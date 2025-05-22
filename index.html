@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:40px}
+    h2{margin-top:0}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #999;padding:8px;text-align:center;min-width:100px}
+    th{background:#f2f2f2}
+    button{margin:4px 6px;padding:6px 10px}
+  </style>
+</head>
+<body>
+  <h2>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</h2>
+
+  <div>
+    <button onclick="addRow()">➕ Add Row</button>
+    <button onclick="deleteRow()">➖ Delete Last Row</button>
+    <button onclick="addColumn()">➕ Add Column</button>
+    <button onclick="deleteColumn()">➖ Delete Last Column</button>
+  </div>
+
+  <table id="editableTable">
+    <thead>
+      <tr>
+        <th>7.15 – 8.15</th>
+        <th>8.15 – 9.15</th>
+        <th>9.15 – 10.15</th>
+        <th>10.15 – 10.30 (REHAT)</th>
+        <th>10.30 – 11.30</th>
+        <th>11.30 – 12.30</th>
+        <th>12.30 – 13.00</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td contenteditable="true">5SN 1</td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    const table = document.getElementById('editableTable');
+
+    // Ensure all existing cells are editable (for safety)
+    [...table.querySelectorAll('td,th')].forEach(c => c.contentEditable = "true");
+
+    function addRow() {
+      const newRow = table.insertRow(-1);           // -1 = append
+      const colCount = table.rows[0].cells.length;
+      for (let i = 0; i < colCount; i++) {
+        const cell = newRow.insertCell(i);
+        cell.contentEditable = "true";
+        cell.innerHTML = "";
+      }
+    }
+
+    function deleteRow() {
+      const rowCount = table.rows.length;
+      if (rowCount > 2) {          // keep header + at least one data row
+        table.deleteRow(-1);
+      }
+    }
+
+    function addColumn() {
+      for (let r = 0; r < table.rows.length; r++) {
+        const cell = table.rows[r].insertCell(-1);
+        cell.contentEditable = "true";
+        if (r === 0) {             // header row
+          cell.outerHTML = "<th contenteditable='true'></th>";
+        }
+      }
+    }
+
+    function deleteColumn() {
+      const colCount = table.rows[0].cells.length;
+      if (colCount > 1) {          // keep at least one column
+        for (let r = 0; r < table.rows.length; r++) {
+          table.rows[r].deleteCell(-1);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
