@@ -1,93 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</title>
-  <style>
-    body{font-family:Arial,Helvetica,sans-serif;margin:40px}
-    h2{margin-top:0}
-    table{border-collapse:collapse;width:100%}
-    th,td{border:1px solid #999;padding:8px;text-align:center;min-width:100px}
-    th{background:#f2f2f2}
-    button{margin:4px 6px;padding:6px 10px}
-  </style>
-</head>
-<body>
-  <h2>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</h2>
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><title>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.0/dist/xlsx.full.min.js"></script>
+<style>
+ body{font-family:Arial,Helvetica,sans-serif;margin:32px}
+ h2{margin-top:0}
+ table{border-collapse:collapse;width:100%;margin-top:10px}
+ th,td{border:1px solid #999;padding:8px;text-align:center;min-width:90px}
+ th{background:#f2f2f2}
+ .bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+ .bar button{padding:8px 14px;font-size:14px;cursor:pointer;border-radius:4px;border:1px solid #555;background:#fff}
+ #excelBtn{background:#2e8b57;color:#fff;border:none}
+ #saveDraftBtn{background:#0b65c2;color:#fff;border:none}
+ #msg{color:#c00;font-size:14px;margin-top:12px;display:none}
+</style></head><body>
+<h2>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</h2>
 
-  <div>
-    <button onclick="addRow()">➕ Add Row</button>
-    <button onclick="deleteRow()">➖ Delete Last Row</button>
-    <button onclick="addColumn()">➕ Add Column</button>
-    <button onclick="deleteColumn()">➖ Delete Last Column</button>
-  </div>
+<!-- ===== first row of buttons (always visible) ===== -->
+<div class="bar">
+  <button id="excelBtn"    onclick="saveToExcel()">💾 Save to Excel</button>
+  <button id="saveDraftBtn"onclick="saveDraft()">💠 Save Draft</button>
+  <button                 onclick="clearDraft()">🗑️ Clear Draft</button>
+</div>
+<!-- ===== second row (table editing) ===== -->
+<div class="bar">
+  <button onclick="addRow()">➕ Add Row</button>
+  <button onclick="deleteRow()">➖ Del Row</button>
+  <button onclick="addColumn()">➕ Add Col</button>
+  <button onclick="deleteColumn()">➖ Del Col</button>
+</div>
 
-  <table id="editableTable">
-    <thead>
-      <tr>
-        <th>7.15 – 8.15</th>
-        <th>8.15 – 9.15</th>
-        <th>9.15 – 10.15</th>
-        <th>10.15 – 10.30 (REHAT)</th>
-        <th>10.30 – 11.30</th>
-        <th>11.30 – 12.30</th>
-        <th>12.30 – 13.00</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td contenteditable="true">5SN 1</td>
-        <td contenteditable="true"></td>
-        <td contenteditable="true"></td>
-        <td contenteditable="true"></td>
-        <td contenteditable="true"></td>
-        <td contenteditable="true"></td>
-        <td contenteditable="true"></td>
-      </tr>
-    </tbody>
-  </table>
+<table id="editableTable"><thead><tr>
+  <th>7.15 – 8.15</th><th>8.15 – 9.15</th><th>9.15 – 10.15</th>
+  <th>10.15 – 10.30 (REHAT)</th>
+  <th>10.30 – 11.30</th><th>11.30 – 12.30</th><th>12.30 – 13.00</th>
+</tr></thead><tbody>
+  <tr><td contenteditable="true">5SN 1</td><td contenteditable="true"></td>
+      <td contenteditable="true"></td><td contenteditable="true"></td>
+      <td contenteditable="true"></td><td contenteditable="true"></td>
+      <td contenteditable="true"></td></tr>
+</tbody></table>
 
-  <script>
-    const table = document.getElementById('editableTable');
+<p id="msg">⚠️ SheetJS failed to load – “Save to Excel” will not work offline.</p>
 
-    // Ensure all existing cells are editable (for safety)
-    [...table.querySelectorAll('td,th')].forEach(c => c.contentEditable = "true");
+<script>
+const table=document.getElementById('editableTable'), LS_KEY="jadual_khamis07_draft";
 
-    function addRow() {
-      const newRow = table.insertRow(-1);           // -1 = append
-      const colCount = table.rows[0].cells.length;
-      for (let i = 0; i < colCount; i++) {
-        const cell = newRow.insertCell(i);
-        cell.contentEditable = "true";
-        cell.innerHTML = "";
-      }
-    }
+/* ---------- table editing ---------- */
+function addRow(){const r=table.insertRow(-1);for(let i=0;i<table.rows[0].cells.length;i++){const c=r.insertCell(i);c.contentEditable="true";}}
+function deleteRow(){if(table.rows.length>2)table.deleteRow(-1);}
+function addColumn(){for(let r=0;r<table.rows.length;r++){const c=table.rows[r].insertCell(-1);c.contentEditable="true";if(r===0)c.outerHTML='<th contenteditable="true"></th>';}}
+function deleteColumn(){const n=table.rows[0].cells.length;if(n>1)for(let r=0;r<table.rows.length;r++)table.rows[r].deleteCell(-1);}
 
-    function deleteRow() {
-      const rowCount = table.rows.length;
-      if (rowCount > 2) {          // keep header + at least one data row
-        table.deleteRow(-1);
-      }
-    }
+/* ---------- local-storage draft ---------- */
+function tableArray(){return[...table.rows].map(r=>[...r.cells].map(c=>c.innerText.trim()))}
+function arrayToTable(a){[...table.tBodies].forEach(tb=>tb.remove());const tb=table.createTBody();for(let r=1;r<a.length;r++){const tr=tb.insertRow(-1);for(const v of a[r]){const td=tr.insertCell(-1);td.contentEditable="true";td.textContent=v}}}
+function saveDraft(){localStorage.setItem(LS_KEY,JSON.stringify(tableArray()));alert("Draft saved!")}
+function clearDraft(){localStorage.removeItem(LS_KEY);alert("Draft cleared.")}
+(function(){const d=localStorage.getItem(LS_KEY);if(d)try{arrayToTable(JSON.parse(d))}catch(e){}})();
 
-    function addColumn() {
-      for (let r = 0; r < table.rows.length; r++) {
-        const cell = table.rows[r].insertCell(-1);
-        cell.contentEditable = "true";
-        if (r === 0) {             // header row
-          cell.outerHTML = "<th contenteditable='true'></th>";
-        }
-      }
-    }
+/* ---------- excel export ---------- */
+function saveToExcel(){
+ if(typeof XLSX==="undefined"){document.getElementById('msg').style.display='block';return;}
+ const aoa=tableArray(), ws=XLSX.utils.aoa_to_sheet(aoa);
+ ws['!cols']=Array(aoa[0].length).fill({wch:20});
+ ws['!pageSetup']={paperSize:9,orientation:'portrait',fitToWidth:1,fitToHeight:0};
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Khamis 07');
+ XLSX.writeFile(wb,'Jadual_Khamis07.xlsx');
+}
 
-    function deleteColumn() {
-      const colCount = table.rows[0].cells.length;
-      if (colCount > 1) {          // keep at least one column
-        for (let r = 0; r < table.rows.length; r++) {
-          table.rows[r].deleteCell(-1);
-        }
-      }
-    }
-  </script>
-</body>
-</html>
+/* ---------- SheetJS CDN fallback notice ---------- */
+window.addEventListener('error',e=>{if(e.target&&e.target.src&&e.target.src.includes('xlsx'))document.getElementById('msg').style.display='block'},true);
+</script>
+</body></html>
