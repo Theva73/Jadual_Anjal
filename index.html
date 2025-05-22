@@ -12,7 +12,7 @@
     h2 { margin: 0 0 12px }
     table { border-collapse: collapse; width: 100%; margin-top: 10px }
     th, td { border: 1px solid #999; padding: 8px; text-align: center; min-width: 90px }
-    th { background: #f2f2f2 }
+    th { background: #f2f2f2 } /* Grey color for header row */
     td.selected, th.selected { outline: 3px solid #ffdf6a }
     .bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px }
     .bar button { padding: 8px 12px; font-size: 14px; border-radius: 4px; cursor: pointer; border: 1px solid #666; background: #fff }
@@ -53,18 +53,20 @@
   <table id="tbl">
     <thead>
       <tr>
-        <th>7.15 – 8.15</th>
-        <th>8.15 – 9.15</th>
-        <th>9.15 – 10.15</th>
-        <th>10.15 – 10.30 (REHAT)</th>
-        <th>10.30 – 11.30</th>
-        <th>11.30 – 12.30</th>
-        <th>12.30 – 13.00</th>
+        <!-- Editable header cells -->
+        <th contenteditable="true">7.15 – 8.15</th>
+        <th contenteditable="true">8.15 – 9.15</th>
+        <th contenteditable="true">9.15 – 10.15</th>
+        <th contenteditable="true">10.15 – 10.30 (REHAT)</th>
+        <th contenteditable="true">10.30 – 11.30</th>
+        <th contenteditable="true">11.30 – 12.30</th>
+        <th contenteditable="true">12.30 – 13.00</th>
       </tr>
     </thead>
     <tbody>
+      <!-- Default rows, all cells empty -->
       <tr>
-        <td contenteditable="true">5SN 1</td>
+        <td contenteditable="true"></td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
@@ -72,7 +74,6 @@
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
       </tr>
-      <!-- Adding 3 new rows -->
       <tr>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
@@ -150,6 +151,10 @@
       }
       /* sync header width if draft had more cols */
       while (T.rows[0].cells.length < a[0].length) addColRight();
+      /* Update the header row with saved values */
+      for (let c = 0; c < a[0].length; c++) {
+        T.rows[0].cells[c].innerText = a[0][c];
+      }
     }
     function saveDraft() { localStorage.setItem(LS_KEY, JSON.stringify(tblArray())); alert('Draft saved!'); }
     function clearDraft() {
