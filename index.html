@@ -47,6 +47,14 @@
   <!-- Draft list for loading -->
   <div id="draftList"></div>
 
+  <!-- ===== targeted actions ===== -->
+  <div class="bar">
+    <button onclick="addRowAbove()">⬆️ Row Above</button>
+    <button onclick="addRowBelow()">⬇️ Row Below</button>
+    <button onclick="addColLeft()">⬅️ Col Left</button>
+    <button onclick="addColRight()">➡️ Col Right</button>
+  </div>
+
   <table id="tbl">
     <thead>
       <tr>
@@ -344,7 +352,7 @@
         row.forEach((cell, cIdx) => {
           if (cell.colspan > 1 || cell.rowspan > 1) {
             merges.push({ s: { r: rIdx, c: cIdx }, e: { r: rIdx + cell.rowspan - 1, c: cIdx + cell.colspan - 1 } });
-          }
+        }
         });
         return merges;
       }, []);
