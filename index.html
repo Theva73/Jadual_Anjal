@@ -22,7 +22,8 @@
   </style>
 </head>
 <body>
-  <h2>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</h2>
+  <!-- Header with no default text, editable -->
+  <h2 contenteditable="true"></h2>
 
   <!-- ===== persistence & export ===== -->
   <div class="bar">
@@ -64,6 +65,34 @@
     <tbody>
       <tr>
         <td contenteditable="true">5SN 1</td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+      </tr>
+      <!-- Adding 3 new rows -->
+      <tr>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+      </tr>
+      <tr>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+      </tr>
+      <tr>
+        <td contenteditable="true"></td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
@@ -123,7 +152,11 @@
       while (T.rows[0].cells.length < a[0].length) addColRight();
     }
     function saveDraft() { localStorage.setItem(LS_KEY, JSON.stringify(tblArray())); alert('Draft saved!'); }
-    function clearDraft() { localStorage.removeItem(LS_KEY); alert('Draft cleared!'); }
+    function clearDraft() {
+      localStorage.removeItem(LS_KEY);
+      alert('Draft cleared! Reverting to default...');
+      location.reload(); // Refresh the page to revert to default
+    }
     (function () { const d = localStorage.getItem(LS_KEY); if (d) arrayToTbl(JSON.parse(d)); })();
 
     /* ---------- Excel export ---------- */
