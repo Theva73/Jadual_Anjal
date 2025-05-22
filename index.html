@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</title>
+  <title></title> <!-- Empty title by default -->
 
   <!-- Load SheetJS via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -159,8 +159,13 @@
     function saveDraft() { localStorage.setItem(LS_KEY, JSON.stringify(tblArray())); alert('Draft saved!'); }
     function clearDraft() {
       localStorage.removeItem(LS_KEY);
-      alert('Draft cleared! Reverting to default...');
-      location.reload(); // Refresh the page to revert to default
+      alert('Draft cleared! Reverting to empty table...');
+      // Clear all rows in tbody
+      [...T.tBodies].forEach(tb => tb.remove());
+      // Optionally clear the header row content (but keep the structure)
+      for (let c = 0; c < T.rows[0].cells.length; c++) {
+        T.rows[0].cells[c].innerText = '';
+      }
     }
     (function () { const d = localStorage.getItem(LS_KEY); if (d) arrayToTbl(JSON.parse(d)); })();
 
