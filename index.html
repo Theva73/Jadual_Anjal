@@ -23,6 +23,7 @@
     #draftList { margin-top: 10px; padding: 5px; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; display: none; }
     #draftList div { padding: 5px; cursor: pointer; }
     #draftList div:hover { background: #f0f0f0; }
+    #fileInput { display: none; }
   </style>
 </head>
 <body>
@@ -31,7 +32,8 @@
 
   <!-- ===== persistence & export ===== -->
   <div class="bar">
-    <button id="excelBtn" onclick="toExcel()">💾 Save to Excel</button>
+    <button id="excelBtn" onclick="document.getElementById('fileInput').click()">💾 Save to Excel</button>
+    <input type="file" id="fileInput" accept=".xlsx" onchange="handleExcelFile(event)" style="display: none;" />
     <button id="saveDraftBtn" onclick="promptSaveDraft()">💠 Save Draft</button>
     <button id="loadDraftBtn" onclick="toggleDraftList()">📂 Load Draft</button>
     <button onclick="clearDraft()">🗑️ Clear Draft</button>
@@ -119,6 +121,7 @@
           DRAFTS_KEY = 'jadual_drafts',
           pageHeader = document.querySelector('h2');
     let sel = { r: 0, c: 0 }; /* selected cell coords */
+    let lastFileName = null; // Store the name of the last uploaded Excel file
 
     /* ---------- selection highlight ---------- */
     T.addEventListener('click', e => {
@@ -190,7 +193,12 @@
     function promptSaveDraft() {
       const title = prompt('Enter a title for this draft:');
       if (title && title.trim()) {
-        saveDraft(title.trim());
+        const drafts = getDrafts();
+        const trimmedTitle = title.trim();
+        if (drafts[trimmedTitle] && !confirm(`A draft named "${trimmedTitle}" already exists. Do you want to overwrite it?`)) {
+          return;
+        }
+        saveDraft(trimmedTitle);
       } else if (title !== null) {
         alert('Please enter a valid title.');
       }
@@ -246,24 +254,60 @@
       pageHeader.innerText = '';
       // Hide the draft list
       document.getElementById('draftList').style.display = 'none';
+      // Reset last file name
+      lastFileName = null;
     }
 
-    /* ---------- Excel export ---------- */
-    function toExcel() {
+    /* ---------- Excel file handling ---------- */
+    function handleExcelFile(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        // If no file is selected, export a new file as before
+        exportExcel(null);
+        return;
+      }
+
+      lastFileName = file.name; // Store the file name for future saves
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        // For simplicity, we'll overwrite the first sheet with the current table data
+        exportExcel(workbook);
+      };
+      reader.readAsArrayBuffer(file);
+      // Reset the file input to allow selecting the same file again
+      event.target.value = '';
+    }
+
+    function exportExcel(existingWorkbook) {
       const msg = document.getElementById('msg');
       msg.style.display = 'none'; // Hide the message initially
       if (typeof XLSX === 'undefined') {
         msg.style.display = 'block';
         return;
       }
+
       const aoa = [...T.rows].map(r => [...r.cells].map(c => c.innerText.trim())),
             ws = XLSX.utils.aoa_to_sheet(aoa);
       ws['!cols'] = Array(aoa[0].length).fill({ wch: 20 });
       ws['!pageSetup'] = { paperSize: 9, orientation: 'portrait', fitToWidth: 1, fitToHeight: 0 };
-      const wb = XLSX.utils.book_new();
+
+      const wb = existingWorkbook || XLSX.utils.book_new();
       const sheetName = pageHeader.innerText.trim() || 'Schedule'; // Use header title or default to 'Schedule'
-      XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31)); // Excel sheet names are limited to 31 chars
-      const fileName = `${sheetName.replace(/[^a-zA-Z0-9]/g, '_') || 'Jadual'}_2025-05-22.xlsx`; // Fixed date based on current time
+      
+      // If an existing workbook was provided, replace the first sheet; otherwise append a new one
+      if (existingWorkbook && existingWorkbook.SheetNames.length > 0) {
+        const existingSheetName = existingWorkbook.SheetNames[0];
+        existingWorkbook.Sheets[existingSheetName] = ws;
+        existingWorkbook.SheetNames[0] = sheetName.slice(0, 31); // Update sheet name
+      } else {
+        XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31)); // Excel sheet names are limited to 31 chars
+      }
+
+      // Use the last file name if available; otherwise, generate a new one with current date
+      const currentDate = new Date().toISOString().slice(0, 10); // e.g., "2025-05-22"
+      const fileName = lastFileName || `${sheetName.replace(/[^a-zA-Z0-9]/g, '_') || 'Jadual'}_${currentDate}.xlsx`;
       XLSX.writeFile(wb, fileName);
     }
 
