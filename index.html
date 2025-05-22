@@ -11,14 +11,17 @@
     body { font-family: Arial, Helvetica, sans-serif; margin: 28px }
     h2 { margin: 0 0 12px }
     table { border-collapse: collapse; width: 100%; margin-top: 10px }
-    th, td { border: 1px solid #999; padding: 8px; text-align: center; min-width: 90px }
+    th, td { border: 1px solid #999; padding: 8px; text-align: center; min-width: 90px; position: relative }
     th { background: #f2f2f2 } /* Grey color for table header row */
     td.selected, th.selected { outline: 3px solid #ffdf6a }
+    .merged { background: #e0e0e0; font-style: italic; }
     .bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px }
     .bar button { padding: 8px 12px; font-size: 14px; border-radius: 4px; cursor: pointer; border: 1px solid #666; background: #fff }
     #excelBtn { background: #2e8b57; color: #fff; border: none }
     #saveDraftBtn { background: #0b65c2; color: #fff; border: none }
     #loadDraftBtn { background: #ff8c00; color: #fff; border: none }
+    #mergeBtn { background: #6a5acd; color: #fff; border: none }
+    #unmergeBtn { background: #cd5c5c; color: #fff; border: none }
     #msg { color: #c00; margin-top: 10px; display: none }
     #draftList { margin-top: 10px; padding: 5px; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; display: none; }
     #draftList div { padding: 5px; cursor: pointer; }
@@ -37,28 +40,12 @@
     <button id="saveDraftBtn" onclick="promptSaveDraft()">💠 Save Draft</button>
     <button id="loadDraftBtn" onclick="toggleDraftList()">📂 Load Draft</button>
     <button onclick="clearDraft()">🗑️ Clear Draft</button>
+    <button id="mergeBtn" onclick="mergeCells()">🔗 Merge Cells</button>
+    <button id="unmergeBtn" onclick="unmergeCells()">🔗 Unmerge Cells</button>
   </div>
 
   <!-- Draft list for loading -->
   <div id="draftList"></div>
-
-  <!-- ===== targeted actions ===== -->
-  <div class="bar">
-    <button onclick="addRowAbove()">⬆️ Row Above</button>
-    <button onclick="addRowBelow()">⬇️ Row Below</button>
-    <button onclick="deleteRow()">❌ Del Row</button>
-    <button onclick="addColLeft()">⬅️ Col Left</button>
-    <button onclick="addColRight()">➡️ Col Right</button>
-    <button onclick="deleteCol()">❌ Del Col</button>
-  </div>
-
-  <!-- ===== quick add / delete on the end ===== -->
-  <div class="bar">
-    <button onclick="quickAddRow()">➕ Add Row (end)</button>
-    <button onclick="quickDelRow()">➖ Del Row (end)</button>
-    <button onclick="quickAddCol()">➕ Add Col (end)</button>
-    <button onclick="quickDelCol()">➖ Del Col (end)</button>
-  </div>
 
   <table id="tbl">
     <thead>
@@ -122,13 +109,41 @@
           pageHeader = document.querySelector('h2');
     let sel = { r: 0, c: 0 }; /* selected cell coords */
     let lastFileName = null; // Store the name of the last uploaded Excel file
+    let selectedCells = []; // Track selected cells for merging
 
-    /* ---------- selection highlight ---------- */
+    /* ---------- selection highlight with multi-select ---------- */
     T.addEventListener('click', e => {
       if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
-      [...T.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
-      e.target.classList.add('selected');
-      sel = { r: e.target.parentNode.rowIndex, c: e.target.cellIndex };
+      const cell = e.target;
+      const isCtrlKey = e.ctrlKey || e.metaKey;
+      const isShiftKey = e.shiftKey;
+
+      if (isCtrlKey || isShiftKey) {
+        cell.classList.add('selected');
+        selectedCells.push(cell);
+        if (isShiftKey && selectedCells.length > 1) {
+          const start = selectedCells[0];
+          const end = cell;
+          const startRow = start.parentNode.rowIndex;
+          const startCol = start.cellIndex;
+          const endRow = end.parentNode.rowIndex;
+          const endCol = end.cellIndex;
+          for (let r = Math.min(startRow, endRow); r <= Math.max(startRow, endRow); r++) {
+            for (let c = Math.min(startCol, endCol); c <= Math.max(startCol, endCol); c++) {
+              const cellToSelect = T.rows[r].cells[c];
+              if (!cellToSelect.classList.contains('selected')) {
+                cellToSelect.classList.add('selected');
+                selectedCells.push(cellToSelect);
+              }
+            }
+          }
+        }
+      } else {
+        [...T.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
+        selectedCells = [cell];
+        cell.classList.add('selected');
+      }
+      sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
     });
 
     /* ---------- helper: create empty cell ---------- */
@@ -138,24 +153,14 @@
       else { cell.contentEditable = 'true'; cell.textContent = ''; }
     }
 
-    /* ---------- targeted row / col ops ---------- */
-    function addRowAbove() { const r = T.insertRow(sel.r); for (let i = 0; i < T.rows[0].cells.length; i++) makeCell(r); }
-    function addRowBelow() { const r = T.insertRow(sel.r + 1); for (let i = 0; i < T.rows[0].cells.length; i++) makeCell(r); }
-    function deleteRow() { if (T.rows.length > 2) T.deleteRow(sel.r); }
-    function addColLeft() { for (const row of T.rows) { const c = row.insertCell(sel.c); if (row.rowIndex) c.contentEditable = 'true'; else c.outerHTML = '<th contenteditable="true"></th>'; } }
-    function addColRight() { for (const row of T.rows) { const c = row.insertCell(sel.c + 1); if (row.rowIndex) c.contentEditable = 'true'; else c.outerHTML = '<th contenteditable="true"></th>'; } }
-    function deleteCol() { if (T.rows[0].cells.length > 1) for (const row of T.rows) row.deleteCell(sel.c); }
-
-    /* ---------- quick ops on table end ---------- */
-    function quickAddRow() { const r = T.insertRow(-1); for (let i = 0; i < T.rows[0].cells.length; i++) makeCell(r); }
-    function quickDelRow() { if (T.rows.length > 2) T.deleteRow(-1); }
-    function quickAddCol() { for (const row of T.rows) { makeCell(row, row.rowIndex === 0); } }
-    function quickDelCol() { const n = T.rows[0].cells.length; if (n > 1) for (const row of T.rows) row.deleteCell(-1); }
-
     /* ---------- localStorage draft management ---------- */
     function tblArray() { 
       return {
-        table: [...T.rows].map(r => [...r.cells].map(c => c.innerText.trim())),
+        table: [...T.rows].map(r => [...r.cells].map(c => {
+          const colspan = c.getAttribute('colspan') || 1;
+          const rowspan = c.getAttribute('rowspan') || 1;
+          return { text: c.innerText.trim(), colspan, rowspan };
+        })),
         header: pageHeader.innerText.trim()
       };
     }
@@ -165,13 +170,24 @@
       const tb = T.createTBody();
       for (let r = 1; r < a.table.length; r++) {
         const tr = tb.insertRow(-1);
-        for (const v of a.table[r]) { const td = tr.insertCell(-1); td.contentEditable = 'true'; td.textContent = v; }
+        for (let c = 0; c < a.table[r].length; c++) {
+          const { text, colspan, rowspan } = a.table[r][c];
+          const td = tr.insertCell(-1);
+          td.contentEditable = 'true';
+          td.textContent = text;
+          if (colspan > 1) td.setAttribute('colspan', colspan);
+          if (rowspan > 1) td.setAttribute('rowspan', rowspan);
+          if (colspan > 1 || rowspan > 1) td.classList.add('merged');
+        }
       }
       /* sync header width if draft had more cols */
       while (T.rows[0].cells.length < a.table[0].length) addColRight();
       /* Update the table header row with saved values */
       for (let c = 0; c < a.table[0].length; c++) {
-        T.rows[0].cells[c].innerText = a.table[0][c];
+        T.rows[0].cells[c].innerText = a.table[0][c].text;
+        if (a.table[0][c].colspan > 1) T.rows[0].cells[c].setAttribute('colspan', a.table[0][c].colspan);
+        if (a.table[0][c].rowspan > 1) T.rows[0].cells[c].setAttribute('rowspan', a.table[0][c].rowspan);
+        if (a.table[0][c].colspan > 1 || a.table[0][c].rowspan > 1) T.rows[0].cells[c].classList.add('merged');
       }
       /* Update the page header */
       pageHeader.innerText = a.header || '';
@@ -241,7 +257,6 @@
     }
 
     function clearDraft() {
-      localStorage.removeItem(DRAFTS_KEY);
       alert('Draft cleared! Reverting to empty table...');
       // Clear all rows in tbody
       [...T.tBodies].forEach(tb => tb.remove());
@@ -249,6 +264,9 @@
       // Clear the header row content (but keep the structure)
       for (let c = 0; c < T.rows[0].cells.length; c++) {
         T.rows[0].cells[c].innerText = '';
+        T.rows[0].cells[c].removeAttribute('colspan');
+        T.rows[0].cells[c].removeAttribute('rowspan');
+        T.rows[0].cells[c].classList.remove('merged');
       }
       // Clear the page header
       pageHeader.innerText = '';
@@ -288,9 +306,21 @@
         return;
       }
 
-      const aoa = [...T.rows].map(r => [...r.cells].map(c => c.innerText.trim())),
-            ws = XLSX.utils.aoa_to_sheet(aoa);
+      const aoa = [...T.rows].map(r => [...r.cells].map(c => {
+        const colspan = c.getAttribute('colspan') || 1;
+        const rowspan = c.getAttribute('rowspan') || 1;
+        return { text: c.innerText.trim(), colspan, rowspan };
+      }));
+      const ws = XLSX.utils.aoa_to_sheet(aoa.map(row => row.map(cell => cell.text)));
       ws['!cols'] = Array(aoa[0].length).fill({ wch: 20 });
+      ws['!merges'] = aoa.reduce((merges, row, rIdx) => {
+        row.forEach((cell, cIdx) => {
+          if (cell.colspan > 1 || cell.rowspan > 1) {
+            merges.push({ s: { r: rIdx, c: cIdx }, e: { r: rIdx + cell.rowspan - 1, c: cIdx + cell.colspan - 1 } });
+          }
+        });
+        return merges;
+      }, []);
       ws['!pageSetup'] = { paperSize: 9, orientation: 'portrait', fitToWidth: 1, fitToHeight: 0 };
 
       const wb = existingWorkbook || XLSX.utils.book_new();
@@ -309,6 +339,80 @@
       const currentDate = new Date().toISOString().slice(0, 10); // e.g., "2025-05-22"
       const fileName = lastFileName || `${sheetName.replace(/[^a-zA-Z0-9]/g, '_') || 'Jadual'}_${currentDate}.xlsx`;
       XLSX.writeFile(wb, fileName);
+    }
+
+    /* ---------- Merge and Unmerge Cells ---------- */
+    function mergeCells() {
+      if (selectedCells.length < 2) {
+        alert('Please select at least 2 cells to merge.');
+        return;
+      }
+
+      const rows = selectedCells.map(cell => cell.parentNode.rowIndex);
+      const cols = selectedCells.map(cell => cell.cellIndex);
+      const minRow = Math.min(...rows);
+      const maxRow = Math.max(...rows);
+      const minCol = Math.min(...cols);
+      const maxCol = Math.max(...cols);
+      const rowspan = maxRow - minRow + 1;
+      const colspan = maxCol - minCol + 1;
+
+      // Get the top-left cell to keep its content
+      const topLeftCell = T.rows[minRow].cells[minCol];
+      const mergedContent = topLeftCell.innerText;
+
+      // Remove all selected cells except the top-left one
+      selectedCells.forEach(cell => {
+        if (cell !== topLeftCell) cell.remove();
+      });
+
+      // Update the top-left cell with merged properties
+      topLeftCell.setAttribute('rowspan', rowspan);
+      topLeftCell.setAttribute('colspan', colspan);
+      topLeftCell.classList.add('merged');
+      topLeftCell.innerText = mergedContent; // Retain the top-left cell's content
+
+      // Clear selection
+      selectedCells = [];
+      [...T.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
+    }
+
+    function unmergeCells() {
+      const mergedCells = [...T.querySelectorAll('.merged')];
+      if (mergedCells.length === 0) {
+        alert('No merged cells to unmerge.');
+        return;
+      }
+
+      mergedCells.forEach(cell => {
+        const rowspan = parseInt(cell.getAttribute('rowspan') || 1);
+        const colspan = parseInt(cell.getAttribute('colspan') || 1);
+        const rowIdx = cell.parentNode.rowIndex;
+        const colIdx = cell.cellIndex;
+
+        // Remove merged attributes and class
+        cell.removeAttribute('rowspan');
+        cell.removeAttribute('colspan');
+        cell.classList.remove('merged');
+
+        // Reconstruct individual cells
+        if (rowspan > 1 || colspan > 1) {
+          const content = cell.innerText;
+          for (let r = 0; r < rowspan; r++) {
+            for (let c = 0; c < colspan; c++) {
+              if (r === 0 && c === 0) continue; // Skip the original cell
+              const newCell = T.rows[rowIdx + r].insertCell(colIdx + c);
+              newCell.contentEditable = 'true';
+              newCell.textContent = ''; // Distribute content if needed (currently empty)
+            }
+          }
+          cell.innerText = content; // Reset content to original cell
+        }
+      });
+
+      // Clear selection
+      selectedCells = [];
+      [...T.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
     }
 
     // Test if SheetJS is loaded
