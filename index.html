@@ -18,7 +18,11 @@
     .bar button { padding: 8px 12px; font-size: 14px; border-radius: 4px; cursor: pointer; border: 1px solid #666; background: #fff }
     #excelBtn { background: #2e8b57; color: #fff; border: none }
     #saveDraftBtn { background: #0b65c2; color: #fff; border: none }
+    #loadDraftBtn { background: #ff8c00; color: #fff; border: none }
     #msg { color: #c00; margin-top: 10px; display: none }
+    #draftList { margin-top: 10px; padding: 5px; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; display: none; }
+    #draftList div { padding: 5px; cursor: pointer; }
+    #draftList div:hover { background: #f0f0f0; }
   </style>
 </head>
 <body>
@@ -28,9 +32,13 @@
   <!-- ===== persistence & export ===== -->
   <div class="bar">
     <button id="excelBtn" onclick="toExcel()">💾 Save to Excel</button>
-    <button id="saveDraftBtn" onclick="saveDraft()">💠 Save Draft</button>
+    <button id="saveDraftBtn" onclick="promptSaveDraft()">💠 Save Draft</button>
+    <button id="loadDraftBtn" onclick="toggleDraftList()">📂 Load Draft</button>
     <button onclick="clearDraft()">🗑️ Clear Draft</button>
   </div>
+
+  <!-- Draft list for loading -->
+  <div id="draftList"></div>
 
   <!-- ===== targeted actions ===== -->
   <div class="bar">
@@ -108,7 +116,8 @@
 
   <script>
     const T = document.getElementById('tbl'),
-          LS_KEY = 'jadual_khamis07_draft';
+          DRAFTS_KEY = 'jadual_drafts',
+          pageHeader = document.querySelector('h2');
     let sel = { r: 0, c: 0 }; /* selected cell coords */
 
     /* ---------- selection highlight ---------- */
@@ -140,34 +149,104 @@
     function quickAddCol() { for (const row of T.rows) { makeCell(row, row.rowIndex === 0); } }
     function quickDelCol() { const n = T.rows[0].cells.length; if (n > 1) for (const row of T.rows) row.deleteCell(-1); }
 
-    /* ---------- localStorage draft ---------- */
-    function tblArray() { return [...T.rows].map(r => [...r.cells].map(c => c.innerText.trim())); }
+    /* ---------- localStorage draft management ---------- */
+    function tblArray() { 
+      return {
+        table: [...T.rows].map(r => [...r.cells].map(c => c.innerText.trim())),
+        header: pageHeader.innerText.trim()
+      };
+    }
+
     function arrayToTbl(a) {
       [...T.tBodies].forEach(tb => tb.remove());
       const tb = T.createTBody();
-      for (let r = 1; r < a.length; r++) {
+      for (let r = 1; r < a.table.length; r++) {
         const tr = tb.insertRow(-1);
-        for (const v of a[r]) { const td = tr.insertCell(-1); td.contentEditable = 'true'; td.textContent = v; }
+        for (const v of a.table[r]) { const td = tr.insertCell(-1); td.contentEditable = 'true'; td.textContent = v; }
       }
       /* sync header width if draft had more cols */
-      while (T.rows[0].cells.length < a[0].length) addColRight();
+      while (T.rows[0].cells.length < a.table[0].length) addColRight();
       /* Update the table header row with saved values */
-      for (let c = 0; c < a[0].length; c++) {
-        T.rows[0].cells[c].innerText = a[0][c];
+      for (let c = 0; c < a.table[0].length; c++) {
+        T.rows[0].cells[c].innerText = a.table[0][c];
+      }
+      /* Update the page header */
+      pageHeader.innerText = a.header || '';
+    }
+
+    function getDrafts() {
+      const drafts = localStorage.getItem(DRAFTS_KEY);
+      return drafts ? JSON.parse(drafts) : {};
+    }
+
+    function saveDraft(title) {
+      const drafts = getDrafts();
+      drafts[title] = tblArray();
+      localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+      alert(`Draft saved as "${title}"!`);
+      updateDraftList();
+    }
+
+    function promptSaveDraft() {
+      const title = prompt('Enter a title for this draft:');
+      if (title && title.trim()) {
+        saveDraft(title.trim());
+      } else if (title !== null) {
+        alert('Please enter a valid title.');
       }
     }
-    function saveDraft() { localStorage.setItem(LS_KEY, JSON.stringify(tblArray())); alert('Draft saved!'); }
+
+    function loadDraft(title) {
+      const drafts = getDrafts();
+      if (drafts[title]) {
+        arrayToTbl(drafts[title]);
+        alert(`Loaded draft "${title}"!`);
+      }
+      toggleDraftList(); // Hide the draft list after loading
+    }
+
+    function updateDraftList() {
+      const drafts = getDrafts();
+      const draftList = document.getElementById('draftList');
+      draftList.innerHTML = '';
+      const titles = Object.keys(drafts);
+      if (titles.length === 0) {
+        draftList.style.display = 'none';
+        return;
+      }
+      titles.forEach(title => {
+        const div = document.createElement('div');
+        div.innerText = title;
+        div.onclick = () => loadDraft(title);
+        draftList.appendChild(div);
+      });
+      draftList.style.display = 'block';
+    }
+
+    function toggleDraftList() {
+      const draftList = document.getElementById('draftList');
+      if (draftList.style.display === 'block') {
+        draftList.style.display = 'none';
+      } else {
+        updateDraftList();
+      }
+    }
+
     function clearDraft() {
-      localStorage.removeItem(LS_KEY);
+      localStorage.removeItem(DRAFTS_KEY);
       alert('Draft cleared! Reverting to empty table...');
       // Clear all rows in tbody
       [...T.tBodies].forEach(tb => tb.remove());
-      // Optionally clear the header row content (but keep the structure)
+      const tb = T.createTBody();
+      // Clear the header row content (but keep the structure)
       for (let c = 0; c < T.rows[0].cells.length; c++) {
         T.rows[0].cells[c].innerText = '';
       }
+      // Clear the page header
+      pageHeader.innerText = '';
+      // Hide the draft list
+      document.getElementById('draftList').style.display = 'none';
     }
-    (function () { const d = localStorage.getItem(LS_KEY); if (d) arrayToTbl(JSON.parse(d)); })();
 
     /* ---------- Excel export ---------- */
     function toExcel() {
@@ -177,13 +256,15 @@
         msg.style.display = 'block';
         return;
       }
-      const aoa = tblArray(),
+      const aoa = [...T.rows].map(r => [...r.cells].map(c => c.innerText.trim())),
             ws = XLSX.utils.aoa_to_sheet(aoa);
       ws['!cols'] = Array(aoa[0].length).fill({ wch: 20 });
       ws['!pageSetup'] = { paperSize: 9, orientation: 'portrait', fitToWidth: 1, fitToHeight: 0 };
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Khamis 07');
-      XLSX.writeFile(wb, 'Jadual_Khamis07.xlsx');
+      const sheetName = pageHeader.innerText.trim() || 'Schedule'; // Use header title or default to 'Schedule'
+      XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31)); // Excel sheet names are limited to 31 chars
+      const fileName = `${sheetName.replace(/[^a-zA-Z0-9]/g, '_') || 'Jadual'}_2025-05-22.xlsx`; // Fixed date based on current time
+      XLSX.writeFile(wb, fileName);
     }
 
     // Test if SheetJS is loaded
