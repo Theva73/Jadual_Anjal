@@ -1,35 +1,52 @@
 <!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"><title>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.0/dist/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<title>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</title>
+
+<!-- load the local SheetJS copy you added -->
+<script src="xlsx.full.min.js"></script>
+
 <style>
- body{font-family:Arial,Helvetica,sans-serif;margin:32px}
- h2{margin-top:0}
+ body{font-family:Arial,Helvetica,sans-serif;margin:28px}
+ h2{margin:0 0 12px}
  table{border-collapse:collapse;width:100%;margin-top:10px}
  th,td{border:1px solid #999;padding:8px;text-align:center;min-width:90px}
  th{background:#f2f2f2}
- .bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
- .bar button{padding:8px 14px;font-size:14px;cursor:pointer;border-radius:4px;border:1px solid #555;background:#fff}
+ td.selected,th.selected{outline:3px solid #ffdf6a}
+ .bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+ .bar button{padding:8px 12px;font-size:14px;border-radius:4px;cursor:pointer;border:1px solid #666;background:#fff}
  #excelBtn{background:#2e8b57;color:#fff;border:none}
  #saveDraftBtn{background:#0b65c2;color:#fff;border:none}
- #msg{color:#c00;font-size:14px;margin-top:12px;display:none}
-</style></head><body>
+ #msg{color:#c00;margin-top:10px;display:none}
+</style>
+</head><body>
 <h2>Jadual Anjal – Khamis 07 Mei 2025 (Editable)</h2>
 
-<!-- ===== first row of buttons (always visible) ===== -->
+<!-- ===== persistence & export ===== -->
 <div class="bar">
-  <button id="excelBtn"    onclick="saveToExcel()">💾 Save to Excel</button>
+  <button id="excelBtn"    onclick="toExcel()">💾 Save to Excel</button>
   <button id="saveDraftBtn"onclick="saveDraft()">💠 Save Draft</button>
-  <button                 onclick="clearDraft()">🗑️ Clear Draft</button>
-</div>
-<!-- ===== second row (table editing) ===== -->
-<div class="bar">
-  <button onclick="addRow()">➕ Add Row</button>
-  <button onclick="deleteRow()">➖ Del Row</button>
-  <button onclick="addColumn()">➕ Add Col</button>
-  <button onclick="deleteColumn()">➖ Del Col</button>
+  <button                onclick="clearDraft()">🗑️ Clear Draft</button>
 </div>
 
-<table id="editableTable"><thead><tr>
+<!-- ===== targeted actions ===== -->
+<div class="bar">
+  <button onclick="addRowAbove()">⬆️ Row Above</button>
+  <button onclick="addRowBelow()">⬇️ Row Below</button>
+  <button onclick="deleteRow()">❌ Del Row</button>
+  <button onclick="addColLeft()">⬅️ Col Left</button>
+  <button onclick="addColRight()">➡️ Col Right</button>
+  <button onclick="deleteCol()">❌ Del Col</button>
+</div>
+
+<!-- ===== quick add / delete on the end ===== -->
+<div class="bar">
+  <button onclick="quickAddRow()">➕ Add Row (end)</button>
+  <button onclick="quickDelRow()">➖ Del Row (end)</button>
+  <button onclick="quickAddCol()">➕ Add Col (end)</button>
+  <button onclick="quickDelCol()">➖ Del Col (end)</button>
+</div>
+
+<table id="tbl"><thead><tr>
   <th>7.15 – 8.15</th><th>8.15 – 9.15</th><th>9.15 – 10.15</th>
   <th>10.15 – 10.30 (REHAT)</th>
   <th>10.30 – 11.30</th><th>11.30 – 12.30</th><th>12.30 – 13.00</th>
@@ -40,35 +57,65 @@
       <td contenteditable="true"></td></tr>
 </tbody></table>
 
-<p id="msg">⚠️ SheetJS failed to load – “Save to Excel” will not work offline.</p>
+<p id="msg">⚠️ SheetJS not found – export disabled.</p>
 
 <script>
-const table=document.getElementById('editableTable'), LS_KEY="jadual_khamis07_draft";
+const T=document.getElementById('tbl'), LS_KEY='jadual_khamis07_draft';
+let sel={r:0,c:0};          /* selected cell coords */
 
-/* ---------- table editing ---------- */
-function addRow(){const r=table.insertRow(-1);for(let i=0;i<table.rows[0].cells.length;i++){const c=r.insertCell(i);c.contentEditable="true";}}
-function deleteRow(){if(table.rows.length>2)table.deleteRow(-1);}
-function addColumn(){for(let r=0;r<table.rows.length;r++){const c=table.rows[r].insertCell(-1);c.contentEditable="true";if(r===0)c.outerHTML='<th contenteditable="true"></th>';}}
-function deleteColumn(){const n=table.rows[0].cells.length;if(n>1)for(let r=0;r<table.rows.length;r++)table.rows[r].deleteCell(-1);}
+/* ---------- selection highlight ---------- */
+T.addEventListener('click',e=>{
+  if(e.target.tagName!=='TD'&&e.target.tagName!=='TH')return;
+  [...T.querySelectorAll('.selected')].forEach(c=>c.classList.remove('selected'));
+  e.target.classList.add('selected');
+  sel={r:e.target.parentNode.rowIndex,c:e.target.cellIndex};
+});
 
-/* ---------- local-storage draft ---------- */
-function tableArray(){return[...table.rows].map(r=>[...r.cells].map(c=>c.innerText.trim()))}
-function arrayToTable(a){[...table.tBodies].forEach(tb=>tb.remove());const tb=table.createTBody();for(let r=1;r<a.length;r++){const tr=tb.insertRow(-1);for(const v of a[r]){const td=tr.insertCell(-1);td.contentEditable="true";td.textContent=v}}}
-function saveDraft(){localStorage.setItem(LS_KEY,JSON.stringify(tableArray()));alert("Draft saved!")}
-function clearDraft(){localStorage.removeItem(LS_KEY);alert("Draft cleared.")}
-(function(){const d=localStorage.getItem(LS_KEY);if(d)try{arrayToTable(JSON.parse(d))}catch(e){}})();
+/* ---------- helper: create empty cell ---------- */
+function makeCell(row,isHeader=false){
+  const cell=isHeader?row.insertCell(-1):row.insertCell(-1);
+  if(isHeader) cell.outerHTML='<th contenteditable="true"></th>';
+  else {cell.contentEditable='true';cell.textContent='';}
+}
 
-/* ---------- excel export ---------- */
-function saveToExcel(){
- if(typeof XLSX==="undefined"){document.getElementById('msg').style.display='block';return;}
- const aoa=tableArray(), ws=XLSX.utils.aoa_to_sheet(aoa);
+/* ---------- targeted row / col ops ---------- */
+function addRowAbove(){const r=T.insertRow(sel.r);for(let i=0;i<T.rows[0].cells.length;i++)makeCell(r);}
+function addRowBelow(){const r=T.insertRow(sel.r+1);for(let i=0;i<T.rows[0].cells.length;i++)makeCell(r);}
+function deleteRow(){if(T.rows.length>2)T.deleteRow(sel.r);}
+function addColLeft (){for(const row of T.rows){const c=row.insertCell(sel.c);if(row.rowIndex) c.contentEditable='true'; else c.outerHTML='<th contenteditable="true"></th>';}}
+function addColRight(){for(const row of T.rows){const c=row.insertCell(sel.c+1);if(row.rowIndex) c.contentEditable='true'; else c.outerHTML='<th contenteditable="true"></th>';}}
+function deleteCol(){if(T.rows[0].cells.length>1)for(const row of T.rows)row.deleteCell(sel.c);}
+
+/* ---------- quick ops on table end ---------- */
+function quickAddRow(){const r=T.insertRow(-1);for(let i=0;i<T.rows[0].cells.length;i++)makeCell(r);}
+function quickDelRow(){if(T.rows.length>2)T.deleteRow(-1);}
+function quickAddCol(){for(const row of T.rows){makeCell(row,row.rowIndex===0);}}
+function quickDelCol(){const n=T.rows[0].cells.length;if(n>1)for(const row of T.rows)row.deleteCell(-1);}
+
+/* ---------- localStorage draft ---------- */
+function tblArray(){return[...T.rows].map(r=>[...r.cells].map(c=>c.innerText.trim()));}
+function arrayToTbl(a){
+  [...T.tBodies].forEach(tb=>tb.remove());
+  const tb=T.createTBody();
+  for(let r=1;r<a.length;r++){
+    const tr=tb.insertRow(-1);
+    for(const v of a[r]){const td=tr.insertCell(-1);td.contentEditable='true';td.textContent=v;}
+  }
+  /* sync header width if draft had more cols */
+  while(T.rows[0].cells.length<a[0].length) addColRight();
+}
+function saveDraft(){localStorage.setItem(LS_KEY,JSON.stringify(tblArray()));alert('Draft saved!');}
+function clearDraft(){localStorage.removeItem(LS_KEY);alert('Draft cleared!');}
+(function(){const d=localStorage.getItem(LS_KEY);if(d)arrayToTbl(JSON.parse(d));})();
+
+/* ---------- Excel export ---------- */
+function toExcel(){
+ if(typeof XLSX==='undefined'){document.getElementById('msg').style.display='block';return;}
+ const aoa=tblArray(), ws=XLSX.utils.aoa_to_sheet(aoa);
  ws['!cols']=Array(aoa[0].length).fill({wch:20});
  ws['!pageSetup']={paperSize:9,orientation:'portrait',fitToWidth:1,fitToHeight:0};
  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Khamis 07');
  XLSX.writeFile(wb,'Jadual_Khamis07.xlsx');
 }
-
-/* ---------- SheetJS CDN fallback notice ---------- */
-window.addEventListener('error',e=>{if(e.target&&e.target.src&&e.target.src.includes('xlsx'))document.getElementById('msg').style.display='block'},true);
 </script>
 </body></html>
