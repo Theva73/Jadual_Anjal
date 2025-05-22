@@ -153,6 +153,33 @@
       else { cell.contentEditable = 'true'; cell.textContent = ''; }
     }
 
+    /* ---------- flexible row / col ops ---------- */
+    function addRowAbove() {
+      const r = T.insertRow(sel.r);
+      for (let i = 0; i < T.rows[0].cells.length; i++) makeCell(r);
+    }
+
+    function addRowBelow() {
+      const r = T.insertRow(sel.r + 1);
+      for (let i = 0; i < T.rows[0].cells.length; i++) makeCell(r);
+    }
+
+    function addColLeft() {
+      for (const row of T.rows) {
+        const c = row.insertCell(sel.c);
+        if (row.rowIndex) c.contentEditable = 'true';
+        else c.outerHTML = '<th contenteditable="true"></th>';
+      }
+    }
+
+    function addColRight() {
+      for (const row of T.rows) {
+        const c = row.insertCell(sel.c + 1);
+        if (row.rowIndex) c.contentEditable = 'true';
+        else c.outerHTML = '<th contenteditable="true"></th>';
+      }
+    }
+
     /* ---------- localStorage draft management ---------- */
     function tblArray() { 
       return {
