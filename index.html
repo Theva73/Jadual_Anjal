@@ -40,6 +40,49 @@
       }
     }
 
+
+
+    // Tap-to-select logic for merging cells (replaces Ctrl/Shift)
+    document.getElementById('tablesContainer').addEventListener('click', e => {
+      if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
+      const cell = e.target;
+
+      // Handle name insertion
+      if (selectedName !== null) {
+        if (cell.tagName === 'TD' && cell.contentEditable === 'true') {
+          cell.innerText = selectedName;
+          const highlightedSpan = nameListContainer.querySelector('.highlighted');
+          if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
+          selectedName = null;
+          return;
+        } else {
+          alert('Please select an editable cell.');
+          return;
+        }
+      }
+
+      // Tap toggle selection
+      if (cell.classList.contains('selected')) {
+        cell.classList.remove('selected');
+        selectedCells = selectedCells.filter(c => c !== cell);
+      } else {
+        cell.classList.add('selected');
+        selectedCells.push(cell);
+      }
+
+      sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
+    });
+
+    // Add a Deselect All button
+    const mergeBar = document.querySelector('.bar');
+    const deselectBtn = document.createElement('button');
+    deselectBtn.textContent = 'Deselect All';
+    deselectBtn.onclick = () => {
+      selectedCells.forEach(cell => cell.classList.remove('selected'));
+      selectedCells = [];
+    };
+    mergeBar.appendChild(deselectBtn);
+
 </script>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; margin: 28px }
@@ -764,6 +807,49 @@
         tableCount--;
       }
     }
+
+
+
+    // Tap-to-select logic for merging cells (replaces Ctrl/Shift)
+    document.getElementById('tablesContainer').addEventListener('click', e => {
+      if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
+      const cell = e.target;
+
+      // Handle name insertion
+      if (selectedName !== null) {
+        if (cell.tagName === 'TD' && cell.contentEditable === 'true') {
+          cell.innerText = selectedName;
+          const highlightedSpan = nameListContainer.querySelector('.highlighted');
+          if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
+          selectedName = null;
+          return;
+        } else {
+          alert('Please select an editable cell.');
+          return;
+        }
+      }
+
+      // Tap toggle selection
+      if (cell.classList.contains('selected')) {
+        cell.classList.remove('selected');
+        selectedCells = selectedCells.filter(c => c !== cell);
+      } else {
+        cell.classList.add('selected');
+        selectedCells.push(cell);
+      }
+
+      sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
+    });
+
+    // Add a Deselect All button
+    const mergeBar = document.querySelector('.bar');
+    const deselectBtn = document.createElement('button');
+    deselectBtn.textContent = 'Deselect All';
+    deselectBtn.onclick = () => {
+      selectedCells.forEach(cell => cell.classList.remove('selected'));
+      selectedCells = [];
+    };
+    mergeBar.appendChild(deselectBtn);
 
 </script>
 </body>
