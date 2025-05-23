@@ -259,29 +259,36 @@
     function addNewTable() {
       tableCount++;
       const newTableId = `tbl_${tableCount}`;
-      const newTable = document.createElement('table');
-      newTable.id = newTableId;
-      newTable.innerHTML = `
-        <thead>
-          <tr>
-            <th contenteditable="true">7.15 – 8.15</th>
-            <th contenteditable="true">8.15 – 9.15</th>
-            <th contenteditable="true">9.15 – 10.15</th>
-            <th contenteditable="true">10.15 – 10.30 (REHAT)</th>
-            <th contenteditable="true">10.30 – 11.30</th>
-            <th contenteditable="true">11.30 – 12.30</th>
-            <th contenteditable="true">12.30 – 13.00</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-          <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-          <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-          <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-        </tbody>`;
-      tablesContainer.appendChild(newTable);
-      tableTabs.innerHTML += `<button onclick="switchTable('tbl_${tableCount}')">Table ${tableCount}</button>`;
-      switchTable(newTableId);
+      const newName = prompt('Enter a name for the new table:', `Table ${tableCount}`);
+      if (newName && newName.trim()) {
+        const trimmedName = newName.trim();
+        const newTable = document.createElement('table');
+        newTable.id = newTableId;
+        newTable.innerHTML = `
+          <thead>
+            <tr>
+              <th contenteditable="true">7.15 – 8.15</th>
+              <th contenteditable="true">8.15 – 9.15</th>
+              <th contenteditable="true">9.15 – 10.15</th>
+              <th contenteditable="true">10.15 – 10.30 (REHAT)</th>
+              <th contenteditable="true">10.30 – 11.30</th>
+              <th contenteditable="true">11.30 – 12.30</th>
+              <th contenteditable="true">12.30 – 13.00</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+          </tbody>`;
+        tablesContainer.appendChild(newTable);
+        tableTabs.innerHTML += `<button onclick="switchTable('tbl_${tableCount}')">${trimmedName}</button>`;
+        switchTable(newTableId);
+      } else if (newName !== null) {
+        alert('Please enter a valid name. New table not created.');
+        tableCount--; // Revert the count if no valid name is provided
+      }
     }
 
     function switchTable(tableId) {
@@ -294,7 +301,7 @@
       [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
     }
 
-    // New function to rename the active table
+    // Function to rename the active table
     function promptRenameTable() {
       const newName = prompt('Enter a new name for the table:', tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`).innerText);
       if (newName && newName.trim()) {
@@ -307,7 +314,7 @@
       }
     }
 
-    // New function to delete the active table
+    // Function to delete the active table
     function promptDeleteTable() {
       if (tablesContainer.querySelectorAll('table').length <= 1) {
         alert('Cannot delete the last table!');
@@ -369,7 +376,7 @@
           return { text: c.innerText.trim(), colspan, rowspan };
         }));
 
-        // Add table title (e.g., custom name or "Table X") if multiple tables
+        // Add table title (custom name or "Table X") if multiple tables
         const tabButton = tableTabs.querySelectorAll('button')[tableIdx];
         const tableTitle = tabButton ? tabButton.innerText : `Table ${tableIdx + 1}`;
         if (tables.length > 1) {
