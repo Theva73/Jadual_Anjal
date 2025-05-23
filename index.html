@@ -112,7 +112,7 @@
   <p id="msg">⚠️ SheetJS not found – export disabled.</p>
 
   <script>
-    const T = document.getElementById('tbl'),
+      const T = document.getElementById('tbl'),
           DRAFTS_KEY = 'jadual_drafts',
           pageHeader = document.querySelector('h2');
     let sel = { r: 0, c: 0 }; /* selected cell coords */
@@ -310,8 +310,7 @@
       // Reset last file name
       lastFileName = null;
     }
-
-    /* ---------- Excel file handling ---------- */
+        /* ---------- Excel file handling ---------- */
     function promptExcelExport() {
       const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
       if (sheetName && sheetName.trim()) {
@@ -347,22 +346,99 @@
         return;
       }
 
-      const aoa = [...T.rows].map(r => [...r.cells].map(c => {
+      // Prepare the data with the page header as the title
+      const headerText = pageHeader.innerText.trim();
+      const hasHeader = headerText !== '';
+      const tableData = [...T.rows].map(r => [...r.cells].map(c => {
         const colspan = c.getAttribute('colspan') || 1;
         const rowspan = c.getAttribute('rowspan') || 1;
         return { text: c.innerText.trim(), colspan, rowspan };
       }));
-      const ws = XLSX.utils.aoa_to_sheet(aoa.map(row => row.map(cell => cell.text)));
-      ws['!cols'] = Array(aoa[0].length).fill({ wch: 20 });
-      ws['!merges'] = aoa.reduce((merges, row, rIdx) => {
+      
+      // Add the page header as the first row if it exists
+      const aoa = hasHeader ? [[headerText]] : [];
+      aoa.push(...tableData.map(row => row.map(cell => cell.text)));
+
+      // Convert to worksheet
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+      // Calculate column widths dynamically based on content
+      const colWidths = Array(tableData[0].length).fill(0);
+      aoa.forEach((row, rIdx) => {
+        row.forEach((cell, cIdx) => {
+          if (cIdx < colWidths.length) {
+            const len = (cell || '').toString().length;
+            colWidths[cIdx] = Math.max(colWidths[cIdx], len);
+          }
+        });
+      });
+      ws['!cols'] = colWidths.map(w => ({ wch: Math.max(w + 2, 10) })); // Add padding, minimum width 10
+
+      // Define merges, adjusting for the title row if present
+      ws['!merges'] = tableData.reduce((merges, row, rIdx) => {
         row.forEach((cell, cIdx) => {
           if (cell.colspan > 1 || cell.rowspan > 1) {
-            merges.push({ s: { r: rIdx, c: cIdx }, e: { r: rIdx + cell.rowspan - 1, c: cIdx + cell.colspan - 1 } });
+            merges.push({
+              s: { r: rIdx + (hasHeader ? 1 : 0), c: cIdx },
+              e: { r: rIdx + (hasHeader ? 1 : 0) + cell.rowspan - 1, c: cIdx + cell.colspan - 1 }
+            });
           }
         });
         return merges;
       }, []);
-      ws['!pageSetup'] = { paperSize: 9, orientation: 'portrait', fitToWidth: 1, fitToHeight: 0 };
+      if (hasHeader) {
+        ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: tableData[0].length - 1 } }); // Merge title row
+      }
+
+      // Apply cell styling
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let r = range.s.r; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellAddress = XLSX.utils.encode_cell({ r, c });
+          if (!ws[cellAddress]) continue;
+
+          // Default style: center alignment, thin borders
+          ws[cellAddress].s = {
+            alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+            border: {
+              top: { style: 'thin', color: { rgb: '000000' } },
+              bottom: { style: 'thin', color: { rgb: '000000' } },
+              left: { style: 'thin', color: { rgb: '000000' } },
+              right: { style: 'thin', color: { rgb: '000000' } }
+            }
+          };
+
+          // Title row styling (first row if header exists)
+          if (hasHeader && r === 0) {
+            ws[cellAddress].s.font = { bold: true, sz: 14 };
+            ws[cellAddress].s.fill = { fgColor: { rgb: 'E6E6FA' } }; // Lavender background
+          }
+          // Header row styling (first row of table)
+          else if (r === (hasHeader ? 1 : 0)) {
+            ws[cellAddress].s.font = { bold: true };
+            ws[cellAddress].s.fill = { fgColor: { rgb: 'D3D3D3' } }; // Light grey background
+          }
+          // Highlight merged cells in the table body
+          else if (r > (hasHeader ? 1 : 0)) {
+            const rowIdx = r - (hasHeader ? 1 : 0);
+            const cellData = tableData[rowIdx][c];
+            if (cellData && (cellData.colspan > 1 || cellData.rowspan > 1)) {
+              ws[cellAddress].s.fill = { fgColor: { rgb: 'F0F0F0' } }; // Very light grey for merged cells
+              ws[cellAddress].s.font = { italic: true };
+            }
+          }
+        }
+      }
+
+      // Freeze the header row (and title row if present)
+      ws['!freeze'] = { xSplit: 0, ySplit: hasHeader ? 2 : 1 };
+
+      // Set print options
+      ws['!pageSetup'] = { paperSize: 9, orientation: 'landscape', fitToWidth: 1, fitToHeight: 0 };
+      ws['!margins'] = { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
+
+      // Define print area
+      ws['!printArea'] = { s: { r: 0, c: 0 }, e: { r: tableData.length + (hasHeader ? 1 : 0) - 1, c: tableData[0].length - 1 } };
 
       const wb = existingWorkbook || XLSX.utils.book_new();
       const trimmedSheetName = sheetName.slice(0, 31); // Excel sheet names are limited to 31 chars
