@@ -33,13 +33,14 @@
     .table-tabs button { padding: 6px 12px; background: #ddd; border: 1px solid #999; border-radius: 4px }
     .table-tabs button.active { background: #4CAF50; color: #fff }
     /* Modal Styles */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 1000 }
-    .modal-content { background: #fff; position: absolute; top: 20%; left: 20%; padding: 20px; width: 300px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); cursor: move }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); z-index: 1000 }
+    .modal-content { background: #fff; position: absolute; top: 50px; right: 50px; padding: 20px; width: 300px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); cursor: move }
     .modal-content h3 { margin: 0 0 10px }
     .modal-content input { width: 70%; padding: 5px; margin-right: 5px }
     .modal-content button { padding: 5px 10px; cursor: pointer }
     .name-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #ddd }
     .name-item:hover { background: #f0f0f0 }
+    .name-item span { flex-grow: 1; cursor: pointer }
     .name-item button { background: #ff4444; color: #fff; border: none; border-radius: 3px }
   </style>
 </head>
@@ -115,17 +116,16 @@
     // Load initial names or set default
     let names = JSON.parse(localStorage.getItem(NAMES_KEY)) || ['Teacher A', 'Teacher B', 'Teacher C'];
 
-    // Modified click event to handle both selection and name insertion
+    // Click event for table cells
     document.getElementById('tablesContainer').addEventListener('click', e => {
       if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
       const cell = e.target, isCtrlKey = e.ctrlKey || e.metaKey, isShiftKey = e.shiftKey;
 
-      // If a name is selected, insert it into the clicked cell
+      // Handle name insertion
       if (selectedName !== null) {
-        if (cell.tagName === 'TD' && cell.contentEditable === 'true') { // Ensure it's an editable cell
+        if (cell.tagName === 'TD' && cell.contentEditable === 'true') {
           cell.innerText = selectedName;
           alert(`Inserted "${selectedName}" into the cell.`);
-          // Do not reset selectedName, allowing continuous insertion
           return;
         } else {
           alert('Please select an editable cell (not a header).');
@@ -162,7 +162,8 @@
     let isDragging = false, currentX, currentY, initialX, initialY;
 
     modalContent.addEventListener('mousedown', e => {
-      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return; // Prevent dragging if clicking on buttons or input
+      // Only start dragging if clicking on the modal header or empty space (not on interactive elements)
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'SPAN') return;
       isDragging = true;
       initialX = e.clientX - currentX;
       initialY = e.clientY - currentY;
@@ -184,11 +185,7 @@
       modalContent.style.cursor = 'move';
     });
 
-    // Initialize modal position
-    currentX = window.innerWidth * 0.2; // 20% from left
-    currentY = window.innerHeight * 0.2; // 20% from top
-    modalContent.style.left = currentX + 'px';
-    modalContent.style.top = currentY + 'px';
+    // Initialize modal position (already set via CSS to top-right)
 
     function makeCell(row, isHeader = false) {
       const cell = isHeader ? row.insertCell(-1) : row.insertCell(-1);
@@ -431,7 +428,7 @@
         const div = document.createElement('div');
         div.className = 'name-item';
         div.innerHTML = `
-          <span onclick="selectName('${name}')" style="cursor: pointer;">${name}</span>
+          <span onclick="selectName('${name}')">${name}</span>
           <button onclick="deleteName('${name}')">Delete</button>
         `;
         nameListContainer.appendChild(div);
@@ -465,7 +462,6 @@
     function selectName(name) {
       selectedName = name;
       alert(`Selected "${name}". Click a cell to insert this name.`);
-      // Modal remains open, allowing continuous name selection
     }
         function promptExcelExport() {
       const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
