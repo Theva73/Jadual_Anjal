@@ -33,9 +33,10 @@
     .table-tabs button { padding: 6px 12px; background: #ddd; border: 1px solid #999; border-radius: 4px }
     .table-tabs button.active { background: #4CAF50; color: #fff }
     /* Modal Styles */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); z-index: 1000 }
-    .modal-content { background: #fff; position: absolute; top: 50px; right: 50px; padding: 20px; width: 300px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); cursor: move }
-    .modal-content h3 { margin: 0 0 10px }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: transparent; z-index: 1000; pointer-events: none }
+    .modal-content { background: #fff; position: absolute; top: 50px; right: 50px; padding: 20px; width: 300px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); pointer-events: auto }
+    .modal-header { cursor: move; padding-bottom: 10px; border-bottom: 1px solid #ddd }
+    .modal-content h3 { margin: 0 }
     .modal-content input { width: 70%; padding: 5px; margin-right: 5px }
     .modal-content button { padding: 5px 10px; cursor: pointer }
     .name-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #ddd }
@@ -93,7 +94,9 @@
   <!-- Name List Modal -->
   <div id="nameModal" class="modal">
     <div class="modal-content">
-      <h3>Name List</h3>
+      <div class="modal-header">
+        <h3>Name List</h3>
+      </div>
       <div>
         <input type="text" id="newNameInput" placeholder="Add new name">
         <button onclick="addName()">Add</button>
@@ -159,15 +162,19 @@
 
     // Make the modal draggable
     const modalContent = document.querySelector('.modal-content');
-    let isDragging = false, currentX, currentY, initialX, initialY;
+    const modalHeader = document.querySelector('.modal-header');
+    let isDragging = false, currentX = 0, currentY = 0, initialX = 0, initialY = 0;
 
-    modalContent.addEventListener('mousedown', e => {
-      // Only start dragging if clicking on the modal header or empty space (not on interactive elements)
-      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'SPAN') return;
+    // Set initial position (already set via CSS, but ensure variables are initialized)
+    const computedStyle = window.getComputedStyle(modalContent);
+    currentX = parseFloat(computedStyle.right) ? window.innerWidth - parseFloat(computedStyle.right) - modalContent.offsetWidth : 0;
+    currentY = parseFloat(computedStyle.top) || 0;
+
+    modalHeader.addEventListener('mousedown', e => {
       isDragging = true;
       initialX = e.clientX - currentX;
       initialY = e.clientY - currentY;
-      modalContent.style.cursor = 'grabbing';
+      modalHeader.style.cursor = 'grabbing';
     });
 
     document.addEventListener('mousemove', e => {
@@ -175,17 +182,21 @@
         e.preventDefault();
         currentX = e.clientX - initialX;
         currentY = e.clientY - initialY;
+        // Ensure the modal stays within the viewport
+        currentX = Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth));
+        currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
         modalContent.style.left = currentX + 'px';
         modalContent.style.top = currentY + 'px';
+        modalContent.style.right = 'auto'; // Override the initial 'right' positioning
       }
     });
 
     document.addEventListener('mouseup', () => {
-      isDragging = false;
-      modalContent.style.cursor = 'move';
+      if (isDragging) {
+        isDragging = false;
+        modalHeader.style.cursor = 'move';
+      }
     });
-
-    // Initialize modal position (already set via CSS to top-right)
 
     function makeCell(row, isHeader = false) {
       const cell = isHeader ? row.insertCell(-1) : row.insertCell(-1);
