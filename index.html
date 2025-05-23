@@ -21,6 +21,8 @@
     #mergeBtn { background: #6a5acd; color: #fff; border: none }
     #unmergeBtn { background: #cd5c5c; color: #fff; border: none }
     #addTableBtn { background: #ff69b4; color: #fff; border: none }
+    #renameTableBtn { background: #4682b4; color: #fff; border: none }
+    #deleteTableBtn { background: #dc143c; color: #fff; border: none }
     #msg { color: #c00; margin-top: 10px; display: none }
     #draftList { margin-top: 10px; padding: 5px; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; display: none }
     #draftList div { padding: 5px; cursor: pointer }
@@ -42,6 +44,8 @@
     <button id="mergeBtn" onclick="mergeCells()">🔗 Merge Cells</button>
     <button id="unmergeBtn" onclick="unmergeCells()">🔗 Unmerge Cells</button>
     <button id="addTableBtn" onclick="addNewTable()">✨ Add New Table</button>
+    <button id="renameTableBtn" onclick="promptRenameTable()">📝 Rename Table</button>
+    <button id="deleteTableBtn" onclick="promptDeleteTable()">❌ Delete Table</button>
   </div>
   <div id="draftList"></div>
   <div class="bar table-tabs" id="tableTabs"></div>
@@ -289,6 +293,36 @@
       selectedCells = [];
       [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
     }
+
+    // New function to rename the active table
+    function promptRenameTable() {
+      const newName = prompt('Enter a new name for the table:', tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`).innerText);
+      if (newName && newName.trim()) {
+        const trimmedName = newName.trim();
+        const activeButton = tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`);
+        activeButton.innerText = trimmedName;
+        alert(`Table renamed to "${trimmedName}"!`);
+      } else if (newName !== null) {
+        alert('Please enter a valid name.');
+      }
+    }
+
+    // New function to delete the active table
+    function promptDeleteTable() {
+      if (tablesContainer.querySelectorAll('table').length <= 1) {
+        alert('Cannot delete the last table!');
+        return;
+      }
+      if (confirm(`Are you sure you want to delete the table "${tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`).innerText}"?`)) {
+        const activeButton = tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`);
+        const nextTableId = tableTabs.querySelector('button:not(.active)')?.getAttribute('onclick')?.match(/switchTable\('(.+)'\)/)?.[1] || 'tbl_1';
+        document.getElementById(activeTableId).remove();
+        activeButton.remove();
+        switchTable(nextTableId);
+        tableCount = Math.max(...[...tablesContainer.querySelectorAll('table')].map(t => parseInt(t.id.replace('tbl_', ''))));
+        alert('Table deleted!');
+      }
+    }
         function promptExcelExport() {
       const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
       if (sheetName && sheetName.trim()) {
@@ -335,9 +369,11 @@
           return { text: c.innerText.trim(), colspan, rowspan };
         }));
 
-        // Add table title (e.g., "Table 1") if multiple tables
+        // Add table title (e.g., custom name or "Table X") if multiple tables
+        const tabButton = tableTabs.querySelectorAll('button')[tableIdx];
+        const tableTitle = tabButton ? tabButton.innerText : `Table ${tableIdx + 1}`;
         if (tables.length > 1) {
-          aoa[currentRow] = [`Table ${tableIdx + 1}`];
+          aoa[currentRow] = [tableTitle];
           merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 6 } });
           currentRow++;
         }
