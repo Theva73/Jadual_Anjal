@@ -20,6 +20,8 @@
     #loadDraftBtn { background: #ff8c00; color: #fff; border: none }
     #mergeBtn { background: #6a5acd; color: #fff; border: none }
     #unmergeBtn { background: #cd5c5c; color: #fff; border: none }
+    #selectBtn { background: #00ced1; color: #fff; border: none }
+    #selectBtn.active { background: #ff4500; } /* Visual cue for selection mode */
     #addTableBtn { background: #ff69b4; color: #fff; border: none }
     #renameTableBtn { background: #4682b4; color: #fff; border: none }
     #deleteTableBtn { background: #dc143c; color: #fff; border: none }
@@ -54,6 +56,7 @@
     <button id="saveDraftBtn" onclick="promptSaveDraft()">💠 Save Draft</button>
     <button id="loadDraftBtn" onclick="toggleDraftList()">📂 Load Draft</button>
     <button onclick="clearDraft()">🗑️ Clear Draft</button>
+    <button id="selectBtn" onclick="toggleSelectionMode()">✨ Select</button>
     <button id="mergeBtn" onclick="mergeCells()">🔗 Merge Cells</button>
     <button id="deselectBtn" onclick="deselectAll()">🚫 Deselect</button>
     <button id="unmergeBtn" onclick="unmergeCells()">🔗 Unmerge Cells</button>
@@ -113,13 +116,28 @@
         nameModal = document.getElementById('nameModal'), nameListContainer = document.getElementById('nameList'),
         newNameInput = document.getElementById('newNameInput'), NAMES_KEY = 'jadual_names';
     let sel = { r: 0, c: 0 }, lastFileName = null, selectedCells = [], activeTableId = 'tbl_1', tableCount = 1,
-        selectedName = null;
+        selectedName = null, selectionMode = false; // New flag for selection mode
 
     // Initialize first table tab
     tableTabs.innerHTML = `<button class="active" onclick="switchTable('tbl_1')">Table 1</button>`;
 
     // Load initial names or set default
     let names = JSON.parse(localStorage.getItem(NAMES_KEY)) || ['Teacher A', 'Teacher B', 'Teacher C'];
+
+    // Toggle selection mode for merging
+    function toggleSelectionMode() {
+        selectionMode = !selectionMode;
+        const selectBtn = document.getElementById('selectBtn');
+        if (selectionMode) {
+            selectBtn.classList.add('active');
+            selectBtn.innerText = '✨ Selecting...';
+            deselectAll(); // Clear any previous selections
+        } else {
+            selectBtn.classList.remove('active');
+            selectBtn.innerText = '✨ Select';
+            deselectAll(); // Clear selections when exiting selection mode
+        }
+    }
 
     // Click event for table cells
     document.getElementById('tablesContainer').addEventListener('click', e => {
@@ -139,15 +157,17 @@
             return;
         }
 
-        // Toggle selection by tap
-        if (cell.classList.contains('selected')) {
-            cell.classList.remove('selected');
-            selectedCells = selectedCells.filter(c => c !== cell);
-        } else {
-            cell.classList.add('selected');
-            selectedCells.push(cell);
+        // Only allow cell selection if in selection mode
+        if (selectionMode) {
+            if (cell.classList.contains('selected')) {
+                cell.classList.remove('selected');
+                selectedCells = selectedCells.filter(c => c !== cell);
+            } else {
+                cell.classList.add('selected');
+                selectedCells.push(cell);
+            }
+            sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
         }
-        sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
     });
 
     // Make the modal draggable
@@ -620,6 +640,10 @@
 
     // Cell merging function
     function mergeCells() {
+        if (!selectionMode) {
+            alert('Please click the "Select" button to choose cells for merging.');
+            return;
+        }
         if (selectedCells.length < 2) { 
             alert('Please select at least 2 cells to merge.'); 
             return; 
@@ -640,6 +664,8 @@
         topLeft.classList.add('merged');
         topLeft.innerText = content;
 
+        // Exit selection mode after merging
+        toggleSelectionMode();
         deselectAll();
     }
 
@@ -675,3 +701,4 @@
   </script>
 </body>
 </html>
+  
