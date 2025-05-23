@@ -731,8 +731,37 @@
       XLSX.writeFile(wb, fileName);
     }
 
+    
     function mergeCells() {
-      if (selectedCells.length < 2) { alert('Please select at least 2 cells to merge.'); return; }
+      setTimeout(() => {
+        if (selectedCells.length < 2) {
+          alert('Please select at least 2 cells to merge.');
+          return;
+        }
+
+        const rows = selectedCells.map(cell => cell.parentNode.rowIndex);
+        const cols = selectedCells.map(cell => cell.cellIndex);
+        const minRow = Math.min(...rows), maxRow = Math.max(...rows);
+        const minCol = Math.min(...cols), maxCol = Math.max(...cols);
+        const rowspan = maxRow - minRow + 1, colspan = maxCol - minCol + 1;
+
+        const topLeftCell = document.getElementById(activeTableId).rows[minRow].cells[minCol];
+        const mergedContent = topLeftCell.innerText;
+        selectedCells.forEach(cell => {
+          if (cell !== topLeftCell) cell.remove();
+        });
+
+        topLeftCell.setAttribute('rowspan', rowspan);
+        topLeftCell.setAttribute('colspan', colspan);
+        topLeftCell.classList.add('merged');
+        topLeftCell.innerText = mergedContent;
+
+        // Clear selection
+        selectedCells = [];
+        [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
+      }, 50); // slight delay to ensure latest selection is captured
+    }
+
       const rows = selectedCells.map(cell => cell.parentNode.rowIndex), cols = selectedCells.map(cell => cell.cellIndex),
             minRow = Math.min(...rows), maxRow = Math.max(...rows), minCol = Math.min(...cols), maxCol = Math.max(...cols),
             rowspan = maxRow - minRow + 1, colspan = maxCol - minCol + 1;
