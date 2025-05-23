@@ -12,7 +12,7 @@
     th, td { border: 1px solid #999; padding: 8px; text-align: center; min-width: 90px }
     th { background: #f2f2f2 }
     td.selected, th.selected { outline: 3px solid #ffdf6a }
-    .merged { background: #e0e0e0; font-style: italic }
+    .merged { font-style: italic } /* Removed background: #e0e0e0 to avoid gray fill */
     .bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px }
     .bar button { padding: 8px 12px; font-size: 14px; border-radius: 4px; cursor: pointer; border: 1px solid #666; background: #fff }
     #excelBtn { background: #2e8b57; color: #fff; border: none }
@@ -35,8 +35,28 @@
     .table-tabs button { padding: 6px 12px; background: #ddd; border: 1px solid #999; border-radius: 4px }
     .table-tabs button.active { background: #4CAF50; color: #fff }
     /* Modal Styles */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: transparent; z-index: 1000; pointer-events: none }
-    .modal-content { background: #fff; position: absolute; top: 50px; right: 50px; padding: 20px; width: 300px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); pointer-events: auto }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      z-index: 1000;
+      pointer-events: none; /* This causes clicks to pass through except modal-content */
+    }
+    .modal-content {
+      pointer-events: auto; /* Allows interaction only on the modal content */
+      background: #fff;
+      position: absolute;
+      top: 50px;
+      right: 50px;
+      padding: 20px;
+      width: 300px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
     .modal-header { cursor: move; padding-bottom: 10px; border-bottom: 1px solid #ddd }
     .modal-content h3 { margin: 0 }
     .modal-content input { width: 70%; padding: 5px; margin-right: 5px }
@@ -116,7 +136,7 @@
         nameModal = document.getElementById('nameModal'), nameListContainer = document.getElementById('nameList'),
         newNameInput = document.getElementById('newNameInput'), NAMES_KEY = 'jadual_names';
     let sel = { r: 0, c: 0 }, lastFileName = null, selectedCells = [], activeTableId = 'tbl_1', tableCount = 1,
-        selectedName = null, selectionMode = false; // New flag for selection mode
+        selectedName = null, selectionMode = false;
 
     // Initialize first table tab
     tableTabs.innerHTML = `<button class="active" onclick="switchTable('tbl_1')">Table 1</button>`;
@@ -182,39 +202,61 @@
     modalContent.style.right = 'auto';
 
     modalHeader.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        initialX = e.clientX - currentX;
-        initialY = e.clientY - currentY;
-        modalHeader.style.cursor = 'grabbing';
-        e.preventDefault(); // Prevent text selection or other default behaviors
+      isDragging = true;
+      initialX = e.clientX - currentX;
+      initialY = e.clientY - currentY;
+      modalHeader.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    modalHeader.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      const touch = e.touches[0];
+      initialX = touch.clientX - currentX;
+      initialY = touch.clientY - currentY;
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            currentX = e.clientX - initialX;
-            currentY = e.clientY - initialY;
+      if (isDragging) {
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
 
-            // Keep modal within viewport
-            currentX = Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth));
-            currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
+        // Keep modal within viewport
+        currentX = Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth));
+        currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
 
-            modalContent.style.left = currentX + 'px';
-            modalContent.style.top = currentY + 'px';
-        }
+        modalContent.style.left = currentX + 'px';
+        modalContent.style.top = currentY + 'px';
+      }
     });
 
+    document.addEventListener('touchmove', (e) => {
+      if (isDragging) {
+        const touch = e.touches[0];
+        currentX = touch.clientX - initialX;
+        currentY = touch.clientY - initialY;
+        modalContent.style.left = `${Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth))}px`;
+        modalContent.style.top = `${Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight))}px`;
+      }
+      e.preventDefault(); // Prevent scrolling while dragging
+    }, { passive: false });
+
     document.addEventListener('mouseup', () => {
-        if (isDragging) {
-            isDragging = false;
-            modalHeader.style.cursor = 'move';
-        }
+      if (isDragging) {
+        isDragging = false;
+        modalHeader.style.cursor = 'move';
+      }
+    });
+
+    document.addEventListener('touchend', () => {
+      isDragging = false;
     });
 
     // Prevent dragging when clicking on interactive elements within the header
     modalHeader.addEventListener('click', (e) => {
-        if (e.target.tagName === 'H3') {
-            e.stopPropagation();
-        }
+      if (e.target.tagName === 'H3') {
+        e.stopPropagation();
+      }
     });
         function makeCell(row, isHeader = false) {
         const cell = isHeader ? row.insertCell(-1) : row.insertCell(-1);
@@ -701,4 +743,3 @@
   </script>
 </body>
 </html>
-  
