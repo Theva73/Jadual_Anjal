@@ -23,6 +23,7 @@
     #addTableBtn { background: #ff69b4; color: #fff; border: none }
     #renameTableBtn { background: #4682b4; color: #fff; border: none }
     #deleteTableBtn { background: #dc143c; color: #fff; border: none }
+    #nameListBtn { background: #32cd32; color: #fff; border: none }
     #msg { color: #c00; margin-top: 10px; display: none }
     #draftList { margin-top: 10px; padding: 5px; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; display: none }
     #draftList div { padding: 5px; cursor: pointer }
@@ -31,6 +32,15 @@
     .table-tabs { display: flex; gap: 6px; margin-bottom: 10px }
     .table-tabs button { padding: 6px 12px; background: #ddd; border: 1px solid #999; border-radius: 4px }
     .table-tabs button.active { background: #4CAF50; color: #fff }
+    /* Modal Styles */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000 }
+    .modal-content { background: #fff; margin: 15% auto; padding: 20px; width: 300px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3) }
+    .modal-content h3 { margin: 0 0 10px }
+    .modal-content input { width: 70%; padding: 5px; margin-right: 5px }
+    .modal-content button { padding: 5px 10px; cursor: pointer }
+    .name-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #ddd }
+    .name-item:hover { background: #f0f0f0 }
+    .name-item button { background: #ff4444; color: #fff; border: none; border-radius: 3px }
   </style>
 </head>
 <body>
@@ -46,6 +56,7 @@
     <button id="addTableBtn" onclick="addNewTable()">✨ Add New Table</button>
     <button id="renameTableBtn" onclick="promptRenameTable()">📝 Rename Table</button>
     <button id="deleteTableBtn" onclick="promptDeleteTable()">❌ Delete Table</button>
+    <button id="nameListBtn" onclick="openNameList()">👥 Name List</button>
   </div>
   <div id="draftList"></div>
   <div class="bar table-tabs" id="tableTabs"></div>
@@ -78,17 +89,46 @@
     <button onclick="addColLeft()">⬅️ Col Left</button>
     <button onclick="addColRight()">➡️ Col Right</button>
   </div>
+  <!-- Name List Modal -->
+  <div id="nameModal" class="modal">
+    <div class="modal-content">
+      <h3>Name List</h3>
+      <div>
+        <input type="text" id="newNameInput" placeholder="Add new name">
+        <button onclick="addName()">Add</button>
+      </div>
+      <div id="nameList" style="margin-top: 10px; max-height: 200px; overflow-y: auto;"></div>
+      <button onclick="closeNameList()" style="margin-top: 10px;">Close</button>
+    </div>
+  </div>
   <script>
       const T = document.getElementById('tbl_1'), DRAFTS_KEY = 'jadual_drafts', pageHeader = document.querySelector('h2'),
-          tablesContainer = document.getElementById('tablesContainer'), tableTabs = document.getElementById('tableTabs');
-    let sel = { r: 0, c: 0 }, lastFileName = null, selectedCells = [], activeTableId = 'tbl_1', tableCount = 1;
+          tablesContainer = document.getElementById('tablesContainer'), tableTabs = document.getElementById('tableTabs'),
+          nameModal = document.getElementById('nameModal'), nameListContainer = document.getElementById('nameList'),
+          newNameInput = document.getElementById('newNameInput'), NAMES_KEY = 'jadual_names';
+    let sel = { r: 0, c: 0 }, lastFileName = null, selectedCells = [], activeTableId = 'tbl_1', tableCount = 1,
+        selectedName = null; // Tracks the name selected for insertion
 
     // Initialize first table tab
     tableTabs.innerHTML = `<button class="active" onclick="switchTable('tbl_1')">Table 1</button>`;
 
-    T.addEventListener('click', e => {
+    // Load initial names or set default
+    let names = JSON.parse(localStorage.getItem(NAMES_KEY)) || ['Teacher A', 'Teacher B', 'Teacher C'];
+
+    // Modified click event to handle both selection and name insertion
+    document.getElementById('tablesContainer').addEventListener('click', e => {
       if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
       const cell = e.target, isCtrlKey = e.ctrlKey || e.metaKey, isShiftKey = e.shiftKey;
+
+      // If a name is selected, insert it into the clicked cell
+      if (selectedName !== null) {
+        cell.innerText = selectedName;
+        selectedName = null; // Reset after insertion
+        alert(`Inserted "${cell.innerText}" into the cell.`);
+        return;
+      }
+
+      // Existing cell selection logic
       if (isCtrlKey || isShiftKey) {
         cell.classList.add('selected');
         selectedCells.push(cell);
@@ -287,7 +327,7 @@
         switchTable(newTableId);
       } else if (newName !== null) {
         alert('Please enter a valid name. New table not created.');
-        tableCount--; // Revert the count if no valid name is provided
+        tableCount--;
       }
     }
 
@@ -301,7 +341,6 @@
       [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
     }
 
-    // Function to rename the active table
     function promptRenameTable() {
       const newName = prompt('Enter a new name for the table:', tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`).innerText);
       if (newName && newName.trim()) {
@@ -314,7 +353,6 @@
       }
     }
 
-    // Function to delete the active table
     function promptDeleteTable() {
       if (tablesContainer.querySelectorAll('table').length <= 1) {
         alert('Cannot delete the last table!');
@@ -329,6 +367,61 @@
         tableCount = Math.max(...[...tablesContainer.querySelectorAll('table')].map(t => parseInt(t.id.replace('tbl_', ''))));
         alert('Table deleted!');
       }
+    }
+
+    // Name List Management Functions
+    function openNameList() {
+      nameModal.style.display = 'block';
+      updateNameList();
+    }
+
+    function closeNameList() {
+      nameModal.style.display = 'none';
+      selectedName = null;
+      newNameInput.value = '';
+    }
+
+    function updateNameList() {
+      nameListContainer.innerHTML = '';
+      names.forEach(name => {
+        const div = document.createElement('div');
+        div.className = 'name-item';
+        div.innerHTML = `
+          <span onclick="selectName('${name}')" style="cursor: pointer;">${name}</span>
+          <button onclick="deleteName('${name}')">Delete</button>
+        `;
+        nameListContainer.appendChild(div);
+      });
+    }
+
+    function addName() {
+      const newName = newNameInput.value.trim();
+      if (newName) {
+        if (names.includes(newName)) {
+          alert('Name already exists!');
+          return;
+        }
+        names.push(newName);
+        localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+        newNameInput.value = '';
+        updateNameList();
+      } else {
+        alert('Please enter a valid name.');
+      }
+    }
+
+    function deleteName(name) {
+      if (confirm(`Are you sure you want to delete "${name}" from the name list?`)) {
+        names = names.filter(n => n !== name);
+        localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+        updateNameList();
+      }
+    }
+
+    function selectName(name) {
+      selectedName = name;
+      closeNameList();
+      alert(`Selected "${name}". Click a cell to insert this name.`);
     }
         function promptExcelExport() {
       const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
@@ -376,7 +469,6 @@
           return { text: c.innerText.trim(), colspan, rowspan };
         }));
 
-        // Add table title (custom name or "Table X") if multiple tables
         const tabButton = tableTabs.querySelectorAll('button')[tableIdx];
         const tableTitle = tabButton ? tabButton.innerText : `Table ${tableIdx + 1}`;
         if (tables.length > 1) {
@@ -385,14 +477,12 @@
           currentRow++;
         }
 
-        // Add table data
         const tableStartRow = currentRow;
         tableData.forEach(row => {
           aoa[currentRow] = row.map(cell => cell.text);
           currentRow++;
         });
 
-        // Add merges for this table
         tableData.forEach((row, rIdx) => {
           row.forEach((cell, cIdx) => {
             if (cell.colspan > 1 || cell.rowspan > 1) {
@@ -404,7 +494,6 @@
           });
         });
 
-        // Add 2 empty rows as a gap (unless it's the last table)
         if (tableIdx < tables.length - 1) {
           aoa[currentRow] = [];
           aoa[currentRow + 1] = [];
@@ -415,8 +504,7 @@
       const ws = XLSX.utils.aoa_to_sheet(aoa);
       ws['!merges'] = merges;
 
-      // Calculate column widths
-      const colWidths = Array(7).fill(0); // Assuming 7 columns
+      const colWidths = Array(7).fill(0);
       aoa.forEach(row => {
         row.forEach((cell, cIdx) => {
           if (cIdx < colWidths.length) colWidths[cIdx] = Math.max(colWidths[cIdx], (cell || '').toString().length);
@@ -424,7 +512,6 @@
       });
       ws['!cols'] = colWidths.map(w => ({ wch: Math.max(w + 2, 10) }));
 
-      // Apply cell styling
       const range = XLSX.utils.decode_range(ws['!ref']);
       for (let r = range.s.r; r <= range.e.r; r++) {
         for (let c = range.s.c; c <= range.e.c; c++) {
