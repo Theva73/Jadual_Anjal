@@ -3,87 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title></title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-
-    function addNewTable() {
-      tableCount++;
-      const newTableId = `tbl_${tableCount}`;
-      const newName = prompt('Enter a name for the new table:', `Table ${tableCount}`);
-      if (newName && newName.trim()) {
-        const trimmedName = newName.trim();
-        const newTable = document.createElement('table');
-        newTable.id = newTableId;
-        newTable.innerHTML = `
-          <thead>
-            <tr>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-          </tbody>`;
-        tablesContainer.appendChild(newTable);
-        tableTabs.innerHTML += `<button onclick="switchTable('${newTableId}')">${trimmedName}</button>`;
-        switchTable(newTableId);
-      } else if (newName !== null) {
-        alert('Please enter a valid name. New table not created.');
-        tableCount--;
-      }
-    }
-
-
-
-    // Tap-to-select logic for merging cells (replaces Ctrl/Shift)
-    document.getElementById('tablesContainer').addEventListener('click', e => {
-      if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
-      const cell = e.target;
-
-      // Handle name insertion
-      if (selectedName !== null) {
-        if (cell.tagName === 'TD' && cell.contentEditable === 'true') {
-          cell.innerText = selectedName;
-          const highlightedSpan = nameListContainer.querySelector('.highlighted');
-          if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
-          selectedName = null;
-          return;
-        } else {
-          alert('Please select an editable cell.');
-          return;
-        }
-      }
-
-      // Tap toggle selection
-      if (cell.classList.contains('selected')) {
-        cell.classList.remove('selected');
-        selectedCells = selectedCells.filter(c => c !== cell);
-      } else {
-        cell.classList.add('selected');
-        selectedCells.push(cell);
-      }
-
-      sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
-    });
-
-    // Add a Deselect All button
-    const mergeBar = document.querySelector('.bar');
-    const deselectBtn = document.createElement('button');
-    deselectBtn.textContent = 'Deselect All';
-    deselectBtn.onclick = () => {
-      selectedCells.forEach(cell => cell.classList.remove('selected'));
-      selectedCells = [];
-    };
-    mergeBar.appendChild(deselectBtn);
-
-</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; margin: 28px }
     h2 { margin: 0 0 12px }
@@ -135,6 +55,7 @@
     <button id="loadDraftBtn" onclick="toggleDraftList()">📂 Load Draft</button>
     <button onclick="clearDraft()">🗑️ Clear Draft</button>
     <button id="mergeBtn" onclick="mergeCells()">🔗 Merge Cells</button>
+    <button id="deselectBtn" onclick="deselectAll()">🚫 Deselect</button>
     <button id="unmergeBtn" onclick="unmergeCells()">🔗 Unmerge Cells</button>
     <button id="addTableBtn" onclick="addNewTable()">✨ Add New Table</button>
     <button id="renameTableBtn" onclick="promptRenameTable()">📝 Rename Table</button>
@@ -145,7 +66,17 @@
   <div class="bar table-tabs" id="tableTabs"></div>
   <div id="tablesContainer">
     <table id="tbl_1" class="active">
-      <thead><tr><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
+      <thead>
+        <tr>
+          <th contenteditable="true">7.15 – 8.15</th>
+          <th contenteditable="true">8.15 – 9.15</th>
+          <th contenteditable="true">9.15 – 10.15</th>
+          <th contenteditable="true">10.15 – 10.30 (REHAT)</th>
+          <th contenteditable="true">10.30 – 11.30</th>
+          <th contenteditable="true">11.30 – 12.30</th>
+          <th contenteditable="true">12.30 – 13.00</th>
+        </tr>
+      </thead>
       <tbody>
         <tr><td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
         <tr><td contenteditable="true">5S2</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
@@ -191,26 +122,36 @@
     let names = JSON.parse(localStorage.getItem(NAMES_KEY)) || ['Teacher A', 'Teacher B', 'Teacher C'];
 
     // Click event for table cells
-    document.getElementById('tablesContainer').addEventListener('click', e => {
-      if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
-      const cell = e.target, isCtrlKey = e.ctrlKey || e.metaKey, isShiftKey = e.shiftKey;
+    
+document.getElementById('tablesContainer').addEventListener('click', e => {
+  if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
+  const cell = e.target;
+  const isNameInsertMode = selectedName !== null;
 
-      // Handle name insertion only if a name is highlighted
-      if (selectedName !== null) {
-        if (cell.tagName === 'TD' && cell.contentEditable === 'true') {
-          cell.innerText = selectedName;
-          // Remove highlight after insertion
-          const highlightedSpan = nameListContainer.querySelector('.highlighted');
-          if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
-          selectedName = null; // Reset selectedName after insertion
-          return;
-        } else {
-          alert('Please select an editable cell (not a header).');
-          return;
-        }
-      }
+  if (isNameInsertMode) {
+    if (cell.tagName === 'TD' && cell.isContentEditable) {
+      cell.innerText = selectedName;
+      const highlighted = nameListContainer.querySelector('.highlighted');
+      if (highlighted) highlighted.classList.remove('highlighted');
+      selectedName = null;
+    } else {
+      alert('Please tap an editable cell.');
+    }
+    return;
+  }
 
-      // Existing cell selection logic for merging
+  // Toggle selection by tap
+  if (cell.classList.contains('selected')) {
+    cell.classList.remove('selected');
+    selectedCells = selectedCells.filter(c => c !== cell);
+  } else {
+    cell.classList.add('selected');
+    selectedCells.push(cell);
+  }
+  sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
+});
+
+
       if (isCtrlKey || isShiftKey) {
         cell.classList.add('selected');
         selectedCells.push(cell);
@@ -268,35 +209,6 @@
     });
 
     document.addEventListener('mouseup', () => {
-
-    // Touch support for drag (enhanced for iPad/mobile)
-    modalHeader.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      const touch = e.touches[0];
-      initialX = touch.clientX - currentX;
-      initialY = touch.clientY - currentY;
-    });
-
-    document.addEventListener('touchmove', (e) => {
-      if (isDragging) {
-        const touch = e.touches[0];
-        currentX = touch.clientX - initialX;
-        currentY = touch.clientY - initialY;
-
-        currentX = Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth));
-        currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
-
-        modalContent.style.left = `${currentX}px`;
-        modalContent.style.top = `${currentY}px`;
-
-        e.preventDefault(); // Prevent screen scrolling while dragging
-      }
-    }, { passive: false });
-
-    document.addEventListener('touchend', () => {
-      isDragging = false;
-    });
-
       if (isDragging) {
         isDragging = false;
         modalHeader.style.cursor = 'move';
@@ -316,7 +228,9 @@
       else { cell.contentEditable = 'true'; cell.textContent = ''; }
     }
 
-    function addRowAbove() {
+    function deselectAll() { selectedCells.forEach(c => c.classList.remove('selected')); selectedCells = []; }
+
+function addRowAbove() {
       const activeTable = document.getElementById(activeTableId);
       const r = activeTable.insertRow(sel.r);
       for (let i = 0; i < activeTable.rows[0].cells.length; i++) makeCell(r);
@@ -732,50 +646,29 @@
     }
 
     
-    function mergeCells() {
-      setTimeout(() => {
-        if (selectedCells.length < 2) {
-          alert('Please select at least 2 cells to merge.');
-          return;
-        }
+window.mergeCells = function () {
+  if (selectedCells.length < 2) { alert('Please select at least 2 cells to merge.'); return; }
+  const rows = selectedCells.map(c => c.parentNode.rowIndex);
+  const cols = selectedCells.map(c => c.cellIndex);
+  const minRow = Math.min(...rows), maxRow = Math.max(...rows);
+  const minCol = Math.min(...cols), maxCol = Math.max(...cols);
+  const rowspan = maxRow - minRow + 1, colspan = maxCol - minCol + 1;
 
-        const rows = selectedCells.map(cell => cell.parentNode.rowIndex);
-        const cols = selectedCells.map(cell => cell.cellIndex);
-        const minRow = Math.min(...rows), maxRow = Math.max(...rows);
-        const minCol = Math.min(...cols), maxCol = Math.max(...cols);
-        const rowspan = maxRow - minRow + 1, colspan = maxCol - minCol + 1;
+  const topLeft = document.getElementById(activeTableId).rows[minRow].cells[minCol];
+  const content = topLeft.innerText;
 
-        const topLeftCell = document.getElementById(activeTableId).rows[minRow].cells[minCol];
-        const mergedContent = topLeftCell.innerText;
-        selectedCells.forEach(cell => {
-          if (cell !== topLeftCell) cell.remove();
-        });
+  selectedCells.forEach(c => { if (c !== topLeft) c.remove(); });
 
-        topLeftCell.setAttribute('rowspan', rowspan);
-        topLeftCell.setAttribute('colspan', colspan);
-        topLeftCell.classList.add('merged');
-        topLeftCell.innerText = mergedContent;
+  topLeft.setAttribute('rowspan', rowspan);
+  topLeft.setAttribute('colspan', colspan);
+  topLeft.classList.add('merged');
+  topLeft.innerText = content;
 
-        // Clear selection
-        selectedCells = [];
-        [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
-      }, 50); // slight delay to ensure latest selection is captured
-    }
+  deselectAll();
+};
 
-      const rows = selectedCells.map(cell => cell.parentNode.rowIndex), cols = selectedCells.map(cell => cell.cellIndex),
-            minRow = Math.min(...rows), maxRow = Math.max(...rows), minCol = Math.min(...cols), maxCol = Math.max(...cols),
-            rowspan = maxRow - minRow + 1, colspan = maxCol - minCol + 1;
-      const topLeftCell = document.getElementById(activeTableId).rows[minRow].cells[minCol], mergedContent = topLeftCell.innerText;
-      selectedCells.forEach(cell => { if (cell !== topLeftCell) cell.remove(); });
-      topLeftCell.setAttribute('rowspan', rowspan);
-      topLeftCell.setAttribute('colspan', colspan);
-      topLeftCell.classList.add('merged');
-      topLeftCell.innerText = mergedContent;
-      selectedCells = [];
-      [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
-    }
-
-    function unmergeCells() {
+window.unmergeCells = function () {
+() {
       const mergedCells = [...document.getElementById(activeTableId).querySelectorAll('.merged')];
       if (mergedCells.length === 0) { alert('No merged cells to unmerge.'); return; }
       mergedCells.forEach(cell => {
@@ -800,86 +693,6 @@
       selectedCells = [];
       [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
     }
-  
-
-    function addNewTable() {
-      tableCount++;
-      const newTableId = `tbl_${tableCount}`;
-      const newName = prompt('Enter a name for the new table:', `Table ${tableCount}`);
-      if (newName && newName.trim()) {
-        const trimmedName = newName.trim();
-        const newTable = document.createElement('table');
-        newTable.id = newTableId;
-        newTable.innerHTML = `
-          <thead>
-            <tr>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-              <th contenteditable="true"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-          </tbody>`;
-        tablesContainer.appendChild(newTable);
-        tableTabs.innerHTML += `<button onclick="switchTable('${newTableId}')">${trimmedName}</button>`;
-        switchTable(newTableId);
-      } else if (newName !== null) {
-        alert('Please enter a valid name. New table not created.');
-        tableCount--;
-      }
-    }
-
-
-
-    // Tap-to-select logic for merging cells (replaces Ctrl/Shift)
-    document.getElementById('tablesContainer').addEventListener('click', e => {
-      if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
-      const cell = e.target;
-
-      // Handle name insertion
-      if (selectedName !== null) {
-        if (cell.tagName === 'TD' && cell.contentEditable === 'true') {
-          cell.innerText = selectedName;
-          const highlightedSpan = nameListContainer.querySelector('.highlighted');
-          if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
-          selectedName = null;
-          return;
-        } else {
-          alert('Please select an editable cell.');
-          return;
-        }
-      }
-
-      // Tap toggle selection
-      if (cell.classList.contains('selected')) {
-        cell.classList.remove('selected');
-        selectedCells = selectedCells.filter(c => c !== cell);
-      } else {
-        cell.classList.add('selected');
-        selectedCells.push(cell);
-      }
-
-      sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
-    });
-
-    // Add a Deselect All button
-    const mergeBar = document.querySelector('.bar');
-    const deselectBtn = document.createElement('button');
-    deselectBtn.textContent = 'Deselect All';
-    deselectBtn.onclick = () => {
-      selectedCells.forEach(cell => cell.classList.remove('selected'));
-      selectedCells = [];
-    };
-    mergeBar.appendChild(deselectBtn);
-
-</script>
+  </script>
 </body>
 </html>
