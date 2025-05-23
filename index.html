@@ -107,13 +107,13 @@
       <button onclick="closeNameList()" style="margin-top: 10px;">Close</button>
     </div>
   </div>
-  <script>
-      const T = document.getElementById('tbl_1'), DRAFTS_KEY = 'jadual_drafts', pageHeader = document.querySelector('h2'),
-          tablesContainer = document.getElementById('tablesContainer'), tableTabs = document.getElementById('tableTabs'),
-          nameModal = document.getElementById('nameModal'), nameListContainer = document.getElementById('nameList'),
-          newNameInput = document.getElementById('newNameInput'), NAMES_KEY = 'jadual_names';
+    <script>
+    const T = document.getElementById('tbl_1'), DRAFTS_KEY = 'jadual_drafts', pageHeader = document.querySelector('h2'),
+        tablesContainer = document.getElementById('tablesContainer'), tableTabs = document.getElementById('tableTabs'),
+        nameModal = document.getElementById('nameModal'), nameListContainer = document.getElementById('nameList'),
+        newNameInput = document.getElementById('newNameInput'), NAMES_KEY = 'jadual_names';
     let sel = { r: 0, c: 0 }, lastFileName = null, selectedCells = [], activeTableId = 'tbl_1', tableCount = 1,
-        selectedName = null; // Tracks the name selected for insertion
+        selectedName = null;
 
     // Initialize first table tab
     tableTabs.innerHTML = `<button class="active" onclick="switchTable('tbl_1')">Table 1</button>`;
@@ -122,57 +122,32 @@
     let names = JSON.parse(localStorage.getItem(NAMES_KEY)) || ['Teacher A', 'Teacher B', 'Teacher C'];
 
     // Click event for table cells
-    
-document.getElementById('tablesContainer').addEventListener('click', e => {
-  if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
-  const cell = e.target;
-  const isNameInsertMode = selectedName !== null;
+    document.getElementById('tablesContainer').addEventListener('click', e => {
+        if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
+        const cell = e.target;
+        const isNameInsertMode = selectedName !== null;
 
-  if (isNameInsertMode) {
-    if (cell.tagName === 'TD' && cell.isContentEditable) {
-      cell.innerText = selectedName;
-      const highlighted = nameListContainer.querySelector('.highlighted');
-      if (highlighted) highlighted.classList.remove('highlighted');
-      selectedName = null;
-    } else {
-      alert('Please tap an editable cell.');
-    }
-    return;
-  }
-
-  // Toggle selection by tap
-  if (cell.classList.contains('selected')) {
-    cell.classList.remove('selected');
-    selectedCells = selectedCells.filter(c => c !== cell);
-  } else {
-    cell.classList.add('selected');
-    selectedCells.push(cell);
-  }
-  sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
-});
-
-
-      if (isCtrlKey || isShiftKey) {
-        cell.classList.add('selected');
-        selectedCells.push(cell);
-        if (isShiftKey && selectedCells.length > 1) {
-          const start = selectedCells[0], end = cell, startRow = start.parentNode.rowIndex,
-                startCol = start.cellIndex, endRow = end.parentNode.rowIndex, endCol = end.cellIndex;
-          for (let r = Math.min(startRow, endRow); r <= Math.max(startRow, endRow); r++)
-            for (let c = Math.min(startCol, endCol); c <= Math.max(startCol, endCol); c++) {
-              const cellToSelect = document.getElementById(activeTableId).rows[r].cells[c];
-              if (!cellToSelect.classList.contains('selected')) {
-                cellToSelect.classList.add('selected');
-                selectedCells.push(cellToSelect);
-              }
+        if (isNameInsertMode) {
+            if (cell.tagName === 'TD' && cell.isContentEditable) {
+                cell.innerText = selectedName;
+                const highlighted = nameListContainer.querySelector('.highlighted');
+                if (highlighted) highlighted.classList.remove('highlighted');
+                selectedName = null;
+            } else {
+                alert('Please tap an editable cell.');
             }
+            return;
         }
-      } else {
-        [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
-        selectedCells = [cell];
-        cell.classList.add('selected');
-      }
-      sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
+
+        // Toggle selection by tap
+        if (cell.classList.contains('selected')) {
+            cell.classList.remove('selected');
+            selectedCells = selectedCells.filter(c => c !== cell);
+        } else {
+            cell.classList.add('selected');
+            selectedCells.push(cell);
+        }
+        sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
     });
 
     // Make the modal draggable
@@ -187,511 +162,515 @@ document.getElementById('tablesContainer').addEventListener('click', e => {
     modalContent.style.right = 'auto';
 
     modalHeader.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      initialX = e.clientX - currentX;
-      initialY = e.clientY - currentY;
-      modalHeader.style.cursor = 'grabbing';
-      e.preventDefault(); // Prevent text selection or other default behaviors
+        isDragging = true;
+        initialX = e.clientX - currentX;
+        initialY = e.clientY - currentY;
+        modalHeader.style.cursor = 'grabbing';
+        e.preventDefault(); // Prevent text selection or other default behaviors
     });
 
     document.addEventListener('mousemove', (e) => {
-      if (isDragging) {
-        currentX = e.clientX - initialX;
-        currentY = e.clientY - initialY;
+        if (isDragging) {
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
 
-        // Keep modal within viewport
-        currentX = Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth));
-        currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
+            // Keep modal within viewport
+            currentX = Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth));
+            currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
 
-        modalContent.style.left = currentX + 'px';
-        modalContent.style.top = currentY + 'px';
-      }
+            modalContent.style.left = currentX + 'px';
+            modalContent.style.top = currentY + 'px';
+        }
     });
 
     document.addEventListener('mouseup', () => {
-      if (isDragging) {
-        isDragging = false;
-        modalHeader.style.cursor = 'move';
-      }
+        if (isDragging) {
+            isDragging = false;
+            modalHeader.style.cursor = 'move';
+        }
     });
 
     // Prevent dragging when clicking on interactive elements within the header
     modalHeader.addEventListener('click', (e) => {
-      if (e.target.tagName === 'H3') {
-        e.stopPropagation();
-      }
+        if (e.target.tagName === 'H3') {
+            e.stopPropagation();
+        }
     });
-
-    function makeCell(row, isHeader = false) {
-      const cell = isHeader ? row.insertCell(-1) : row.insertCell(-1);
-      if (isHeader) cell.outerHTML = '<th contenteditable="true"></th>';
-      else { cell.contentEditable = 'true'; cell.textContent = ''; }
+        function makeCell(row, isHeader = false) {
+        const cell = isHeader ? row.insertCell(-1) : row.insertCell(-1);
+        if (isHeader) cell.outerHTML = '<th contenteditable="true"></th>';
+        else { cell.contentEditable = 'true'; cell.textContent = ''; }
     }
 
-    function deselectAll() { selectedCells.forEach(c => c.classList.remove('selected')); selectedCells = []; }
+    function deselectAll() { 
+        selectedCells.forEach(c => c.classList.remove('selected')); 
+        selectedCells = []; 
+    }
 
-function addRowAbove() {
-      const activeTable = document.getElementById(activeTableId);
-      const r = activeTable.insertRow(sel.r);
-      for (let i = 0; i < activeTable.rows[0].cells.length; i++) makeCell(r);
+    function addRowAbove() {
+        const activeTable = document.getElementById(activeTableId);
+        const r = activeTable.insertRow(sel.r);
+        for (let i = 0; i < activeTable.rows[0].cells.length; i++) makeCell(r);
     }
 
     function addRowBelow() {
-      const activeTable = document.getElementById(activeTableId);
-      const r = activeTable.insertRow(sel.r + 1);
-      for (let i = 0; i < activeTable.rows[0].cells.length; i++) makeCell(r);
+        const activeTable = document.getElementById(activeTableId);
+        const r = activeTable.insertRow(sel.r + 1);
+        for (let i = 0; i < activeTable.rows[0].cells.length; i++) makeCell(r);
     }
 
     function addColLeft() {
-      const activeTable = document.getElementById(activeTableId);
-      for (const row of activeTable.rows) {
-        const c = row.insertCell(sel.c);
-        if (row.rowIndex) c.contentEditable = 'true';
-        else c.outerHTML = '<th contenteditable="true"></th>';
-      }
+        const activeTable = document.getElementById(activeTableId);
+        for (const row of activeTable.rows) {
+            const c = row.insertCell(sel.c);
+            if (row.rowIndex) c.contentEditable = 'true';
+            else c.outerHTML = '<th contenteditable="true"></th>';
+        }
     }
 
     function addColRight() {
-      const activeTable = document.getElementById(activeTableId);
-      for (const row of activeTable.rows) {
-        const c = row.insertCell(sel.c + 1);
-        if (row.rowIndex) c.contentEditable = 'true';
-        else c.outerHTML = '<th contenteditable="true"></th>';
-      }
+        const activeTable = document.getElementById(activeTableId);
+        for (const row of activeTable.rows) {
+            const c = row.insertCell(sel.c + 1);
+            if (row.rowIndex) c.contentEditable = 'true';
+            else c.outerHTML = '<th contenteditable="true"></th>';
+        }
     }
-        function tblArray(tableId) {
-      const table = document.getElementById(tableId);
-      return {
-        table: [...table.rows].map(r => [...r.cells].map(c => {
-          const colspan = c.getAttribute('colspan') || 1, rowspan = c.getAttribute('rowspan') || 1;
-          return { text: c.innerText.trim(), colspan, rowspan };
-        })),
-        header: pageHeader.innerText.trim()
-      };
+
+    function tblArray(tableId) {
+        const table = document.getElementById(tableId);
+        return {
+            table: [...table.rows].map(r => [...r.cells].map(c => {
+                const colspan = c.getAttribute('colspan') || 1, rowspan = c.getAttribute('rowspan') || 1;
+                return { text: c.innerText.trim(), colspan, rowspan };
+            })),
+            header: pageHeader.innerText.trim()
+        };
     }
 
     function arrayToTbl(a, tableId) {
-      const table = document.getElementById(tableId);
-      [...table.tBodies].forEach(tb => tb.remove());
-      const tb = table.createTBody();
-      for (let r = 1; r < a.table.length; r++) {
-        const tr = tb.insertRow(-1);
-        for (let c = 0; c < a.table[r].length; c++) {
-          const { text, colspan, rowspan } = a.table[r][c];
-          const td = tr.insertCell(-1);
-          td.contentEditable = 'true';
-          td.textContent = text;
-          if (colspan > 1) td.setAttribute('colspan', colspan);
-          if (rowspan > 1) td.setAttribute('rowspan', rowspan);
-          if (colspan > 1 || rowspan > 1) td.classList.add('merged');
+        const table = document.getElementById(tableId);
+        [...table.tBodies].forEach(tb => tb.remove());
+        const tb = table.createTBody();
+        for (let r = 1; r < a.table.length; r++) {
+            const tr = tb.insertRow(-1);
+            for (let c = 0; c < a.table[r].length; c++) {
+                const { text, colspan, rowspan } = a.table[r][c];
+                const td = tr.insertCell(-1);
+                td.contentEditable = 'true';
+                td.textContent = text;
+                if (colspan > 1) td.setAttribute('colspan', colspan);
+                if (rowspan > 1) td.setAttribute('rowspan', rowspan);
+                if (colspan > 1 || rowspan > 1) td.classList.add('merged');
+            }
         }
-      }
-      while (table.rows[0].cells.length < a.table[0].length) addColRight();
-      for (let c = 0; c < a.table[0].length; c++) {
-        table.rows[0].cells[c].innerText = a.table[0][c].text;
-        if (a.table[0][c].colspan > 1) table.rows[0].cells[c].setAttribute('colspan', a.table[0][c].colspan);
-        if (a.table[0][c].rowspan > 1) table.rows[0].cells[c].setAttribute('rowspan', a.table[0][c].rowspan);
-        if (a.table[0][c].colspan > 1 || a.table[0][c].rowspan > 1) table.rows[0].cells[c].classList.add('merged');
-      }
-      pageHeader.innerText = a.header || '';
+        while (table.rows[0].cells.length < a.table[0].length) addColRight();
+        for (let c = 0; c < a.table[0].length; c++) {
+            table.rows[0].cells[c].innerText = a.table[0][c].text;
+            if (a.table[0][c].colspan > 1) table.rows[0].cells[c].setAttribute('colspan', a.table[0][c].colspan);
+            if (a.table[0][c].rowspan > 1) table.rows[0].cells[c].setAttribute('rowspan', a.table[0][c].rowspan);
+            if (a.table[0][c].colspan > 1 || a.table[0][c].rowspan > 1) table.rows[0].cells[c].classList.add('merged');
+        }
+        pageHeader.innerText = a.header || '';
     }
 
     function getDrafts() {
-      const drafts = localStorage.getItem(DRAFTS_KEY);
-      return drafts ? JSON.parse(drafts) : {};
+        const drafts = localStorage.getItem(DRAFTS_KEY);
+        return drafts ? JSON.parse(drafts) : {};
     }
 
     function saveDraft(title) {
-      const drafts = getDrafts();
-      drafts[title] = { [activeTableId]: tblArray(activeTableId) };
-      localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-      alert(`Draft saved as "${title}" for ${activeTableId}!`);
-      updateDraftList();
+        const drafts = getDrafts();
+        drafts[title] = { [activeTableId]: tblArray(activeTableId) };
+        localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+        alert(`Draft saved as "${title}" for ${activeTableId}!`);
+        updateDraftList();
     }
 
     function promptSaveDraft() {
-      const title = prompt('Enter a title for this draft:');
-      if (title && title.trim()) {
-        const drafts = getDrafts();
-        const trimmedTitle = title.trim();
-        if (drafts[trimmedTitle] && !confirm(`A draft named "${trimmedTitle}" already exists. Do you want to overwrite it?`)) return;
-        saveDraft(trimmedTitle);
-      } else if (title !== null) alert('Please enter a valid title.');
+        const title = prompt('Enter a title for this draft:');
+        if (title && title.trim()) {
+            const drafts = getDrafts();
+            const trimmedTitle = title.trim();
+            if (drafts[trimmedTitle] && !confirm(`A draft named "${trimmedTitle}" already exists. Do you want to overwrite it?`)) return;
+            saveDraft(trimmedTitle);
+        } else if (title !== null) alert('Please enter a valid title.');
     }
 
     function loadDraft(title) {
-      const drafts = getDrafts();
-      if (drafts[title] && drafts[title][activeTableId]) {
-        arrayToTbl(drafts[title][activeTableId], activeTableId);
-        alert(`Loaded draft "${title}" for ${activeTableId}!`);
-      }
-      toggleDraftList();
+        const drafts = getDrafts();
+        if (drafts[title] && drafts[title][activeTableId]) {
+            arrayToTbl(drafts[title][activeTableId], activeTableId);
+            alert(`Loaded draft "${title}" for ${activeTableId}!`);
+        }
+        toggleDraftList();
     }
 
     function updateDraftList() {
-      const drafts = getDrafts();
-      const draftList = document.getElementById('draftList');
-      draftList.innerHTML = '';
-      const titles = Object.keys(drafts);
-      if (titles.length === 0) {
-        draftList.style.display = 'none';
-        return;
-      }
-      titles.forEach(title => {
-        const div = document.createElement('div');
-        div.innerText = title;
-        div.onclick = () => loadDraft(title);
-        draftList.appendChild(div);
-      });
-      draftList.style.display = 'block';
+        const drafts = getDrafts();
+        const draftList = document.getElementById('draftList');
+        draftList.innerHTML = '';
+        const titles = Object.keys(drafts);
+        if (titles.length === 0) {
+            draftList.style.display = 'none';
+            return;
+        }
+        titles.forEach(title => {
+            const div = document.createElement('div');
+            div.innerText = title;
+            div.onclick = () => loadDraft(title);
+            draftList.appendChild(div);
+        });
+        draftList.style.display = 'block';
     }
 
     function toggleDraftList() {
-      const draftList = document.getElementById('draftList');
-      draftList.style.display = draftList.style.display === 'block' ? 'none' : 'block';
-      updateDraftList();
+        const draftList = document.getElementById('draftList');
+        draftList.style.display = draftList.style.display === 'block' ? 'none' : 'block';
+        updateDraftList();
     }
 
     function clearDraft() {
-      alert('Draft cleared! Reverting to empty table...');
-      const activeTable = document.getElementById(activeTableId);
-      [...activeTable.tBodies].forEach(tb => tb.remove());
-      const tb = activeTable.createTBody();
-      for (let c = 0; c < activeTable.rows[0].cells.length; c++) {
-        activeTable.rows[0].cells[c].innerText = '';
-        activeTable.rows[0].cells[c].removeAttribute('colspan');
-        activeTable.rows[0].cells[c].removeAttribute('rowspan');
-        activeTable.rows[0].cells[c].classList.remove('merged');
-      }
-      pageHeader.innerText = '';
-      document.getElementById('draftList').style.display = 'none';
-      lastFileName = null;
+        alert('Draft cleared! Reverting to empty table...');
+        const activeTable = document.getElementById(activeTableId);
+        [...activeTable.tBodies].forEach(tb => tb.remove());
+        const tb = activeTable.createTBody();
+        for (let c = 0; c < activeTable.rows[0].cells.length; c++) {
+            activeTable.rows[0].cells[c].innerText = '';
+            activeTable.rows[0].cells[c].removeAttribute('colspan');
+            activeTable.rows[0].cells[c].removeAttribute('rowspan');
+            activeTable.rows[0].cells[c].classList.remove('merged');
+        }
+        pageHeader.innerText = '';
+        document.getElementById('draftList').style.display = 'none';
+        lastFileName = null;
     }
 
     function addNewTable() {
-      tableCount++;
-      const newTableId = `tbl_${tableCount}`;
-      const newName = prompt('Enter a name for the new table:', `Table ${tableCount}`);
-      if (newName && newName.trim()) {
-        const trimmedName = newName.trim();
-        const newTable = document.createElement('table');
-        newTable.id = newTableId;
-        newTable.innerHTML = `
-          <thead>
-            <tr>
-              <th contenteditable="true">7.15 – 8.15</th>
-              <th contenteditable="true">8.15 – 9.15</th>
-              <th contenteditable="true">9.15 – 10.15</th>
-              <th contenteditable="true">10.15 – 10.30 (REHAT)</th>
-              <th contenteditable="true">10.30 – 11.30</th>
-              <th contenteditable="true">11.30 – 12.30</th>
-              <th contenteditable="true">12.30 – 13.00</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-            <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-          </tbody>`;
-        tablesContainer.appendChild(newTable);
-        tableTabs.innerHTML += `<button onclick="switchTable('tbl_${tableCount}')">${trimmedName}</button>`;
-        switchTable(newTableId);
-      } else if (newName !== null) {
-        alert('Please enter a valid name. New table not created.');
-        tableCount--;
-      }
+        tableCount++;
+        const newTableId = `tbl_${tableCount}`;
+        const newName = prompt('Enter a name for the new table:', `Table ${tableCount}`);
+        if (newName && newName.trim()) {
+            const trimmedName = newName.trim();
+            const newTable = document.createElement('table');
+            newTable.id = newTableId;
+            newTable.innerHTML = `
+                <thead>
+                    <tr>
+                        <th contenteditable="true">7.15 – 8.15</th>
+                        <th contenteditable="true">8.15 – 9.15</th>
+                        <th contenteditable="true">9.15 – 10.15</th>
+                        <th contenteditable="true">10.15 – 10.30 (REHAT)</th>
+                        <th contenteditable="true">10.30 – 11.30</th>
+                        <th contenteditable="true">11.30 – 12.30</th>
+                        <th contenteditable="true">12.30 – 13.00</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+                    <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+                    <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+                    <tr><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+                </tbody>`;
+            tablesContainer.appendChild(newTable);
+            tableTabs.innerHTML += `<button onclick="switchTable('tbl_${tableCount}')">${trimmedName}</button>`;
+            switchTable(newTableId);
+        } else if (newName !== null) {
+            alert('Please enter a valid name. New table not created.');
+            tableCount--;
+        }
     }
 
     function switchTable(tableId) {
-      activeTableId = tableId;
-      [...tablesContainer.querySelectorAll('table')].forEach(t => t.classList.remove('active'));
-      document.getElementById(tableId).classList.add('active');
-      [...tableTabs.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
-      tableTabs.querySelector(`button[onclick="switchTable('${tableId}')"]`).classList.add('active');
-      selectedCells = [];
-      [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
+        activeTableId = tableId;
+        [...tablesContainer.querySelectorAll('table')].forEach(t => t.classList.remove('active'));
+        document.getElementById(tableId).classList.add('active');
+        [...tableTabs.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+        tableTabs.querySelector(`button[onclick="switchTable('${tableId}')"]`).classList.add('active');
+        selectedCells = [];
+        [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
     }
 
     function promptRenameTable() {
-      const newName = prompt('Enter a new name for the table:', tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`).innerText);
-      if (newName && newName.trim()) {
-        const trimmedName = newName.trim();
-        const activeButton = tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`);
-        activeButton.innerText = trimmedName;
-        alert(`Table renamed to "${trimmedName}"!`);
-      } else if (newName !== null) {
-        alert('Please enter a valid name.');
-      }
+        const newName = prompt('Enter a new name for the table:', tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`).innerText);
+        if (newName && newName.trim()) {
+            const trimmedName = newName.trim();
+            const activeButton = tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`);
+            activeButton.innerText = trimmedName;
+            alert(`Table renamed to "${trimmedName}"!`);
+        } else if (newName !== null) {
+            alert('Please enter a valid name.');
+        }
     }
 
     function promptDeleteTable() {
-      if (tablesContainer.querySelectorAll('table').length <= 1) {
-        alert('Cannot delete the last table!');
-        return;
-      }
-      if (confirm(`Are you sure you want to delete the table "${tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`).innerText}"?`)) {
-        const activeButton = tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`);
-        const nextTableId = tableTabs.querySelector('button:not(.active)')?.getAttribute('onclick')?.match(/switchTable\('(.+)'\)/)?.[1] || 'tbl_1';
-        document.getElementById(activeTableId).remove();
-        activeButton.remove();
-        switchTable(nextTableId);
-        tableCount = Math.max(...[...tablesContainer.querySelectorAll('table')].map(t => parseInt(t.id.replace('tbl_', ''))));
-        alert('Table deleted!');
-      }
+        if (tablesContainer.querySelectorAll('table').length <= 1) {
+            alert('Cannot delete the last table!');
+            return;
+        }
+        if (confirm(`Are you sure you want to delete the table "${tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`).innerText}"?`)) {
+            const activeButton = tableTabs.querySelector(`button[onclick="switchTable('${activeTableId}')"]`);
+            const nextTableId = tableTabs.querySelector('button:not(.active)')?.getAttribute('onclick')?.match(/switchTable\('(.+)'\)/)?.[1] || 'tbl_1';
+            document.getElementById(activeTableId).remove();
+            activeButton.remove();
+            switchTable(nextTableId);
+            tableCount = Math.max(...[...tablesContainer.querySelectorAll('table')].map(t => parseInt(t.id.replace('tbl_', ''))));
+            alert('Table deleted!');
+        }
     }
-
-    // Name List Management Functions
+        // Name List Management Functions
     function toggleNameList() {
-      const isVisible = nameModal.style.display === 'block';
-      if (isVisible) {
-        nameModal.style.display = 'none';
-        selectedName = null;
-        // Remove any existing highlight when closing
-        const highlightedSpan = nameListContainer.querySelector('.highlighted');
-        if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
-      } else {
-        nameModal.style.display = 'block';
-        updateNameList();
-      }
+        const isVisible = nameModal.style.display === 'block';
+        if (isVisible) {
+            nameModal.style.display = 'none';
+            selectedName = null;
+            const highlightedSpan = nameListContainer.querySelector('.highlighted');
+            if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
+        } else {
+            nameModal.style.display = 'block';
+            updateNameList();
+        }
     }
 
     function closeNameList() {
-      nameModal.style.display = 'none';
-      selectedName = null;
-      newNameInput.value = '';
-      // Remove any existing highlight when closing
-      const highlightedSpan = nameListContainer.querySelector('.highlighted');
-      if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
+        nameModal.style.display = 'none';
+        selectedName = null;
+        newNameInput.value = '';
+        const highlightedSpan = nameListContainer.querySelector('.highlighted');
+        if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
     }
 
     function updateNameList() {
-      nameListContainer.innerHTML = '';
-      names.forEach(name => {
-        const div = document.createElement('div');
-        div.className = 'name-item';
-        div.innerHTML = `
-          <span onclick="selectName('${name}')" data-name="${name}">${name}</span>
-          <button onclick="deleteName('${name}')">Delete</button>
-        `;
-        nameListContainer.appendChild(div);
-      });
+        nameListContainer.innerHTML = '';
+        names.forEach(name => {
+            const div = document.createElement('div');
+            div.className = 'name-item';
+            div.innerHTML = `
+                <span onclick="selectName('${name}')" data-name="${name}">${name}</span>
+                <button onclick="deleteName('${name}')">Delete</button>
+            `;
+            nameListContainer.appendChild(div);
+        });
     }
 
     function addName() {
-      const newName = newNameInput.value.trim();
-      if (newName) {
-        if (names.includes(newName)) {
-          alert('Name already exists!');
-          return;
+        const newName = newNameInput.value.trim();
+        if (newName) {
+            if (names.includes(newName)) {
+                alert('Name already exists!');
+                return;
+            }
+            names.push(newName);
+            localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+            newNameInput.value = '';
+            updateNameList();
+        } else {
+            alert('Please enter a valid name.');
         }
-        names.push(newName);
-        localStorage.setItem(NAMES_KEY, JSON.stringify(names));
-        newNameInput.value = '';
-        updateNameList();
-      } else {
-        alert('Please enter a valid name.');
-      }
     }
 
     function deleteName(name) {
-      if (confirm(`Are you sure you want to delete "${name}" from the name list?`)) {
-        names = names.filter(n => n !== name);
-        localStorage.setItem(NAMES_KEY, JSON.stringify(names));
-        updateNameList();
-      }
+        if (confirm(`Are you sure you want to delete "${name}" from the name list?`)) {
+            names = names.filter(n => n !== name);
+            localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+            updateNameList();
+        }
     }
 
     function selectName(name) {
-      // Remove highlight from any previously selected name
-      const previouslyHighlighted = nameListContainer.querySelector('.highlighted');
-      if (previouslyHighlighted) previouslyHighlighted.classList.remove('highlighted');
-
-      // Highlight the newly selected name
-      const span = nameListContainer.querySelector(`span[data-name="${name}"]`);
-      if (span) {
-        span.classList.add('highlighted');
-        selectedName = name;
-      }
+        const previouslyHighlighted = nameListContainer.querySelector('.highlighted');
+        if (previouslyHighlighted) previouslyHighlighted.classList.remove('highlighted');
+        const span = nameListContainer.querySelector(`span[data-name="${name}"]`);
+        if (span) {
+            span.classList.add('highlighted');
+            selectedName = name;
+        }
     }
-        function promptExcelExport() {
-      const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
-      if (sheetName && sheetName.trim()) {
-        const trimmedSheetName = sheetName.trim().slice(0, 31);
-        handleExcelFile({ target: { files: [] } }, trimmedSheetName);
-      } else if (sheetName !== null) alert('Please enter a valid sheet title.');
+
+    function promptExcelExport() {
+        const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
+        if (sheetName && sheetName.trim()) {
+            const trimmedSheetName = sheetName.trim().slice(0, 31);
+            handleExcelFile({ target: { files: [] } }, trimmedSheetName);
+        } else if (sheetName !== null) alert('Please enter a valid sheet title.');
     }
 
     function handleExcelFile(event, customSheetName = null) {
-      const file = event.target.files[0];
-      if (file) {
-        lastFileName = file.name;
-        const reader = new FileReader();
-        reader.onload = e => {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          exportExcel(workbook, customSheetName || 'Schedule');
-        };
-        reader.readAsArrayBuffer(file);
-        event.target.value = '';
-      } else {
-        exportExcel(null, customSheetName || 'Schedule');
-      }
+        const file = event.target.files[0];
+        if (file) {
+            lastFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                exportExcel(workbook, customSheetName || 'Schedule');
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        } else {
+            exportExcel(null, customSheetName || 'Schedule');
+        }
     }
 
     function exportExcel(existingWorkbook, sheetName) {
-      const msg = document.getElementById('msg');
-      msg.style.display = 'none';
-      if (typeof XLSX === 'undefined') {
-        msg.style.display = 'block';
-        return;
-      }
-
-      const headerText = pageHeader.innerText.trim();
-      const hasHeader = headerText !== '';
-      let aoa = hasHeader ? [[headerText]] : [];
-      let merges = hasHeader ? [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }] : [];
-      let currentRow = hasHeader ? 1 : 0;
-
-      const tables = [...tablesContainer.querySelectorAll('table')];
-      tables.forEach((table, tableIdx) => {
-        const tableData = [...table.rows].map(r => [...r.cells].map(c => {
-          const colspan = c.getAttribute('colspan') || 1, rowspan = c.getAttribute('rowspan') || 1;
-          return { text: c.innerText.trim(), colspan, rowspan };
-        }));
-
-        const tabButton = tableTabs.querySelectorAll('button')[tableIdx];
-        const tableTitle = tabButton ? tabButton.innerText : `Table ${tableIdx + 1}`;
-        if (tables.length > 1) {
-          aoa[currentRow] = [tableTitle];
-          merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 6 } });
-          currentRow++;
+        const msg = document.getElementById('msg');
+        msg.style.display = 'none';
+        if (typeof XLSX === 'undefined') {
+            msg.style.display = 'block';
+            return;
         }
 
-        const tableStartRow = currentRow;
-        tableData.forEach(row => {
-          aoa[currentRow] = row.map(cell => cell.text);
-          currentRow++;
-        });
+        const headerText = pageHeader.innerText.trim();
+        const hasHeader = headerText !== '';
+        let aoa = hasHeader ? [[headerText]] : [];
+        let merges = hasHeader ? [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }] : [];
+        let currentRow = hasHeader ? 1 : 0;
 
-        tableData.forEach((row, rIdx) => {
-          row.forEach((cell, cIdx) => {
-            if (cell.colspan > 1 || cell.rowspan > 1) {
-              merges.push({
-                s: { r: tableStartRow + rIdx, c: cIdx },
-                e: { r: tableStartRow + rIdx + cell.rowspan - 1, c: cIdx + cell.colspan - 1 }
-              });
+        const tables = [...tablesContainer.querySelectorAll('table')];
+        tables.forEach((table, tableIdx) => {
+            const tableData = [...table.rows].map(r => [...r.cells].map(c => {
+                const colspan = c.getAttribute('colspan') || 1, rowspan = c.getAttribute('rowspan') || 1;
+                return { text: c.innerText.trim(), colspan, rowspan };
+            }));
+
+            const tabButton = tableTabs.querySelectorAll('button')[tableIdx];
+            const tableTitle = tabButton ? tabButton.innerText : `Table ${tableIdx + 1}`;
+            if (tables.length > 1) {
+                aoa[currentRow] = [tableTitle];
+                merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 6 } });
+                currentRow++;
             }
-          });
+
+            const tableStartRow = currentRow;
+            tableData.forEach(row => {
+                aoa[currentRow] = row.map(cell => cell.text);
+                currentRow++;
+            });
+
+            tableData.forEach((row, rIdx) => {
+                row.forEach((cell, cIdx) => {
+                    if (cell.colspan > 1 || cell.rowspan > 1) {
+                        merges.push({
+                            s: { r: tableStartRow + rIdx, c: cIdx },
+                            e: { r: tableStartRow + rIdx + cell.rowspan - 1, c: cIdx + cell.colspan - 1 }
+                        });
+                    }
+                });
+            });
+
+            if (tableIdx < tables.length - 1) {
+                aoa[currentRow] = [];
+                aoa[currentRow + 1] = [];
+                currentRow += 2;
+            }
         });
 
-        if (tableIdx < tables.length - 1) {
-          aoa[currentRow] = [];
-          aoa[currentRow + 1] = [];
-          currentRow += 2;
-        }
-      });
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        ws['!merges'] = merges;
 
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
-      ws['!merges'] = merges;
-
-      const colWidths = Array(7).fill(0);
-      aoa.forEach(row => {
-        row.forEach((cell, cIdx) => {
-          if (cIdx < colWidths.length) colWidths[cIdx] = Math.max(colWidths[cIdx], (cell || '').toString().length);
+        const colWidths = Array(7).fill(0);
+        aoa.forEach(row => {
+            row.forEach((cell, cIdx) => {
+                if (cIdx < colWidths.length) colWidths[cIdx] = Math.max(colWidths[cIdx], (cell || '').toString().length);
+            });
         });
-      });
-      ws['!cols'] = colWidths.map(w => ({ wch: Math.max(w + 2, 10) }));
+        ws['!cols'] = colWidths.map(w => ({ wch: Math.max(w + 2, 10) }));
 
-      const range = XLSX.utils.decode_range(ws['!ref']);
-      for (let r = range.s.r; r <= range.e.r; r++) {
-        for (let c = range.s.c; c <= range.e.c; c++) {
-          const cellAddress = XLSX.utils.encode_cell({ r, c });
-          if (!ws[cellAddress]) continue;
-          ws[cellAddress].s = {
-            alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-            border: { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } },
-                     left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } }
-          };
-          if (hasHeader && r === 0) {
-            ws[cellAddress].s.font = { bold: true, sz: 14 };
-            ws[cellAddress].s.fill = { fgColor: { rgb: 'E6E6FA' } };
-          } else if (tables.some((_, idx) => r === (hasHeader ? 1 : 0) + idx * (tables[idx].rows.length + (idx > 0 ? 3 : 1)))) {
-            ws[cellAddress].s.font = { bold: true };
-            ws[cellAddress].s.fill = { fgColor: { rgb: 'D3D3D3' } };
-          } else if (tables.some((_, idx) => r === (hasHeader ? 1 : 0) + idx * (tables[idx].rows.length + (idx > 0 ? 3 : 1)) - (idx > 0 ? 1 : 0) && idx > 0)) {
-            ws[cellAddress].s.font = { italic: true };
-            ws[cellAddress].s.fill = { fgColor: { rgb: 'F0F0F0' } };
-          }
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let r = range.s.r; r <= range.e.r; r++) {
+            for (let c = range.s.c; c <= range.e.c; c++) {
+                const cellAddress = XLSX.utils.encode_cell({ r, c });
+                if (!ws[cellAddress]) continue;
+                ws[cellAddress].s = {
+                    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+                    border: { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } },
+                            left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } }
+                };
+                if (hasHeader && r === 0) {
+                    ws[cellAddress].s.font = { bold: true, sz: 14 };
+                    ws[cellAddress].s.fill = { fgColor: { rgb: 'E6E6FA' } };
+                } else if (tables.some((_, idx) => r === (hasHeader ? 1 : 0) + idx * (tables[idx].rows.length + (idx > 0 ? 3 : 1)))) {
+                    ws[cellAddress].s.font = { bold: true };
+                    ws[cellAddress].s.fill = { fgColor: { rgb: 'D3D3D3' } };
+                } else if (tables.some((_, idx) => r === (hasHeader ? 1 : 0) + idx * (tables[idx].rows.length + (idx > 0 ? 3 : 1)) - (idx > 0 ? 1 : 0) && idx > 0)) {
+                    ws[cellAddress].s.font = { italic: true };
+                    ws[cellAddress].s.fill = { fgColor: { rgb: 'F0F0F0' } };
+                }
+            }
         }
-      }
 
-      ws['!freeze'] = { xSplit: 0, ySplit: hasHeader ? 1 : 0 };
-      ws['!pageSetup'] = { paperSize: 9, orientation: 'landscape', fitToWidth: 1, fitToHeight: 0 };
-      ws['!margins'] = { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
-      ws['!printArea'] = { s: { r: 0, c: 0 }, e: { r: currentRow - 1, c: 6 } };
+        ws['!freeze'] = { xSplit: 0, ySplit: hasHeader ? 1 : 0 };
+        ws['!pageSetup'] = { paperSize: 9, orientation: 'landscape', fitToWidth: 1, fitToHeight: 0 };
+        ws['!margins'] = { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 };
+        ws['!printArea'] = { s: { r: 0, c: 0 }, e: { r: currentRow - 1, c: 6 } };
 
-      const wb = existingWorkbook || XLSX.utils.book_new();
-      const trimmedSheetName = sheetName.slice(0, 31);
-      if (existingWorkbook && existingWorkbook.SheetNames.length > 0) {
-        existingWorkbook.Sheets[existingWorkbook.SheetNames[0]] = ws;
-        existingWorkbook.SheetNames[0] = trimmedSheetName;
-      } else {
-        XLSX.utils.book_append_sheet(wb, ws, trimmedSheetName);
-      }
+        const wb = existingWorkbook || XLSX.utils.book_new();
+        const trimmedSheetName = sheetName.slice(0, 31);
+        if (existingWorkbook && existingWorkbook.SheetNames.length > 0) {
+            existingWorkbook.Sheets[existingWorkbook.SheetNames[0]] = ws;
+            existingWorkbook.SheetNames[0] = trimmedSheetName;
+        } else {
+            XLSX.utils.book_append_sheet(wb, ws, trimmedSheetName);
+        }
 
-      const currentDate = new Date().toISOString().slice(0, 10);
-      const fileName = lastFileName || `${trimmedSheetName.replace(/[^a-zA-Z0-9]/g, '_') || 'Jadual'}_${currentDate}.xlsx`;
-      XLSX.writeFile(wb, fileName);
+        const currentDate = new Date().toISOString().slice(0, 10);
+        const fileName = lastFileName || `${trimmedSheetName.replace(/[^a-zA-Z0-9]/g, '_') || 'Jadual'}_${currentDate}.xlsx`;
+        XLSX.writeFile(wb, fileName);
     }
 
-    
-window.mergeCells = function () {
-  if (selectedCells.length < 2) { alert('Please select at least 2 cells to merge.'); return; }
-  const rows = selectedCells.map(c => c.parentNode.rowIndex);
-  const cols = selectedCells.map(c => c.cellIndex);
-  const minRow = Math.min(...rows), maxRow = Math.max(...rows);
-  const minCol = Math.min(...cols), maxCol = Math.max(...cols);
-  const rowspan = maxRow - minRow + 1, colspan = maxCol - minCol + 1;
-
-  const topLeft = document.getElementById(activeTableId).rows[minRow].cells[minCol];
-  const content = topLeft.innerText;
-
-  selectedCells.forEach(c => { if (c !== topLeft) c.remove(); });
-
-  topLeft.setAttribute('rowspan', rowspan);
-  topLeft.setAttribute('colspan', colspan);
-  topLeft.classList.add('merged');
-  topLeft.innerText = content;
-
-  deselectAll();
-};
-
-window.unmergeCells = function () {
-() {
-      const mergedCells = [...document.getElementById(activeTableId).querySelectorAll('.merged')];
-      if (mergedCells.length === 0) { alert('No merged cells to unmerge.'); return; }
-      mergedCells.forEach(cell => {
-        const rowspan = parseInt(cell.getAttribute('rowspan') || 1), colspan = parseInt(cell.getAttribute('colspan') || 1),
-              rowIdx = cell.parentNode.rowIndex, colIdx = cell.cellIndex;
-        cell.removeAttribute('rowspan');
-        cell.removeAttribute('colspan');
-        cell.classList.remove('merged');
-        if (rowspan > 1 || colspan > 1) {
-          const content = cell.innerText;
-          for (let r = 0; r < rowspan; r++)
-            for (let c = 0; c < colspan; c++)
-              if (r === 0 && c === 0) continue;
-              else {
-                const newCell = document.getElementById(activeTableId).rows[rowIdx + r].insertCell(colIdx + c);
-                newCell.contentEditable = 'true';
-                newCell.textContent = '';
-              }
-          cell.innerText = content;
+    // Cell merging function
+    function mergeCells() {
+        if (selectedCells.length < 2) { 
+            alert('Please select at least 2 cells to merge.'); 
+            return; 
         }
-      });
-      selectedCells = [];
-      [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
+        const rows = selectedCells.map(c => c.parentNode.rowIndex);
+        const cols = selectedCells.map(c => c.cellIndex);
+        const minRow = Math.min(...rows), maxRow = Math.max(...rows);
+        const minCol = Math.min(...cols), maxCol = Math.max(...cols);
+        const rowspan = maxRow - minRow + 1, colspan = maxCol - minCol + 1;
+
+        const topLeft = document.getElementById(activeTableId).rows[minRow].cells[minCol];
+        const content = topLeft.innerText;
+
+        selectedCells.forEach(c => { if (c !== topLeft) c.remove(); });
+
+        topLeft.setAttribute('rowspan', rowspan);
+        topLeft.setAttribute('colspan', colspan);
+        topLeft.classList.add('merged');
+        topLeft.innerText = content;
+
+        deselectAll();
+    }
+
+    // Cell unmerging function
+    function unmergeCells() {
+        const mergedCells = [...document.getElementById(activeTableId).querySelectorAll('.merged')];
+        if (mergedCells.length === 0) { 
+            alert('No merged cells to unmerge.'); 
+            return; 
+        }
+        mergedCells.forEach(cell => {
+            const rowspan = parseInt(cell.getAttribute('rowspan') || 1), colspan = parseInt(cell.getAttribute('colspan') || 1),
+                  rowIdx = cell.parentNode.rowIndex, colIdx = cell.cellIndex;
+            cell.removeAttribute('rowspan');
+            cell.removeAttribute('colspan');
+            cell.classList.remove('merged');
+            if (rowspan > 1 || colspan > 1) {
+                const content = cell.innerText;
+                for (let r = 0; r < rowspan; r++)
+                    for (let c = 0; c < colspan; c++)
+                        if (r === 0 && c === 0) continue;
+                        else {
+                            const newCell = document.getElementById(activeTableId).rows[rowIdx + r].insertCell(colIdx + c);
+                            newCell.contentEditable = 'true';
+                            newCell.textContent = '';
+                        }
+                cell.innerText = content;
+            }
+        });
+        selectedCells = [];
+        [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
     }
   </script>
 </body>
