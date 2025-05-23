@@ -2,18 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"> <!-- Added to enable zooming -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title></title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; margin: 28px }
+    body { 
+      font-family: Arial, Helvetica, sans-serif; 
+      margin: 28px; 
+      touch-action: pinch-zoom; /* Explicitly allow pinch-to-zoom */
+    }
     h2 { margin: 0 0 12px }
     table { border-collapse: collapse; width: 100%; margin-top: 10px; display: none }
     table.active { display: table }
     th, td { border: 1px solid #999; padding: 8px; text-align: center; min-width: 90px }
     th { background: #f2f2f2 }
     td.selected, th.selected { outline: 3px solid #ffdf6a }
-    .merged { font-style: italic } /* No background color */
+    .merged { font-style: italic }
     .bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px }
     .bar button { padding: 8px 12px; font-size: 14px; border-radius: 4px; cursor: pointer; border: 1px solid #666; background: #fff }
     #excelBtn { background: #2e8b57; color: #fff; border: none }
@@ -79,7 +83,7 @@
     <button onclick="clearDraft()">🗑️ Clear Draft</button>
     <button id="selectBtn" onclick="toggleSelectionMode()">✨ Select</button>
     <button id="mergeBtn" onclick="mergeCells()">🔗 Merge Cells</button>
-    <button id="deselectBtn" onclick="deselectAll()">🚫 Deselect</button>
+    <button id="deselectBtn" onclick="promptExcelExport()">🚫 Deselect</button>
     <button id="unmergeBtn" onclick="unmergeCells()">🔗 Unmerge Cells</button>
     <button id="addTableBtn" onclick="addNewTable()">✨ Add New Table</button>
     <button id="renameTableBtn" onclick="promptRenameTable()">📝 Rename Table</button>
@@ -152,11 +156,11 @@
         if (selectionMode) {
             selectBtn.classList.add('active');
             selectBtn.innerText = '✨ Selecting...';
-            deselectAll(); // Clear any previous selections
+            deselectAll();
         } else {
             selectBtn.classList.remove('active');
             selectBtn.innerText = '✨ Select';
-            deselectAll(); // Clear selections when exiting selection mode
+            deselectAll();
         }
     }
 
@@ -178,7 +182,6 @@
             return;
         }
 
-        // Only allow cell selection if in selection mode
         if (selectionMode) {
             if (cell.classList.contains('selected')) {
                 cell.classList.remove('selected');
@@ -211,10 +214,12 @@
     });
 
     modalHeader.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      const touch = e.touches[0];
-      initialX = touch.clientX - currentX;
-      initialY = touch.clientY - currentY;
+      if (e.touches.length === 1) { // Only handle single-touch for dragging
+        isDragging = true;
+        const touch = e.touches[0];
+        initialX = touch.clientX - currentX;
+        initialY = touch.clientY - currentY;
+      }
     });
 
     document.addEventListener('mousemove', (e) => {
@@ -232,14 +237,15 @@
     });
 
     document.addEventListener('touchmove', (e) => {
-      if (isDragging) {
+      if (isDragging && e.touches.length === 1) { // Only handle single-touch dragging
+        e.preventDefault(); // Prevent scrolling while dragging
         const touch = e.touches[0];
         currentX = touch.clientX - initialX;
         currentY = touch.clientY - initialY;
         modalContent.style.left = `${Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth))}px`;
         modalContent.style.top = `${Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight))}px`;
       }
-      e.preventDefault(); // Prevent scrolling while dragging
+      // If e.touches.length > 1, do nothing to allow pinch-to-zoom
     }, { passive: false });
 
     document.addEventListener('mouseup', () => {
