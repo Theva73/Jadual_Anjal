@@ -33,8 +33,8 @@
     .table-tabs button { padding: 6px 12px; background: #ddd; border: 1px solid #999; border-radius: 4px }
     .table-tabs button.active { background: #4CAF50; color: #fff }
     /* Modal Styles */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000 }
-    .modal-content { background: #fff; margin: 15% auto; padding: 20px; width: 300px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3) }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 1000 }
+    .modal-content { background: #fff; position: absolute; top: 20%; left: 20%; padding: 20px; width: 300px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3); cursor: move }
     .modal-content h3 { margin: 0 0 10px }
     .modal-content input { width: 70%; padding: 5px; margin-right: 5px }
     .modal-content button { padding: 5px 10px; cursor: pointer }
@@ -56,7 +56,7 @@
     <button id="addTableBtn" onclick="addNewTable()">✨ Add New Table</button>
     <button id="renameTableBtn" onclick="promptRenameTable()">📝 Rename Table</button>
     <button id="deleteTableBtn" onclick="promptDeleteTable()">❌ Delete Table</button>
-    <button id="nameListBtn" onclick="openNameList()">👥 Name List</button>
+    <button id="nameListBtn" onclick="toggleNameList()">👥 Name List</button>
   </div>
   <div id="draftList"></div>
   <div class="bar table-tabs" id="tableTabs"></div>
@@ -122,13 +122,18 @@
 
       // If a name is selected, insert it into the clicked cell
       if (selectedName !== null) {
-        cell.innerText = selectedName;
-        selectedName = null; // Reset after insertion
-        alert(`Inserted "${cell.innerText}" into the cell.`);
-        return;
+        if (cell.tagName === 'TD' && cell.contentEditable === 'true') { // Ensure it's an editable cell
+          cell.innerText = selectedName;
+          alert(`Inserted "${selectedName}" into the cell.`);
+          // Do not reset selectedName, allowing continuous insertion
+          return;
+        } else {
+          alert('Please select an editable cell (not a header).');
+          return;
+        }
       }
 
-      // Existing cell selection logic
+      // Existing cell selection logic for merging
       if (isCtrlKey || isShiftKey) {
         cell.classList.add('selected');
         selectedCells.push(cell);
@@ -151,6 +156,39 @@
       }
       sel = { r: cell.parentNode.rowIndex, c: cell.cellIndex };
     });
+
+    // Make the modal draggable
+    const modalContent = document.querySelector('.modal-content');
+    let isDragging = false, currentX, currentY, initialX, initialY;
+
+    modalContent.addEventListener('mousedown', e => {
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return; // Prevent dragging if clicking on buttons or input
+      isDragging = true;
+      initialX = e.clientX - currentX;
+      initialY = e.clientY - currentY;
+      modalContent.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (isDragging) {
+        e.preventDefault();
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+        modalContent.style.left = currentX + 'px';
+        modalContent.style.top = currentY + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      modalContent.style.cursor = 'move';
+    });
+
+    // Initialize modal position
+    currentX = window.innerWidth * 0.2; // 20% from left
+    currentY = window.innerHeight * 0.2; // 20% from top
+    modalContent.style.left = currentX + 'px';
+    modalContent.style.top = currentY + 'px';
 
     function makeCell(row, isHeader = false) {
       const cell = isHeader ? row.insertCell(-1) : row.insertCell(-1);
@@ -370,9 +408,15 @@
     }
 
     // Name List Management Functions
-    function openNameList() {
-      nameModal.style.display = 'block';
-      updateNameList();
+    function toggleNameList() {
+      const isVisible = nameModal.style.display === 'block';
+      if (isVisible) {
+        nameModal.style.display = 'none';
+        selectedName = null;
+      } else {
+        nameModal.style.display = 'block';
+        updateNameList();
+      }
     }
 
     function closeNameList() {
@@ -420,8 +464,8 @@
 
     function selectName(name) {
       selectedName = name;
-      closeNameList();
       alert(`Selected "${name}". Click a cell to insert this name.`);
+      // Modal remains open, allowing continuous name selection
     }
         function promptExcelExport() {
       const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
@@ -459,7 +503,7 @@
       const headerText = pageHeader.innerText.trim();
       const hasHeader = headerText !== '';
       let aoa = hasHeader ? [[headerText]] : [];
-      let merges = hasHeader ? [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }] : []; // Assuming 7 columns
+      let merges = hasHeader ? [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }] : [];
       let currentRow = hasHeader ? 1 : 0;
 
       const tables = [...tablesContainer.querySelectorAll('table')];
