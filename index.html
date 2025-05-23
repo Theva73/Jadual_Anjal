@@ -198,6 +198,35 @@
     });
 
     document.addEventListener('mouseup', () => {
+
+    // Touch support for drag (enhanced for iPad/mobile)
+    modalHeader.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      const touch = e.touches[0];
+      initialX = touch.clientX - currentX;
+      initialY = touch.clientY - currentY;
+    });
+
+    document.addEventListener('touchmove', (e) => {
+      if (isDragging) {
+        const touch = e.touches[0];
+        currentX = touch.clientX - initialX;
+        currentY = touch.clientY - initialY;
+
+        currentX = Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth));
+        currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
+
+        modalContent.style.left = `${currentX}px`;
+        modalContent.style.top = `${currentY}px`;
+
+        e.preventDefault(); // Prevent screen scrolling while dragging
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+
       if (isDragging) {
         isDragging = false;
         modalHeader.style.cursor = 'move';
