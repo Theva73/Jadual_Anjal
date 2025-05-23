@@ -43,6 +43,7 @@
     .name-item:hover { background: #f0f0f0 }
     .name-item span { flex-grow: 1; cursor: pointer }
     .name-item button { background: #ff4444; color: #fff; border: none; border-radius: 3px }
+    .highlighted { background-color: #ffff99; } /* Highlighted name with a light yellow background */
   </style>
 </head>
 <body>
@@ -124,11 +125,15 @@
       if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
       const cell = e.target, isCtrlKey = e.ctrlKey || e.metaKey, isShiftKey = e.shiftKey;
 
-      // Handle name insertion
+      // Handle name insertion only if a name is highlighted
       if (selectedName !== null) {
         if (cell.tagName === 'TD' && cell.contentEditable === 'true') {
           cell.innerText = selectedName;
-          alert(`Inserted "${selectedName}" into the cell.`);
+          // Remove highlight after insertion
+          const highlightedSpan = nameListContainer.querySelector('.highlighted');
+          if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
+          selectedName = null; // Reset selectedName after insertion
+          alert(`Inserted "${selectedName}" into the cell.`); // Temporary alert, will be removed
           return;
         } else {
           alert('Please select an editable cell (not a header).');
@@ -163,12 +168,7 @@
     // Make the modal draggable
     const modalContent = document.querySelector('.modal-content');
     const modalHeader = document.querySelector('.modal-header');
-    let isDragging = false, currentX = 0, currentY = 0, initialX = 0, initialY = 0;
-
-    // Set initial position (already set via CSS, but ensure variables are initialized)
-    const computedStyle = window.getComputedStyle(modalContent);
-    currentX = parseFloat(computedStyle.right) ? window.innerWidth - parseFloat(computedStyle.right) - modalContent.offsetWidth : 0;
-    currentY = parseFloat(computedStyle.top) || 0;
+    let isDragging = false, currentX = 50, currentY = 50, initialX = 0, initialY = 0;
 
     modalHeader.addEventListener('mousedown', e => {
       isDragging = true;
@@ -187,7 +187,7 @@
         currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
         modalContent.style.left = currentX + 'px';
         modalContent.style.top = currentY + 'px';
-        modalContent.style.right = 'auto'; // Override the initial 'right' positioning
+        modalContent.style.right = 'auto';
       }
     });
 
@@ -197,6 +197,10 @@
         modalHeader.style.cursor = 'move';
       }
     });
+
+    // Ensure initial position is set
+    modalContent.style.left = currentX + 'px';
+    modalContent.style.top = currentY + 'px';
 
     function makeCell(row, isHeader = false) {
       const cell = isHeader ? row.insertCell(-1) : row.insertCell(-1);
@@ -421,6 +425,9 @@
       if (isVisible) {
         nameModal.style.display = 'none';
         selectedName = null;
+        // Remove any existing highlight when closing
+        const highlightedSpan = nameListContainer.querySelector('.highlighted');
+        if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
       } else {
         nameModal.style.display = 'block';
         updateNameList();
@@ -431,6 +438,9 @@
       nameModal.style.display = 'none';
       selectedName = null;
       newNameInput.value = '';
+      // Remove any existing highlight when closing
+      const highlightedSpan = nameListContainer.querySelector('.highlighted');
+      if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
     }
 
     function updateNameList() {
@@ -439,7 +449,7 @@
         const div = document.createElement('div');
         div.className = 'name-item';
         div.innerHTML = `
-          <span onclick="selectName('${name}')">${name}</span>
+          <span onclick="selectName('${name}')" data-name="${name}">${name}</span>
           <button onclick="deleteName('${name}')">Delete</button>
         `;
         nameListContainer.appendChild(div);
@@ -471,8 +481,16 @@
     }
 
     function selectName(name) {
-      selectedName = name;
-      alert(`Selected "${name}". Click a cell to insert this name.`);
+      // Remove highlight from any previously selected name
+      const previouslyHighlighted = nameListContainer.querySelector('.highlighted');
+      if (previouslyHighlighted) previouslyHighlighted.classList.remove('highlighted');
+
+      // Highlight the newly selected name
+      const span = nameListContainer.querySelector(`span[data-name="${name}"]`);
+      if (span) {
+        span.classList.add('highlighted');
+        selectedName = name;
+      }
     }
         function promptExcelExport() {
       const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
