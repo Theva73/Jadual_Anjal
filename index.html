@@ -35,7 +35,7 @@
 
   <!-- ===== persistence & export ===== -->
   <div class="bar">
-    <button id="excelBtn" onclick="document.getElementById('fileInput').click()">💾 Save to Excel</button>
+    <button id="excelBtn" onclick="promptExcelExport()">💾 Save to Excel</button>
     <input type="file" id="fileInput" accept=".xlsx" onchange="handleExcelFile(event)" style="display: none;" />
     <button id="saveDraftBtn" onclick="promptSaveDraft()">💠 Save Draft</button>
     <button id="loadDraftBtn" onclick="toggleDraftList()">📂 Load Draft</button>
@@ -312,28 +312,34 @@
     }
 
     /* ---------- Excel file handling ---------- */
-    function handleExcelFile(event) {
-      const file = event.target.files[0];
-      if (!file) {
-        // If no file is selected, export a new file as before
-        exportExcel(null);
-        return;
+    function promptExcelExport() {
+      const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
+      if (sheetName && sheetName.trim()) {
+        const trimmedSheetName = sheetName.trim().slice(0, 31); // Limit to 31 characters
+        handleExcelFile({ target: { files: [] } }, trimmedSheetName); // Trigger export with custom sheet name
+      } else if (sheetName !== null) {
+        alert('Please enter a valid sheet title.');
       }
-
-      lastFileName = file.name; // Store the file name for future saves
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        // For simplicity, we'll overwrite the first sheet with the current table data
-        exportExcel(workbook);
-      };
-      reader.readAsArrayBuffer(file);
-      // Reset the file input to allow selecting the same file again
-      event.target.value = '';
     }
 
-    function exportExcel(existingWorkbook) {
+    function handleExcelFile(event, customSheetName = null) {
+      const file = event.target.files[0];
+      if (file) {
+        lastFileName = file.name; // Store the file name for future saves
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          exportExcel(workbook, customSheetName || 'Schedule');
+        };
+        reader.readAsArrayBuffer(file);
+        event.target.value = ''; // Reset the file input
+      } else {
+        exportExcel(null, customSheetName || 'Schedule'); // Export new file with custom sheet name
+      }
+    }
+
+    function exportExcel(existingWorkbook, sheetName) {
       const msg = document.getElementById('msg');
       msg.style.display = 'none'; // Hide the message initially
       if (typeof XLSX === 'undefined') {
@@ -352,27 +358,27 @@
         row.forEach((cell, cIdx) => {
           if (cell.colspan > 1 || cell.rowspan > 1) {
             merges.push({ s: { r: rIdx, c: cIdx }, e: { r: rIdx + cell.rowspan - 1, c: cIdx + cell.colspan - 1 } });
-        }
+          }
         });
         return merges;
       }, []);
       ws['!pageSetup'] = { paperSize: 9, orientation: 'portrait', fitToWidth: 1, fitToHeight: 0 };
 
       const wb = existingWorkbook || XLSX.utils.book_new();
-      const sheetName = pageHeader.innerText.trim() || 'Schedule'; // Use header title or default to 'Schedule'
+      const trimmedSheetName = sheetName.slice(0, 31); // Excel sheet names are limited to 31 chars
       
       // If an existing workbook was provided, replace the first sheet; otherwise append a new one
       if (existingWorkbook && existingWorkbook.SheetNames.length > 0) {
         const existingSheetName = existingWorkbook.SheetNames[0];
         existingWorkbook.Sheets[existingSheetName] = ws;
-        existingWorkbook.SheetNames[0] = sheetName.slice(0, 31); // Update sheet name
+        existingWorkbook.SheetNames[0] = trimmedSheetName;
       } else {
-        XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31)); // Excel sheet names are limited to 31 chars
+        XLSX.utils.book_append_sheet(wb, ws, trimmedSheetName);
       }
 
       // Use the last file name if available; otherwise, generate a new one with current date
-      const currentDate = new Date().toISOString().slice(0, 10); // e.g., "2025-05-22"
-      const fileName = lastFileName || `${sheetName.replace(/[^a-zA-Z0-9]/g, '_') || 'Jadual'}_${currentDate}.xlsx`;
+      const currentDate = new Date().toISOString().slice(0, 10); // e.g., "2025-05-23"
+      const fileName = lastFileName || `${trimmedSheetName.replace(/[^a-zA-Z0-9]/g, '_') || 'Jadual'}_${currentDate}.xlsx`;
       XLSX.writeFile(wb, fileName);
     }
 
