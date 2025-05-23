@@ -143,8 +143,7 @@
         else c.outerHTML = '<th contenteditable="true"></th>';
       }
     }
-
-    function tblArray(tableId) {
+        function tblArray(tableId) {
       const table = document.getElementById(tableId);
       return {
         table: [...table.rows].map(r => [...r.cells].map(c => {
@@ -290,8 +289,7 @@
       selectedCells = [];
       [...document.querySelectorAll('.selected')].forEach(c => c.classList.remove('selected'));
     }
-
-    function promptExcelExport() {
+        function promptExcelExport() {
       const sheetName = prompt('Enter the Excel sheet title (max 31 characters):', 'Schedule');
       if (sheetName && sheetName.trim()) {
         const trimmedSheetName = sheetName.trim().slice(0, 31);
@@ -337,7 +335,7 @@
           return { text: c.innerText.trim(), colspan, rowspan };
         }));
 
-        // Add table title (e.g., "Table 1")
+        // Add table title (e.g., "Table 1") if multiple tables
         if (tables.length > 1) {
           aoa[currentRow] = [`Table ${tableIdx + 1}`];
           merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 6 } });
