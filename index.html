@@ -133,7 +133,6 @@
           const highlightedSpan = nameListContainer.querySelector('.highlighted');
           if (highlightedSpan) highlightedSpan.classList.remove('highlighted');
           selectedName = null; // Reset selectedName after insertion
-          alert(`Inserted "${selectedName}" into the cell.`); // Temporary alert, will be removed
           return;
         } else {
           alert('Please select an editable cell (not a header).');
@@ -168,26 +167,33 @@
     // Make the modal draggable
     const modalContent = document.querySelector('.modal-content');
     const modalHeader = document.querySelector('.modal-header');
-    let isDragging = false, currentX = 50, currentY = 50, initialX = 0, initialY = 0;
+    let isDragging = false, initialX = 0, initialY = 0, currentX = 50, currentY = 50;
 
-    modalHeader.addEventListener('mousedown', e => {
+    // Initialize modal position
+    modalContent.style.position = 'absolute';
+    modalContent.style.left = currentX + 'px';
+    modalContent.style.top = currentY + 'px';
+    modalContent.style.right = 'auto';
+
+    modalHeader.addEventListener('mousedown', (e) => {
       isDragging = true;
       initialX = e.clientX - currentX;
       initialY = e.clientY - currentY;
       modalHeader.style.cursor = 'grabbing';
+      e.preventDefault(); // Prevent text selection or other default behaviors
     });
 
-    document.addEventListener('mousemove', e => {
+    document.addEventListener('mousemove', (e) => {
       if (isDragging) {
-        e.preventDefault();
         currentX = e.clientX - initialX;
         currentY = e.clientY - initialY;
-        // Ensure the modal stays within the viewport
+
+        // Keep modal within viewport
         currentX = Math.max(0, Math.min(currentX, window.innerWidth - modalContent.offsetWidth));
         currentY = Math.max(0, Math.min(currentY, window.innerHeight - modalContent.offsetHeight));
+
         modalContent.style.left = currentX + 'px';
         modalContent.style.top = currentY + 'px';
-        modalContent.style.right = 'auto';
       }
     });
 
@@ -198,9 +204,12 @@
       }
     });
 
-    // Ensure initial position is set
-    modalContent.style.left = currentX + 'px';
-    modalContent.style.top = currentY + 'px';
+    // Prevent dragging when clicking on interactive elements within the header
+    modalHeader.addEventListener('click', (e) => {
+      if (e.target.tagName === 'H3') {
+        e.stopPropagation();
+      }
+    });
 
     function makeCell(row, isHeader = false) {
       const cell = isHeader ? row.insertCell(-1) : row.insertCell(-1);
