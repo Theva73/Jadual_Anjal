@@ -1,697 +1,818 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Weekly Schedule</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            margin: 28px;
-        }
-        h2 {
-            margin: 0 0 12px;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 10px;
-            display: none;
-        }
-        table.active {
-            display: table;
-        }
-        th, td {
-            border: 1px solid #999;
-            padding: 8px;
-            text-align: center;
-            min-width: 90px;
-        }
-        th {
-            background: #f2f2f2;
-        }
-        td.selected, th.selected {
-            outline: 3px solid #ffdf6a;
-        }
-        .merged {
-            font-style: italic;
-        }
-        .bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-        .bar button {
-            padding: 8px 12px;
-            font-size: 14px;
-            border-radius: 4px;
-            cursor: pointer;
-            border: 1px solid #666;
-            background: #fff;
-        }
-        #excelBtn {
-            background: #2e8b57;
-            color: #fff;
-        }
-        #saveDraftBtn {
-            background: #0b65c2;
-            color: #fff;
-        }
-        #loadDraftBtn {
-            background: #ff8c00;
-            color: #fff;
-        }
-        #mergeBtn {
-            background: #6a5acd;
-            color: #fff;
-        }
-        #unmergeBtn {
-            background: #cd5c5c;
-            color: #fff;
-        }
-        #selectBtn {
-            background: #00ced1;
-            color: #fff;
-        }
-        #selectBtn.active {
-            background: #ff4500;
-        }
-        #addTableBtn {
-            background: #ff69b4;
-            color: #fff;
-        }
-        #renameTableBtn {
-            background: #4682b4;
-            color: #fff;
-        }
-        #deleteTableBtn {
-            background: #dc143c;
-            color: #fff;
-        }
-        #nameListBtn {
-            background: #32cd32;
-            color: #fff;
-        }
-        .table-tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-        .table-tabs button {
-            padding: 6px 12px;
-            background: #ddd;
-            border: 1px solid #999;
-            border-radius: 4px;
-        }
-        .table-tabs button.active {
-            background: #4caf50;
-            color: #fff;
-        }
-        #summaryTable th {
-            background: #ffeeba;
-        }
-        #summaryTable td {
-            background: #fffff7;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        .modal-content {
-            pointer-events: auto;
-            background: #fff;
-            position: absolute;
-            top: 50px;
-            right: 50px;
-            padding: 20px;
-            width: 300px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, .3);
-        }
-        .modal-header {
-            cursor: move;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #ddd;
-            touch-action: none;
-        }
-        .name-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
-        }
-        .name-item span {
-            flex-grow: 1;
-            cursor: pointer;
-        }
-        .name-item button {
-            background: #ff4444;
-            color: #fff;
-            border: none;
-            border-radius: 3px;
-        }
-        .highlighted {
-            background: #ffff99;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Weekly Schedule</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        h2, h3 {
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: #fff;
+        }
+        #tablesContainer > table {
+            display: none; 
+        }
+        #tablesContainer > table.active {
+            display: table;
+        }
+        #summaryTable {
+            display: table; 
+            margin-top: 20px; 
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            min-width: 100px;
+        }
+        table th { 
+            background-color: #e9ecef;
+            color: #495057;
+            font-weight: bold;
+        }
+        td.selected, th.selected { 
+            outline: 3px solid #007bff;
+            background-color: #cfe2ff;
+        }
+        .merged { 
+            font-style: italic;
+            background-color: #f8f9fa;
+        }
+        .bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .bar button, .table-tabs button {
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid #adb5bd;
+            background-color: #fff;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .bar button:hover, .table-tabs button:hover {
+            background-color: #f1f3f5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62; } /* Updated ID */
+        #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
+        #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
+        #loadDraftBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
+        #clearDraft { background-color: #dc3545; color: white; border-color: #dc3545;}
+        #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
+        #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
+        #mergeBtn { background-color: #6f42c1; color: white; border-color: #6f42c1;}
+        #unmergeBtn { background-color: #e83e8c; color: white; border-color: #e83e8c;}
+        #addTableBtn { background-color: #20c997; color: white; border-color: #20c997;}
+        #renameTableBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
+        #deleteTableBtn { background-color: #dc3545; color: white; border-color: #dc3545;}
+        #nameListBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
+        #deselectBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
+
+        .table-tabs { margin-bottom: 10px; }
+        .table-tabs button { background-color: #f8f9fa; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+        .table-tabs button.active { background-color: #007bff; color: white; border-color: #007bff; }
+        #summaryTable th { background-color: #ffeeba; }
+        #summaryTable td { background-color: #fff3cd; }
+
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff; margin: auto; padding: 20px; border: 1px solid #888;
+            width: 90%; max-width: 400px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .modal-header {
+            padding-bottom: 10px; border-bottom: 1px solid #eee; margin-bottom: 15px;
+            font-size: 1.2em; color: #333; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-close-btn {
+            font-size: 1.5rem; font-weight: bold; line-height: 1; color: #000;
+            text-shadow: 0 1px 0 #fff; opacity: .5; background: transparent; border: 0; cursor: pointer;
+        }
+        .modal-close-btn:hover { opacity: .75; }
+
+        .name-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #eee; }
+        .name-item:last-child { border-bottom: none; }
+        .name-item span { flex-grow: 1; cursor: pointer; color: #007bff; }
+        .name-item span:hover { text-decoration: underline; }
+        .name-item button { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.9em; }
+        .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
+        #draftList { border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 5px; background-color: #fff; }
+        .draft-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #eee; }
+        .draft-item:last-child { border-bottom: none; }
+        .draft-item span { cursor: pointer; color: #007bff; }
+        .draft-item span:hover { text-decoration: underline; }
+        .draft-item button { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.9em; }
+        #newNameInput { padding: 8px; margin-right: 5px; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1; }
+        .input-group { display: flex; margin-bottom: 10px; }
+        .input-group button { background-color: #28a745; color: white; border-color: #28a745; }
+
+        .custom-message-box {
+            display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background-color: #333; color: white; padding: 15px 25px; border-radius: 5px;
+            z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 1em;
+        }
+        .custom-message-box.success { background-color: #28a745; }
+        .custom-message-box.error { background-color: #dc3545; }
+        .custom-message-box.info { background-color: #007bff; }
+
+    </style>
 </head>
 <body>
-    <h2 contenteditable="true">Weekly Schedule</h2>
+    <h2 contenteditable="true" id="scheduleTitle">Weekly Schedule</h2>
 
-    <div class="bar">
-        <button id="excelBtn">💾 Save to Excel</button>
-        <input type="file" id="fileInput" accept=".xlsx" style="display:none">
-        <button id="saveDraftBtn">💠 Save Draft</button>
-        <button id="loadDraftBtn">📂 Load Draft</button>
-        <button id="clearDraft">🗑️ Clear Draft</button>
-        <button id="selectBtn">✨ Select</button>
-        <button id="mergeBtn">🔗 Merge Cells</button>
-        <button id="deselectBtn">🚫 Deselect</button>
-        <button id="unmergeBtn">🔗 Unmerge Cells</button>
-        <button id="addTableBtn">✨ Add New Table</button>
-        <button id="renameTableBtn">📝 Rename Table</button>
-        <button id="deleteTableBtn">❌ Delete Table</button>
-        <button id="nameListBtn">👥 Name List</button>
-    </div>
+    <div class="bar">
+        <button id="directCopyFullHtmlBtn">📋 Copy Full HTML (Direct)</button> 
+    </div>
 
-    <div id="draftList"></div>
-    <div class="bar table-tabs" id="tableTabs"></div>
+    <div class="bar">
+        <button id="excelBtnTrigger">💾 Export Active Table to Excel</button>
+        <button id="importExcelBtn">📂 Import from Excel</button>
+        <input type="file" id="fileInput" accept=".xlsx" style="display:none"> 
+    </div>
+    <div class="bar">
+        <button id="saveDraftBtn">💠 Save All as Draft</button>
+        <button id="loadDraftBtn">📂 Load Draft</button>
+        <button id="clearDraft">🗑️ Clear All Drafts</button>
+    </div>
+    <div class="bar">
+        <button id="selectBtn">✨ Select Cells</button>
+        <button id="mergeBtn">🔗 Merge Cells</button>
+        <button id="deselectBtn">🚫 Deselect All</button>
+        <button id="unmergeBtn">💔 Unmerge Cell</button>
+    </div>
+    <div class="bar">
+        <button id="addTableBtn">➕ Add New Table</button>
+        <button id="renameTableBtn">📝 Rename Active Table</button>
+        <button id="deleteTableBtn">❌ Delete Active Table</button>
+        <button id="nameListBtn">👥 Manage Names</button>
+    </div>
 
-    <script>
-        // Part 1: Core Setup, Utility Functions, and Initialization
+    <div id="draftList" style="display:none;"></div>
+    <div class="bar table-tabs" id="tableTabs"></div>
 
-        // Utility function to display prompts with a callback
-        function showPrompt(message, callback) {
-            const response = prompt(message);
-            if (callback && response !== null) {
-                callback(response);
-            }
-        }
+    <div id="tablesContainer">
+        <table id="tbl_1" class="active" data-table-name="Table 1">
+            <thead>
+                <tr>
+                    <th contenteditable="true">Class/Time</th>
+                    <th contenteditable="true">Monday</th>
+                    <th contenteditable="true">Tuesday</th>
+                    <th contenteditable="true">Wednesday</th>
+                    <th contenteditable="true">Thursday</th>
+                    <th contenteditable="true">Friday</th>
+                    <th contenteditable="true">Saturday</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td contenteditable="true">08:00-09:00</td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                </tr>
+                 <tr>
+                    <td contenteditable="true">09:00-10:00</td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-        // Function to initialize event listeners for all buttons
-        function initializeEventListeners() {
-            // Excel and draft management buttons
-            document.getElementById('excelBtn').addEventListener('click', promptExcelExport);
-            document.getElementById('fileInput').addEventListener('change', handleExcelFile);
-            document.getElementById('saveDraftBtn').addEventListener('click', promptSaveDraft);
-            document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftList);
-            document.getElementById('clearDraft').addEventListener('click', clearDraft);
+    <div class="bar" id="rowColManipulationBar">
+        <button>⬆️ Add Row Above</button>
+        <button>⬇️ Add Row Below</button>
+        <button>⬅️ Add Column Left</button>
+        <button>➡️ Add Column Right</button>
+    </div>
 
-            // Selection and cell management buttons
-            document.getElementById('selectBtn').addEventListener('click', toggleSelectionMode);
-            document.getElementById('mergeBtn').addEventListener('click', mergeCells);
-            document.getElementById('deselectBtn').addEventListener('click', deselectAll);
-            document.getElementById('unmergeBtn').addEventListener('click', unmergeCells);
+    <div id="nameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Name List</h3>
+                <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard">×</button>
+            </div>
+            <div class="input-group">
+                <input id="newNameInput" placeholder="Add new name">
+                <button id="addNameBtnInModal">Add</button>
+            </div>
+            <div id="nameList" style="margin-top:10px;max-height:200px;overflow-y:auto;"></div>
+        </div>
+    </div>
 
-            // Table management buttons
-            document.getElementById('addTableBtn').addEventListener('click', addNewTable);
-            document.getElementById('renameTableBtn').addEventListener('click', promptRenameTable);
-            document.getElementById('deleteTableBtn').addEventListener('click', promptDeleteTable);
+    <h3 style="margin-top:32px">Teacher/Subject Attendance Summary</h3>
+    <table id="summaryTable"></table>
+    <div id="customMessageBox" class="custom-message-box"></div>
 
-            // Name list button
-            document.getElementById('nameListBtn').addEventListener('click', toggleNameList);
+<script>
+    // --- Global State and Configuration ---
+    const DRAFTS_KEY = 'jadual_drafts_v3'; 
+    const NAMES_KEY = 'jadual_names_v3';
+    const SCHEDULE_TITLE_KEY = 'jadual_title_v3';
 
-            // Row and column buttons
-            document.querySelector('button:nth-child(1)', '.bar:last-child').addEventListener('click', addRowAbove);
-            document.querySelector('button:nth-child(2)', '.bar:last-child').addEventListener('click', addRowBelow);
-            document.querySelector('button:nth-child(3)', '.bar:last-child').addEventListener('click', addColLeft);
-            document.querySelector('button:nth-child(4)', '.bar:last-child').addEventListener('click', addColRight);
+    let activeTableId = 'tbl_1'; 
+    let tableCount = 1; 
+    let selectionMode = false;
+    let selectedCells = [];
+    let selectedNameFromList = null; 
+    let names = []; 
 
-            // Name modal buttons
-            document.querySelector('#nameModal button:nth-child(2)').addEventListener('click', addName);
-            document.querySelector('#nameModal button:nth-child(3)').addEventListener('click', closeNameList);
+    // --- DOM Element References ---
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement;
 
-            // Centralized event listeners for dynamically added elements
-            document.getElementById('draftList').addEventListener('click', (e) => {
-                if (e.target.tagName === 'SPAN') {
-                    loadDraft(e.target.textContent);
-                } else if (e.target.tagName === 'BUTTON') {
-                    deleteDraft(e.target.parentElement.querySelector('span').textContent);
-                }
-            });
+    // --- Utility Functions ---
+    function showMessage(message, type = 'info', duration = 3000) {
+        if (!customMessageBox) return;
+        customMessageBox.textContent = message;
+        customMessageBox.className = `custom-message-box ${type}`;
+        customMessageBox.style.display = 'block';
+        setTimeout(() => { if (customMessageBox) customMessageBox.style.display = 'none'; }, duration);
+    }
+    function customPrompt(message, defaultValue = "") { return prompt(message, defaultValue); }
+    function customConfirm(message) { return confirm(message); }
 
-            document.getElementById('nameList').addEventListener('click', (e) => {
-                if (e.target.tagName === 'SPAN') {
-                    selectName(e.target.getAttribute('data-name'));
-                } else if (e.target.tagName === 'BUTTON') {
-                    deleteName(e.target.parentElement.querySelector('span').getAttribute('data-name'));
-                }
-            });
-        }
+    // --- Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+        scheduleTitleElement = document.getElementById('scheduleTitle');
+        tablesContainer = document.getElementById('tablesContainer');
+        tableTabs = document.getElementById('tableTabs');
+        nameModal = document.getElementById('nameModal');
+        nameListContainer = document.getElementById('nameList');
+        newNameInput = document.getElementById('newNameInput');
+        draftListElement = document.getElementById('draftList');
+        summaryTableElement = document.getElementById('summaryTable');
+        customMessageBox = document.getElementById('customMessageBox');
+        fileInputElement = document.getElementById('fileInput');
+        directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn');
+        closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard');
 
-        // Initialize when the DOM is fully loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeEventListeners();
-            updateNameList();
-            rebuildAndUpdateSummary();
-        });
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement) {
+            console.error("Critical DOM elements missing. Application might not function correctly.");
+            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements.</p>";
+            return;
+        }
+        
+        loadScheduleTitle();
+        loadNames(); 
+        initializeEventListeners();
+        setupInitialTableState(); 
+        renderNameList(); 
+        rebuildAndRenderSummary(); 
+    });
 
-        // Global variables
-        const DRAFTS_KEY = 'jadual_drafts';
-        const NAMES_KEY = 'jadual_names';
-        let activeTableId = 'tbl_1';
-        let tableCount = 1;
-        let selectionMode = false;
-        let selectedCells = [];
-        let selectedName = null;
-        const tablesContainer = document.getElementById('tablesContainer');
-        const tableTabs = document.getElementById('tableTabs');
-        tableTabs.innerHTML = "<button class='active' onclick=\"switchTable('tbl_1')\">Table 1</button>";
-        let names = JSON.parse(localStorage.getItem(NAMES_KEY) || '[]');
-        if (!names.length) names = ['Teacher A', 'Teacher B', 'Teacher C'];
-        const nameModal = document.getElementById('nameModal');
-        const nameListContainer = document.getElementById('nameList');
-        const newNameInput = document.getElementById('newNameInput');
-    </script>
-        <div id="tablesContainer">
-        <table id="tbl_1" class="active">
-            <thead><tr><th contenteditable="true">Class</th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
-            <tbody><tr><td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr></tbody>
-        </table>
-    </div>
+    function setupInitialTableState() {
+        const existingTables = tablesContainer.querySelectorAll('table');
+        if (existingTables.length > 0) {
+            tableTabs.innerHTML = ''; 
+            existingTables.forEach((table, index) => {
+                const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`; 
+                table.id = tableId;
+                const tableName = table.dataset.tableName || `Table ${index + 1}`;
+                table.dataset.tableName = tableName; 
+                addTabButton(tableId, tableName);
+                if (index === 0) activeTableId = tableId;
+            });
+        } else { addNewTable(true); }
+        if (activeTableId && document.getElementById(activeTableId)) switchTable(activeTableId);
+        else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id);
+    }
+    
+    function loadScheduleTitle() {
+        const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
+        if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
+        if (scheduleTitleElement) {
+            scheduleTitleElement.addEventListener('blur', () => {
+                localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent);
+                showMessage('Schedule title saved!', 'success');
+            });
+        }
+    }
 
-    <div class="bar">
-        <button>⬆️ Row Above</button>
-        <button>⬇️ Row Below</button>
-        <button>⬅️ Col Left</button>
-        <button>➡️ Col Right</button>
-    </div>
+    // --- Event Listener Initialization ---
+    function initializeEventListeners() {
+        directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
+        closeNameModalButtonStandardElement.addEventListener('click', toggleNameListModalVisibility);
 
-    <div id="nameModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Name List</h3></div>
-            <div><input id="newNameInput" placeholder="Add new name"><button>Add</button></div>
-            <div id="nameList" style="margin-top:10px;max-height:200px;overflow-y:auto;"></div>
-            <button>Close</button>
-        </div>
-    </div>
+        document.getElementById('excelBtnTrigger').addEventListener('click', exportActiveTableToExcel);
+        document.getElementById('importExcelBtn').addEventListener('click', () => fileInputElement.click()); 
+        fileInputElement.addEventListener('change', handleExcelFileImport);
+        
+        document.getElementById('saveDraftBtn').addEventListener('click', promptAndSaveDraft);
+        document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftListVisibility);
+        document.getElementById('clearDraft').addEventListener('click', confirmAndClearAllDrafts);
 
-    <h3 style="margin-top:32px">Teacher Attendance Summary</h3>
-    <table id="summaryTable"></table>
+        document.getElementById('selectBtn').addEventListener('click', toggleCellSelectionMode);
+        document.getElementById('mergeBtn').addEventListener('click', mergeSelectedTableCells);
+        document.getElementById('deselectBtn').addEventListener('click', deselectAllTableCells);
+        document.getElementById('unmergeBtn').addEventListener('click', unmergeActiveCellIfMerged);
 
-    <script>
-        // Part 2: Draft Management Functions
+        document.getElementById('addTableBtn').addEventListener('click', () => addNewTable());
+        document.getElementById('renameTableBtn').addEventListener('click', promptAndRenameActiveTable);
+        document.getElementById('deleteTableBtn').addEventListener('click', confirmAndDeleteActiveTable);
+        document.getElementById('nameListBtn').addEventListener('click', toggleNameListModalVisibility);
 
-        // Function to save the current schedule as a draft
-        function promptSaveDraft() {
-            const draftData = tablesContainer.innerHTML;
-            if (draftData) {
-                const draftName = prompt('Enter draft name:', 'Draft ' + new Date().toLocaleDateString());
-                if (draftName) {
-                    const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-                    drafts[draftName] = draftData;
-                    localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-                    alert('Draft saved as "' + draftName + '"!');
-                }
-            } else {
-                alert('No schedule data to save.');
-            }
-        }
+        const rowColBar = document.getElementById('rowColManipulationBar');
+        if (rowColBar) {
+            const buttons = rowColBar.getElementsByTagName('button');
+            if (buttons[0]) buttons[0].addEventListener('click', addRowAboveToActiveTable);
+            if (buttons[1]) buttons[1].addEventListener('click', addRowBelowToActiveTable);
+            if (buttons[2]) buttons[2].addEventListener('click', addColumnLeftToActiveTable);
+            if (buttons[3]) buttons[3].addEventListener('click', addColumnRightToActiveTable);
+        }
 
-        // Function to toggle draft list visibility and load drafts
-        function toggleDraftList() {
-            const draftList = document.getElementById('draftList');
-            draftList.innerHTML = '';
-            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-            for (let name in drafts) {
-                draftList.innerHTML += `<div><span>${name}</span><button>Delete</button></div>`;
-            }
-            draftList.style.display = draftList.style.display === 'block' ? 'none' : 'block';
-        }
+        document.getElementById('addNameBtnInModal').addEventListener('click', addNewNameToList);
 
-        // Function to load a selected draft
-        function loadDraft(draftName) {
-            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-            if (drafts[draftName]) {
-                tablesContainer.innerHTML = drafts[draftName];
-                alert('Draft "' + draftName + '" loaded!');
-                document.getElementById('draftList').style.display = 'none';
-                rebuildAndUpdateSummary();
-            }
-        }
+        draftListElement.addEventListener('click', (e) => {
+            const targetSpan = e.target.closest('.draft-item span');
+            const targetButton = e.target.closest('.draft-item button');
+            if (targetSpan) loadSelectedDraft(targetSpan.textContent);
+            else if (targetButton) confirmAndDeleteDraft(targetButton.parentElement.querySelector('span').textContent);
+        });
 
-        // Function to delete a draft
-        function deleteDraft(draftName) {
-            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-            if (drafts[draftName]) {
-                delete drafts[draftName];
-                localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-                toggleDraftList();
-                alert('Draft "' + draftName + '" deleted!');
-            }
-        }
+        nameListContainer.addEventListener('click', (e) => {
+            const nameItemSpan = e.target.closest('.name-item span[data-name]');
+            const deleteButton = e.target.closest('.name-item button');
+            if (nameItemSpan) selectNameForCellInsertion(nameItemSpan.dataset.name);
+            else if (deleteButton) deleteNameFromListAndStorage(deleteButton.parentElement.querySelector('span[data-name]').dataset.name);
+        });
 
-        // Function to clear all drafts
-        function clearDraft() {
-            localStorage.removeItem(DRAFTS_KEY);
-            document.getElementById('draftList').style.display = 'none';
-            alert('All drafts cleared!');
-        }
-    </script>
-        <script>
-        // Part 3: Table and Cell Management Functions
+        tablesContainer.addEventListener('click', handleTableCellClick);
+        tablesContainer.addEventListener('blur', (e) => { 
+            if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                setTimeout(rebuildAndRenderSummary, 0); 
+            }
+        }, true); 
+        tablesContainer.addEventListener('input', (e) => { 
+            if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                setTimeout(rebuildAndRenderSummary, 300); 
+            }
+        });
 
-        // Function to switch between tables
-        function switchTable(id) {
-            activeTableId = id;
-            document.querySelectorAll('#tablesContainer table').forEach(t => t.classList.toggle('active', t.id === id));
-            document.querySelectorAll('.table-tabs button').forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes(id)));
-            deselectAll();
-        }
+        window.addEventListener('click', (event) => { // Close Name modal if clicked outside
+            if (event.target === nameModal) nameModal.style.display = 'none';
+        });
+    }
 
-        // Function to add a new table
-        function addNewTable() {
-            tableCount++;
-            const label = prompt('Table name:', 'Table ' + tableCount);
-            if (!label) return;
-            const tbl = document.createElement('table');
-            tbl.id = 'tbl_' + tableCount;
-            tbl.innerHTML = document.getElementById('tbl_1').innerHTML;
-            tbl.querySelectorAll('tbody td').forEach(td => td.textContent = '');
-            tablesContainer.appendChild(tbl);
-            tableTabs.insertAdjacentHTML('beforeend', "<button onclick=\"switchTable('" + tbl.id + "')\">" + label.trim() + "</button>");
-            switchTable(tbl.id);
-            rebuildAndUpdateSummary();
-        }
+    // --- Direct Copy Full HTML Functionality ---
+    async function attemptDirectCopyToClipboard() {
+        const fullHtml = document.documentElement.outerHTML;
+        try {
+            // Try modern clipboard API first
+            await navigator.clipboard.writeText(fullHtml);
+            showMessage('Full HTML copied to clipboard!', 'success');
+        } catch (err) {
+            console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
+            // Fallback to execCommand
+            const textarea = document.createElement('textarea');
+            textarea.value = fullHtml;
+            textarea.style.position = 'fixed'; // Prevent scrolling to bottom
+            textarea.style.left = '-9999px'; // Move off-screen
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showMessage('Full HTML copied! (using fallback method)', 'success');
+                } else {
+                    showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
+                }
+            } catch (execErr) {
+                console.error('execCommand copy failed: ', execErr);
+                showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
+            }
+            document.body.removeChild(textarea);
+        }
+    }
 
-        // Function to add a row above
-        function addRowAbove() {
-            const t = document.getElementById(activeTableId);
-            const r = t.insertRow(1);
-            for (let i = 0; i < t.rows[0].cells.length; i++) {
-                const cell = r.insertCell();
-                cell.contentEditable = 'true';
-            }
-            updateSummary();
-        }
+    // --- Draft Management ---
+    function promptAndSaveDraft() {
+        if (tablesContainer.children.length === 0) { showMessage('No schedule data to save.', 'error'); return; }
+        const allTablesData = tablesContainer.innerHTML; 
+        const allTableMeta = {}; 
+        tablesContainer.querySelectorAll('table').forEach(table => {
+            allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
+        });
+        const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`);
+        if (draftName) {
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+            drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId };
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+            showMessage(`Draft "${draftName}" saved!`, 'success');
+            if (draftListElement.style.display === 'block') renderDraftList(); 
+        }
+    }
+    function toggleDraftListVisibility() {
+        const isVisible = draftListElement.style.display === 'block';
+        draftListElement.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) renderDraftList(); 
+    }
+    function renderDraftList() {
+        draftListElement.innerHTML = ''; 
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+        if (Object.keys(drafts).length === 0) { draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return; }
+        for (const name in drafts) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'draft-item';
+            itemDiv.innerHTML = `<span>${name}</span><button>Delete</button>`;
+            draftListElement.appendChild(itemDiv);
+        }
+    }
+    function loadSelectedDraft(draftName) {
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+        if (drafts[draftName]) {
+            tablesContainer.innerHTML = drafts[draftName].html;
+            const tableMeta = drafts[draftName].meta || {};
+            tableTabs.innerHTML = ''; 
+            tablesContainer.querySelectorAll('table').forEach(table => {
+                const id = table.id;
+                const metaInfo = tableMeta[id] || {}; 
+                const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`; 
+                table.dataset.tableName = name; 
+                addTabButton(id, name);
+                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
+            });
+            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1'; 
+            if (document.getElementById(activeTableId)) switchTable(activeTableId);
+            else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id);
+            else addNewTable(true);
+            showMessage(`Draft "${draftName}" loaded!`, 'success');
+            draftListElement.style.display = 'none'; 
+            rebuildAndRenderSummary();
+        } else { showMessage(`Draft "${draftName}" not found.`, 'error'); }
+    }
+    function confirmAndDeleteDraft(draftName) {
+        if (customConfirm(`Are you sure you want to delete draft "${draftName}"?`)) {
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+            delete drafts[draftName];
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+            showMessage(`Draft "${draftName}" deleted.`, 'success');
+            renderDraftList(); 
+        }
+    }
+    function confirmAndClearAllDrafts() {
+        if (customConfirm('Are you sure you want to delete ALL drafts? This cannot be undone.')) {
+            localStorage.removeItem(DRAFTS_KEY);
+            showMessage('All drafts cleared!', 'success');
+            renderDraftList(); 
+        }
+    }
 
-        // Function to add a row below
-        function addRowBelow() {
-            const t = document.getElementById(activeTableId);
-            const r = t.insertRow(-1);
-            for (let i = 0; i < t.rows[0].cells.length; i++) {
-                const cell = r.insertCell();
-                cell.contentEditable = 'true';
-            }
-            updateSummary();
-        }
+    // --- Table Management ---
+    function addTabButton(id, label) {
+        const button = document.createElement('button');
+        button.textContent = label;
+        button.onclick = () => switchTable(id); 
+        tableTabs.appendChild(button);
+        return button;
+    }
+    function switchTable(id) {
+        const targetTable = document.getElementById(id);
+        if (!targetTable) {
+            const firstTableInDOM = tablesContainer.querySelector('table');
+            if (firstTableInDOM) id = firstTableInDOM.id;
+            else { 
+                showMessage('Cannot switch: Target table not found.', 'error');
+                if (tablesContainer.children.length === 0) addNewTable(true); 
+                return;
+            }
+        }
+        activeTableId = id;
+        tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
+        tableTabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes(`'${id}'`)));
+        deselectAllTableCells(); 
+        rebuildAndRenderSummary(); 
+    }
+    function addNewTable(isInitial = false) {
+        tableCount++; 
+        const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
+        const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
+        if (!label && !isInitial) return; 
+        const newTable = document.createElement('table');
+        const newTableId = `tbl_${Date.now()}_${tableCount}`; 
+        newTable.id = newTableId;
+        newTable.dataset.tableName = label || defaultTableName; 
+        const thead = newTable.createTHead();
+        const headerRow = thead.insertRow();
+        ['Period/Subject', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'].forEach(text => {
+            const th = document.createElement('th');
+            th.contentEditable = 'true'; th.textContent = text; headerRow.appendChild(th);
+        });
+        const tbody = newTable.createTBody();
+        for (let r = 0; r < 2; r++) { 
+            const dataRow = tbody.insertRow();
+            for (let c = 0; c < headerRow.cells.length; c++) {
+                const td = dataRow.insertCell();
+                td.contentEditable = 'true';
+                if (c === 0) td.textContent = `Sample Row ${r+1}`; 
+            }
+        }
+        tablesContainer.appendChild(newTable);
+        addTabButton(newTableId, label || defaultTableName);
+        switchTable(newTableId); 
+        if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
+    }
+    function promptAndRenameActiveTable() {
+        const currentTab = tableTabs.querySelector(`button.active`);
+        if (!currentTab) { showMessage('No active table to rename.', 'error'); return; }
+        const oldName = currentTab.textContent;
+        const newName = customPrompt('Enter new table name:', oldName);
+        if (newName && newName.trim() !== oldName) {
+            currentTab.textContent = newName.trim();
+            const tableElement = document.getElementById(activeTableId);
+            if (tableElement) tableElement.dataset.tableName = newName.trim(); 
+            showMessage(`Table renamed to "${newName.trim()}".`, 'success');
+        }
+    }
+    function confirmAndDeleteActiveTable() {
+        if (tablesContainer.children.length <= 1) { showMessage('Cannot delete the last table.', 'error'); return; }
+        const activeTab = tableTabs.querySelector(`button.active`);
+        const tableName = activeTab ? activeTab.textContent : activeTableId; 
+        if (customConfirm(`Delete table "${tableName}"?`)) {
+            document.getElementById(activeTableId)?.remove(); 
+            activeTab?.remove(); 
+            const firstRemainingTab = tableTabs.querySelector('button');
+            if (firstRemainingTab) firstRemainingTab.click(); 
+            else { activeTableId = null; addNewTable(true); }
+            showMessage('Table deleted.', 'success');
+        }
+    }
 
-        // Function to add a column to the left
-        function addColLeft() {
-            const t = document.getElementById(activeTableId);
-            for (const row of t.rows) {
-                const c = row.insertCell(1);
-                if (row.rowIndex === 0) {
-                    c.outerHTML = '<th contenteditable="true"></th>';
-                } else {
-                    c.contentEditable = 'true';
-                }
-            }
-            rebuildAndUpdateSummary();
-        }
+    // --- Row/Column Operations ---
+    function addRowToTable(tableBody, rowIndex, numCols) {
+        const row = tableBody.insertRow(rowIndex);
+        for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true'; }
+    }
+    function addRowAboveToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return;
+        addRowToTable(table.tBodies[0], 0, table.rows[0].cells.length); 
+        rebuildAndRenderSummary();
+    }
+    function addRowBelowToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return;
+        addRowToTable(table.tBodies[0], -1, table.rows[0].cells.length); 
+        rebuildAndRenderSummary();
+    }
+    function addColumnToTable(table, colIndex) {
+        for (const row of table.rows) {
+            const isHeaderRow = row.parentElement.tagName === 'THEAD';
+            const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex);
+            cell.contentEditable = 'true';
+            if (isHeaderRow) {
+                 if (colIndex === -1 || colIndex >= row.cells.length) row.appendChild(cell); else row.insertBefore(cell, row.cells[colIndex]);
+                 cell.textContent = "New Col"; 
+            }
+        }
+    }
+    function addColumnLeftToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (table) { addColumnToTable(table, 0); rebuildAndRenderSummary(); }
+    }
+    function addColumnRightToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (table) { addColumnToTable(table, -1); rebuildAndRenderSummary(); }
+    }
 
-        // Function to add a column to the right
-        function addColRight() {
-            const t = document.getElementById(activeTableId);
-            for (const row of t.rows) {
-                const c = row.insertCell(-1);
-                if (row.rowIndex === 0) {
-                    c.outerHTML = '<th contenteditable="true"></th>';
-                } else {
-                    c.contentEditable = 'true';
-                }
-            }
-            rebuildAndUpdateSummary();
-        }
+    // --- Cell Selection, Merging, Unmerging ---
+    function toggleCellSelectionMode() {
+        selectionMode = !selectionMode;
+        const btn = document.getElementById('selectBtn');
+        btn.classList.toggle('active', selectionMode);
+        btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
+        if (!selectionMode) deselectAllTableCells();
+    }
+    function handleTableCellClick(event) {
+        const cell = event.target.closest('td, th'); 
+        if (!cell || !cell.closest(`#${activeTableId}`)) return; 
+        if (selectedNameFromList) { 
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
+                cell.textContent = selectedNameFromList;
+                nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted'); 
+                selectedNameFromList = null; 
+                rebuildAndRenderSummary(); 
+                toggleNameListModalVisibility(); 
+            } else { showMessage('Click an editable data cell to insert name.', 'info'); }
+            return; 
+        }
+        if (selectionMode) { 
+            cell.classList.toggle('selected');
+            if (cell.classList.contains('selected')) selectedCells.push(cell);
+            else selectedCells = selectedCells.filter(c => c !== cell);
+        }
+    }
+    function deselectAllTableCells() {
+        selectedCells.forEach(c => c.classList.remove('selected'));
+        selectedCells = [];
+    }
+    function mergeSelectedTableCells() {
+        if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error'); return; }
+        const table = document.getElementById(activeTableId);
+        let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
+        selectedCells.forEach(cell => {
+            const r = cell.parentNode.rowIndex; const c = cell.cellIndex;          
+            minR = Math.min(minR, r); maxR = Math.max(maxR, r + (cell.rowSpan || 1) - 1); 
+            minC = Math.min(minC, c); maxC = Math.max(maxC, c + (cell.colSpan || 1) - 1); 
+        });
+        const firstCell = table.rows[minR]?.cells[minC]; 
+        if (!firstCell) { showMessage('Error finding merge starting cell.', 'error'); return; }
+        let contentToKeep = firstCell.innerHTML; 
+        let cellsToRemove = [];
+        for (let r = minR; r <= maxR; r++) {
+            for (let c = minC; c <= maxC; c++) {
+                if (table.rows[r]?.cells[c]) {
+                    const currentCell = table.rows[r].cells[c];
+                    if (currentCell !== firstCell && selectedCells.includes(currentCell)) cellsToRemove.push(currentCell);
+                }
+            }
+        }
+        cellsToRemove.forEach(cell => cell.remove()); 
+        firstCell.rowSpan = maxR - minR + 1; firstCell.colSpan = maxC - minC + 1;
+        firstCell.innerHTML = contentToKeep; firstCell.classList.add('merged');
+        deselectAllTableCells(); 
+        if (selectionMode) toggleCellSelectionMode(); 
+        rebuildAndRenderSummary(); showMessage('Cells merged.', 'success');
+    }
+    function unmergeActiveCellIfMerged() {
+        const activeCell = document.activeElement; 
+        if (activeCell && (activeCell.tagName === 'TD' || activeCell.tagName === 'TH') && (activeCell.rowSpan > 1 || activeCell.colSpan > 1) && activeCell.closest(`#${activeTableId}`)) {
+            unmergeGivenCell(activeCell);
+        } else if (selectedCells.length === 1 && (selectedCells[0].rowSpan > 1 || selectedCells[0].colSpan > 1)) {
+             unmergeGivenCell(selectedCells[0]);
+        } else { showMessage('Click on a merged cell or select a single merged cell to unmerge.', 'error'); }
+    }
+    function unmergeGivenCell(cellToUnmerge) {
+        const table = cellToUnmerge.closest('table'); if (!table) return; 
+        const rSpan = cellToUnmerge.rowSpan || 1; const cSpan = cellToUnmerge.colSpan || 1;
+        if (rSpan === 1 && cSpan === 1) { showMessage('Cell is not merged.', 'info'); return; }
+        const startRowIndex = cellToUnmerge.parentNode.rowIndex; const startCellIndex = cellToUnmerge.cellIndex;
+        cellToUnmerge.rowSpan = 1; cellToUnmerge.colSpan = 1; cellToUnmerge.classList.remove('merged');
+        for (let r = 0; r < rSpan; r++) {
+            for (let c = 0; c < cSpan; c++) {
+                if (r === 0 && c === 0) continue; 
+                const targetRow = table.rows[startRowIndex + r];
+                if (targetRow) { const newCell = targetRow.insertCell(startCellIndex + c); newCell.contentEditable = 'true'; }
+            }
+        }
+        deselectAllTableCells(); rebuildAndRenderSummary(); showMessage('Cell unmerged.', 'success');
+    }
 
-        // Function to prompt for table deletion
-        function promptDeleteTable() {
-            showPrompt('Are you sure you want to delete the table? Type "yes" to confirm.', (response) => {
-                if (response && response.toLowerCase() === 'yes') {
-                    const table = document.getElementById(activeTableId);
-                    if (table && table.id !== 'tbl_1') { // Prevent deleting the first table
-                        table.remove();
-                        const tab = document.querySelector(`.table-tabs button[onclick="switchTable('${activeTableId}')"]`);
-                        if (tab) tab.remove();
-                        activeTableId = 'tbl_1'; // Switch back to default table
-                        switchTable(activeTableId);
-                        alert('Table deleted successfully!');
-                    } else {
-                        alert('Cannot delete the default table or no table found.');
-                    }
-                }
-            });
-        }
+    // --- Name List Management (Modal) ---
+    function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C"]'); }
+    function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
+    function toggleNameListModalVisibility() {
+        nameModal.style.display = nameModal.style.display === 'flex' ? 'none' : 'flex'; 
+        if (nameModal.style.display === 'flex') { renderNameList(); newNameInput.focus(); }
+    }
+    function renderNameList() {
+        nameListContainer.innerHTML = ''; 
+        if (names.length === 0) { nameListContainer.innerHTML = '<p>No names. Add some!</p>'; return; }
+        names.forEach(name => {
+            const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
+            itemDiv.innerHTML = `<span data-name="${name}">${name}</span><button>Delete</button>`;
+            nameListContainer.appendChild(itemDiv);
+        });
+    }
+    function addNewNameToList() {
+        const newName = newNameInput.value.trim();
+        if (!newName) { showMessage('Enter a name.', 'error'); return; }
+        if (names.includes(newName)) { showMessage('Name already exists.', 'error'); return; }
+        names.push(newName); saveNames(); renderNameList();
+        newNameInput.value = ''; newNameInput.focus(); 
+        rebuildAndRenderSummary(); showMessage(`"${newName}" added.`, 'success');
+    }
+    function deleteNameFromListAndStorage(nameToDelete) {
+        if (customConfirm(`Delete "${nameToDelete}"?`)) {
+            names = names.filter(n => n !== nameToDelete); saveNames(); renderNameList();
+            rebuildAndRenderSummary(); showMessage(`"${nameToDelete}" removed.`, 'success');
+        }
+    }
+    function selectNameForCellInsertion(name) {
+        nameListContainer.querySelectorAll('.name-item span').forEach(s => s.classList.remove('highlighted'));
+        nameListContainer.querySelector(`.name-item span[data-name="${name}"]`)?.classList.add('highlighted');
+        selectedNameFromList = name; 
+        showMessage(`Selected "${name}". Click cell to insert.`, 'info');
+    }
 
-        // Function to prompt for renaming a table
-        function promptRenameTable() {
-            showPrompt('Enter the new table name:', (newName) => {
-                const tab = document.querySelector(`.table-tabs button[onclick="switchTable('${activeTableId}')"]`);
-                if (tab && newName) {
-                    tab.textContent = newName.trim();
-                    alert('Table renamed to "' + newName + '"!');
-                } else {
-                    alert('No table found to rename.');
-                }
-            });
-        }
-    </script>
-        <script>
-        // Part 4: Selection, Merge, Name List, and Excel Export Functions
+    // --- Excel Export/Import ---
+    function handleExcelFileImport(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName];
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { editable: true, raw: false });
+                tableCount++; 
+                const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
+                const importedTableName = file.name.replace(/\.xlsx?/i, '') || `Imported ${tableCount}`;
+                const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
+                const importedTableElement = tempDiv.querySelector('table');
+                if (importedTableElement) {
+                    importedTableElement.id = newTableId; importedTableElement.dataset.tableName = importedTableName;
+                    importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
+                    tablesContainer.appendChild(importedTableElement); 
+                    addTabButton(newTableId, importedTableName); switchTable(newTableId); 
+                    showMessage('Excel data imported into a new table!', 'success');
+                } else { showMessage('Could not parse table from Excel.', 'error'); }
+            } catch (error) { console.error("Excel import error:", error); showMessage('Error processing Excel file.', 'error'); }
+            finally { event.target.value = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    function exportActiveTableToExcel() {
+        const tableToExport = document.getElementById(activeTableId);
+        if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
+        const tableName = tableToExport.dataset.tableName || activeTableId; 
+        const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
+        XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showMessage(`Table "${tableName}" exported.`, 'success');
+    }
 
-        // Function to toggle selection mode
-        function toggleSelectionMode() {
-            selectionMode = !selectionMode;
-            const b = document.getElementById('selectBtn');
-            b.classList.toggle('active', selectionMode);
-            b.textContent = selectionMode ? '✨ Selecting...' : '✨ Select';
-            if (!selectionMode) deselectAll();
-        }
-
-        tablesContainer.addEventListener('click', e => {
-            if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
-            const cell = e.target;
-            if (selectedName) {
-                if (cell.tagName === 'TD') {
-                    cell.textContent = selectedName;
-                    nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
-                    selectedName = '';
-                    updateSummary();
-                } else {
-                    alert('Tap an editable cell');
-                }
-                return;
-            }
-            if (selectionMode) {
-                cell.classList.toggle('selected');
-                if (cell.classList.contains('selected')) {
-                    selectedCells.push(cell);
-                } else {
-                    selectedCells = selectedCells.filter(c => c !== cell);
-                }
-            }
-        });
-
-        // Function to deselect all selected cells
-        function deselectAll() {
-            selectedCells.forEach(c => c.classList.remove('selected'));
-            selectedCells = [];
-        }
-
-        // Function to merge selected cells
-        function mergeCells() {
-            if (selectedCells.length < 2) {
-                alert('Please select at least two cells to merge.');
-                return;
-            }
-            const rs = selectedCells.map(c => c.parentNode.rowIndex);
-            const cs = selectedCells.map(c => c.cellIndex);
-            const minR = Math.min(...rs);
-            const maxR = Math.max(...rs);
-            const minC = Math.min(...cs);
-            const maxC = Math.max(...cs);
-            const table = document.getElementById(activeTableId);
-            const tl = table.rows[minR].cells[minC];
-            for (let r = minR; r <= maxR; r++) {
-                for (let c = minC; c <= maxC; c++) {
-                    const cell = table.rows[r].cells[c];
-                    if (cell !== tl) cell.remove();
-                }
-            }
-            tl.rowSpan = maxR - minR + 1;
-            tl.colSpan = maxC - minC + 1;
-            tl.classList.add('merged');
-            toggleSelectionMode();
-            deselectAll();
-            updateSummary();
-        }
-
-        // Function to unmerge cells
-        function unmergeCells() {
-            const mergedCells = document.querySelectorAll(`#${activeTableId} .merged`);
-            if (!mergedCells.length) {
-                alert('No merged cells to unmerge.');
-                return;
-            }
-            mergedCells.forEach(cell => {
-                const rs = cell.rowSpan || 1;
-                const cs = cell.colSpan || 1;
-                const r0 = cell.parentNode.rowIndex;
-                const c0 = cell.cellIndex;
-                const table = document.getElementById(activeTableId);
-                cell.rowSpan = 1;
-                cell.colSpan = 1;
-                cell.classList.remove('merged');
-                for (let r = 0; r < rs; r++) {
-                    for (let c = 0; c < cs; c++) {
-                        if (r || c) {
-                            const row = table.rows[r0 + r];
-                            const newCell = row.insertCell(c0 + c);
-                            newCell.contentEditable = 'true';
-                            newCell.textContent = '';
-                        }
-                    }
-                }
-            });
-            updateSummary();
-        }
-
-        // Name list functions
-        function toggleNameList() {
-            nameModal.style.display = nameModal.style.display === 'block' ? 'none' : 'block';
-            updateNameList();
-        }
-
-        function closeNameList() {
-            nameModal.style.display = 'none';
-        }
-
-        function updateNameList() {
-            nameListContainer.innerHTML = '';
-            names.forEach(n => {
-                nameListContainer.insertAdjacentHTML('beforeend', `<div class="name-item"><span data-name="${n}">${n}</span><button>Delete</button></div>`);
-            });
-        }
-
-        function selectName(n) {
-            nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
-            const span = nameListContainer.querySelector(`span[data-name="${n}"]`);
-            if (span) {
-                span.classList.add('highlighted');
-                selectedName = n;
-            }
-        }
-
-        function addName() {
-            const n = newNameInput.value.trim();
-            if (!n || names.includes(n)) {
-                if (!n) alert('Please enter a name.');
-                else alert('Name already exists.');
-                return;
-            }
-            names.push(n);
-            localStorage.setItem(NAMES_KEY, JSON.stringify(names));
-            newNameInput.value = '';
-            updateNameList();
-            rebuildAndUpdateSummary();
-        }
-
-        function deleteName(n) {
-            names = names.filter(x => x !== n);
-            localStorage.setItem(NAMES_KEY, JSON.stringify(names));
-            updateNameList();
-            rebuildAndUpdateSummary();
-        }
-
-        // Excel export function
-        function promptExcelExport() {
-            const table = document.getElementById(activeTableId);
-            if (!table) {
-                alert('No table found to export.');
-                return;
-            }
-            const wb = XLSX.utils.table_to_book(table, { sheet: 'Weekly Schedule' });
-            const date = new Date('2025-05-24T20:19:00+08:00').toISOString().split('T')[0]; // Current date and time
-            XLSX.writeFile(wb, `Weekly_Schedule_${date}.xlsx`);
-            alert('Exported to Excel successfully!');
-        }
-
-        // Function to handle Excel file import
-        function handleExcelFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const html = XLSX.utils.sheet_to_html(sheet);
-                tablesContainer.innerHTML = html;
-                rebuildAndUpdateSummary();
-                event.target.value = ''; // Reset file input
-                alert('Imported from Excel successfully!');
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        // Summary functions
-        function buildSummarySkeleton() {
-            const firstTable = tablesContainer.querySelector('table');
-            if (!firstTable) return;
-            const hdr = [...firstTable.tHead.rows[0].cells].slice(1).map(th => th.innerText.trim() || '—');
-            const tbl = document.getElementById('summaryTable');
-            tbl.innerHTML = '';
-            const thead = tbl.createTHead();
-            const hr = thead.insertRow();
-            hr.insertCell().outerHTML = '<th>NAME</th>';
-            hdr.forEach(h => hr.insertCell().textContent = h);
-            const tbody = tbl.createTBody();
-            const uniqueNames = [...new Set([...names, ...[...tablesContainer.querySelectorAll('td')].map(td => td.innerText.trim()).filter(Boolean)])];
-            uniqueNames.forEach(n => {
-                const tr = tbody.insertRow();
-                tr.insertCell().textContent = n;
-                for (let i = 0; i < hdr.length; i++) tr.insertCell();
-            });
-        }
-
-        function updateSummary() {
-            const tbl = document.getElementById('summaryTable');
-            if (!tbl.tBodies.length) {
-                buildSummarySkeleton();
-                return;
-            }
-            [...tbl.tBodies[0].rows].forEach(r => [...r.cells].slice(1).forEach(c => c.textContent = ''));
-            tablesContainer.querySelectorAll('table').forEach(t => {
-                [...t.tBodies].forEach(tb => {
-                    tb.querySelectorAll('tr').forEach(r => {
-                        [...r.cells].slice(1).forEach((c, i) => {
-                            const name = c.innerText.trim();
-                            if (!name) return;
-                            const row = [...tbl.tBodies[0].rows].find(rr => rr.cells[0].textContent === name);
-                            if (row) row.cells[i + 1].textContent = '✱';
-                        });
-                    });
-                });
-            });
-        }
-
-        const rebuildAndUpdateSummary = () => {
-            buildSummarySkeleton();
-            updateSummary();
-        };
-
-        // Auto update on edits
-        ['blur', 'input'].forEach(ev => tablesContainer.addEventListener(ev, e => {
-            if (/TD|TH/.test(e.target.tagName)) setTimeout(updateSummary, 0);
-        }));
-    </script>
+    // --- Summary Table Logic ---
+    function rebuildAndRenderSummary() { buildSummaryTableSkeleton(); updateSummaryTableData(); }
+    function buildSummaryTableSkeleton() {
+        if (!summaryTableElement) { console.error("Summary table element not found."); return; }
+        summaryTableElement.innerHTML = ''; 
+        const summaryRowItems = new Set(names); 
+        tablesContainer.querySelectorAll('table').forEach(table => {
+            table.querySelectorAll('tbody tr').forEach(dataRow => {
+                Array.from(dataRow.cells).forEach((cell, cellIndex) => {
+                    if (cellIndex > 0) { 
+                        const text = cell.textContent.trim();
+                        if (text && isNaN(text) && text.length > 1) summaryRowItems.add(text);
+                    }
+                });
+            });
+        });
+        const sortedSummaryRowHeaders = Array.from(summaryRowItems).sort();
+        const activeScheduleTable = document.getElementById(activeTableId);
+        let summaryColumnHeaders = ['Name/Subject']; 
+        if (activeScheduleTable?.tHead?.rows.length > 0) {
+            summaryColumnHeaders.push(...Array.from(activeScheduleTable.tHead.rows[0].cells).slice(1).map(th => th.textContent.trim() || 'Period')); 
+        } else { summaryColumnHeaders.push('Period 1', 'Period 2', 'Period 3', 'Period 4', 'Period 5'); }
+        const thead = summaryTableElement.createTHead();
+        const headerRowForSummary = thead.insertRow();
+        summaryColumnHeaders.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRowForSummary.appendChild(th); });
+        const tbody = summaryTableElement.createTBody();
+        if (sortedSummaryRowHeaders.length === 0) {
+            const tr = tbody.insertRow(); const td = tr.insertCell();
+            td.colSpan = summaryColumnHeaders.length || 1; 
+            td.textContent = 'No items to summarize.'; td.style.textAlign = 'center'; td.style.padding = '10px';
+        } else {
+            sortedSummaryRowHeaders.forEach(name => {
+                const tr = tbody.insertRow(); tr.insertCell().textContent = name; 
+                for (let i = 1; i < summaryColumnHeaders.length; i++) tr.insertCell().textContent = ''; 
+            });
+        }
+    }
+    function updateSummaryTableData() {
+        if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0) {
+            buildSummaryTableSkeleton(); 
+            if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0 || (summaryTableElement.tBodies[0].rows[0].cells.length === 1 && summaryTableElement.tBodies[0].rows[0].cells[0].colSpan > 1) ) return; 
+        }
+        const summaryBody = summaryTableElement.tBodies[0];
+        const summaryTableActualColumnHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
+        Array.from(summaryBody.rows).forEach(summaryRow => Array.from(summaryRow.cells).slice(1).forEach(cell => cell.textContent = '')); 
+        const activeScheduleTable = document.getElementById(activeTableId);
+        if (!activeScheduleTable || !activeScheduleTable.tHead?.rows.length > 0 || !activeScheduleTable.tBodies[0]) { console.warn("Active schedule table not found/malformed for summary."); return; }
+        const activeScheduleTableHeaders = Array.from(activeScheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+        Array.from(activeScheduleTable.tBodies[0].rows).forEach(scheduleDataRow => {
+            Array.from(scheduleDataRow.cells).forEach((scheduleCell, scheduleCellIndex) => {
+                if (scheduleCellIndex === 0) return; 
+                const entryInScheduleCell = scheduleCell.textContent.trim(); 
+                if (entryInScheduleCell) {
+                    const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
+                    if (targetSummaryRow) {
+                        const currentScheduleColumnHeader = activeScheduleTableHeaders[scheduleCellIndex];
+                        const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === currentScheduleColumnHeader);
+                        if (targetSummaryColumnCellIndex > 0) targetSummaryRow.cells[targetSummaryColumnCellIndex].textContent += '✱'; 
+                    }
+                }
+            });
+        });
+    }
+</script>
 </body>
 </html>
