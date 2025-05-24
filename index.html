@@ -1,121 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=yes">
-<title>Weekly Schedule</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-body{font-family:Arial,Helvetica,sans-serif;margin:28px}
-h2{margin:0 0 12px}
-table{border-collapse:collapse;width:100%;margin-top:10px;display:none}
-table.active{display:table}
-th,td{border:1px solid #999;padding:8px;text-align:center;min-width:90px}
-th{background:#f2f2f2}td.selected,th.selected{outline:3px solid #ffdf6a}.merged{font-style:italic}
-.bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.bar button{padding:8px 12px;font-size:14px;border-radius:4px;cursor:pointer;border:1px solid #666;background:#fff}
-#excelBtn{background:#2e8b57;color:#fff}#saveDraftBtn{background:#0b65c2;color:#fff}
-#loadDraftBtn{background:#ff8c00;color:#fff}#mergeBtn{background:#6a5acd;color:#fff}
-#unmergeBtn{background:#cd5c5c;color:#fff}#selectBtn{background:#00ced1;color:#fff}
-#selectBtn.active{background:#ff4500}#addTableBtn{background:#ff69b4;color:#fff}
-#renameTableBtn{background:#4682b4;color:#fff}#deleteTableBtn{background:#dc143c;color:#fff}
-#nameListBtn{background:#32cd32;color:#fff}
-.table-tabs{display:flex;gap:6px;margin-bottom:10px}
-.table-tabs button{padding:6px 12px;background:#ddd;border:1px solid #999;border-radius:4px}
-.table-tabs button.active{background:#4caf50;color:#fff}
-#summaryTable th{background:#ffeeba}#summaryTable td{background:#fffff7}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none}
-.modal-content{pointer-events:auto;background:#fff;position:absolute;top:50px;right:50px;padding:20px;width:300px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,.3)}
-.modal-header{cursor:move;padding-bottom:10px;border-bottom:1px solid #ddd;touch-action:none;}
-.name-item{display:flex;justify-content:space-between;align-items:center;padding:5px;border-bottom:1px solid #ddd}
-.name-item span{flex-grow:1;cursor:pointer}.name-item button{background:#ff4444;color:#fff;border:none;border-radius:3px}
-.highlighted{background:#ffff99}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Weekly Schedule</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 28px;
+        }
+        h2 {
+            margin: 0 0 12px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+            display: none;
+        }
+        table.active {
+            display: table;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: center;
+            min-width: 90px;
+        }
+        th {
+            background: #f2f2f2;
+        }
+        td.selected, th.selected {
+            outline: 3px solid #ffdf6a;
+        }
+        .merged {
+            font-style: italic;
+        }
+        .bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .bar button {
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #666;
+            background: #fff;
+        }
+        #excelBtn {
+            background: #2e8b57;
+            color: #fff;
+        }
+        #saveDraftBtn {
+            background: #0b65c2;
+            color: #fff;
+        }
+        #loadDraftBtn {
+            background: #ff8c00;
+            color: #fff;
+        }
+        #mergeBtn {
+            background: #6a5acd;
+            color: #fff;
+        }
+        #unmergeBtn {
+            background: #cd5c5c;
+            color: #fff;
+        }
+        #selectBtn {
+            background: #00ced1;
+            color: #fff;
+        }
+        #selectBtn.active {
+            background: #ff4500;
+        }
+        #addTableBtn {
+            background: #ff69b4;
+            color: #fff;
+        }
+        #renameTableBtn {
+            background: #4682b4;
+            color: #fff;
+        }
+        #deleteTableBtn {
+            background: #dc143c;
+            color: #fff;
+        }
+        #nameListBtn {
+            background: #32cd32;
+            color: #fff;
+        }
+        .table-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .table-tabs button {
+            padding: 6px 12px;
+            background: #ddd;
+            border: 1px solid #999;
+            border-radius: 4px;
+        }
+        .table-tabs button.active {
+            background: #4caf50;
+            color: #fff;
+        }
+        #summaryTable th {
+            background: #ffeeba;
+        }
+        #summaryTable td {
+            background: #fffff7;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .modal-content {
+            pointer-events: auto;
+            background: #fff;
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            padding: 20px;
+            width: 300px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .3);
+        }
+        .modal-header {
+            cursor: move;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            touch-action: none;
+        }
+        .name-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .name-item span {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        .name-item button {
+            background: #ff4444;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+        }
+        .highlighted {
+            background: #ffff99;
+        }
+    </style>
 </head>
 <body>
-<h2 contenteditable="true">Weekly Schedule</h2>
+    <h2 contenteditable="true">Weekly Schedule</h2>
 
-<div class="bar">
-  <button id="excelBtn" onclick="promptExcelExport()">💾 Save to Excel</button>
-  <input type="file" id="fileInput" accept=".xlsx" style="display:none" onchange="handleExcelFile(event)">
-  <button id="saveDraftBtn" onclick="promptSaveDraft()">💠 Save Draft</button>
-  <button id="loadDraftBtn" onclick="toggleDraftList()">📂 Load Draft</button>
-  <button onclick="clearDraft()">🗑️ Clear Draft</button>
-  <button id="selectBtn" onclick="toggleSelectionMode()">✨ Select</button>
-  <button id="mergeBtn" onclick="mergeCells()">🔗 Merge Cells</button>
-  <button id="deselectBtn" onclick="deselectAll()">🚫 Deselect</button>
-  <button id="unmergeBtn" onclick="unmergeCells()">🔗 Unmerge Cells</button>
-  <button id="addTableBtn" onclick="addNewTable()">✨ Add New Table</button>
-  <button id="renameTableBtn" onclick="promptRenameTable()">📝 Rename Table</button>
-  <button id="deleteTableBtn" onclick="promptDeleteTable()">❌ Delete Table</button>
-  <button id="nameListBtn" onclick="toggleNameList()">👥 Name List</button>
-</div>
+    <div class="bar">
+        <button id="excelBtn">💾 Save to Excel</button>
+        <input type="file" id="fileInput" accept=".xlsx" style="display:none">
+        <button id="saveDraftBtn">💠 Save Draft</button>
+        <button id="loadDraftBtn">📂 Load Draft</button>
+        <button id="clearDraft">🗑️ Clear Draft</button>
+        <button id="selectBtn">✨ Select</button>
+        <button id="mergeBtn">🔗 Merge Cells</button>
+        <button id="deselectBtn">🚫 Deselect</button>
+        <button id="unmergeBtn">🔗 Unmerge Cells</button>
+        <button id="addTableBtn">✨ Add New Table</button>
+        <button id="renameTableBtn">📝 Rename Table</button>
+        <button id="deleteTableBtn">❌ Delete Table</button>
+        <button id="nameListBtn">👥 Name List</button>
+    </div>
 
-<div id="draftList"></div>
-<div class="bar table-tabs" id="tableTabs"></div>
+    <div id="draftList"></div>
+    <div class="bar table-tabs" id="tableTabs"></div>
 
-<div id="tablesContainer">
-  <table id="tbl_1" class="active">
-    <thead><tr><th contenteditable="true">Class</th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
-    <tbody><tr><td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr></tbody>
-  </table>
-</div>
+    <div id="tablesContainer">
+        <table id="tbl_1" class="active">
+            <thead><tr><th contenteditable="true">Class</th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
+            <tbody><tr><td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr></tbody>
+        </table>
+    </div>
 
-<div class="bar">
-  <button onclick="addRowAbove()">⬆️ Row Above</button>
-  <button onclick="addRowBelow()">⬇️ Row Below</button>
-  <button onclick="addColLeft()">⬅️ Col Left</button>
-  <button onclick="addColRight()">➡️ Col Right</button>
-</div>
+    <div class="bar">
+        <button>⬆️ Row Above</button>
+        <button>⬇️ Row Below</button>
+        <button>⬅️ Col Left</button>
+        <button>➡️ Col Right</button>
+    </div>
 
-<div id="nameModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header"><h3>Name List</h3></div>
-    <div><input id="newNameInput" placeholder="Add new name"><button onclick="addName()">Add</button></div>
-    <div id="nameList" style="margin-top:10px;max-height:200px;overflow-y:auto;"></div>
-    <button onclick="closeNameList()" style="margin-top:10px;">Close</button>
-  </div>
-</div>
+    <div id="nameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Name List</h3></div>
+            <div><input id="newNameInput" placeholder="Add new name"><button>Add</button></div>
+            <div id="nameList" style="margin-top:10px;max-height:200px;overflow-y:auto;"></div>
+            <button>Close</button>
+        </div>
+    </div>
 
-<h3 style="margin-top:32px">Teacher Attendance Summary</h3>
-<table id="summaryTable"></table>
+    <h3 style="margin-top:32px">Teacher Attendance Summary</h3>
+    <table id="summaryTable"></table>
 
-<script>
-const DRAFTS_KEY='jadual_drafts',NAMES_KEY='jadual_names';
-let activeTableId='tbl_1',tableCount=1,selectionMode=false,selectedCells=[],selectedName=null;
-const tablesContainer=document.getElementById('tablesContainer');
-const tableTabs=document.getElementById('tableTabs');
-tableTabs.innerHTML="<button class='active' onclick="switchTable('tbl_1')">Table 1</button>";
-let names=JSON.parse(localStorage.getItem(NAMES_KEY)||'[]');if(!names.length)names=['Teacher A','Teacher B','Teacher C'];
-const nameModal=document.getElementById('nameModal'),nameListContainer=document.getElementById('nameList'),newNameInput=document.getElementById('newNameInput');
-const deselectAll=()=>{selectedCells.forEach(c=>c.classList.remove('selected'));selectedCells=[];};
-/* switch */
-function switchTable(id){activeTableId=id;document.querySelectorAll('#tablesContainer table').forEach(t=>t.classList.toggle('active',t.id===id));document.querySelectorAll('.table-tabs button').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(id)));deselectAll();}
-function addNewTable(){tableCount++;const id='tbl_'+tableCount;const label=prompt('Table name:','Table '+tableCount);if(!label)return;const tbl=document.createElement('table');tbl.id=id;tbl.innerHTML=document.getElementById('tbl_1').innerHTML;tbl.querySelectorAll('tbody td').forEach(td=>td.textContent='');tablesContainer.appendChild(tbl);tableTabs.insertAdjacentHTML('beforeend',"<button onclick="switchTable('"+id+"')">"+label.trim()+"</button>");switchTable(id);rebuildAndUpdateSummary();}
-function addRowAbove(){const t=document.getElementById(activeTableId);const r=t.insertRow(1);for(let i=0;i<t.rows[0].cells.length;i++)r.insertCell().contentEditable='true';updateSummary();}
-function addRowBelow(){const t=document.getElementById(activeTableId);const r=t.insertRow(-1);for(let i=0;i<t.rows[0].cells.length;i++)r.insertCell().contentEditable='true';updateSummary();}
-function addColLeft(){const t=document.getElementById(activeTableId);for(const row of t.rows){const c=row.insertCell(1);row.rowIndex?c.contentEditable='true':c.outerHTML='<th contenteditable="true"></th>';}rebuildAndUpdateSummary();}
-function addColRight(){const t=document.getElementById(activeTableId);for(const row of t.rows){const c=row.insertCell(-1);row.rowIndex?c.contentEditable='true':c.outerHTML='<th contenteditable="true"></th>';}rebuildAndUpdateSummary();}
-/* select merge */
-function toggleSelectionMode(){selectionMode=!selectionMode;const b=document.getElementById('selectBtn');b.classList.toggle('active',selectionMode);b.textContent=selectionMode?'✨ Selecting...':'✨ Select';if(!selectionMode)deselectAll();}
-tablesContainer.addEventListener('click',e=>{if(e.target.tagName!=='TD'&&e.target.tagName!=='TH')return;const cell=e.target;if(selectedName){if(cell.tagName==='TD'){cell.textContent=selectedName;nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');selectedName='';updateSummary();}else alert('Tap an editable cell');return;}if(selectionMode){cell.classList.toggle('selected');cell.classList.contains('selected')?selectedCells.push(cell):selectedCells.splice(selectedCells.indexOf(cell),1);}});
-function mergeCells(){if(selectedCells.length<2)return;const rs=selectedCells.map(c=>c.parentNode.rowIndex),cs=selectedCells.map(c=>c.cellIndex),minR=Math.min(...rs),maxR=Math.max(...rs),minC=Math.min(...cs),maxC=Math.max(...cs),table=document.getElementById(activeTableId),tl=table.rows[minR].cells[minC];for(let r=minR;r<=maxR;r++)for(let c=minC;c<=maxC;c++){const cell=table.rows[r].cells[c];if(cell!==tl)cell.remove();}tl.rowSpan=maxR-minR+1;tl.colSpan=maxC-minC+1;tl.classList.add('merged');toggleSelectionMode();deselectAll();updateSummary();}
-function unmergeCells(){document.querySelectorAll(`#${activeTableId} .merged`).forEach(cell=>{const rs=cell.rowSpan,cs=cell.colSpan,r0=cell.parentNode.rowIndex,c0=cell.cellIndex,table=document.getElementById(activeTableId);cell.rowSpan=1;cell.colSpan=1;cell.classList.remove('merged');for(let r=0;r<rs;r++)for(let c=0;c<cs;c++)if(r||c){const n=table.rows[r0+r].insertCell(c0+c);n.contentEditable='true';}});updateSummary();}
-/* name list */
-function toggleNameList(){nameModal.style.display=nameModal.style.display==='block'?'none':'block';updateNameList();}
-function closeNameList(){nameModal.style.display='none';}
-function updateNameList(){nameListContainer.innerHTML='';names.forEach(n=>{nameListContainer.insertAdjacentHTML('beforeend',`<div class="name-item"><span data-name="${n}" onclick="selectName('${n}')">${n}</span><button onclick="deleteName('${n}')">Delete</button></div>`);});}
-function selectName(n){nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');nameListContainer.querySelector(`span[data-name="${n}"]`).classList.add('highlighted');selectedName=n;}
-function addName(){const n=newNameInput.value.trim();if(!n||names.includes(n))return;names.push(n);localStorage.setItem(NAMES_KEY,JSON.stringify(names));newNameInput.value='';updateNameList();rebuildAndUpdateSummary();}
-function deleteName(n){names=names.filter(x=>x!==n);localStorage.setItem(NAMES_KEY,JSON.stringify(names));updateNameList();rebuildAndUpdateSummary();}
-/* summary */
-function buildSummarySkeleton(){const hdr=[...tablesContainer.querySelector('table').tHead.rows[0].cells].slice(1).map(th=>th.innerText.trim()||'—');const tbl=document.getElementById('summaryTable');tbl.innerHTML='';const thead=tbl.createTHead();const hr=thead.insertRow();hr.insertCell().outerHTML='<th>NAME</th>';hdr.forEach(h=>hr.insertCell().textContent=h);const tbody=tbl.createTBody();[...new Set([...names,...[...tablesContainer.querySelectorAll('td')].map(td=>td.innerText.trim()).filter(Boolean)])].forEach(n=>{const tr=tbody.insertRow();tr.insertCell().textContent=n;for(let i=0;i<hdr.length;i++)tr.insertCell();});}
-function updateSummary(){const tbl=document.getElementById('summaryTable');if(!tbl.tBodies.length)buildSummarySkeleton();[...tbl.tBodies[0].rows].forEach(r=>[...r.cells].slice(1).forEach(c=>c.textContent=''));tablesContainer.querySelectorAll('table').forEach(t=>{[...t.tBodies].forEach(tb=>{tb.querySelectorAll('tr').forEach(r=>{[...r.cells].slice(1).forEach((c,i)=>{const name=c.innerText.trim();if(!name)return;const row=[...tbl.tBodies[0].rows].find(rr=>rr.cells[0].textContent===name);if(row)row.cells[i+1].textContent='✱';});});});});}
-const rebuildAndUpdateSummary=()=>{buildSummarySkeleton();updateSummary();};
-/* auto update on edits */
-['blur','input'].forEach(ev=>tablesContainer.addEventListener(ev,e=>{if(/TD|TH/.test(e.target.tagName))setTimeout(updateSummary,0);}));
+    <script>
+        // Part 4: Selection, Merge, Name List, and Excel Export Functions
 
-updateNameList();rebuildAndUpdateSummary();
-</script>
+        // Function to toggle selection mode
+        function toggleSelectionMode() {
+            selectionMode = !selectionMode;
+            const b = document.getElementById('selectBtn');
+            b.classList.toggle('active', selectionMode);
+            b.textContent = selectionMode ? '✨ Selecting...' : '✨ Select';
+            if (!selectionMode) deselectAll();
+        }
+
+        tablesContainer.addEventListener('click', e => {
+            if (e.target.tagName !== 'TD' && e.target.tagName !== 'TH') return;
+            const cell = e.target;
+            if (selectedName) {
+                if (cell.tagName === 'TD') {
+                    cell.textContent = selectedName;
+                    nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
+                    selectedName = '';
+                    updateSummary();
+                } else alert('Tap an editable cell');
+                return;
+            }
+            if (selectionMode) {
+                cell.classList.toggle('selected');
+                cell.classList.contains('selected') ? selectedCells.push(cell) : selectedCells.splice(selectedCells.indexOf(cell), 1);
+            }
+        });
+
+        // Function to deselect all selected cells
+        function deselectAll() {
+            selectedCells.forEach(c => c.classList.remove('selected'));
+            selectedCells = [];
+        }
+
+        // Function to merge selected cells
+        function mergeCells() {
+            if (selectedCells.length < 2) return;
+            const rs = selectedCells.map(c => c.parentNode.rowIndex);
+            const cs = selectedCells.map(c => c.cellIndex);
+            const minR = Math.min(...rs);
+            const maxR = Math.max(...rs);
+            const minC = Math.min(...cs);
+            const maxC = Math.max(...cs);
+            const table = document.getElementById(activeTableId);
+            const tl = table.rows[minR].cells[minC];
+            for (let r = minR; r <= maxR; r++) {
+                for (let c = minC; c <= maxC; c++) {
+                    const cell = table.rows[r].cells[c];
+                    if (cell !== tl) cell.remove();
+                }
+            }
+            tl.rowSpan = maxR - minR + 1;
+            tl.colSpan = maxC - minC + 1;
+            tl.classList.add('merged');
+            toggleSelectionMode();
+            deselectAll();
+            updateSummary();
+        }
+
+        // Function to unmerge cells
+        function unmergeCells() {
+            document.querySelectorAll(`#${activeTableId} .merged`).forEach(cell => {
+                const rs = cell.rowSpan;
+                const cs = cell.colSpan;
+                const r0 = cell.parentNode.rowIndex;
+                const c0 = cell.cellIndex;
+                const table = document.getElementById(activeTableId);
+                cell.rowSpan = 1;
+                cell.colSpan = 1;
+                cell.classList.remove('merged');
+                for (let r = 0; r < rs; r++) {
+                    for (let c = 0; c < cs; c++) {
+                        if (r || c) {
+                            const n = table.rows[r0 + r].insertCell(c0 + c);
+                            n.contentEditable = 'true';
+                        }
+                    }
+                }
+            });
+            updateSummary();
+        }
+
+        // Name list functions
+        function toggleNameList() {
+            nameModal.style.display = nameModal.style.display === 'block' ? 'none' : 'block';
+            updateNameList();
+        }
+
+        function closeNameList() {
+            nameModal.style.display = 'none';
+        }
+
+        function updateNameList() {
+            nameListContainer.innerHTML = '';
+            names.forEach(n => {
+                nameListContainer.insertAdjacentHTML('beforeend', `<div class="name-item"><span data-name="${n}" onclick="selectName('${n}')">${n}</span><button onclick="deleteName('${n}')">Delete</button></div>`);
+            });
+        }
+
+        function selectName(n) {
+            nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
+            nameListContainer.querySelector(`span[data-name="${n}"]`).classList.add('highlighted');
+            selectedName = n;
+        }
+
+        function addName() {
+            const n = newNameInput.value.trim();
+            if (!n || names.includes(n)) return;
+            names.push(n);
+            localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+            newNameInput.value = '';
+            updateNameList();
+            rebuildAndUpdateSummary();
+        }
+
+        function deleteName(n) {
+            names = names.filter(x => x !== n);
+            localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+            updateNameList();
+            rebuildAndUpdateSummary();
+        }
+
+        // Excel export function
+        function promptExcelExport() {
+            const table = document.getElementById(activeTableId);
+            if (!table) {
+                alert('No table found to export.');
+                return;
+            }
+            const wb = XLSX.utils.table_to_book(table, { sheet: 'Weekly Schedule' });
+            const date = new Date('2025-05-24T19:35:00+08:00').toISOString().split('T')[0]; // Current date and time
+            XLSX.writeFile(wb, `Weekly_Schedule_${date}.xlsx`);
+            alert('Exported to Excel successfully!');
+        }
+
+        // Function to handle Excel file import
+        function handleExcelFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const html = XLSX.utils.sheet_to_html(sheet);
+                tablesContainer.innerHTML = html;
+                rebuildAndUpdateSummary();
+                event.target.value = ''; // Reset file input
+                alert('Imported from Excel successfully!');
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Summary functions
+        function buildSummarySkeleton() {
+            const hdr = [...tablesContainer.querySelector('table').tHead.rows[0].cells].slice(1).map(th => th.innerText.trim() || '—');
+            const tbl = document.getElementById('summaryTable');
+            tbl.innerHTML = '';
+            const thead = tbl.createTHead();
+            const hr = thead.insertRow();
+            hr.insertCell().outerHTML = '<th>NAME</th>';
+            hdr.forEach(h => hr.insertCell().textContent = h);
+            const tbody = tbl.createTBody();
+            [...new Set([...names, ...[...tablesContainer.querySelectorAll('td')].map(td => td.innerText.trim()).filter(Boolean)])].forEach(n => {
+                const tr = tbody.insertRow();
+                tr.insertCell().textContent = n;
+                for (let i = 0; i < hdr.length; i++) tr.insertCell();
+            });
+        }
+
+        function updateSummary() {
+            const tbl = document.getElementById('summaryTable');
+            if (!tbl.tBodies.length) buildSummarySkeleton();
+            [...tbl.tBodies[0].rows].forEach(r => [...r.cells].slice(1).forEach(c => c.textContent = ''));
+            tablesContainer.querySelectorAll('table').forEach(t => {
+                [...t.tBodies].forEach(tb => {
+                    tb.querySelectorAll('tr').forEach(r => {
+                        [...r.cells].slice(1).forEach((c, i) => {
+                            const name = c.innerText.trim();
+                            if (!name) return;
+                            const row = [...tbl.tBodies[0].rows].find(rr => rr.cells[0].textContent === name);
+                            if (row) row.cells[i + 1].textContent = '✱';
+                        });
+                    });
+                });
+            });
+        }
+
+        const rebuildAndUpdateSummary = () => {
+            buildSummarySkeleton();
+            updateSummary();
+        };
+
+        // Auto update on edits
+        ['blur', 'input'].forEach(ev => tablesContainer.addEventListener(ev, e => {
+            if (/TD|TH/.test(e.target.tagName)) setTimeout(updateSummary, 0);
+        }));
+    </script>
 </body>
 </html>
