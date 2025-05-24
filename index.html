@@ -111,20 +111,19 @@
         #summaryTable td { background-color: #fff3cd;
         } /*[span_33](end_span) */
 
-        /* Modal Styles - Updated for click-through */
         .modal {
-            display: none; /* Initially hidden */
+            display: none; 
             position: fixed;
-            z-index: 1000; /* High z-index to be on top */
+            z-index: 1000; 
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Or 'auto' if modal content might scroll */
-            background-color: rgba(0,0,0,0.4); /* Semi-transparent background */
-            align-items: center; /* For centering modal-content via flexbox */
-            justify-content: center; /* For centering modal-content via flexbox */
-            pointer-events: none; /* <<< KEY CHANGE: Allows clicks to pass through the overlay */
+            overflow: hidden; 
+            background-color: rgba(0,0,0,0.4); 
+            align-items: center; 
+            justify-content: center; 
+            pointer-events: none; 
         }
 
         .modal-content {
@@ -136,7 +135,7 @@
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             position: relative; 
-            pointer-events: auto; /* <<< KEY CHANGE: Makes the modal box itself interactive */
+            pointer-events: auto; 
         }
 
         .modal-content.dragging {
@@ -374,8 +373,6 @@
     // --- Event Listener Initialization ---
     function initializeEventListeners() {
         directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
-
-        // Event listener for the modal's close button
         closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
 
         nameModalHeader.addEventListener('mousedown', startDragModal);
@@ -383,7 +380,7 @@
         document.addEventListener('mouseup', stopDragModal);
         nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false });
         document.addEventListener('touchmove', dragModal, { passive: false });
-        document.addEventListener('touchend', stopDragModal); /*[span_83](end_span) */
+        document.addEventListener('touchend', stopDragModal); 
 
         document.getElementById('excelBtnTrigger').addEventListener('click', exportActiveTableToExcel);
         document.getElementById('importExcelBtn').addEventListener('click', () => fileInputElement.click());
@@ -395,7 +392,7 @@
 
         document.getElementById('selectBtn').addEventListener('click', toggleCellSelectionMode);
         document.getElementById('mergeBtn').addEventListener('click', mergeSelectedTableCells);
-        document.getElementById('deselectBtn').addEventListener('click', deselectAllTableCells); /*[span_84](end_span) */
+        document.getElementById('deselectBtn').addEventListener('click', deselectAllTableCells); 
         document.getElementById('unmergeBtn').addEventListener('click', unmergeActiveCellIfMerged);
 
         document.getElementById('addTableBtn').addEventListener('click', () => addNewTable());
@@ -404,46 +401,45 @@
         document.getElementById('nameListBtn').addEventListener('click', toggleNameListModalVisibility);
 
         const rowColBar = document.getElementById('rowColManipulationBar');
-        if (rowColBar) { /*[span_85](end_span) */
+        if (rowColBar) { 
             const buttons = rowColBar.getElementsByTagName('button');
             if (buttons[0]) buttons[0].addEventListener('click', addRowAboveToActiveTable);
-            if (buttons[1]) buttons[1].addEventListener('click', addRowBelowToActiveTable); /*[span_86](end_span) */
+            if (buttons[1]) buttons[1].addEventListener('click', addRowBelowToActiveTable); 
             if (buttons[2]) buttons[2].addEventListener('click', addColumnLeftToActiveTable);
             if (buttons[3]) buttons[3].addEventListener('click', addColumnRightToActiveTable);
         }
 
         document.getElementById('addNameBtnInModal').addEventListener('click', addNewNameToList);
-        draftListElement.addEventListener('click', (e) => { /*[span_87](end_span) */
+        draftListElement.addEventListener('click', (e) => { 
             const targetSpan = e.target.closest('.draft-item span');
             const targetButton = e.target.closest('.draft-item button');
             if (targetSpan) loadSelectedDraft(targetSpan.textContent);
             else if (targetButton) confirmAndDeleteDraft(targetButton.parentElement.querySelector('span').textContent);
         });
-        nameListContainer.addEventListener('click', (e) => { /*[span_88](end_span) */
+        nameListContainer.addEventListener('click', (e) => { 
             const nameItemSpan = e.target.closest('.name-item span[data-name]');
             const deleteButton = e.target.closest('.name-item button');
             if (nameItemSpan) selectNameForCellInsertion(nameItemSpan.dataset.name);
             else if (deleteButton) deleteNameFromListAndStorage(deleteButton.parentElement.querySelector('span[data-name]').dataset.name);
         });
-        tablesContainer.addEventListener('click', handleTableCellClick); /*[span_89](end_span) */
+        tablesContainer.addEventListener('click', handleTableCellClick); 
         tablesContainer.addEventListener('blur', (e) => {
             if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
                 setTimeout(rebuildAndRenderSummary, 0);
             }
         }, true);
-        tablesContainer.addEventListener('input', (e) => { /*[span_90](end_span) */
+        tablesContainer.addEventListener('input', (e) => { 
             if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
                 setTimeout(rebuildAndRenderSummary, 300);
             }
         });
-    } /*[span_91](end_span) */
+    } 
 
     // --- Draggable Modal Functionality ---
     function startDragModal(e) {
-        // Prevent drag if the mousedown is on the close button itself
         if (e.target.closest('.modal-close-btn')) {
-            isDraggingModal = false;
-            return;
+            isDraggingModal = false; 
+            return; 
         }
         isDraggingModal = true;
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
@@ -482,90 +478,90 @@
     // --- Direct Copy Full HTML Functionality ---
     async function attemptDirectCopyToClipboard() {
         const fullHtml = document.documentElement.outerHTML;
-        try { /*[span_103](end_span) */
+        try { 
             await navigator.clipboard.writeText(fullHtml);
             showMessage('Full HTML copied to clipboard!', 'success');
-        } catch (err) { /*[span_104](end_span) */
+        } catch (err) { 
             console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
-            const textarea = document.createElement('textarea'); /*[span_105](end_span) */
+            const textarea = document.createElement('textarea'); 
             textarea.value = fullHtml;
             textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
             document.body.appendChild(textarea);
             textarea.select();
-            try { /*[span_106](end_span) */
+            try { 
                 const successful = document.execCommand('copy');
-                if (successful) showMessage('Full HTML copied! (using fallback method)', 'success'); /*[span_107](end_span) */
+                if (successful) showMessage('Full HTML copied! (using fallback method)', 'success'); 
                 else showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
-            } catch (execErr) { /*[span_108](end_span) */
+            } catch (execErr) { 
                 console.error('execCommand copy failed: ', execErr);
-                showMessage('Direct copy failed. Please try copying manually.', 'error', 5000); /*[span_109](end_span) */
+                showMessage('Direct copy failed. Please try copying manually.', 'error', 5000); 
             }
             document.body.removeChild(textarea);
-        } /*[span_110](end_span) */
+        } 
     }
 
     // --- Draft Management ---
     function promptAndSaveDraft() {
         if (tablesContainer.children.length === 0) { showMessage('No schedule data to save.', 'error');
-        return; } /*[span_111](end_span) */
+        return; } 
         const allTablesData = tablesContainer.innerHTML;
         const allTableMeta = {};
-        tablesContainer.querySelectorAll('table').forEach(table => { /*[span_112](end_span) */
+        tablesContainer.querySelectorAll('table').forEach(table => { 
             allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
         });
-        const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`); /*[span_113](end_span) */
-        if (draftName) { /*[span_114](end_span) */
+        const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`); 
+        if (draftName) { 
             const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-            drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId }; /*[span_115](end_span) */
+            drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId }; 
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
             showMessage(`Draft "${draftName}" saved!`, 'success');
-            if (draftListElement.style.display === 'block') renderDraftList(); /*[span_116](end_span) */
+            if (draftListElement.style.display === 'block') renderDraftList(); 
         }
     }
     function toggleDraftListVisibility() {
         const isVisible = draftListElement.style.display === 'block';
-        draftListElement.style.display = isVisible ? 'none' : 'block'; /*[span_117](end_span) */
+        draftListElement.style.display = isVisible ? 'none' : 'block'; 
         if (!isVisible) renderDraftList();
     }
     function renderDraftList() {
         draftListElement.innerHTML = '';
-        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}'); /*[span_118](end_span) */
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}'); 
         if (Object.keys(drafts).length === 0) { draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return;
-        } /*[span_119](end_span) */
+        } 
         for (const name in drafts) {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'draft-item'; /*[span_120](end_span) */
+            itemDiv.className = 'draft-item'; 
             itemDiv.innerHTML = `<span>${name}</span><button>Delete</button>`;
             draftListElement.appendChild(itemDiv);
         }
     }
     function loadSelectedDraft(draftName) {
         const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-        if (drafts[draftName]) { /*[span_121](end_span) */
+        if (drafts[draftName]) { 
             tablesContainer.innerHTML = drafts[draftName].html;
             const tableMeta = drafts[draftName].meta || {};
-            tableTabs.innerHTML = ''; /*[span_122](end_span) */
+            tableTabs.innerHTML = ''; 
             tablesContainer.querySelectorAll('table').forEach(table => {
                 const id = table.id;
                 const metaInfo = tableMeta[id] || {};
                 const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
                 table.dataset.tableName = name;
                 addTabButton(id, name);
-                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true'); /*[span_123](end_span) */
+                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true'); 
             });
             activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
-            if (document.getElementById(activeTableId)) switchTable(activeTableId); /*[span_124](end_span) */
+            if (document.getElementById(activeTableId)) switchTable(activeTableId); 
             else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id);
             else addNewTable(true);
             showMessage(`Draft "${draftName}" loaded!`, 'success');
             draftListElement.style.display = 'none';
             rebuildAndRenderSummary();
-        } else { showMessage(`Draft "${draftName}" not found.`, 'error'); } /*[span_125](end_span) */
+        } else { showMessage(`Draft "${draftName}" not found.`, 'error'); } 
     }
     function confirmAndDeleteDraft(draftName) {
         if (customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
             const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-            delete drafts[draftName]; /*[span_126](end_span) */
+            delete drafts[draftName]; 
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
             showMessage(`Saved draft "${draftName}" deleted.`, 'success');
             renderDraftList();
@@ -574,21 +570,21 @@
 
     function confirmAndClearActiveTableContent() {
         const activeTableElement = document.getElementById(activeTableId);
-        if (!activeTableElement) { /*[span_127](end_span) */
+        if (!activeTableElement) { 
             showMessage('No active table to clear.', 'error');
             return;
-        } /*[span_128](end_span) */
+        } 
         const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
-        if (customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) { /*[span_129](end_span) */
+        if (customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) { 
             activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
                 cell.innerHTML = '';
                 if (cell.tagName === 'TH') cell.textContent = '';
                 cell.rowSpan = 1;
                 cell.colSpan = 1;
-                cell.classList.remove('merged'); /*[span_130](end_span) */
+                cell.classList.remove('merged'); 
                 cell.classList.remove('selected');
             });
-            selectedCells = []; /*[span_131](end_span) */
+            selectedCells = []; 
             rebuildAndRenderSummary();
             showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
@@ -597,134 +593,134 @@
     // --- Table Management ---
     function addTabButton(id, label) {
         const button = document.createElement('button');
-        button.textContent = label; /*[span_132](end_span) */
+        button.textContent = label; 
         button.onclick = () => switchTable(id);
         tableTabs.appendChild(button);
         return button;
-    } /*[span_133](end_span) */
+    } 
     function switchTable(id) {
         const targetTable = document.getElementById(id);
-        if (!targetTable) { /*[span_134](end_span) */
+        if (!targetTable) { 
             const firstTableInDOM = tablesContainer.querySelector('table');
             if (firstTableInDOM) id = firstTableInDOM.id;
-            else { /*[span_135](end_span) */
+            else { 
                 showMessage('Cannot switch: Target table not found.', 'error');
-                if (tablesContainer.children.length === 0) addNewTable(true); /*[span_136](end_span) */
+                if (tablesContainer.children.length === 0) addNewTable(true); 
                 return;
             }
         }
         activeTableId = id;
-        tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id)); /*[span_137](end_span) */
+        tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id)); 
         tableTabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes(`'${id}'`)));
         deselectAllTableCells();
         rebuildAndRenderSummary();
-    } /*[span_138](end_span) */
+    } 
     function addNewTable(isInitial = false) {
         tableCount++;
         const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
-        const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName); /*[span_139](end_span) */
+        const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName); 
         if (!label && !isInitial) return;
-        const newTable = document.createElement('table'); /*[span_140](end_span) */
+        const newTable = document.createElement('table'); 
         const newTableId = `tbl_${Date.now()}_${tableCount}`;
         newTable.id = newTableId;
         newTable.dataset.tableName = label || defaultTableName;
         const thead = newTable.createTHead();
-        const headerRow = thead.insertRow(); /*[span_141](end_span) */
+        const headerRow = thead.insertRow(); 
         for (let i = 0; i < 7; i++) {
             const th = document.createElement('th');
-            th.contentEditable = 'true'; /*[span_142](end_span) */
+            th.contentEditable = 'true'; 
             th.textContent = '';
             headerRow.appendChild(th);
         }
         const tbody = newTable.createTBody();
-        for (let r = 0; r < 2; r++) { /*[span_143](end_span) */
+        for (let r = 0; r < 2; r++) { 
             const dataRow = tbody.insertRow();
-            for (let c = 0; c < headerRow.cells.length; c++) { /*[span_144](end_span) */
+            for (let c = 0; c < headerRow.cells.length; c++) { 
                 const td = dataRow.insertCell();
-                td.contentEditable = 'true'; /*[span_145](end_span) */
+                td.contentEditable = 'true'; 
                 if (c === 0 && r === 0) td.textContent = `Sample A`;
-                if (c === 0 && r === 1) td.textContent = `Sample B`; /*[span_146](end_span) */
-            } /*[span_147](end_span) */
+                if (c === 0 && r === 1) td.textContent = `Sample B`; 
+            } 
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTableId, label || defaultTableName);
         switchTable(newTableId);
-        if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success'); /*[span_148](end_span) */
+        if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success'); 
     }
     function promptAndRenameActiveTable() {
         const currentTab = tableTabs.querySelector(`button.active`);
-        if (!currentTab) { showMessage('No active table to rename.', 'error'); return; } /*[span_149](end_span) */
+        if (!currentTab) { showMessage('No active table to rename.', 'error'); return; } 
         const oldName = currentTab.textContent;
-        const newName = customPrompt('Enter new table name:', oldName); /*[span_150](end_span) */
+        const newName = customPrompt('Enter new table name:', oldName); 
         if (newName && newName.trim() !== oldName) {
             currentTab.textContent = newName.trim();
-            const tableElement = document.getElementById(activeTableId); /*[span_151](end_span) */
+            const tableElement = document.getElementById(activeTableId); 
             if (tableElement) tableElement.dataset.tableName = newName.trim();
             showMessage(`Table renamed to "${newName.trim()}".`, 'success');
-        } /*[span_152](end_span) */
+        } 
     }
     function confirmAndDeleteActiveTable() {
         if (tablesContainer.children.length <= 1) { showMessage('Cannot delete the last table.', 'error'); return;
-        } /*[span_153](end_span) */
+        } 
         const activeTab = tableTabs.querySelector(`button.active`);
         const tableName = activeTab ? activeTab.textContent : activeTableId;
-        if (customConfirm(`Delete table "${tableName}"?`)) { /*[span_154](end_span) */
+        if (customConfirm(`Delete table "${tableName}"?`)) { 
             document.getElementById(activeTableId)?.remove();
             activeTab?.remove();
             const firstRemainingTab = tableTabs.querySelector('button');
-            if (firstRemainingTab) firstRemainingTab.click(); /*[span_155](end_span) */
+            if (firstRemainingTab) firstRemainingTab.click(); 
             else { activeTableId = null; addNewTable(true); }
             showMessage('Table deleted.', 'success');
-        } /*[span_156](end_span) */
+        } 
     }
 
     // --- Row/Column Operations ---
     function addRowToTable(tableBody, rowIndex, numCols) {
         const row = tableBody.insertRow(rowIndex);
         for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true';
-        } /*[span_157](end_span) */
-    } /*[span_158](end_span) */
+        } 
+    } 
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
-        addRowToTable(table.tBodies[0], 0, table.rows[0].cells.length); /*[span_159](end_span) */
+        addRowToTable(table.tBodies[0], 0, table.rows[0].cells.length); 
         rebuildAndRenderSummary();
     }
     function addRowBelowToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0] || table.rows.length === 0) return; /*[span_160](end_span) */
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return; 
         addRowToTable(table.tBodies[0], -1, table.rows[0].cells.length);
         rebuildAndRenderSummary();
-    } /*[span_161](end_span) */
+    } 
     function addColumnToTable(table, colIndex) {
         for (const row of table.rows) {
             const isHeaderRow = row.parentElement.tagName === 'THEAD';
-            const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex); /*[span_162](end_span) */
+            const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex); 
             cell.contentEditable = 'true';
-            if (isHeaderRow) { /*[span_163](end_span) */
+            if (isHeaderRow) { 
                 if (colIndex === -1 || colIndex >= row.cells.length) row.appendChild(cell);
-                else row.insertBefore(cell, row.cells[colIndex]); /*[span_164](end_span) */
+                else row.insertBefore(cell, row.cells[colIndex]); 
                 cell.textContent = "";
             }
         }
     }
     function addColumnLeftToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (table) { addColumnToTable(table, 0); rebuildAndRenderSummary(); } /*[span_165](end_span) */
+        if (table) { addColumnToTable(table, 0); rebuildAndRenderSummary(); } 
     }
     function addColumnRightToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (table) { addColumnToTable(table, -1); rebuildAndRenderSummary(); } /*[span_166](end_span) */
+        if (table) { addColumnToTable(table, -1); rebuildAndRenderSummary(); } 
     }
 
     // --- Cell Selection, Merging, Unmerging ---
     function toggleCellSelectionMode() {
         selectionMode = !selectionMode;
-        const btn = document.getElementById('selectBtn'); /*[span_167](end_span) */
+        const btn = document.getElementById('selectBtn'); 
         btn.classList.toggle('active', selectionMode);
         btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
         if (!selectionMode) deselectAllTableCells();
-    } /*[span_168](end_span) */
+    } 
     function handleTableCellClick(event) {
         const cell = event.target.closest('td, th');
         if (!cell || !cell.closest(`#${activeTableId}`)) return;
@@ -745,42 +741,42 @@
 
         if (selectionMode) {
             cell.classList.toggle('selected');
-            if (cell.classList.contains('selected')) selectedCells.push(cell); /*[span_172](end_span) */
+            if (cell.classList.contains('selected')) selectedCells.push(cell); 
             else selectedCells = selectedCells.filter(c => c !== cell);
         }
     }
     function deselectAllTableCells() {
         selectedCells.forEach(c => c.classList.remove('selected'));
-        selectedCells = []; /*[span_173](end_span) */
+        selectedCells = []; 
     }
     function mergeSelectedTableCells() {
         if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error');
-        return; } /*[span_174](end_span) */
+        return; } 
         const table = document.getElementById(activeTableId);
         let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
-        selectedCells.forEach(cell => { /*[span_175](end_span) */
+        selectedCells.forEach(cell => { 
             const r = cell.parentNode.rowIndex; const c = cell.cellIndex;
             minR = Math.min(minR, r); maxR = Math.max(maxR, r + (cell.rowSpan || 1) - 1);
             minC = Math.min(minC, c); maxC = Math.max(maxC, c + (cell.colSpan || 1) - 1);
         });
-        const firstCell = table.rows[minR]?.cells[minC]; /*[span_176](end_span) */
+        const firstCell = table.rows[minR]?.cells[minC]; 
         if (!firstCell) { showMessage('Error finding merge starting cell.', 'error'); return;
-        } /*[span_177](end_span) */
+        } 
         let contentToKeep = firstCell.innerHTML;
         let cellsToRemove = [];
-        for (let r = minR; r <= maxR; r++) { /*[span_178](end_span) */
+        for (let r = minR; r <= maxR; r++) { 
             for (let c = minC; c <= maxC; c++) {
                 if (table.rows[r]?.cells[c]) {
                     const currentCell = table.rows[r].cells[c];
-                    if (currentCell !== firstCell && selectedCells.includes(currentCell)) cellsToRemove.push(currentCell); /*[span_179](end_span) */
+                    if (currentCell !== firstCell && selectedCells.includes(currentCell)) cellsToRemove.push(currentCell); 
                 }
             }
         }
         cellsToRemove.forEach(cell => cell.remove());
-        firstCell.rowSpan = maxR - minR + 1; firstCell.colSpan = maxC - minC + 1; /*[span_180](end_span) */
+        firstCell.rowSpan = maxR - minR + 1; firstCell.colSpan = maxC - minC + 1; 
         firstCell.innerHTML = contentToKeep; firstCell.classList.add('merged');
         deselectAllTableCells();
-        if (selectionMode) toggleCellSelectionMode(); /*[span_181](end_span) */
+        if (selectionMode) toggleCellSelectionMode(); 
         rebuildAndRenderSummary(); showMessage('Cells merged.', 'success');
     }
 
@@ -802,46 +798,46 @@
 
     function unmergeGivenCell(cellToUnmerge) {
         const table = cellToUnmerge.closest('table');
-        if (!table) { /*[span_182](end_span) */
+        if (!table) { 
             showMessage('No table found for cell.', 'error');
             return;
-        } /*[span_183](end_span) */
+        } 
         const rowIndex = cellToUnmerge.parentNode.rowIndex;
         const cellIndex = cellToUnmerge.cellIndex;
         const rowSpan = cellToUnmerge.rowSpan || 1;
-        const colSpan = cellToUnmerge.colSpan || 1; /*[span_184](end_span) */
+        const colSpan = cellToUnmerge.colSpan || 1; 
         if (rowSpan === 1 && colSpan === 1) {
             showMessage('Cell is not merged.', 'info');
-            return; } /*[span_185](end_span) */
+            return; } 
         const content = cellToUnmerge.innerHTML;
         cellToUnmerge.rowSpan = 1;
         cellToUnmerge.colSpan = 1;
         cellToUnmerge.classList.remove('merged');
         cellToUnmerge.innerHTML = content;
-        for (let r = rowIndex; r < rowIndex + rowSpan; r++) { /*[span_186](end_span) */
+        for (let r = rowIndex; r < rowIndex + rowSpan; r++) { 
             const row = table.rows[r];
-            if (!row) continue; /*[span_187](end_span) */
+            if (!row) continue; 
             let visualCol = 0;
             let insertIndex = cellIndex;
-            for (let i = 0; i < row.cells.length; i++) { /*[span_188](end_span) */
+            for (let i = 0; i < row.cells.length; i++) { 
                 if (visualCol >= cellIndex) {
                     insertIndex = i;
-                    break; /*[span_189](end_span) */
+                    break; 
                 }
                 visualCol += row.cells[i].colSpan || 1;
-                insertIndex = i + 1; /*[span_190](end_span) */
+                insertIndex = i + 1; 
             }
             for (let c = 0; c < colSpan; c++) {
                 if (r === rowIndex && c === 0) continue;
-                const newCell = row.insertCell(insertIndex + c); /*[span_191](end_span) */
+                const newCell = row.insertCell(insertIndex + c); 
                 newCell.contentEditable = 'true';
                 newCell.innerHTML = '';
-            } /*[span_192](end_span) */
+            } 
         }
         deselectAllTableCells();
         rebuildAndRenderSummary();
         showMessage('Cell unmerged.', 'success');
-    } /*[span_193](end_span) */
+    } 
 
     // --- Name List Management (Modal) ---
     function highlightSelectedNameInList(nameToHighlight) {
@@ -865,19 +861,16 @@
     }
 
     function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C"]');
-    } /*[span_194](end_span) */
+    } 
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
 
-    // MODIFIED: Removed event.stopPropagation()
     function closeNameModal() { 
-        // console.log('Attempting to close name modal via X button...'); // For debugging
         if (nameModal) {
             nameModal.style.display = 'none';
         } else {
             console.error('nameModal element not found in closeNameModal');
         }
         clearNameSelection();
-        // console.log('Name modal closed via X button and selection cleared.'); // For debugging
     }
 
     function toggleNameListModalVisibility() {
@@ -903,27 +896,27 @@
         if (!nameListContainer) return;
         nameListContainer.innerHTML = '';
         if (names.length === 0) { nameListContainer.innerHTML = '<p>No names. Add some!</p>';
-        return; } /*[span_198](end_span) */
+        return; } 
         names.forEach(name => {
             const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
             itemDiv.innerHTML = `<span data-name="${name}">${name}</span><button>Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
-    } /*[span_199](end_span) */
+    } 
     function addNewNameToList() {
         if (!newNameInput) return;
         const newName = newNameInput.value.trim();
         if (!newName) { showMessage('Enter a name.', 'error'); return;
-        } /*[span_200](end_span) */
+        } 
         if (names.includes(newName)) { showMessage('Name already exists.', 'error'); return; }
         names.push(newName); saveNames(); renderNameList();
-        newNameInput.value = ''; newNameInput.focus(); /*[span_201](end_span) */
+        newNameInput.value = ''; newNameInput.focus(); 
         rebuildAndRenderSummary(); showMessage(`"${newName}" added.`, 'success');
     }
     function deleteNameFromListAndStorage(nameToDelete) {
         if (customConfirm(`Delete "${nameToDelete}"?`)) {
             names = names.filter(n => n !== nameToDelete);
-            saveNames(); renderNameList(); /*[span_202](end_span) */
+            saveNames(); renderNameList(); 
             rebuildAndRenderSummary(); showMessage(`"${nameToDelete}" removed.`, 'success');
             if (selectedNameFromList === nameToDelete) { 
                 clearNameSelection();
@@ -933,114 +926,193 @@
     function selectNameForCellInsertion(name) {
         selectedNameFromList = name;
         highlightSelectedNameInList(name);
-        showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000); /*[span_203](end_span) */
+        showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000); 
     }
 
     // --- Excel Export/Import ---
     function handleExcelFileImport(event) {
         const file = event.target.files[0];
-        if (!file) return; /*[span_204](end_span) */
+        if (!file) return; 
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName]; /*[span_205](end_span) */
+                const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName]; 
                 const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { editable: true, raw: false });
                 tableCount++;
-                const newTableId = `tbl_imported_${Date.now()}_${tableCount}`; /*[span_206](end_span) */
+                const newTableId = `tbl_imported_${Date.now()}_${tableCount}`; 
                 const importedTableName = file.name.replace(/\.xlsx?/i, '') || `Imported ${tableCount}`;
                 const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
-                const importedTableElement = tempDiv.querySelector('table'); /*[span_207](end_span) */
+                const importedTableElement = tempDiv.querySelector('table'); 
                 if (importedTableElement) {
                     importedTableElement.id = newTableId;
-                    importedTableElement.dataset.tableName = importedTableName; /*[span_208](end_span) */
+                    importedTableElement.dataset.tableName = importedTableName; 
                     importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
                     addTabButton(newTableId, importedTableName); switchTable(newTableId);
-                    showMessage('Excel data imported into a new table!', 'success'); /*[span_209](end_span) */
+                    showMessage('Excel data imported into a new table!', 'success'); 
                 } else { showMessage('Could not parse table from Excel.', 'error');
-                } /*[span_210](end_span) */
+                } 
             } catch (error) { console.error("Excel import error:", error);
-                showMessage('Error processing Excel file.', 'error'); } /*[span_211](end_span) */
+                showMessage('Error processing Excel file.', 'error'); } 
             finally { event.target.value = '';
-            } /*[span_212](end_span) */
+            } 
         };
         reader.readAsArrayBuffer(file);
     }
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
-        if (!tableToExport) { showMessage('No active table to export.', 'error'); return; } /*[span_213](end_span) */
+        if (!tableToExport) { showMessage('No active table to export.', 'error'); return; } 
         const tableName = tableToExport.dataset.tableName || activeTableId;
-        const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName }); /*[span_214](end_span) */
+        const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName }); 
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
         showMessage(`Table "${tableName}" exported.`, 'success');
-    } /*[span_215](end_span) */
+    } 
 
     // --- Summary Table Logic ---
-    function rebuildAndRenderSummary() { buildSummaryTableSkeleton(); updateSummaryTableData();
-    } /*[span_216](end_span) */
+    function rebuildAndRenderSummary() {
+        buildSummaryTableSkeleton();
+        updateSummaryTableData();
+    }
+
+    function parseTimeToMinutes(timeStr) {
+        if (typeof timeStr !== 'string') return Infinity;
+        // Expects "HH:MM" or "HH:MM-..."
+        const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
+        if (match) {
+            return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+        }
+        return Infinity; // Non-time strings sort last
+    }
+
     function buildSummaryTableSkeleton() {
-        if (!summaryTableElement) { console.error("Summary table element not found."); return;
-        } /*[span_217](end_span) */
-        summaryTableElement.innerHTML = '';
-        const summaryRowItems = new Set(names);
-        tablesContainer.querySelectorAll('table').forEach(table => { /*[span_218](end_span) */
-            table.querySelectorAll('tbody tr').forEach(dataRow => {
-                Array.from(dataRow.cells).forEach((cell, cellIndex) => {
-                    if (cellIndex > 0) {
-                        const text = cell.textContent.trim();
-                        if (text && isNaN(text) && text.length > 1)
-                        summaryRowItems.add(text); /*[span_219](end_span) */
+        if (!summaryTableElement) {
+            console.error("Summary table element not found.");
+            return;
+        }
+        summaryTableElement.innerHTML = ''; // Clear existing summary
+
+        const summaryRowItems = new Set(names); // Start with globally managed names
+        const summaryColumnHeadersSet = new Set();
+
+        // Collect names/subjects and headers from ALL tables
+        tablesContainer.querySelectorAll('table').forEach(table => {
+            // Collect Names/Subjects from this table's body cells
+            table.querySelectorAll('tbody tr td').forEach(td => {
+                // Only consider cells that are not the first in their row (to avoid row labels like time)
+                if (td.cellIndex > 0) {
+                     const text = td.textContent.trim();
+                    // Heuristic: if it's text, not a number, and has some length
+                    if (text && isNaN(text) && text.length > 1) {
+                        summaryRowItems.add(text);
+                    }
+                }
+            });
+
+            // Collect Time Headers from this table's thead
+            if (table.tHead && table.tHead.rows.length > 0) {
+                Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => { // Skip first header cell
+                    const headerText = th.textContent.trim();
+                    if (headerText) {
+                        summaryColumnHeadersSet.add(headerText);
                     }
                 });
-            });
+            }
         });
-        const sortedSummaryRowHeaders = Array.from(summaryRowItems).sort(); /*[span_220](end_span) */
-        const activeScheduleTable = document.getElementById(activeTableId);
-        let summaryColumnHeaders = ['Name/Subject'];
-        if (activeScheduleTable?.tHead?.rows.length > 0) { /*[span_221](end_span) */
-            summaryColumnHeaders.push(...Array.from(activeScheduleTable.tHead.rows[0].cells).slice(1).map(th => th.textContent.trim() || 'Period'));
-        } else { summaryColumnHeaders.push('Period 1', 'Period 2', 'Period 3', 'Period 4', 'Period 5'); /*[span_222](end_span) */
-        } /*[span_223](end_span) */
+
+        const sortedSummaryRowHeaders = Array.from(summaryRowItems).sort((a,b) => a.localeCompare(b));
+        
+        let rawColumnHeaders = Array.from(summaryColumnHeadersSet);
+        rawColumnHeaders.sort((a, b) => {
+            const timeA = parseTimeToMinutes(a);
+            const timeB = parseTimeToMinutes(b);
+
+            if (timeA !== Infinity && timeB !== Infinity) { // Both are valid times
+                return timeA - timeB;
+            } else if (timeA !== Infinity) { // Only A is a valid time, so A comes first
+                return -1;
+            } else if (timeB !== Infinity) { // Only B is a valid time, so B comes first
+                return 1;
+            }
+            return a.localeCompare(b); // Fallback to alphabetical for non-times or if both are non-times
+        });
+
+        const finalSummaryColumnHeaders = ['Name/Subject', ...rawColumnHeaders];
+
+        // Build THead
         const thead = summaryTableElement.createTHead();
         const headerRowForSummary = thead.insertRow();
-        summaryColumnHeaders.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRowForSummary.appendChild(th); }); /*[span_224](end_span) */
+        finalSummaryColumnHeaders.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRowForSummary.appendChild(th);
+        });
+
+        // Build TBody
         const tbody = summaryTableElement.createTBody();
-        if (sortedSummaryRowHeaders.length === 0) { /*[span_225](end_span) */
-            const tr = tbody.insertRow(); const td = tr.insertCell();
-            td.colSpan = summaryColumnHeaders.length || 1; /*[span_226](end_span) */
-            td.textContent = 'No items to summarize.'; td.style.textAlign = 'center'; td.style.padding = '10px';
-        } else { /*[span_227](end_span) */
+        if (sortedSummaryRowHeaders.length === 0) {
+            const tr = tbody.insertRow();
+            const td = tr.insertCell();
+            td.colSpan = finalSummaryColumnHeaders.length || 1;
+            td.textContent = 'No items to summarize.';
+            td.style.textAlign = 'center';
+            td.style.padding = '10px';
+        } else {
             sortedSummaryRowHeaders.forEach(name => {
-                const tr = tbody.insertRow(); tr.insertCell().textContent = name;
-                for (let i = 1; i < summaryColumnHeaders.length; i++) tr.insertCell().textContent = '';
+                const tr = tbody.insertRow();
+                tr.insertCell().textContent = name; // Name/Subject cell
+                for (let i = 1; i < finalSummaryColumnHeaders.length; i++) {
+                    tr.insertCell().textContent = ''; // Placeholder for attendance marks
+                }
             });
-        } /*[span_228](end_span) */
+        }
     }
+
     function updateSummaryTableData() {
         if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0) {
-            buildSummaryTableSkeleton();
-            if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0 || (summaryTableElement.tBodies[0].rows[0].cells.length === 1 && summaryTableElement.tBodies[0].rows[0].cells[0].colSpan > 1) ) return; /*[span_229](end_span) */
-        } /*[span_230](end_span) */
+             // If skeleton decided there's nothing to summarize (e.g. "No items to summarize." message row)
+            if (summaryTableElement?.tBodies[0]?.rows[0]?.cells[0]?.colSpan > 1) return;
+            // Attempt to build skeleton if it's truly empty, then re-check
+            buildSummaryTableSkeleton(); 
+            if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0 || (summaryTableElement.tBodies[0].rows[0].cells.length === 1 && summaryTableElement.tBodies[0].rows[0].cells[0].colSpan > 1) ) return;
+        }
+
         const summaryBody = summaryTableElement.tBodies[0];
         const summaryTableActualColumnHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
-        Array.from(summaryBody.rows).forEach(summaryRow => Array.from(summaryRow.cells).slice(1).forEach(cell => cell.textContent = '')); /*[span_231](end_span) */
-        const activeScheduleTable = document.getElementById(activeTableId);
-        if (!activeScheduleTable || !activeScheduleTable.tHead?.rows.length > 0 || !activeScheduleTable.tBodies[0]) { console.warn("Active schedule table not found/malformed for summary."); return; /*[span_232](end_span) */
-        } /*[span_233](end_span) */
-        const activeScheduleTableHeaders = Array.from(activeScheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
-        Array.from(activeScheduleTable.tBodies[0].rows).forEach(scheduleDataRow => { /*[span_234](end_span) */
-            Array.from(scheduleDataRow.cells).forEach((scheduleCell, scheduleCellIndex) => {
-                if (scheduleCellIndex === 0) return;
-                const entryInScheduleCell = scheduleCell.textContent.trim();
-                if (entryInScheduleCell) {
-                    const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
-                    if (targetSummaryRow) { /*[span_235](end_span) */
-                        const currentScheduleColumnHeader = activeScheduleTableHeaders[scheduleCellIndex];
-                        const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === currentScheduleColumnHeader);
-                        if (targetSummaryColumnCellIndex > 0) targetSummaryRow.cells[targetSummaryColumnCellIndex].textContent += '✱';
+
+        // Clear previous marks
+        Array.from(summaryBody.rows).forEach(summaryRow => {
+            Array.from(summaryRow.cells).slice(1).forEach(cell => cell.textContent = '');
+        });
+
+        // Iterate through ALL tables in the container to populate summary
+        tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+            if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
+                // console.warn(`Table ${scheduleTable.id || 'unknown'} is malformed for summary.`);
+                return; // Skip malformed tables
+            }
+            const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+
+            Array.from(scheduleTable.tBodies[0].rows).forEach(scheduleDataRow => {
+                Array.from(scheduleDataRow.cells).forEach((scheduleCell, scheduleCellIndex) => {
+                    if (scheduleCellIndex === 0) return; // Skip first cell (usually time label for the row)
+
+                    const entryInScheduleCell = scheduleCell.textContent.trim();
+                    if (entryInScheduleCell) { // If there's a name/subject in the cell
+                        // Find the corresponding row in the summary table
+                        const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
+                        
+                        if (targetSummaryRow) {
+                            const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[scheduleCellIndex];
+                            // Find the corresponding column in the summary table
+                            const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === scheduleColumnHeaderForThisCell);
+
+                            if (targetSummaryColumnCellIndex > 0) { // If column header found in summary
+                                targetSummaryRow.cells[targetSummaryColumnCellIndex].textContent = '✱'; // Mark attendance
+                            }
+                        }
                     }
-                  } /*[span_236](end_span) */
+                });
             });
         });
     }
