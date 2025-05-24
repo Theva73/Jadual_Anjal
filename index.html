@@ -135,14 +135,12 @@
             max-width: 400px;
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            /* position: fixed, top, left, transform are for centering if not using flex on parent.
-               With flex on .modal, these are less critical for centering but define its independent layer. */
-            position: relative; /* Or fixed, depending on desired scroll behavior with page */
+            position: relative; 
             pointer-events: auto; /* <<< KEY CHANGE: Makes the modal box itself interactive */
         }
 
         .modal-content.dragging {
-            transform: none; /* Adjusted by dragging logic */
+            transform: none; 
         }
         .modal-header {
             padding-bottom: 10px;
@@ -199,7 +197,7 @@
             display: none;
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             background-color: #333; color: white; padding: 15px 25px; border-radius: 5px;
-            z-index: 2000; /* Ensure message box is above modal if needed */
+            z-index: 2000; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 1em;
         }
         .custom-message-box.success { background-color: #28a745;
@@ -293,7 +291,7 @@
     let tableCount = 1;
     let selectionMode = false;
     let selectedCells = []; /*[span_65](end_span) */
-    let lastClickedCell = null; // FIX: Added to track the last clicked cell for unmerging
+    let lastClickedCell = null; 
     let selectedNameFromList = null;
     let names = [];
     let isDraggingModal = false;
@@ -377,6 +375,7 @@
     function initializeEventListeners() {
         directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
 
+        // Event listener for the modal's close button
         closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
 
         nameModalHeader.addEventListener('mousedown', startDragModal);
@@ -441,21 +440,19 @@
 
     // --- Draggable Modal Functionality ---
     function startDragModal(e) {
+        // Prevent drag if the mousedown is on the close button itself
+        if (e.target.closest('.modal-close-btn')) {
+            isDraggingModal = false;
+            return;
+        }
         isDraggingModal = true;
-        // No need to add 'dragging' class if modal-content is position relative/static inside flex parent
-        // nameModalContent.classList.add('dragging');
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-
-        // Make sure modal content is absolutely positioned for dragging
-        // This might conflict with flex centering if not handled carefully.
-        // For simplicity, we ensure it's fixed/absolute when dragging starts.
         const rect = nameModalContent.getBoundingClientRect();
-        nameModalContent.style.position = 'fixed'; // Ensure it's fixed for dragging
+        nameModalContent.style.position = 'fixed'; 
         nameModalContent.style.left = `${rect.left}px`;
         nameModalContent.style.top = `${rect.top}px`;
-        nameModalContent.style.transform = 'none'; // Remove transform if it was used for centering
-
+        nameModalContent.style.transform = 'none'; 
         modalDragOffsetX = clientX - nameModalContent.offsetLeft;
         modalDragOffsetY = clientY - nameModalContent.offsetTop;
         if (e.type === 'touchstart') e.preventDefault();
@@ -480,10 +477,6 @@
     function stopDragModal() {
         if (isDraggingModal) {
             isDraggingModal = false;
-            // Optional: Reset to flex centering if needed, but fixed positioning after drag is usually fine.
-            // nameModalContent.style.position = 'relative'; // Or whatever it was
-            // nameModalContent.style.left = 'auto';
-            // nameModalContent.style.top = 'auto';
         }
     }
     // --- Direct Copy Full HTML Functionality ---
@@ -743,11 +736,11 @@
                 cell.textContent = selectedNameFromList;
                 rebuildAndRenderSummary();
                 showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
-                clearNameSelection(); // Clear selection after successful insertion
+                clearNameSelection(); 
             } else {
                 showMessage('Click an editable data cell to insert name.', 'info');
             }
-            return; // Name insertion takes precedence
+            return; 
         }
 
         if (selectionMode) {
@@ -875,11 +868,16 @@
     } /*[span_194](end_span) */
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
 
-    function closeNameModal(event) {
-        if(event) event.stopPropagation();
-        if(nameModal) nameModal.style.display = 'none';
+    // MODIFIED: Removed event.stopPropagation()
+    function closeNameModal() { 
+        // console.log('Attempting to close name modal via X button...'); // For debugging
+        if (nameModal) {
+            nameModal.style.display = 'none';
+        } else {
+            console.error('nameModal element not found in closeNameModal');
+        }
         clearNameSelection();
-        console.log('Name modal closed.');
+        // console.log('Name modal closed via X button and selection cleared.'); // For debugging
     }
 
     function toggleNameListModalVisibility() {
@@ -889,17 +887,16 @@
             nameModal.style.display = 'none';
             clearNameSelection();
         } else {
-            // Reset modal position to center when opening
-            nameModalContent.style.position = 'relative'; // Use relative for flex centering
+            nameModalContent.style.position = 'relative'; 
             nameModalContent.style.left = 'auto';
             nameModalContent.style.top = 'auto';
-            nameModalContent.style.transform = 'none'; // Remove any transform from dragging
+            nameModalContent.style.transform = 'none'; 
 
-            nameModal.style.display = 'flex'; // This uses flex to center .modal-content
+            nameModal.style.display = 'flex'; 
             renderNameList();
             newNameInput.focus();
-            clearNameSelection(); // Clear previous selection when opening
-        }
+            clearNameSelection(); 
+        } 
     }
 
     function renderNameList() {
@@ -928,7 +925,7 @@
             names = names.filter(n => n !== nameToDelete);
             saveNames(); renderNameList(); /*[span_202](end_span) */
             rebuildAndRenderSummary(); showMessage(`"${nameToDelete}" removed.`, 'success');
-            if (selectedNameFromList === nameToDelete) { // If deleted name was selected, clear selection
+            if (selectedNameFromList === nameToDelete) { 
                 clearNameSelection();
             }
         }
