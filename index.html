@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=yes">
 <title>Weekly Schedule</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* === BASIC LAYOUT & BUTTON STYLES (shortened) === */
+/* -------------- basic layout -------------- */
 body{font-family:Arial,Helvetica,sans-serif;margin:28px}
 h2{margin:0 0 12px}
 table{border-collapse:collapse;width:100%;margin-top:10px;display:none}
@@ -15,69 +15,66 @@ th,td{border:1px solid #999;padding:8px;text-align:center;min-width:90px}
 th{background:#f2f2f2}
 td.selected,th.selected{outline:3px solid #ffdf6a}
 .merged{font-style:italic}
+/* -------------- buttons -------------- */
 .bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .bar button{padding:8px 12px;font-size:14px;border-radius:4px;cursor:pointer;border:1px solid #666;background:#fff}
-#excelBtn{background:#2e8b57;color:#fff;border:none}
-#saveDraftBtn{background:#0b65c2;color:#fff;border:none}
-#loadDraftBtn{background:#ff8c00;color:#fff;border:none}
-#mergeBtn{background:#6a5acd;color:#fff;border:none}
-#unmergeBtn{background:#cd5c5c;color:#fff;border:none}
-#selectBtn{background:#00ced1;color:#fff;border:none}
+#excelBtn{background:#2e8b57;color:#fff}
+#saveDraftBtn{background:#0b65c2;color:#fff}
+#loadDraftBtn{background:#ff8c00;color:#fff}
+#mergeBtn{background:#6a5acd;color:#fff}
+#unmergeBtn{background:#cd5c5c;color:#fff}
+#selectBtn{background:#00ced1;color:#fff}
 #selectBtn.active{background:#ff4500}
-#addTableBtn{background:#ff69b4;color:#fff;border:none}
-#renameTableBtn{background:#4682b4;color:#fff;border:none}
-#deleteTableBtn{background:#dc143c;color:#fff;border:none}
-#nameListBtn{background:#32cd32;color:#fff;border:none}
+#addTableBtn{background:#ff69b4;color:#fff}
+#renameTableBtn{background:#4682b4;color:#fff}
+#deleteTableBtn{background:#dc143c;color:#fff}
+#nameListBtn{background:#32cd32;color:#fff}
+/* -------------- tabs & modal -------------- */
 .table-tabs{display:flex;gap:6px;margin-bottom:10px}
 .table-tabs button{padding:6px 12px;background:#ddd;border:1px solid #999;border-radius:4px}
 .table-tabs button.active{background:#4caf50;color:#fff}
-/* modal */
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:transparent;z-index:1000;pointer-events:none}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none}
 .modal-content{pointer-events:auto;background:#fff;position:absolute;top:50px;right:50px;padding:20px;width:300px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,.3)}
 .modal-header{cursor:move;padding-bottom:10px;border-bottom:1px solid #ddd}
 .name-item{display:flex;justify-content:space-between;align-items:center;padding:5px;border-bottom:1px solid #ddd}
 .name-item span{flex-grow:1;cursor:pointer}
 .name-item button{background:#ff4444;color:#fff;border:none;border-radius:3px}
 .highlighted{background:#ffff99}
-/* summary */
+/* -------------- summary -------------- */
 #summaryTable th{background:#ffeeba}
 #summaryTable td{background:#fffff7}
 </style>
 </head>
-
 <body>
 <h2 contenteditable="true">Weekly Schedule</h2>
 
-<!-- ───────────────── BUTTON BAR ───────────────── -->
 <div class="bar">
-  <button id="excelBtn" onclick="promptExcelExport()">💾 Save to Excel</button>
-  <input type="file" id="fileInput" style="display:none" accept=".xlsx" onchange="handleExcelFile(event)">
-  <button id="saveDraftBtn" onclick="promptSaveDraft()">💠 Save Draft</button>
-  <button id="loadDraftBtn" onclick="toggleDraftList()">📂 Load Draft</button>
-  <button onclick="clearDraft()">🗑️ Clear Draft</button>
-  <button id="selectBtn" onclick="toggleSelectionMode()">✨ Select</button>
-  <button id="mergeBtn" onclick="mergeCells()">🔗 Merge Cells</button>
-  <button id="deselectBtn" onclick="deselectAll()">🚫 Deselect</button>
-  <button id="unmergeBtn" onclick="unmergeCells()">🔗 Unmerge Cells</button>
-  <button id="addTableBtn" onclick="addNewTable()">✨ Add New Table</button>
-  <button id="renameTableBtn" onclick="promptRenameTable()">📝 Rename Table</button>
-  <button id="deleteTableBtn" onclick="promptDeleteTable()">❌ Delete Table</button>
-  <button id="nameListBtn" onclick="toggleNameList()">👥 Name List</button>
+  <button id="excelBtn"         onclick="promptExcelExport()">💾 Save to Excel</button>
+  <input  type="file" id="fileInput" accept=".xlsx" style="display:none" onchange="handleExcelFile(event)">
+  <button id="saveDraftBtn"     onclick="promptSaveDraft()">💠 Save Draft</button>
+  <button id="loadDraftBtn"     onclick="toggleDraftList()">📂 Load Draft</button>
+  <button                      onclick="clearDraft()">🗑️ Clear Draft</button>
+  <button id="selectBtn"        onclick="toggleSelectionMode()">✨ Select</button>
+  <button id="mergeBtn"         onclick="mergeCells()">🔗 Merge Cells</button>
+  <button id="deselectBtn"      onclick="deselectAll()">🚫 Deselect</button>
+  <button id="unmergeBtn"       onclick="unmergeCells()">🔗 Unmerge Cells</button>
+  <button id="addTableBtn"      onclick="addNewTable()">✨ Add New Table</button>
+  <button id="renameTableBtn"   onclick="promptRenameTable()">📝 Rename Table</button>
+  <button id="deleteTableBtn"   onclick="promptDeleteTable()">❌ Delete Table</button>
+  <button id="nameListBtn"      onclick="toggleNameList()">👥 Name List</button>
 </div>
 
 <div id="draftList"></div>
 <div class="bar table-tabs" id="tableTabs"></div>
 
-<!-- ───────────────── FIRST TIMETABLE ───────────────── -->
+<!-- first timetable -->
 <div id="tablesContainer">
   <table id="tbl_1" class="active">
-    <thead>
-      <tr>
-        <th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th>
-        <th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th>
-        <th contenteditable="true"></th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th>
+      <th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th>
+      <th contenteditable="true"></th>
+    </tr></thead>
     <tbody>
       <tr>
         <td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true"></td>
@@ -88,8 +85,6 @@ td.selected,th.selected{outline:3px solid #ffdf6a}
   </table>
 </div>
 
-<p id="msg" style="color:#c00;display:none">⚠️ SheetJS not found – export disabled.</p>
-
 <!-- quick row/col bar -->
 <div class="bar">
   <button onclick="addRowAbove()">⬆️ Row Above</button>
@@ -98,7 +93,7 @@ td.selected,th.selected{outline:3px solid #ffdf6a}
   <button onclick="addColRight()">➡️ Col Right</button>
 </div>
 
-<!-- ───────────────── NAME LIST MODAL ───────────────── -->
+<!-- name-list modal -->
 <div id="nameModal" class="modal">
   <div class="modal-content">
     <div class="modal-header"><h3>Name List</h3></div>
@@ -111,26 +106,33 @@ td.selected,th.selected{outline:3px solid #ffdf6a}
   </div>
 </div>
 
-<!-- ───────────────── SUMMARY ───────────────── -->
+<!-- attendance summary -->
 <h3 style="margin-top:32px">Teacher Attendance Summary</h3>
 <table id="summaryTable"></table>
 
 <script>
-/* ===== GLOBALS & INITIAL DATA ===== */
+/* ===== globals ===== */
 const DRAFTS_KEY='jadual_drafts',NAMES_KEY='jadual_names';
 let activeTableId='tbl_1',tableCount=1,selectionMode=false,selectedCells=[],selectedName=null;
+
+/* DOM refs */
 const tablesContainer=document.getElementById('tablesContainer');
 const tableTabs=document.getElementById('tableTabs');
 const nameModal=document.getElementById('nameModal');
 const nameListContainer=document.getElementById('nameList');
 const newNameInput=document.getElementById('newNameInput');
-tableTabs.innerHTML='<button class="active" onclick="switchTable(\\'tbl_1\\')">Table&nbsp;1</button>';
+
+/* init tab bar – **no back-slashes** */
+tableTabs.innerHTML="<button class='active' onclick=\"switchTable('tbl_1')\">Table 1</button>";
+
+/* restore saved names or defaults */
 let names=JSON.parse(localStorage.getItem(NAMES_KEY)||'[]');
 if(!names.length)names=['Teacher A','Teacher B','Teacher C'];
+
+/* helper */
 const deselectAll=()=>{selectedCells.forEach(c=>c.classList.remove('selected'));selectedCells=[];};
 
-/* ===== TABLE UTIL ===== */
-const tblArray=id=>[...document.getElementById(id).rows].map(r=>[...r.cells].map(c=>({txt:c.innerText.trim(),colspan:+(c.colSpan),rowspan:+(c.rowSpan)})));
+/* ========== table ops ========== */
 function switchTable(id){
   activeTableId=id;
   document.querySelectorAll('#tablesContainer table').forEach(t=>t.classList.toggle('active',t.id===id));
@@ -143,17 +145,47 @@ function addNewTable(){
   const label=prompt('Table name:','Table '+tableCount);
   if(!label||!label.trim()){tableCount--;return;}
   const tbl=document.createElement('table');tbl.id=id;
-  tbl.innerHTML='<thead><tr>'+ '<th contenteditable="true"></th>'.repeat(7) +'</tr></thead><tbody>'+Array(4).fill('<tr>'+ '<td contenteditable="true"></td>'.repeat(7) +'</tr>').join('')+'</tbody>';
+  tbl.innerHTML='<thead><tr>'+ '<th contenteditable="true"></th>'.repeat(7) +'</tr></thead>'+
+                '<tbody>'+Array(4).fill('<tr>'+ '<td contenteditable="true"></td>'.repeat(7) +'</tr>').join('')+'</tbody>';
   tablesContainer.appendChild(tbl);
-  tableTabs.insertAdjacentHTML('beforeend',`<button onclick="switchTable(\\'${id}\\')">${label.trim()}</button>`);
+  tableTabs.insertAdjacentHTML('beforeend',
+    "<button onclick=\"switchTable('"+id+"')\">"+label.trim()+"</button>");
   switchTable(id); rebuildAndUpdateSummary();
 }
+/* add/remove rows & cols – unchanged */
 function addRowAbove(){const t=document.getElementById(activeTableId);const r=t.insertRow(1);for(let i=0;i<t.rows[0].cells.length;i++)r.insertCell().contentEditable='true';updateSummary();}
 function addRowBelow(){const t=document.getElementById(activeTableId);const r=t.insertRow(-1);for(let i=0;i<t.rows[0].cells.length;i++)r.insertCell().contentEditable='true';updateSummary();}
 function addColLeft(){const t=document.getElementById(activeTableId);for(const row of t.rows){const c=row.insertCell(1);row.rowIndex?c.contentEditable='true':c.outerHTML='<th contenteditable=\"true\"></th>';};rebuildAndUpdateSummary();}
 function addColRight(){const t=document.getElementById(activeTableId);for(const row of t.rows){const c=row.insertCell(-1);row.rowIndex?c.contentEditable='true':c.outerHTML='<th contenteditable=\"true\"></th>';};rebuildAndUpdateSummary();}
 
-/* ===== SELECTION / MERGE ===== */
+/* ========== name list ========== */
+function toggleNameList(){nameModal.style.display=nameModal.style.display==='block'?'none':'block';updateNameList();}
+function closeNameList(){nameModal.style.display='none';}
+function updateNameList(){
+  nameListContainer.innerHTML='';
+  names.forEach(n=>{
+    const div=document.createElement('div');div.className='name-item';
+    div.innerHTML=`<span data-name="${n}" onclick="selectName('${n}')">${n}</span><button onclick="deleteName('${n}')">Delete</button>`;
+    nameListContainer.appendChild(div);
+  });
+}
+function addName(){
+  const n=newNameInput.value.trim();if(!n)return;
+  if(names.includes(n)){alert('Exists');return;}
+  names.push(n);localStorage.setItem(NAMES_KEY,JSON.stringify(names));
+  newNameInput.value='';updateNameList();rebuildAndUpdateSummary();
+}
+function deleteName(n){
+  names=names.filter(x=>x!==n);localStorage.setItem(NAMES_KEY,JSON.stringify(names));
+  updateNameList();rebuildAndUpdateSummary();
+}
+function selectName(n){
+  nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
+  nameListContainer.querySelector(`span[data-name="${n}"]`).classList.add('highlighted');
+  selectedName=n;
+}
+
+/* ========== selection / merge ========== */
 function toggleSelectionMode(){
   selectionMode=!selectionMode;
   const btn=document.getElementById('selectBtn');
@@ -168,8 +200,7 @@ tablesContainer.addEventListener('click',e=>{
     if(cell.tagName==='TD'&&cell.isContentEditable){
       cell.innerText=selectedName;
       nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
-      selectedName=null;
-      updateSummary();
+      selectedName=null;updateSummary();
     }else alert('Tap an editable cell');
     return;
   }
@@ -180,11 +211,12 @@ tablesContainer.addEventListener('click',e=>{
 });
 function mergeCells(){
   if(selectedCells.length<2){alert('Select ≥2 cells');return;}
-  const r=selectedCells.map(c=>c.parentNode.rowIndex),c=selectedCells.map(c=>c.cellIndex);
-  const minR=Math.min(...r),maxR=Math.max(...r),minC=Math.min(...c),maxC=Math.max(...c);
-  const rs=maxR-minR+1,cs=maxC-minC+1,table=document.getElementById(activeTableId),tl=table.rows[minR].cells[minC],txt=tl.innerText;
-  for(let i=minR;i<=maxR;i++)for(let j=minC;j<=maxC;j++){const cell=table.rows[i].cells[j];if(cell!==tl)cell.remove();}
-  tl.rowSpan=rs;tl.colSpan=cs;tl.classList.add('merged');tl.innerText=txt;
+  const rs=selectedCells.map(c=>c.parentNode.rowIndex),cs=selectedCells.map(c=>c.cellIndex);
+  const minR=Math.min(...rs),maxR=Math.max(...rs),minC=Math.min(...cs),maxC=Math.max(...cs);
+  const rowspan=maxR-minR+1,colspan=maxC-minC+1;
+  const table=document.getElementById(activeTableId),tl=table.rows[minR].cells[minC],txt=tl.innerText;
+  for(let r=minR;r<=maxR;r++)for(let c=minC;c<=maxC;c++){const cell=table.rows[r].cells[c];if(cell!==tl)cell.remove();}
+  tl.rowSpan=rowspan;tl.colSpan=colspan;tl.classList.add('merged');tl.innerText=txt;
   toggleSelectionMode();deselectAll();updateSummary();
 }
 function unmergeCells(){
@@ -196,46 +228,31 @@ function unmergeCells(){
   updateSummary();
 }
 
-/* ===== NAME LIST ===== */
-function toggleNameList(){nameModal.style.display=nameModal.style.display==='block'?'none':'block';updateNameList();}
-function closeNameList(){nameModal.style.display='none';}
-function updateNameList(){nameListContainer.innerHTML='';names.forEach(n=>{const div=document.createElement('div');div.className='name-item';div.innerHTML=`<span data-name="${n}" onclick="selectName('${n}')">${n}</span><button onclick="deleteName('${n}')">Delete</button>`;nameListContainer.appendChild(div);});}
-function addName(){const n=newNameInput.value.trim();if(!n)return;if(names.includes(n)){alert('Exists');return;}names.push(n);localStorage.setItem(NAMES_KEY,JSON.stringify(names));newNameInput.value='';updateNameList();rebuildAndUpdateSummary();}
-function deleteName(n){names=names.filter(x=>x!==n);localStorage.setItem(NAMES_KEY,JSON.stringify(names));updateNameList();rebuildAndUpdateSummary();}
-function selectName(n){nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');nameListContainer.querySelector(`span[data-name="${n}"]`).classList.add('highlighted');selectedName=n;}
-
-/* ===== SUMMARY ===== */
+/* ========== summary ========== */
 const teachersFromTables=()=>{const s=new Set();tablesContainer.querySelectorAll('td').forEach(td=>{const v=td.innerText.trim();if(v)s.add(v);});return [...s];};
 const allTeachers=()=>Array.from(new Set([...names,...teachersFromTables()]));
 function buildSummarySkeleton(){
-  const header=[...tablesContainer.querySelector('table').tHead.rows[0].cells].map(th=>th.innerText.trim()||'—');
+  const hdr=[...tablesContainer.querySelector('table').tHead.rows[0].cells].map(th=>th.innerText.trim()||'—');
   const tbl=document.getElementById('summaryTable');tbl.innerHTML='';
-  const thead=tbl.createTHead();const hrow=thead.insertRow();hrow.insertCell().outerHTML='<th>NAME</th>';header.forEach(h=>{const th=document.createElement('th');th.textContent=h;hrow.appendChild(th);});
+  const thead=tbl.createTHead();const hr=thead.insertRow();hr.insertCell().outerHTML='<th>NAME</th>';hdr.forEach(h=>{hr.insertCell().textContent=h;});
   const tbody=tbl.createTBody();
-  allTeachers().forEach(n=>{const tr=tbody.insertRow();tr.insertCell().textContent=n;for(let i=0;i<header.length;i++)tr.insertCell();});
+  allTeachers().forEach(n=>{const tr=tbody.insertRow();tr.insertCell().textContent=n;for(let i=0;i<hdr.length;i++)tr.insertCell();});
 }
 function updateSummary(){
   const tbl=document.getElementById('summaryTable');if(!tbl.tBodies.length)buildSummarySkeleton();
   [...tbl.tBodies[0].rows].forEach(r=>[...r.cells].slice(1).forEach(c=>c.textContent=''));
   tablesContainer.querySelectorAll('table').forEach(t=>{
-    [...t.tBodies].forEach(tb=>{tb.querySelectorAll('tr').forEach(r=>{[...r.cells].forEach((c,idx)=>{const name=c.innerText.trim();if(!name)return;const row=[...tbl.tBodies[0].rows].find(rr=>rr.cells[0].textContent===name);if(row)row.cells[idx+1].textContent='✱';});});});
+    [...t.tBodies].forEach(tb=>{tb.querySelectorAll('tr').forEach(r=>{
+      [...r.cells].forEach((c,i)=>{const name=c.innerText.trim();if(!name)return;const row=[...tbl.tBodies[0].rows].find(rr=>rr.cells[0].textContent===name);if(row)row.cells[i+1].textContent='✱';});
+    })});
   });
 }
 const rebuildAndUpdateSummary=()=>{buildSummarySkeleton();updateSummary();}
 
-/* Auto-update summary on edits */
+/* recompute summary on blur/input */
 ['blur','input'].forEach(ev=>tablesContainer.addEventListener(ev,e=>{if(/TD|TH/.test(e.target.tagName))setTimeout(updateSummary,0);}));
 
-/* ===== SIMPLE DRAG HANDLE FOR MODAL ===== */
-const modalContent=document.querySelector('.modal-content'),modalHeader=document.querySelector('.modal-header');
-let drag=false,ix=0,iy=0,cx=50,cy=50;modalContent.style.left=cx+'px';modalContent.style.top=cy+'px';
-modalHeader.addEventListener('mousedown',e=>{drag=true;ix=e.clientX-cx;iy=e.clientY-cy;e.preventDefault();});
-modalHeader.addEventListener('touchstart',e=>{drag=true;ix=e.touches[0].clientX-cx;iy=e.touches[0].clientY-cy;});
-document.addEventListener('mousemove',e=>{if(!drag)return;cx=e.clientX-ix;cy=e.clientY-iy;modalContent.style.left=cx+'px';modalContent.style.top=cy+'px';});
-document.addEventListener('touchmove',e=>{if(!drag)return;cx=e.touches[0].clientX-ix;cy=e.touches[0].clientY-iy;modalContent.style.left=cx+'px';modalContent.style.top=cy+'px';e.preventDefault();},{passive:false});
-document.addEventListener('mouseup',()=>drag=false);document.addEventListener('touchend',()=>drag=false);
-
-/* ===== INITIALISE ===== */
+/* ===== on load ===== */
 updateNameList();rebuildAndUpdateSummary();
 </script>
 </body>
