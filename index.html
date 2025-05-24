@@ -5,19 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>Weekly Schedule</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <style>
-  /* ====== BASIC LAYOUT ====== */
+  /* ——— styles unchanged ——— */
   body{font-family:Arial,Helvetica,sans-serif;margin:28px}
   h2{margin:0 0 12px}
   table{border-collapse:collapse;width:100%;margin-top:10px;display:none}
   table.active{display:table}
   th,td{border:1px solid #999;padding:8px;text-align:center;min-width:90px}
-  th{background:#f2f2f2}
-  td.selected,th.selected{outline:3px solid #ffdf6a}
+  th{background:#f2f2f2}  td.selected,th.selected{outline:3px solid #ffdf6a}
   .merged{font-style:italic}
-
-  /* ====== BUTTON BAR ====== */
   .bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
   .bar button{padding:8px 12px;font-size:14px;border-radius:4px;cursor:pointer;border:1px solid #666;background:#fff}
   #excelBtn{background:#2e8b57;color:#fff;border:none}
@@ -31,22 +27,17 @@
   #renameTableBtn{background:#4682b4;color:#fff;border:none}
   #deleteTableBtn{background:#dc143c;color:#fff;border:none}
   #nameListBtn{background:#32cd32;color:#fff;border:none}
-
   #msg{color:#c00;margin-top:10px;display:none}
   #draftList{margin-top:10px;padding:5px;border:1px solid #ccc;max-height:150px;overflow-y:auto;display:none}
   #draftList div{padding:5px;cursor:pointer}
   #draftList div:hover{background:#f0f0f0}
-
   .table-tabs{display:flex;gap:6px;margin-bottom:10px}
   .table-tabs button{padding:6px 12px;background:#ddd;border:1px solid #999;border-radius:4px}
   .table-tabs button.active{background:#4caf50;color:#fff}
-
-  /* ====== MODAL ====== */
   .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:transparent;z-index:1000;pointer-events:none}
   .modal-content{pointer-events:auto;background:#fff;position:absolute;top:50px;right:50px;padding:20px;width:300px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,.3)}
   .modal-header{cursor:move;padding-bottom:10px;border-bottom:1px solid #ddd}
   .name-item{display:flex;justify-content:space-between;align-items:center;padding:5px;border-bottom:1px solid #ddd}
-  .name-item:hover{background:#f0f0f0}
   .name-item span{flex-grow:1;cursor:pointer}
   .name-item button{background:#ff4444;color:#fff;border:none;border-radius:3px}
   .highlighted{background:#ffff99}
@@ -56,7 +47,7 @@
 <body>
 <h2 contenteditable="true">Weekly Schedule</h2>
 
-<!-- ===== ACTION BAR ===== -->
+<!-- ===== BUTTON BAR ===== -->
 <div class="bar">
   <button id="excelBtn"        onclick="promptExcelExport()">💾 Save to Excel</button>
   <input  type="file" id="fileInput" accept=".xlsx" onchange="handleExcelFile(event)">
@@ -76,7 +67,7 @@
 <div id="draftList"></div>
 <div class="bar table-tabs" id="tableTabs"></div>
 
-<!-- ===== FIRST TABLE (blank headers) ===== -->
+<!-- ===== FIRST TABLE ===== -->
 <div id="tablesContainer">
   <table id="tbl_1" class="active">
     <thead><tr><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
@@ -112,67 +103,65 @@
   </div>
 </div>
 
-<!-- ===== MAIN SCRIPT ===== -->
 <script>
 /* ---------- GLOBALS ---------- */
 const DRAFTS_KEY='jadual_drafts',NAMES_KEY='jadual_names';
 let activeTableId='tbl_1',tableCount=1,selectionMode=false,selectedCells=[],selectedName=null;
 
+/* ---------- DOM refs ---------- */
 const tablesContainer=document.getElementById('tablesContainer');
 const tableTabs=document.getElementById('tableTabs');
 const nameModal=document.getElementById('nameModal');
 const nameListContainer=document.getElementById('nameList');
 const newNameInput=document.getElementById('newNameInput');
 
-/* ---------- INIT ---------- */
-tableTabs.innerHTML='<button class="active" onclick="switchTable(\\'tbl_1\\')">Table 1</button>';
+/* ---------- Init ---------- */
+tableTabs.innerHTML=`<button class="active" onclick="switchTable('tbl_1')">Table&nbsp;1</button>`;
 let names=JSON.parse(localStorage.getItem(NAMES_KEY)||'[]');
 if(!names.length)names=['Teacher A','Teacher B','Teacher C'];
 
-/* ---------- TABLE UTILITIES ---------- */
+/* ---------- Helpers ---------- */
+function deselectAll(){selectedCells.forEach(c=>c.classList.remove('selected'));selectedCells.length=0;}
 function switchTable(id){
   activeTableId=id;
-  document.querySelectorAll('#tablesContainer table').forEach(t=>t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.table-tabs button').forEach(b=>b.classList.remove('active'));
-  tableTabs.querySelector(`button[onclick="switchTable('${id}')"]`).classList.add('active');
+  document.querySelectorAll('#tablesContainer table').forEach(t=>t.classList.toggle('active',t.id===id));
+  document.querySelectorAll('.table-tabs button').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(id)));
   deselectAll();
 }
 
+/* ---------- Add new table (blank headers) ---------- */
 function addNewTable(){
   tableCount++;
   const id='tbl_'+tableCount;
   const nm=prompt('Table name:','Table '+tableCount);
   if(!nm||!nm.trim()){tableCount--;return;}
-  const t=document.createElement('table');t.id=id;
-  t.innerHTML='<thead><tr>'+ '<th contenteditable="true"></th>'.repeat(7) +'</tr></thead>'+
-              '<tbody>'+Array(4).fill('<tr>'+ '<td contenteditable="true"></td>'.repeat(7) +'</tr>').join('')+'</tbody>';
-  tablesContainer.appendChild(t);
+  const tbl=document.createElement('table');tbl.id=id;
+  tbl.innerHTML='<thead><tr>'+ '<th contenteditable="true"></th>'.repeat(7) +'</tr></thead>'+
+                '<tbody>'+Array(4).fill('<tr>'+ '<td contenteditable="true"></td>'.repeat(7) +'</tr>').join('')+'</tbody>';
+  tablesContainer.appendChild(tbl);
   tableTabs.insertAdjacentHTML('beforeend',`<button onclick="switchTable('${id}')">${nm.trim()}</button>`);
   switchTable(id);
 }
 
-/* ---------- ROW / COL QUICK OPS ---------- */
-function addRowAbove(){const t=document.getElementById(activeTableId);const r=t.insertRow(1);for(let i=0;i<7;i++){const c=r.insertCell(-1);c.contentEditable='true';}}
-function addRowBelow(){const t=document.getElementById(activeTableId);const r=t.insertRow(-1);for(let i=0;i<7;i++){const c=r.insertCell(-1);c.contentEditable='true';}}
+/* ---------- Row/Col ops ---------- */
+function addRowAbove(){const t=document.getElementById(activeTableId);const r=t.insertRow(1);for(let i=0;i<7;i++)r.insertCell(i).contentEditable='true';}
+function addRowBelow(){const t=document.getElementById(activeTableId);const r=t.insertRow(-1);for(let i=0;i<7;i++)r.insertCell(i).contentEditable='true';}
 function addColLeft(){const t=document.getElementById(activeTableId);for(const row of t.rows){const c=row.insertCell(1);row.rowIndex?c.contentEditable='true':c.outerHTML='<th contenteditable="true"></th>';}}
 function addColRight(){const t=document.getElementById(activeTableId);for(const row of t.rows){const c=row.insertCell(-1);row.rowIndex?c.contentEditable='true':c.outerHTML='<th contenteditable="true"></th>';}}
-function deselectAll(){selectedCells.forEach(c=>c.classList.remove('selected'));selectedCells=[];}
+function promptRenameTable(){const btn=tableTabs.querySelector('.active');const n=prompt('New name:',btn.textContent);if(n&&n.trim())btn.textContent=n.trim();}
+function promptDeleteTable(){if(document.querySelectorAll('#tablesContainer table').length<=1)return;const btn=tableTabs.querySelector('.active');if(confirm('Delete this table?')){document.getElementById(activeTableId).remove();btn.remove();switchTable(document.querySelector('.table-tabs button').getAttribute('onclick').match(/'(.*?)'/)[1]);}}
 
-/* ---------- SELECTION / MERGE ---------- */
+/* ---------- Select / merge ---------- */
 function toggleSelectionMode(){
   selectionMode=!selectionMode;
-  const btn=document.getElementById('selectBtn');
-  btn.classList.toggle('active',selectionMode);
-  btn.innerText=selectionMode?'✨ Selecting...':'✨ Select';
+  const b=document.getElementById('selectBtn');
+  b.classList.toggle('active',selectionMode);
+  b.textContent=selectionMode?'✨ Selecting...':'✨ Select';
   if(!selectionMode)deselectAll();
 }
-
 tablesContainer.addEventListener('click',e=>{
   if(e.target.tagName!=='TD'&&e.target.tagName!=='TH')return;
   const cell=e.target;
-
-  /* === NAME-INSERT MODE === */
   if(selectedName!==null){
     if(cell.tagName==='TD'&&cell.isContentEditable){
       cell.innerText=selectedName;
@@ -181,17 +170,13 @@ tablesContainer.addEventListener('click',e=>{
     }else alert('Tap an editable cell.');
     return;
   }
-
-  /* === NORMAL SELECTION === */
   if(selectionMode){
     cell.classList.toggle('selected');
-    cell.classList.contains('selected')?selectedCells.push(cell):
-      selectedCells.splice(selectedCells.indexOf(cell),1);
+    cell.classList.contains('selected')?selectedCells.push(cell):selectedCells.splice(selectedCells.indexOf(cell),1);
   }
 });
-
 function mergeCells(){
-  if(selectedCells.length<2){alert('Select >=2 cells');return;}
+  if(selectedCells.length<2){alert('Select at least 2 cells');return;}
   const [base,...rest]=selectedCells;
   rest.forEach(c=>c.remove());
   base.setAttribute('colspan',selectedCells.length);
@@ -202,11 +187,11 @@ function unmergeCells(){
   document.querySelectorAll('.merged').forEach(cell=>{
     const cs=+cell.getAttribute('colspan')||1;
     cell.removeAttribute('colspan');cell.classList.remove('merged');
-    for(let i=1;i<cs;i++){const nc=cell.parentNode.insertCell(cell.cellIndex+i);nc.contentEditable='true';}
+    for(let i=1;i<cs;i++){const n=cell.parentNode.insertCell(cell.cellIndex+i);n.contentEditable='true';}
   });
 }
 
-/* ---------- NAME LIST ---------- */
+/* ---------- Name list ---------- */
 function toggleNameList(){nameModal.style.display=nameModal.style.display==='block'?'none':'block';updateNameList();}
 function closeNameList(){nameModal.style.display='none';}
 function updateNameList(){
@@ -221,18 +206,17 @@ function addName(){const n=newNameInput.value.trim();if(!n)return;if(names.inclu
 function deleteName(n){names=names.filter(x=>x!==n);updateNameList();}
 function selectName(n){
   nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
-  const s=nameListContainer.querySelector(`span[data-name="${n}"]`);
-  if(s)s.classList.add('highlighted');
+  nameListContainer.querySelector(`span[data-name="${n}"]`).classList.add('highlighted');
   selectedName=n;
 }
 
-/* ---------- (Excel export, drafts etc. omitted for brevity) ---------- */
-function promptExcelExport(){alert('Excel export code omitted in this trimmed demo.');}
-function promptSaveDraft(){alert('Draft save omitted in this trimmed demo.');}
+/* ---------- Placeholder stubs for draft / excel ---------- */
+function promptExcelExport(){alert('Excel export not included in this trimmed file');}
+function promptSaveDraft(){alert('Draft save not included in this trimmed file');}
 function toggleDraftList(){}
 function clearDraft(){}
 
-/* ---------- DRAGGABLE MODAL (mobile-friendly) ---------- */
+/* ---------- Draggable modal ---------- */
 const modalContent=document.querySelector('.modal-content');
 const modalHeader=document.querySelector('.modal-header');
 let drag=false,ix=0,iy=0,cx=50,cy=50;
@@ -244,7 +228,7 @@ document.addEventListener('touchmove',e=>{if(!drag)return;cx=e.touches[0].client
 document.addEventListener('mouseup',()=>drag=false);
 document.addEventListener('touchend',()=>drag=false);
 
-/* ---------- STARTUP ---------- */
+/* ---------- Kick off name list ---------- */
 updateNameList();
 </script>
 </body>
