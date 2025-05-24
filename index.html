@@ -36,10 +36,10 @@
             border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            min-width: 100px;
+            min-width: 100px; /* Adjusted min-width for better layout */
         }
         table th { 
-            background-color: #e9ecef;
+            background-color: #e9ecef; /* Default grey stripe for headers */
             color: #495057;
             font-weight: bold;
         }
@@ -72,7 +72,7 @@
             background-color: #f1f3f5;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62; } /* Updated ID */
+        #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62; }
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
         #loadDraftBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
@@ -95,16 +95,28 @@
 
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center;
+            overflow: hidden; 
+            background-color: rgba(0,0,0,0.4); 
+            align-items: center; 
+            justify-content: center;
         }
         .modal-content {
-            background-color: #fff; margin: auto; padding: 20px; border: 1px solid #888;
+            background-color: #fff; 
+            padding: 20px; border: 1px solid #888;
             width: 90%; max-width: 400px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            position: relative;
+            position: fixed; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
         }
+        .modal-content.dragging { 
+            transform: none; 
+        }
+
         .modal-header {
             padding-bottom: 10px; border-bottom: 1px solid #eee; margin-bottom: 15px;
             font-size: 1.2em; color: #333; display: flex; justify-content: space-between; align-items: center;
+            cursor: move; 
+            user-select: none; 
         }
         .modal-close-btn {
             font-size: 1.5rem; font-weight: bold; line-height: 1; color: #000;
@@ -176,14 +188,7 @@
         <table id="tbl_1" class="active" data-table-name="Table 1">
             <thead>
                 <tr>
-                    <th contenteditable="true">Class/Time</th>
-                    <th contenteditable="true">Monday</th>
-                    <th contenteditable="true">Tuesday</th>
-                    <th contenteditable="true">Wednesday</th>
-                    <th contenteditable="true">Thursday</th>
-                    <th contenteditable="true">Friday</th>
-                    <th contenteditable="true">Saturday</th>
-                </tr>
+                    <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> </tr>
             </thead>
             <tbody>
                 <tr>
@@ -208,8 +213,8 @@
     </div>
 
     <div id="nameModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content" id="nameModalContent"> 
+            <div class="modal-header" id="nameModalHeader"> 
                 <h3>Name List</h3>
                 <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard">&times;</button>
             </div>
@@ -239,7 +244,12 @@
     let names = []; 
 
     // --- DOM Element References ---
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement;
+
+    // --- Draggable Modal State ---
+    let isDraggingModal = false;
+    let modalDragOffsetX, modalDragOffsetY;
+
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -258,6 +268,8 @@
         tablesContainer = document.getElementById('tablesContainer');
         tableTabs = document.getElementById('tableTabs');
         nameModal = document.getElementById('nameModal');
+        nameModalContent = document.getElementById('nameModalContent'); 
+        nameModalHeader = document.getElementById('nameModalHeader');   
         nameListContainer = document.getElementById('nameList');
         newNameInput = document.getElementById('newNameInput');
         draftListElement = document.getElementById('draftList');
@@ -267,7 +279,7 @@
         directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn');
         closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard');
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement) {
+        if (!tablesContainer || !tableTabs || !nameModal || !nameModalContent || !nameModalHeader || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement) {
             console.error("Critical DOM elements missing. Application might not function correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements.</p>";
             return;
@@ -293,9 +305,16 @@
                 addTabButton(tableId, tableName);
                 if (index === 0) activeTableId = tableId;
             });
-        } else { addNewTable(true); }
-        if (activeTableId && document.getElementById(activeTableId)) switchTable(activeTableId);
-        else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id);
+        } else { addNewTable(true); } // Create initial table if none exist
+        
+        if (activeTableId && document.getElementById(activeTableId)) {
+            switchTable(activeTableId);
+        } else if (tablesContainer.querySelector('table')) {
+            // Fallback if activeTableId is somehow invalid but a table exists
+            switchTable(tablesContainer.querySelector('table').id);
+        }
+        // Ensure initial table headers are empty (HTML already reflects this for tbl_1)
+        // The addNewTable function will handle new tables.
     }
     
     function loadScheduleTitle() {
@@ -313,6 +332,13 @@
     function initializeEventListeners() {
         directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         closeNameModalButtonStandardElement.addEventListener('click', toggleNameListModalVisibility);
+
+        nameModalHeader.addEventListener('mousedown', startDragModal);
+        document.addEventListener('mousemove', dragModal);
+        document.addEventListener('mouseup', stopDragModal);
+        nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false }); 
+        document.addEventListener('touchmove', dragModal, { passive: false });
+        document.addEventListener('touchend', stopDragModal);
 
         document.getElementById('excelBtnTrigger').addEventListener('click', exportActiveTableToExcel);
         document.getElementById('importExcelBtn').addEventListener('click', () => fileInputElement.click()); 
@@ -369,34 +395,83 @@
             }
         });
 
-        window.addEventListener('click', (event) => { // Close Name modal if clicked outside
-            if (event.target === nameModal) nameModal.style.display = 'none';
+        window.addEventListener('click', (event) => { 
+            if (event.target === nameModal && !isDraggingModal) { 
+                nameModal.style.display = 'none';
+            }
         });
     }
+
+    // --- Draggable Modal Functionality ---
+    function startDragModal(e) {
+        isDraggingModal = true;
+        nameModalContent.classList.add('dragging'); 
+
+        const clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
+        const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
+
+        if (nameModalContent.style.position !== 'fixed' || nameModalContent.style.transform === 'translate(-50%, -50%)' || nameModalContent.style.transform === '') {
+            const rect = nameModalContent.getBoundingClientRect();
+            nameModalContent.style.position = 'fixed'; 
+            nameModalContent.style.left = `${rect.left}px`;
+            nameModalContent.style.top = `${rect.top}px`;
+            nameModalContent.style.transform = 'none'; 
+            nameModalContent.style.margin = '0'; 
+        }
+        
+        modalDragOffsetX = clientX - nameModalContent.offsetLeft;
+        modalDragOffsetY = clientY - nameModalContent.offsetTop;
+
+        if (e.type === 'touchstart') e.preventDefault(); 
+    }
+
+    function dragModal(e) {
+        if (!isDraggingModal) return;
+
+        const clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
+        const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
+
+        let newLeft = clientX - modalDragOffsetX;
+        let newTop = clientY - modalDragOffsetY;
+
+        const modalRect = nameModalContent.getBoundingClientRect(); // Get current dimensions
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        if (newLeft < 0) newLeft = 0;
+        if (newTop < 0) newTop = 0;
+        if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
+        if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
+
+        nameModalContent.style.left = `${newLeft}px`;
+        nameModalContent.style.top = `${newTop}px`;
+        if (e.type === 'touchmove') e.preventDefault(); 
+    }
+
+    function stopDragModal() {
+        if (isDraggingModal) {
+            isDraggingModal = false;
+        }
+    }
+
 
     // --- Direct Copy Full HTML Functionality ---
     async function attemptDirectCopyToClipboard() {
         const fullHtml = document.documentElement.outerHTML;
         try {
-            // Try modern clipboard API first
             await navigator.clipboard.writeText(fullHtml);
             showMessage('Full HTML copied to clipboard!', 'success');
         } catch (err) {
             console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
-            // Fallback to execCommand
             const textarea = document.createElement('textarea');
             textarea.value = fullHtml;
-            textarea.style.position = 'fixed'; // Prevent scrolling to bottom
-            textarea.style.left = '-9999px'; // Move off-screen
+            textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
             document.body.appendChild(textarea);
             textarea.select();
             try {
                 const successful = document.execCommand('copy');
-                if (successful) {
-                    showMessage('Full HTML copied! (using fallback method)', 'success');
-                } else {
-                    showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
-                }
+                if (successful) showMessage('Full HTML copied! (using fallback method)', 'success');
+                else showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
             } catch (execErr) {
                 console.error('execCommand copy failed: ', execErr);
                 showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
@@ -514,14 +589,17 @@
         newTable.dataset.tableName = label || defaultTableName; 
         const thead = newTable.createTHead();
         const headerRow = thead.insertRow();
-        ['Period/Subject', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'].forEach(text => {
+        // Create 7 empty header cells for a new table (matching initial table structure)
+        for (let i = 0; i < 7; i++) { 
             const th = document.createElement('th');
-            th.contentEditable = 'true'; th.textContent = text; headerRow.appendChild(th);
-        });
+            th.contentEditable = 'true'; 
+            th.textContent = ''; // Empty header cell
+            headerRow.appendChild(th);
+        }
         const tbody = newTable.createTBody();
         for (let r = 0; r < 2; r++) { 
             const dataRow = tbody.insertRow();
-            for (let c = 0; c < headerRow.cells.length; c++) {
+            for (let c = 0; c < headerRow.cells.length; c++) { // Match number of header cells
                 const td = dataRow.insertCell();
                 td.contentEditable = 'true';
                 if (c === 0) td.textContent = `Sample Row ${r+1}`; 
@@ -582,7 +660,7 @@
             cell.contentEditable = 'true';
             if (isHeaderRow) {
                  if (colIndex === -1 || colIndex >= row.cells.length) row.appendChild(cell); else row.insertBefore(cell, row.cells[colIndex]);
-                 cell.textContent = "New Col"; 
+                 cell.textContent = ""; // Empty header for new column
             }
         }
     }
@@ -609,10 +687,8 @@
         if (selectedNameFromList) { 
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
                 cell.textContent = selectedNameFromList;
-                nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted'); 
                 selectedNameFromList = null; 
                 rebuildAndRenderSummary(); 
-                toggleNameListModalVisibility(); 
             } else { showMessage('Click an editable data cell to insert name.', 'info'); }
             return; 
         }
@@ -681,10 +757,25 @@
     // --- Name List Management (Modal) ---
     function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C"]'); }
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
+    
     function toggleNameListModalVisibility() {
-        nameModal.style.display = nameModal.style.display === 'flex' ? 'none' : 'flex'; 
-        if (nameModal.style.display === 'flex') { renderNameList(); newNameInput.focus(); }
+        const isDisplayed = nameModal.style.display === 'flex';
+        if (isDisplayed) {
+            nameModal.style.display = 'none';
+        } else {
+            nameModalContent.style.position = 'fixed'; 
+            nameModalContent.style.left = '50%';
+            nameModalContent.style.top = '50%';
+            nameModalContent.style.transform = 'translate(-50%, -50%)';
+            nameModalContent.style.margin = ''; 
+            nameModalContent.classList.remove('dragging'); 
+
+            nameModal.style.display = 'flex'; 
+            renderNameList(); 
+            newNameInput.focus(); 
+        }
     }
+
     function renderNameList() {
         nameListContainer.innerHTML = ''; 
         if (names.length === 0) { nameListContainer.innerHTML = '<p>No names. Add some!</p>'; return; }
@@ -709,10 +800,9 @@
         }
     }
     function selectNameForCellInsertion(name) {
-        nameListContainer.querySelectorAll('.name-item span').forEach(s => s.classList.remove('highlighted'));
-        nameListContainer.querySelector(`.name-item span[data-name="${name}"]`)?.classList.add('highlighted');
         selectedNameFromList = name; 
-        showMessage(`Selected "${name}". Click cell to insert.`, 'info');
+        toggleNameListModalVisibility(); 
+        showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
     }
 
     // --- Excel Export/Import ---
