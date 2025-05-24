@@ -185,7 +185,76 @@
     <div id="draftList"></div>
     <div class="bar table-tabs" id="tableTabs"></div>
 
-    <div id="tablesContainer">
+    <script>
+        // Part 1: Core Setup, Utility Functions, and Initialization
+
+        // Utility function to display prompts with a callback
+        function showPrompt(message, callback) {
+            const response = prompt(message);
+            if (callback && response !== null) {
+                callback(response);
+            }
+        }
+
+        // Function to initialize event listeners for all buttons
+        function initializeEventListeners() {
+            // Excel and draft management buttons
+            document.getElementById('excelBtn').addEventListener('click', promptExcelExport);
+            document.getElementById('fileInput').addEventListener('change', handleExcelFile);
+            document.getElementById('saveDraftBtn').addEventListener('click', promptSaveDraft);
+            document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftList);
+            document.getElementById('clearDraft').addEventListener('click', clearDraft);
+
+            // Selection and cell management buttons
+            document.getElementById('selectBtn').addEventListener('click', toggleSelectionMode);
+            document.getElementById('mergeBtn').addEventListener('click', mergeCells);
+            document.getElementById('deselectBtn').addEventListener('click', deselectAll);
+            document.getElementById('unmergeBtn').addEventListener('click', unmergeCells);
+
+            // Table management buttons
+            document.getElementById('addTableBtn').addEventListener('click', addNewTable);
+            document.getElementById('renameTableBtn').addEventListener('click', promptRenameTable);
+            document.getElementById('deleteTableBtn').addEventListener('click', promptDeleteTable);
+
+            // Name list button
+            document.getElementById('nameListBtn').addEventListener('click', toggleNameList);
+
+            // Row and column buttons
+            document.querySelector('button:nth-child(1)', '.bar:last-child').addEventListener('click', addRowAbove);
+            document.querySelector('button:nth-child(2)', '.bar:last-child').addEventListener('click', addRowBelow);
+            document.querySelector('button:nth-child(3)', '.bar:last-child').addEventListener('click', addColLeft);
+            document.querySelector('button:nth-child(4)', '.bar:last-child').addEventListener('click', addColRight);
+
+            // Name modal buttons
+            document.querySelector('#nameModal button:nth-child(2)').addEventListener('click', addName);
+            document.querySelector('#nameModal button:nth-child(3)').addEventListener('click', closeNameList);
+        }
+
+        // Initialize when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeEventListeners();
+            updateNameList();
+            rebuildAndUpdateSummary();
+        });
+
+        // Global variables
+        const DRAFTS_KEY = 'jadual_drafts';
+        const NAMES_KEY = 'jadual_names';
+        let activeTableId = 'tbl_1';
+        let tableCount = 1;
+        let selectionMode = false;
+        let selectedCells = [];
+        let selectedName = null;
+        const tablesContainer = document.getElementById('tablesContainer');
+        const tableTabs = document.getElementById('tableTabs');
+        tableTabs.innerHTML = "<button class='active' onclick=\"switchTable('tbl_1')\">Table 1</button>";
+        let names = JSON.parse(localStorage.getItem(NAMES_KEY) || '[]');
+        if (!names.length) names = ['Teacher A', 'Teacher B', 'Teacher C'];
+        const nameModal = document.getElementById('nameModal');
+        const nameListContainer = document.getElementById('nameList');
+        const newNameInput = document.getElementById('newNameInput');
+    </script>
+        <div id="tablesContainer">
         <table id="tbl_1" class="active">
             <thead><tr><th contenteditable="true">Class</th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
             <tbody><tr><td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr></tbody>
@@ -212,6 +281,159 @@
     <table id="summaryTable"></table>
 
     <script>
+        // Part 2: Draft Management Functions
+
+        // Function to save the current schedule as a draft
+        function promptSaveDraft() {
+            const draftData = tablesContainer.innerHTML;
+            if (draftData) {
+                const draftName = prompt('Enter draft name:', 'Draft ' + new Date().toLocaleDateString());
+                if (draftName) {
+                    const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+                    drafts[draftName] = draftData;
+                    localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+                    alert('Draft saved as "' + draftName + '"!');
+                }
+            } else {
+                alert('No schedule data to save.');
+            }
+        }
+
+        // Function to toggle draft list visibility and load drafts
+        function toggleDraftList() {
+            const draftList = document.getElementById('draftList');
+            draftList.innerHTML = '';
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+            for (let name in drafts) {
+                draftList.innerHTML += `<div><span onclick="loadDraft('${name}')">${name}</span><button onclick="deleteDraft('${name}')">Delete</button></div>`;
+            }
+            draftList.style.display = draftList.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Function to load a selected draft
+        function loadDraft(draftName) {
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+            if (drafts[draftName]) {
+                tablesContainer.innerHTML = drafts[draftName];
+                alert('Draft "' + draftName + '" loaded!');
+                draftList.style.display = 'none';
+                rebuildAndUpdateSummary();
+            }
+        }
+
+        // Function to delete a draft
+        function deleteDraft(draftName) {
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+            if (drafts[draftName]) {
+                delete drafts[draftName];
+                localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+                toggleDraftList();
+                alert('Draft "' + draftName + '" deleted!');
+            }
+        }
+
+        // Function to clear all drafts
+        function clearDraft() {
+            localStorage.removeItem(DRAFTS_KEY);
+            document.getElementById('draftList').style.display = 'none';
+            alert('All drafts cleared!');
+        }
+    </script>
+        <script>
+        // Part 3: Table and Cell Management Functions
+
+        // Function to switch between tables
+        function switchTable(id) {
+            activeTableId = id;
+            document.querySelectorAll('#tablesContainer table').forEach(t => t.classList.toggle('active', t.id === id));
+            document.querySelectorAll('.table-tabs button').forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes(id)));
+            deselectAll();
+        }
+
+        // Function to add a new table
+        function addNewTable() {
+            tableCount++;
+            const label = prompt('Table name:', 'Table ' + tableCount);
+            if (!label) return;
+            const tbl = document.createElement('table');
+            tbl.id = 'tbl_' + tableCount;
+            tbl.innerHTML = document.getElementById('tbl_1').innerHTML;
+            tbl.querySelectorAll('tbody td').forEach(td => td.textContent = '');
+            tablesContainer.appendChild(tbl);
+            tableTabs.insertAdjacentHTML('beforeend', "<button onclick=\"switchTable('" + tbl.id + "')\">" + label.trim() + "</button>");
+            switchTable(tbl.id);
+            rebuildAndUpdateSummary();
+        }
+
+        // Function to add a row above
+        function addRowAbove() {
+            const t = document.getElementById(activeTableId);
+            const r = t.insertRow(1);
+            for (let i = 0; i < t.rows[0].cells.length; i++) r.insertCell().contentEditable = 'true';
+            updateSummary();
+        }
+
+        // Function to add a row below
+        function addRowBelow() {
+            const t = document.getElementById(activeTableId);
+            const r = t.insertRow(-1);
+            for (let i = 0; i < t.rows[0].cells.length; i++) r.insertCell().contentEditable = 'true';
+            updateSummary();
+        }
+
+        // Function to add a column to the left
+        function addColLeft() {
+            const t = document.getElementById(activeTableId);
+            for (const row of t.rows) {
+                const c = row.insertCell(1);
+                row.rowIndex ? c.contentEditable = 'true' : c.outerHTML = '<th contenteditable="true"></th>';
+            }
+            rebuildAndUpdateSummary();
+        }
+
+        // Function to add a column to the right
+        function addColRight() {
+            const t = document.getElementById(activeTableId);
+            for (const row of t.rows) {
+                const c = row.insertCell(-1);
+                row.rowIndex ? c.contentEditable = 'true' : c.outerHTML = '<th contenteditable="true"></th>';
+            }
+            rebuildAndUpdateSummary();
+        }
+
+        // Function to prompt for table deletion
+        function promptDeleteTable() {
+            showPrompt('Are you sure you want to delete the table? Type "yes" to confirm.', (response) => {
+                if (response.toLowerCase() === 'yes') {
+                    const table = document.getElementById(activeTableId);
+                    if (table && table.id !== 'tbl_1') { // Prevent deleting the first table
+                        table.remove();
+                        const tab = document.querySelector(`.table-tabs button[onclick="switchTable('${activeTableId}')"]`);
+                        if (tab) tab.remove();
+                        activeTableId = 'tbl_1'; // Switch back to default table
+                        switchTable(activeTableId);
+                        alert('Table deleted successfully!');
+                    } else {
+                        alert('Cannot delete the default table or no table found.');
+                    }
+                }
+            });
+        }
+
+        // Function to prompt for renaming a table
+        function promptRenameTable() {
+            showPrompt('Enter the new table name:', (newName) => {
+                const tab = document.querySelector(`.table-tabs button[onclick="switchTable('${activeTableId}')"]`);
+                if (tab && newName) {
+                    tab.textContent = newName.trim();
+                    alert('Table renamed to "' + newName + '"!');
+                } else {
+                    alert('No table found to rename.');
+                }
+            });
+        }
+    </script>
+        <script>
         // Part 4: Selection, Merge, Name List, and Excel Export Functions
 
         // Function to toggle selection mode
@@ -343,7 +565,7 @@
                 return;
             }
             const wb = XLSX.utils.table_to_book(table, { sheet: 'Weekly Schedule' });
-            const date = new Date('2025-05-24T19:35:00+08:00').toISOString().split('T')[0]; // Current date and time
+            const date = new Date('2025-05-24T20:03:00+08:00').toISOString().split('T')[0]; // Current date and time
             XLSX.writeFile(wb, `Weekly_Schedule_${date}.xlsx`);
             alert('Exported to Excel successfully!');
         }
