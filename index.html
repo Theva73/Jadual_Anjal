@@ -76,7 +76,7 @@
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
         #loadDraftBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
-        #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
+        #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;} 
         #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
         #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
         #mergeBtn { background-color: #6f42c1; color: white; border-color: #6f42c1;}
@@ -400,7 +400,7 @@
 
         window.addEventListener('click', (event) => { 
             if (event.target === nameModal && !isDraggingModal) { 
-                nameModal.style.display = 'none';
+                toggleNameListModalVisibility(); // Use the toggle function to ensure proper state handling
             }
         });
     }
@@ -755,45 +755,44 @@
         }
 
         const startRowIndex = cellToUnmerge.parentNode.rowIndex;
-        const startCellIndex = cellToUnmerge.cellIndex;
-        // const originalContent = cellToUnmerge.innerHTML; // Content remains in the top-left cell
+        const startCellIndex = cellToUnmerge.cellIndex; // DOM index of the merged cell
 
         cellToUnmerge.rowSpan = 1;
         cellToUnmerge.colSpan = 1;
         cellToUnmerge.classList.remove('merged');
-        // cellToUnmerge.innerHTML = originalContent; // Restore if needed
 
-        // Re-create the cells that were covered by the span
-        for (let r = 0; r < rSpan; r++) {
-            const targetRow = table.rows[startRowIndex + r];
-            if (!targetRow) {
-                console.error(`Unmerge error: Row at index ${startRowIndex + r} not found.`);
-                continue;
-            }
-            for (let c = 0; c < cSpan; c++) {
+        for (let r = 0; r < rSpan; r++) { // Iterate for each row the original cell spanned
+            const currentRow = table.rows[startRowIndex + r];
+            if (!currentRow) continue;
+
+            for (let c = 0; c < cSpan; c++) { // Iterate for each col the original cell spanned
                 if (r === 0 && c === 0) continue; // Skip the original cell itself
-                
-                const insertAtIndex = startCellIndex + c;
-                let actualInsertIndex = 0;
-                let currentVisualCol = 0;
-                // Iterate through existing cells in the target row to find the correct DOM index
-                for(let k=0; k < targetRow.cells.length; k++){
-                    if(currentVisualCol >= insertAtIndex){
-                        actualInsertIndex = k;
-                        break;
+
+                // Determine the correct DOM index to insert the new cell
+                let domInsertIndex = startCellIndex + c;
+                // This simple calculation for domInsertIndex might need adjustment if there are
+                // other complex colSpans in the row that are *not* part of this unmerge operation.
+                // For now, assuming `startCellIndex + c` is a reasonable approximation for many cases.
+                // A more robust solution would calculate the visual position.
+
+                // Check if a cell already exists at this visual position (it shouldn't if unmerging correctly)
+                // This part is complex if other merges exist. Let's try simpler insertion first.
+                try {
+                    const newCell = currentRow.insertCell(domInsertIndex);
+                    newCell.contentEditable = 'true';
+                    newCell.innerHTML = '';
+                } catch (e) {
+                    // If insertCell fails (e.g., index out of bounds due to complex existing spans),
+                    // try appending. This is a fallback.
+                    console.warn(`Unmerge: Could not insert cell at index ${domInsertIndex} for row ${startRowIndex + r}. Appending. Error: ${e.message}`);
+                    try {
+                        const newCell = currentRow.insertCell(-1); // Append
+                        newCell.contentEditable = 'true';
+                        newCell.innerHTML = '';
+                    } catch (appendError) {
+                         console.error(`Unmerge: Failed to append cell for row ${startRowIndex + r}. Error: ${appendError.message}`);
                     }
-                    currentVisualCol += (targetRow.cells[k].colSpan || 1);
-                    actualInsertIndex = k + 1; // If loop finishes, insert at the end
                 }
-                // If the calculated insertAtIndex is beyond current cells, append
-                if (currentVisualCol < insertAtIndex) {
-                     actualInsertIndex = targetRow.cells.length;
-                }
-
-
-                const newCell = targetRow.insertCell(actualInsertIndex);
-                newCell.contentEditable = 'true';
-                newCell.innerHTML = '';
             }
         }
         deselectAllTableCells();
@@ -801,15 +800,16 @@
         showMessage('Cell unmerged.', 'success');
     }
 
-
     // --- Name List Management (Modal) ---
     function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C"]'); }
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
     
     function toggleNameListModalVisibility() {
+        // console.log('Toggling Name List Modal. Current display:', nameModal.style.display); // For debugging
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) {
             nameModal.style.display = 'none';
+            // console.log('Name List Modal closed.'); // For debugging
         } else {
             nameModalContent.style.position = 'fixed'; 
             nameModalContent.style.left = '50%';
@@ -819,6 +819,7 @@
             nameModalContent.classList.remove('dragging'); 
 
             nameModal.style.display = 'flex'; 
+            // console.log('Name List Modal opened.'); // For debugging
             renderNameList(); 
             newNameInput.focus(); 
         }
