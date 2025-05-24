@@ -228,6 +228,23 @@
             // Name modal buttons
             document.querySelector('#nameModal button:nth-child(2)').addEventListener('click', addName);
             document.querySelector('#nameModal button:nth-child(3)').addEventListener('click', closeNameList);
+
+            // Centralized event listeners for dynamically added elements
+            document.getElementById('draftList').addEventListener('click', (e) => {
+                if (e.target.tagName === 'SPAN') {
+                    loadDraft(e.target.textContent);
+                } else if (e.target.tagName === 'BUTTON') {
+                    deleteDraft(e.target.parentElement.querySelector('span').textContent);
+                }
+            });
+
+            document.getElementById('nameList').addEventListener('click', (e) => {
+                if (e.target.tagName === 'SPAN') {
+                    selectName(e.target.getAttribute('data-name'));
+                } else if (e.target.tagName === 'BUTTON') {
+                    deleteName(e.target.parentElement.querySelector('span').getAttribute('data-name'));
+                }
+            });
         }
 
         // Initialize when the DOM is fully loaded
@@ -305,7 +322,7 @@
             draftList.innerHTML = '';
             const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
             for (let name in drafts) {
-                draftList.innerHTML += `<div><span onclick="loadDraft('${name}')">${name}</span><button onclick="deleteDraft('${name}')">Delete</button></div>`;
+                draftList.innerHTML += `<div><span>${name}</span><button>Delete</button></div>`;
             }
             draftList.style.display = draftList.style.display === 'block' ? 'none' : 'block';
         }
@@ -316,7 +333,7 @@
             if (drafts[draftName]) {
                 tablesContainer.innerHTML = drafts[draftName];
                 alert('Draft "' + draftName + '" loaded!');
-                draftList.style.display = 'none';
+                document.getElementById('draftList').style.display = 'none';
                 rebuildAndUpdateSummary();
             }
         }
@@ -369,7 +386,10 @@
         function addRowAbove() {
             const t = document.getElementById(activeTableId);
             const r = t.insertRow(1);
-            for (let i = 0; i < t.rows[0].cells.length; i++) r.insertCell().contentEditable = 'true';
+            for (let i = 0; i < t.rows[0].cells.length; i++) {
+                const cell = r.insertCell();
+                cell.contentEditable = 'true';
+            }
             updateSummary();
         }
 
@@ -377,7 +397,10 @@
         function addRowBelow() {
             const t = document.getElementById(activeTableId);
             const r = t.insertRow(-1);
-            for (let i = 0; i < t.rows[0].cells.length; i++) r.insertCell().contentEditable = 'true';
+            for (let i = 0; i < t.rows[0].cells.length; i++) {
+                const cell = r.insertCell();
+                cell.contentEditable = 'true';
+            }
             updateSummary();
         }
 
@@ -386,7 +409,11 @@
             const t = document.getElementById(activeTableId);
             for (const row of t.rows) {
                 const c = row.insertCell(1);
-                row.rowIndex ? c.contentEditable = 'true' : c.outerHTML = '<th contenteditable="true"></th>';
+                if (row.rowIndex === 0) {
+                    c.outerHTML = '<th contenteditable="true"></th>';
+                } else {
+                    c.contentEditable = 'true';
+                }
             }
             rebuildAndUpdateSummary();
         }
@@ -396,7 +423,11 @@
             const t = document.getElementById(activeTableId);
             for (const row of t.rows) {
                 const c = row.insertCell(-1);
-                row.rowIndex ? c.contentEditable = 'true' : c.outerHTML = '<th contenteditable="true"></th>';
+                if (row.rowIndex === 0) {
+                    c.outerHTML = '<th contenteditable="true"></th>';
+                } else {
+                    c.contentEditable = 'true';
+                }
             }
             rebuildAndUpdateSummary();
         }
@@ -404,7 +435,7 @@
         // Function to prompt for table deletion
         function promptDeleteTable() {
             showPrompt('Are you sure you want to delete the table? Type "yes" to confirm.', (response) => {
-                if (response.toLowerCase() === 'yes') {
+                if (response && response.toLowerCase() === 'yes') {
                     const table = document.getElementById(activeTableId);
                     if (table && table.id !== 'tbl_1') { // Prevent deleting the first table
                         table.remove();
@@ -454,12 +485,18 @@
                     nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
                     selectedName = '';
                     updateSummary();
-                } else alert('Tap an editable cell');
+                } else {
+                    alert('Tap an editable cell');
+                }
                 return;
             }
             if (selectionMode) {
                 cell.classList.toggle('selected');
-                cell.classList.contains('selected') ? selectedCells.push(cell) : selectedCells.splice(selectedCells.indexOf(cell), 1);
+                if (cell.classList.contains('selected')) {
+                    selectedCells.push(cell);
+                } else {
+                    selectedCells = selectedCells.filter(c => c !== cell);
+                }
             }
         });
 
@@ -471,7 +508,10 @@
 
         // Function to merge selected cells
         function mergeCells() {
-            if (selectedCells.length < 2) return;
+            if (selectedCells.length < 2) {
+                alert('Please select at least two cells to merge.');
+                return;
+            }
             const rs = selectedCells.map(c => c.parentNode.rowIndex);
             const cs = selectedCells.map(c => c.cellIndex);
             const minR = Math.min(...rs);
@@ -496,9 +536,14 @@
 
         // Function to unmerge cells
         function unmergeCells() {
-            document.querySelectorAll(`#${activeTableId} .merged`).forEach(cell => {
-                const rs = cell.rowSpan;
-                const cs = cell.colSpan;
+            const mergedCells = document.querySelectorAll(`#${activeTableId} .merged`);
+            if (!mergedCells.length) {
+                alert('No merged cells to unmerge.');
+                return;
+            }
+            mergedCells.forEach(cell => {
+                const rs = cell.rowSpan || 1;
+                const cs = cell.colSpan || 1;
                 const r0 = cell.parentNode.rowIndex;
                 const c0 = cell.cellIndex;
                 const table = document.getElementById(activeTableId);
@@ -508,8 +553,10 @@
                 for (let r = 0; r < rs; r++) {
                     for (let c = 0; c < cs; c++) {
                         if (r || c) {
-                            const n = table.rows[r0 + r].insertCell(c0 + c);
-                            n.contentEditable = 'true';
+                            const row = table.rows[r0 + r];
+                            const newCell = row.insertCell(c0 + c);
+                            newCell.contentEditable = 'true';
+                            newCell.textContent = '';
                         }
                     }
                 }
@@ -530,19 +577,26 @@
         function updateNameList() {
             nameListContainer.innerHTML = '';
             names.forEach(n => {
-                nameListContainer.insertAdjacentHTML('beforeend', `<div class="name-item"><span data-name="${n}" onclick="selectName('${n}')">${n}</span><button onclick="deleteName('${n}')">Delete</button></div>`);
+                nameListContainer.insertAdjacentHTML('beforeend', `<div class="name-item"><span data-name="${n}">${n}</span><button>Delete</button></div>`);
             });
         }
 
         function selectName(n) {
             nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
-            nameListContainer.querySelector(`span[data-name="${n}"]`).classList.add('highlighted');
-            selectedName = n;
+            const span = nameListContainer.querySelector(`span[data-name="${n}"]`);
+            if (span) {
+                span.classList.add('highlighted');
+                selectedName = n;
+            }
         }
 
         function addName() {
             const n = newNameInput.value.trim();
-            if (!n || names.includes(n)) return;
+            if (!n || names.includes(n)) {
+                if (!n) alert('Please enter a name.');
+                else alert('Name already exists.');
+                return;
+            }
             names.push(n);
             localStorage.setItem(NAMES_KEY, JSON.stringify(names));
             newNameInput.value = '';
@@ -565,7 +619,7 @@
                 return;
             }
             const wb = XLSX.utils.table_to_book(table, { sheet: 'Weekly Schedule' });
-            const date = new Date('2025-05-24T20:03:00+08:00').toISOString().split('T')[0]; // Current date and time
+            const date = new Date('2025-05-24T20:19:00+08:00').toISOString().split('T')[0]; // Current date and time
             XLSX.writeFile(wb, `Weekly_Schedule_${date}.xlsx`);
             alert('Exported to Excel successfully!');
         }
@@ -590,7 +644,9 @@
 
         // Summary functions
         function buildSummarySkeleton() {
-            const hdr = [...tablesContainer.querySelector('table').tHead.rows[0].cells].slice(1).map(th => th.innerText.trim() || '—');
+            const firstTable = tablesContainer.querySelector('table');
+            if (!firstTable) return;
+            const hdr = [...firstTable.tHead.rows[0].cells].slice(1).map(th => th.innerText.trim() || '—');
             const tbl = document.getElementById('summaryTable');
             tbl.innerHTML = '';
             const thead = tbl.createTHead();
@@ -598,7 +654,8 @@
             hr.insertCell().outerHTML = '<th>NAME</th>';
             hdr.forEach(h => hr.insertCell().textContent = h);
             const tbody = tbl.createTBody();
-            [...new Set([...names, ...[...tablesContainer.querySelectorAll('td')].map(td => td.innerText.trim()).filter(Boolean)])].forEach(n => {
+            const uniqueNames = [...new Set([...names, ...[...tablesContainer.querySelectorAll('td')].map(td => td.innerText.trim()).filter(Boolean)])];
+            uniqueNames.forEach(n => {
                 const tr = tbody.insertRow();
                 tr.insertCell().textContent = n;
                 for (let i = 0; i < hdr.length; i++) tr.insertCell();
@@ -607,7 +664,10 @@
 
         function updateSummary() {
             const tbl = document.getElementById('summaryTable');
-            if (!tbl.tBodies.length) buildSummarySkeleton();
+            if (!tbl.tBodies.length) {
+                buildSummarySkeleton();
+                return;
+            }
             [...tbl.tBodies[0].rows].forEach(r => [...r.cells].slice(1).forEach(c => c.textContent = ''));
             tablesContainer.querySelectorAll('table').forEach(t => {
                 [...t.tBodies].forEach(tb => {
