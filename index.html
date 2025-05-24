@@ -497,7 +497,7 @@ function loadSelectedDraft(draftName) {
         showMessage(`Draft "${draftName}" loaded!`, 'success');
         draftListElement.style.display = 'none'; 
         rebuildAndRenderSummary();
-    } else { showMessage(`Draft "${draftName}" not found.', 'error'); }
+    } else { showMessage(`Draft "${draftName}" not found.`, 'error'); }
 }
 function confirmAndDeleteDraft(draftName) { 
     if (customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
@@ -545,9 +545,7 @@ function switchTable(id) {
         const firstTableInDOM = tablesContainer.querySelector('table');
         if (firstTableInDOM) id = firstTableInDOM.id;
         else { 
-            showMessage('Cannot
-
- switch: Target table not found.', 'error');
+            showMessage('Cannot switch: Target table not found.', 'error');
             if (tablesContainer.children.length === 0) addNewTable(true); 
             return;
         }
@@ -915,4 +913,4 @@ function updateSummaryTableData() {
 }
 </script>
 </body>
-</html>
+</html
