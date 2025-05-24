@@ -714,17 +714,20 @@
         const cell = event.target.closest('td, th');
         if (!cell || !cell.closest(`#${activeTableId}`)) return;
 
-        lastClickedCell = cell; // FIX: Store the most recently clicked cell
+        lastClickedCell = cell;
 
-        if (selectedNameFromList) { /*[span_169](end_span) */
+        if (selectedNameFromList) {
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
                 cell.textContent = selectedNameFromList;
-                selectedNameFromList = null; /*[span_170](end_span) */
                 rebuildAndRenderSummary();
-            } else { showMessage('Click an editable data cell to insert name.', 'info');
-            } /*[span_171](end_span) */
-            return;
+                showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
+                clearNameSelection(); // Clear selection after successful insertion
+            } else {
+                showMessage('Click an editable data cell to insert name.', 'info');
+            }
+            return; // Name insertion takes precedence
         }
+
         if (selectionMode) {
             cell.classList.toggle('selected');
             if (cell.classList.contains('selected')) selectedCells.push(cell); /*[span_172](end_span) */
@@ -766,15 +769,11 @@
         rebuildAndRenderSummary(); showMessage('Cells merged.', 'success');
     }
 
-    // FIX: Corrected function to reliably identify the cell to unmerge
     function unmergeActiveCellIfMerged() {
         let cellToUnmerge = null;
-
-        // First, check if a single merged cell is selected in selection mode
         if (selectedCells.length === 1 && (selectedCells[0].rowSpan > 1 || selectedCells[0].colSpan > 1)) {
             cellToUnmerge = selectedCells[0];
         }
-        // Otherwise, use the last cell the user clicked on
         else if (lastClickedCell && (lastClickedCell.rowSpan > 1 || lastClickedCell.colSpan > 1) && lastClickedCell.closest(`#${activeTableId}`)) {
             cellToUnmerge = lastClickedCell;
         }
@@ -782,7 +781,7 @@
         if (cellToUnmerge) {
             unmergeGivenCell(cellToUnmerge);
         } else {
-            showMessage('Click a merged cell to unmerge it.', 'error');
+            showMessage('Click a merged cell to unmerge it, or select a single merged cell.', 'error');
         }
     }
 
@@ -828,23 +827,45 @@
         rebuildAndRenderSummary();
         showMessage('Cell unmerged.', 'success');
     } /*[span_193](end_span) */
+
     // --- Name List Management (Modal) ---
+    function highlightSelectedNameInList(nameToHighlight) {
+        if (!nameListContainer) return;
+        nameListContainer.querySelectorAll('.name-item span').forEach(span => {
+            if (span.dataset.name === nameToHighlight) {
+                span.classList.add('highlighted');
+            } else {
+                span.classList.remove('highlighted');
+            }
+        });
+    }
+
+    function clearNameSelection() {
+        selectedNameFromList = null;
+        if (nameListContainer) {
+            nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => {
+                span.classList.remove('highlighted');
+            });
+        }
+    }
+
     function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C"]');
     } /*[span_194](end_span) */
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
 
-    // FIX: Dedicated function to close the modal to prevent event conflicts
     function closeNameModal(event) {
-        event.stopPropagation(); // Prevents the drag event on the header from firing
-        nameModal.style.display = 'none';
-        console.log('Close button clicked, modal closed.');
+        if(event) event.stopPropagation();
+        if(nameModal) nameModal.style.display = 'none';
+        clearNameSelection();
+        console.log('Name modal closed.');
     }
 
-    // FIX: Simplified function to toggle modal visibility (now it only opens)
     function toggleNameListModalVisibility() {
+        if (!nameModal || !nameModalContent || !newNameInput) return;
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) {
             nameModal.style.display = 'none';
+            clearNameSelection();
         } else {
             nameModalContent.style.position = 'fixed'; /*[span_195](end_span) */
             nameModalContent.style.left = '50%';
@@ -855,10 +876,12 @@
             nameModal.style.display = 'flex';
             renderNameList();
             newNameInput.focus();
+            clearNameSelection(); // Clear previous selection when opening
         } /*[span_197](end_span) */
     }
 
     function renderNameList() {
+        if (!nameListContainer) return;
         nameListContainer.innerHTML = '';
         if (names.length === 0) { nameListContainer.innerHTML = '<p>No names. Add some!</p>';
         return; } /*[span_198](end_span) */
@@ -869,6 +892,7 @@
         });
     } /*[span_199](end_span) */
     function addNewNameToList() {
+        if (!newNameInput) return;
         const newName = newNameInput.value.trim();
         if (!newName) { showMessage('Enter a name.', 'error'); return;
         } /*[span_200](end_span) */
@@ -882,10 +906,14 @@
             names = names.filter(n => n !== nameToDelete);
             saveNames(); renderNameList(); /*[span_202](end_span) */
             rebuildAndRenderSummary(); showMessage(`"${nameToDelete}" removed.`, 'success');
+            if (selectedNameFromList === nameToDelete) { // If deleted name was selected, clear selection
+                clearNameSelection();
+            }
         }
     }
     function selectNameForCellInsertion(name) {
         selectedNameFromList = name;
+        highlightSelectedNameInList(name);
         showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000); /*[span_203](end_span) */
     }
 
