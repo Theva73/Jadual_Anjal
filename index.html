@@ -76,7 +76,7 @@
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
         #loadDraftBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
-        #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;} /* Changed ID and style */
+        #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
         #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
         #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
         #mergeBtn { background-color: #6f42c1; color: white; border-color: #6f42c1;}
@@ -166,7 +166,8 @@
     <div class="bar">
         <button id="saveDraftBtn">💠 Save All as Draft</button>
         <button id="loadDraftBtn">📂 Load Draft</button>
-        <button id="clearActiveTableContentBtn">🧹 Clear Active Table</button> </div>
+        <button id="clearActiveTableContentBtn">🧹 Clear Active Table</button> 
+    </div>
     <div class="bar">
         <button id="selectBtn">✨ Select Cells</button>
         <button id="mergeBtn">🔗 Merge Cells</button>
@@ -348,7 +349,7 @@
         
         document.getElementById('saveDraftBtn').addEventListener('click', promptAndSaveDraft);
         document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftListVisibility);
-        document.getElementById('clearActiveTableContentBtn').addEventListener('click', confirmAndClearActiveTableContent); // Changed listener
+        document.getElementById('clearActiveTableContentBtn').addEventListener('click', confirmAndClearActiveTableContent); 
 
         document.getElementById('selectBtn').addEventListener('click', toggleCellSelectionMode);
         document.getElementById('mergeBtn').addEventListener('click', mergeSelectedTableCells);
@@ -524,7 +525,7 @@
             rebuildAndRenderSummary();
         } else { showMessage(`Draft "${draftName}" not found.`, 'error'); }
     }
-    function confirmAndDeleteDraft(draftName) { // This deletes from localStorage
+    function confirmAndDeleteDraft(draftName) { 
         if (customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
             const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
             delete drafts[draftName];
@@ -534,7 +535,6 @@
         }
     }
     
-    // Renamed and modified function
     function confirmAndClearActiveTableContent() {
         const activeTableElement = document.getElementById(activeTableId);
         if (!activeTableElement) {
@@ -545,7 +545,7 @@
         if (customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
             activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
                 cell.innerHTML = ''; 
-                if (cell.tagName === 'TH') cell.textContent = ''; // Ensure headers are visually empty
+                if (cell.tagName === 'TH') cell.textContent = ''; 
                 cell.rowSpan = 1;
                 cell.colSpan = 1;
                 cell.classList.remove('merged');
@@ -556,7 +556,6 @@
             showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
     }
-
 
     // --- Table Management ---
     function addTabButton(id, label) {
@@ -606,7 +605,7 @@
             for (let c = 0; c < headerRow.cells.length; c++) { 
                 const td = dataRow.insertCell();
                 td.contentEditable = 'true';
-                if (c === 0 && r === 0) td.textContent = `Sample A`; // Minimal sample content
+                if (c === 0 && r === 0) td.textContent = `Sample A`; 
                 if (c === 0 && r === 1) td.textContent = `Sample B`;
             }
         }
@@ -743,63 +742,65 @@
              unmergeGivenCell(selectedCells[0]);
         } else { showMessage('Click on a merged cell or select a single merged cell to unmerge.', 'error'); }
     }
+    
     function unmergeGivenCell(cellToUnmerge) {
-        const table = cellToUnmerge.closest('table'); if (!table) return; 
-        const rSpan = cellToUnmerge.rowSpan || 1; const cSpan = cellToUnmerge.colSpan || 1;
-        if (rSpan === 1 && cSpan === 1) { showMessage('Cell is not merged.', 'info'); return; }
-        
-        const startRowIndex = cellToUnmerge.parentNode.rowIndex; 
+        const table = cellToUnmerge.closest('table');
+        if (!table) return;
+
+        const rSpan = cellToUnmerge.rowSpan || 1;
+        const cSpan = cellToUnmerge.colSpan || 1;
+        if (rSpan === 1 && cSpan === 1) {
+            showMessage('Cell is not merged.', 'info');
+            return;
+        }
+
+        const startRowIndex = cellToUnmerge.parentNode.rowIndex;
         const startCellIndex = cellToUnmerge.cellIndex;
-        
-        // Store the content of the merged cell before changing its spans
-        // const originalHTML = cellToUnmerge.innerHTML; // Keep this if you want to preserve content
+        // const originalContent = cellToUnmerge.innerHTML; // Content remains in the top-left cell
 
-        cellToUnmerge.rowSpan = 1; 
-        cellToUnmerge.colSpan = 1; 
+        cellToUnmerge.rowSpan = 1;
+        cellToUnmerge.colSpan = 1;
         cellToUnmerge.classList.remove('merged');
-        // cellToUnmerge.innerHTML = originalHTML; // Restore content to the top-left cell
+        // cellToUnmerge.innerHTML = originalContent; // Restore if needed
 
-        // Re-create the other cells that were covered by the span
+        // Re-create the cells that were covered by the span
         for (let r = 0; r < rSpan; r++) {
             const targetRow = table.rows[startRowIndex + r];
             if (!targetRow) {
-                console.error(`Target row ${startRowIndex + r} not found during unmerge.`);
+                console.error(`Unmerge error: Row at index ${startRowIndex + r} not found.`);
                 continue;
             }
             for (let c = 0; c < cSpan; c++) {
                 if (r === 0 && c === 0) continue; // Skip the original cell itself
                 
-                // Calculate the correct insertion index.
-                // This needs to be robust, especially if other cells in the row have colSpans.
-                // For simplicity, assuming `startCellIndex + c` is the visual target.
-                // More robust: iterate cells in targetRow to find correct visual insertion point.
-                // However, `insertCell(index)` should usually handle this by inserting before current cell at `index`.
-                let insertAtIndex = startCellIndex + c;
-                
-                // Adjust insertAtIndex if cells before it have colSpans that push its effective index
-                let currentVisualIndex = 0;
+                const insertAtIndex = startCellIndex + c;
+                let actualInsertIndex = 0;
+                let currentVisualCol = 0;
+                // Iterate through existing cells in the target row to find the correct DOM index
                 for(let k=0; k < targetRow.cells.length; k++){
-                    if(currentVisualIndex >= insertAtIndex && k < targetRow.cells.length) {
-                        insertAtIndex = k; // Found the actual cell index to insert before
+                    if(currentVisualCol >= insertAtIndex){
+                        actualInsertIndex = k;
                         break;
                     }
-                    currentVisualIndex += (targetRow.cells[k].colSpan || 1);
-                    if (k === targetRow.cells.length -1 && currentVisualIndex < insertAtIndex) {
-                        // If we are at the end and still haven't reached the target, append
-                        insertAtIndex = targetRow.cells.length;
-                    }
+                    currentVisualCol += (targetRow.cells[k].colSpan || 1);
+                    actualInsertIndex = k + 1; // If loop finishes, insert at the end
+                }
+                // If the calculated insertAtIndex is beyond current cells, append
+                if (currentVisualCol < insertAtIndex) {
+                     actualInsertIndex = targetRow.cells.length;
                 }
 
 
-                const newCell = targetRow.insertCell(insertAtIndex);
+                const newCell = targetRow.insertCell(actualInsertIndex);
                 newCell.contentEditable = 'true';
-                newCell.innerHTML = ''; // New cells are empty
+                newCell.innerHTML = '';
             }
         }
-        deselectAllTableCells(); 
-        rebuildAndRenderSummary(); 
+        deselectAllTableCells();
+        rebuildAndRenderSummary();
         showMessage('Cell unmerged.', 'success');
     }
+
 
     // --- Name List Management (Modal) ---
     function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C"]'); }
