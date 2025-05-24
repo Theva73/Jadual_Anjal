@@ -6,7 +6,7 @@
 <title>Weekly Schedule</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* —— layout identical to previous build (truncated for brevity) —— */
+/* === BASIC LAYOUT & BUTTON STYLES (shortened) === */
 body{font-family:Arial,Helvetica,sans-serif;margin:28px}
 h2{margin:0 0 12px}
 table{border-collapse:collapse;width:100%;margin-top:10px;display:none}
@@ -15,18 +15,41 @@ th,td{border:1px solid #999;padding:8px;text-align:center;min-width:90px}
 th{background:#f2f2f2}
 td.selected,th.selected{outline:3px solid #ffdf6a}
 .merged{font-style:italic}
-/* bar & button styles unchanged */
-/* summary table highlights */
+.bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.bar button{padding:8px 12px;font-size:14px;border-radius:4px;cursor:pointer;border:1px solid #666;background:#fff}
+#excelBtn{background:#2e8b57;color:#fff;border:none}
+#saveDraftBtn{background:#0b65c2;color:#fff;border:none}
+#loadDraftBtn{background:#ff8c00;color:#fff;border:none}
+#mergeBtn{background:#6a5acd;color:#fff;border:none}
+#unmergeBtn{background:#cd5c5c;color:#fff;border:none}
+#selectBtn{background:#00ced1;color:#fff;border:none}
+#selectBtn.active{background:#ff4500}
+#addTableBtn{background:#ff69b4;color:#fff;border:none}
+#renameTableBtn{background:#4682b4;color:#fff;border:none}
+#deleteTableBtn{background:#dc143c;color:#fff;border:none}
+#nameListBtn{background:#32cd32;color:#fff;border:none}
+.table-tabs{display:flex;gap:6px;margin-bottom:10px}
+.table-tabs button{padding:6px 12px;background:#ddd;border:1px solid #999;border-radius:4px}
+.table-tabs button.active{background:#4caf50;color:#fff}
+/* modal */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:transparent;z-index:1000;pointer-events:none}
+.modal-content{pointer-events:auto;background:#fff;position:absolute;top:50px;right:50px;padding:20px;width:300px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,.3)}
+.modal-header{cursor:move;padding-bottom:10px;border-bottom:1px solid #ddd}
+.name-item{display:flex;justify-content:space-between;align-items:center;padding:5px;border-bottom:1px solid #ddd}
+.name-item span{flex-grow:1;cursor:pointer}
+.name-item button{background:#ff4444;color:#fff;border:none;border-radius:3px}
+.highlighted{background:#ffff99}
+/* summary */
 #summaryTable th{background:#ffeeba}
 #summaryTable td{background:#fffff7}
 </style>
 </head>
+
 <body>
 <h2 contenteditable="true">Weekly Schedule</h2>
 
-<!-- ① control bar (unchanged) -->
+<!-- ───────────────── BUTTON BAR ───────────────── -->
 <div class="bar">
-  <!-- … buttons exactly as before … -->
   <button id="excelBtn" onclick="promptExcelExport()">💾 Save to Excel</button>
   <input type="file" id="fileInput" style="display:none" accept=".xlsx" onchange="handleExcelFile(event)">
   <button id="saveDraftBtn" onclick="promptSaveDraft()">💠 Save Draft</button>
@@ -45,21 +68,29 @@ td.selected,th.selected{outline:3px solid #ffdf6a}
 <div id="draftList"></div>
 <div class="bar table-tabs" id="tableTabs"></div>
 
-<!-- ② timetable container (unchanged starter table) -->
+<!-- ───────────────── FIRST TIMETABLE ───────────────── -->
 <div id="tablesContainer">
   <table id="tbl_1" class="active">
-    <thead><tr><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
+    <thead>
+      <tr>
+        <th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th>
+        <th contenteditable="true"></th><th contenteditable="true"></th><th contenteditable="true"></th>
+        <th contenteditable="true"></th>
+      </tr>
+    </thead>
     <tbody>
-      <!-- starter rows identical to last build -->
-      <tr><td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
-      <!-- … more rows … -->
+      <tr>
+        <td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true"></td>
+        <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+      </tr>
     </tbody>
   </table>
 </div>
 
-<p id="msg">⚠️ SheetJS not found – export disabled.</p>
+<p id="msg" style="color:#c00;display:none">⚠️ SheetJS not found – export disabled.</p>
 
-<!-- ③ quick row / col bar (unchanged) -->
+<!-- quick row/col bar -->
 <div class="bar">
   <button onclick="addRowAbove()">⬆️ Row Above</button>
   <button onclick="addRowBelow()">⬇️ Row Below</button>
@@ -67,9 +98,8 @@ td.selected,th.selected{outline:3px solid #ffdf6a}
   <button onclick="addColRight()">➡️ Col Right</button>
 </div>
 
-<!-- ④ name-list modal (unchanged) -->
+<!-- ───────────────── NAME LIST MODAL ───────────────── -->
 <div id="nameModal" class="modal">
-  <!-- … modal HTML exactly as before … -->
   <div class="modal-content">
     <div class="modal-header"><h3>Name List</h3></div>
     <div>
@@ -81,95 +111,132 @@ td.selected,th.selected{outline:3px solid #ffdf6a}
   </div>
 </div>
 
-<!-- ⑤ NEW: Attendance summary -->
+<!-- ───────────────── SUMMARY ───────────────── -->
 <h3 style="margin-top:32px">Teacher Attendance Summary</h3>
 <table id="summaryTable"></table>
 
-<!-- ==================== MAIN SCRIPT ==================== -->
 <script>
-/*  All previous variables & helper functions from the last file remain intact.
-    Only NEW or CHANGED parts are marked  <<< NEW >>>                                    */
+/* ===== GLOBALS & INITIAL DATA ===== */
+const DRAFTS_KEY='jadual_drafts',NAMES_KEY='jadual_names';
+let activeTableId='tbl_1',tableCount=1,selectionMode=false,selectedCells=[],selectedName=null;
+const tablesContainer=document.getElementById('tablesContainer');
+const tableTabs=document.getElementById('tableTabs');
+const nameModal=document.getElementById('nameModal');
+const nameListContainer=document.getElementById('nameList');
+const newNameInput=document.getElementById('newNameInput');
+tableTabs.innerHTML='<button class="active" onclick="switchTable(\\'tbl_1\\')">Table&nbsp;1</button>';
+let names=JSON.parse(localStorage.getItem(NAMES_KEY)||'[]');
+if(!names.length)names=['Teacher A','Teacher B','Teacher C'];
+const deselectAll=()=>{selectedCells.forEach(c=>c.classList.remove('selected'));selectedCells=[];};
 
-/* ---------- (globals, init, table ops, name list, merge, draft, excel, etc.) ---------- */
-/*   … keep the exact code from the previous working ‘weekly_schedule_full.html’ …       */
-
-/* ---------- <<< NEW >>> summary helpers ---------- */
-function buildSummarySkeleton(){
-  /* create headers based on first table’s <th> texts  */
-  const firstHeader=[...document.querySelector('#tablesContainer table').tHead.rows[0].cells].map(
-      th=>th.innerText.trim()||'—');
-  const tbl=document.getElementById('summaryTable');
-  tbl.innerHTML='';                                            // wipe
-  const thead=document.createElement('thead');
-  const hrow=thead.insertRow();
-  hrow.insertCell().outerHTML='<th>NAME</th>';
-  firstHeader.forEach(txt=>{
-    const th=document.createElement('th');th.textContent=txt;hrow.appendChild(th);
-  });
-  tbl.appendChild(thead);
-
-  const tbody=document.createElement('tbody');
-  names.forEach(n=>{
-    const tr=tbody.insertRow();
-    tr.insertCell().textContent=n;                              // name col
-    for(let i=0;i<firstHeader.length;i++)tr.insertCell();       // empty period cols
-  });
-  tbl.appendChild(tbody);
+/* ===== TABLE UTIL ===== */
+const tblArray=id=>[...document.getElementById(id).rows].map(r=>[...r.cells].map(c=>({txt:c.innerText.trim(),colspan:+(c.colSpan),rowspan:+(c.rowSpan)})));
+function switchTable(id){
+  activeTableId=id;
+  document.querySelectorAll('#tablesContainer table').forEach(t=>t.classList.toggle('active',t.id===id));
+  document.querySelectorAll('.table-tabs button').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(id)));
+  deselectAll();
 }
-
-function updateSummary(){
-  const tbl=document.getElementById('summaryTable');
-  if(!tbl.tBodies.length) buildSummarySkeleton();               // safety
-  // clear previous marks
-  [...tbl.tBodies[0].rows].forEach(r=>[...r.cells].slice(1).forEach(c=>c.textContent=''));
-  /* scan every timetable cell & mark ✱ */
-  const allTables=[...document.querySelectorAll('#tablesContainer table')];
-  allTables.forEach(t=>{
-    const headCells=[...t.tHead.rows[0].cells];
-    [...t.tBodies].forEach(tb=>{
-      [...tb.rows].forEach(r=>{
-        [...r.cells].forEach((c,idx)=>{
-          const name=c.innerText.trim();
-          if(!name) return;
-          const summaryRow=[...tbl.tBodies[0].rows].find(row=>row.cells[0].textContent===name);
-          if(summaryRow) summaryRow.cells[idx+1].textContent='✱';
-        });
-      });
-    });
-  });
+function addNewTable(){
+  tableCount++;
+  const id='tbl_'+tableCount;
+  const label=prompt('Table name:','Table '+tableCount);
+  if(!label||!label.trim()){tableCount--;return;}
+  const tbl=document.createElement('table');tbl.id=id;
+  tbl.innerHTML='<thead><tr>'+ '<th contenteditable="true"></th>'.repeat(7) +'</tr></thead><tbody>'+Array(4).fill('<tr>'+ '<td contenteditable="true"></td>'.repeat(7) +'</tr>').join('')+'</tbody>';
+  tablesContainer.appendChild(tbl);
+  tableTabs.insertAdjacentHTML('beforeend',`<button onclick="switchTable(\\'${id}\\')">${label.trim()}</button>`);
+  switchTable(id); rebuildAndUpdateSummary();
 }
+function addRowAbove(){const t=document.getElementById(activeTableId);const r=t.insertRow(1);for(let i=0;i<t.rows[0].cells.length;i++)r.insertCell().contentEditable='true';updateSummary();}
+function addRowBelow(){const t=document.getElementById(activeTableId);const r=t.insertRow(-1);for(let i=0;i<t.rows[0].cells.length;i++)r.insertCell().contentEditable='true';updateSummary();}
+function addColLeft(){const t=document.getElementById(activeTableId);for(const row of t.rows){const c=row.insertCell(1);row.rowIndex?c.contentEditable='true':c.outerHTML='<th contenteditable=\"true\"></th>';};rebuildAndUpdateSummary();}
+function addColRight(){const t=document.getElementById(activeTableId);for(const row of t.rows){const c=row.insertCell(-1);row.rowIndex?c.contentEditable='true':c.outerHTML='<th contenteditable=\"true\"></th>';};rebuildAndUpdateSummary();}
 
-/* ---------- hook summary into every change ---------- */
-function rebuildAndUpdateSummary(){
-  buildSummarySkeleton();
+/* ===== SELECTION / MERGE ===== */
+function toggleSelectionMode(){
+  selectionMode=!selectionMode;
+  const btn=document.getElementById('selectBtn');
+  btn.classList.toggle('active',selectionMode);
+  btn.textContent=selectionMode?'✨ Selecting...':'✨ Select';
+  if(!selectionMode)deselectAll();
+}
+tablesContainer.addEventListener('click',e=>{
+  if(e.target.tagName!=='TD'&&e.target.tagName!=='TH')return;
+  const cell=e.target;
+  if(selectedName!==null){
+    if(cell.tagName==='TD'&&cell.isContentEditable){
+      cell.innerText=selectedName;
+      nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');
+      selectedName=null;
+      updateSummary();
+    }else alert('Tap an editable cell');
+    return;
+  }
+  if(selectionMode){
+    cell.classList.toggle('selected');
+    cell.classList.contains('selected')?selectedCells.push(cell):selectedCells.splice(selectedCells.indexOf(cell),1);
+  }
+});
+function mergeCells(){
+  if(selectedCells.length<2){alert('Select ≥2 cells');return;}
+  const r=selectedCells.map(c=>c.parentNode.rowIndex),c=selectedCells.map(c=>c.cellIndex);
+  const minR=Math.min(...r),maxR=Math.max(...r),minC=Math.min(...c),maxC=Math.max(...c);
+  const rs=maxR-minR+1,cs=maxC-minC+1,table=document.getElementById(activeTableId),tl=table.rows[minR].cells[minC],txt=tl.innerText;
+  for(let i=minR;i<=maxR;i++)for(let j=minC;j<=maxC;j++){const cell=table.rows[i].cells[j];if(cell!==tl)cell.remove();}
+  tl.rowSpan=rs;tl.colSpan=cs;tl.classList.add('merged');tl.innerText=txt;
+  toggleSelectionMode();deselectAll();updateSummary();
+}
+function unmergeCells(){
+  document.querySelectorAll(`#${activeTableId} .merged`).forEach(cell=>{
+    const rs=cell.rowSpan||1,cs=cell.colSpan||1,r0=cell.parentNode.rowIndex,c0=cell.cellIndex,table=document.getElementById(activeTableId);
+    cell.rowSpan=1;cell.colSpan=1;cell.classList.remove('merged');
+    for(let r=0;r<rs;r++)for(let c=0;c<cs;c++)if(r||c){const n=table.rows[r0+r].insertCell(c0+c);n.contentEditable='true';}
+  });
   updateSummary();
 }
-/* run once on load */
-rebuildAndUpdateSummary();
 
-/* intercept important changes */
-['blur','input'].forEach(evt=>{
-  tablesContainer.addEventListener(evt, e=>{
-    if(e.target.tagName==='TD' || e.target.tagName==='TH') setTimeout(updateSummary,0);
+/* ===== NAME LIST ===== */
+function toggleNameList(){nameModal.style.display=nameModal.style.display==='block'?'none':'block';updateNameList();}
+function closeNameList(){nameModal.style.display='none';}
+function updateNameList(){nameListContainer.innerHTML='';names.forEach(n=>{const div=document.createElement('div');div.className='name-item';div.innerHTML=`<span data-name="${n}" onclick="selectName('${n}')">${n}</span><button onclick="deleteName('${n}')">Delete</button>`;nameListContainer.appendChild(div);});}
+function addName(){const n=newNameInput.value.trim();if(!n)return;if(names.includes(n)){alert('Exists');return;}names.push(n);localStorage.setItem(NAMES_KEY,JSON.stringify(names));newNameInput.value='';updateNameList();rebuildAndUpdateSummary();}
+function deleteName(n){names=names.filter(x=>x!==n);localStorage.setItem(NAMES_KEY,JSON.stringify(names));updateNameList();rebuildAndUpdateSummary();}
+function selectName(n){nameListContainer.querySelector('.highlighted')?.classList.remove('highlighted');nameListContainer.querySelector(`span[data-name="${n}"]`).classList.add('highlighted');selectedName=n;}
+
+/* ===== SUMMARY ===== */
+const teachersFromTables=()=>{const s=new Set();tablesContainer.querySelectorAll('td').forEach(td=>{const v=td.innerText.trim();if(v)s.add(v);});return [...s];};
+const allTeachers=()=>Array.from(new Set([...names,...teachersFromTables()]));
+function buildSummarySkeleton(){
+  const header=[...tablesContainer.querySelector('table').tHead.rows[0].cells].map(th=>th.innerText.trim()||'—');
+  const tbl=document.getElementById('summaryTable');tbl.innerHTML='';
+  const thead=tbl.createTHead();const hrow=thead.insertRow();hrow.insertCell().outerHTML='<th>NAME</th>';header.forEach(h=>{const th=document.createElement('th');th.textContent=h;hrow.appendChild(th);});
+  const tbody=tbl.createTBody();
+  allTeachers().forEach(n=>{const tr=tbody.insertRow();tr.insertCell().textContent=n;for(let i=0;i<header.length;i++)tr.insertCell();});
+}
+function updateSummary(){
+  const tbl=document.getElementById('summaryTable');if(!tbl.tBodies.length)buildSummarySkeleton();
+  [...tbl.tBodies[0].rows].forEach(r=>[...r.cells].slice(1).forEach(c=>c.textContent=''));
+  tablesContainer.querySelectorAll('table').forEach(t=>{
+    [...t.tBodies].forEach(tb=>{tb.querySelectorAll('tr').forEach(r=>{[...r.cells].forEach((c,idx)=>{const name=c.innerText.trim();if(!name)return;const row=[...tbl.tBodies[0].rows].find(rr=>rr.cells[0].textContent===name);if(row)row.cells[idx+1].textContent='✱';});});});
   });
-});
-/* after structural ops (merge, unmerge, add table, row/col) call update */
-const origMerge=mergeCells,origUnmerge=unmergeCells,origAddTable=addNewTable,
-      origRowAbove=addRowAbove,origRowBelow=addRowBelow,origColL=addColLeft,origColR=addColRight;
-mergeCells = ()=>{origMerge(); updateSummary();};
-unmergeCells= ()=>{origUnmerge();updateSummary();};
-addNewTable =()=>{origAddTable(); rebuildAndUpdateSummary();};
-addRowAbove = ()=>{origRowAbove();updateSummary();};
-addRowBelow = ()=>{origRowBelow();updateSummary();};
-addColLeft  = ()=>{origColL();   rebuildAndUpdateSummary();};
-addColRight = ()=>{origColR();   rebuildAndUpdateSummary();};
-/* when you add or delete a name */
-const origAddName=addName,origDeleteName=deleteName;
-addName = ()=>{origAddName(); rebuildAndUpdateSummary();};
-deleteName = n=>{origDeleteName(n); rebuildAndUpdateSummary();};
-/* after draft load */
-const origLoadDraft=loadDraft;
-loadDraft = t=>{origLoadDraft(t); rebuildAndUpdateSummary();};
+}
+const rebuildAndUpdateSummary=()=>{buildSummarySkeleton();updateSummary();}
+
+/* Auto-update summary on edits */
+['blur','input'].forEach(ev=>tablesContainer.addEventListener(ev,e=>{if(/TD|TH/.test(e.target.tagName))setTimeout(updateSummary,0);}));
+
+/* ===== SIMPLE DRAG HANDLE FOR MODAL ===== */
+const modalContent=document.querySelector('.modal-content'),modalHeader=document.querySelector('.modal-header');
+let drag=false,ix=0,iy=0,cx=50,cy=50;modalContent.style.left=cx+'px';modalContent.style.top=cy+'px';
+modalHeader.addEventListener('mousedown',e=>{drag=true;ix=e.clientX-cx;iy=e.clientY-cy;e.preventDefault();});
+modalHeader.addEventListener('touchstart',e=>{drag=true;ix=e.touches[0].clientX-cx;iy=e.touches[0].clientY-cy;});
+document.addEventListener('mousemove',e=>{if(!drag)return;cx=e.clientX-ix;cy=e.clientY-iy;modalContent.style.left=cx+'px';modalContent.style.top=cy+'px';});
+document.addEventListener('touchmove',e=>{if(!drag)return;cx=e.touches[0].clientX-ix;cy=e.touches[0].clientY-iy;modalContent.style.left=cx+'px';modalContent.style.top=cy+'px';e.preventDefault();},{passive:false});
+document.addEventListener('mouseup',()=>drag=false);document.addEventListener('touchend',()=>drag=false);
+
+/* ===== INITIALISE ===== */
+updateNameList();rebuildAndUpdateSummary();
 </script>
 </body>
 </html>
