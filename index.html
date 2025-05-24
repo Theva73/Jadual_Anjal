@@ -36,10 +36,10 @@
             border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            min-width: 100px; /* Adjusted min-width for better layout */
+            min-width: 100px; 
         }
         table th { 
-            background-color: #e9ecef; /* Default grey stripe for headers */
+            background-color: #e9ecef; 
             color: #495057;
             font-weight: bold;
         }
@@ -76,7 +76,7 @@
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
         #loadDraftBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
-        #clearDraft { background-color: #dc3545; color: white; border-color: #dc3545;}
+        #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;} /* Changed ID and style */
         #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
         #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
         #mergeBtn { background-color: #6f42c1; color: white; border-color: #6f42c1;}
@@ -166,8 +166,7 @@
     <div class="bar">
         <button id="saveDraftBtn">💠 Save All as Draft</button>
         <button id="loadDraftBtn">📂 Load Draft</button>
-        <button id="clearDraft">🗑️ Clear All Drafts</button>
-    </div>
+        <button id="clearActiveTableContentBtn">🧹 Clear Active Table</button> </div>
     <div class="bar">
         <button id="selectBtn">✨ Select Cells</button>
         <button id="mergeBtn">🔗 Merge Cells</button>
@@ -188,7 +187,14 @@
         <table id="tbl_1" class="active" data-table-name="Table 1">
             <thead>
                 <tr>
-                    <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> <th contenteditable="true"></th> </tr>
+                    <th contenteditable="true"></th> 
+                    <th contenteditable="true"></th> 
+                    <th contenteditable="true"></th> 
+                    <th contenteditable="true"></th> 
+                    <th contenteditable="true"></th> 
+                    <th contenteditable="true"></th> 
+                    <th contenteditable="true"></th> 
+                </tr>
             </thead>
             <tbody>
                 <tr>
@@ -250,7 +256,6 @@
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
 
-
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
         if (!customMessageBox) return;
@@ -305,16 +310,13 @@
                 addTabButton(tableId, tableName);
                 if (index === 0) activeTableId = tableId;
             });
-        } else { addNewTable(true); } // Create initial table if none exist
+        } else { addNewTable(true); } 
         
         if (activeTableId && document.getElementById(activeTableId)) {
             switchTable(activeTableId);
         } else if (tablesContainer.querySelector('table')) {
-            // Fallback if activeTableId is somehow invalid but a table exists
             switchTable(tablesContainer.querySelector('table').id);
         }
-        // Ensure initial table headers are empty (HTML already reflects this for tbl_1)
-        // The addNewTable function will handle new tables.
     }
     
     function loadScheduleTitle() {
@@ -346,7 +348,7 @@
         
         document.getElementById('saveDraftBtn').addEventListener('click', promptAndSaveDraft);
         document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftListVisibility);
-        document.getElementById('clearDraft').addEventListener('click', confirmAndClearAllDrafts);
+        document.getElementById('clearActiveTableContentBtn').addEventListener('click', confirmAndClearActiveTableContent); // Changed listener
 
         document.getElementById('selectBtn').addEventListener('click', toggleCellSelectionMode);
         document.getElementById('mergeBtn').addEventListener('click', mergeSelectedTableCells);
@@ -406,10 +408,8 @@
     function startDragModal(e) {
         isDraggingModal = true;
         nameModalContent.classList.add('dragging'); 
-
         const clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
         const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
-
         if (nameModalContent.style.position !== 'fixed' || nameModalContent.style.transform === 'translate(-50%, -50%)' || nameModalContent.style.transform === '') {
             const rect = nameModalContent.getBoundingClientRect();
             nameModalContent.style.position = 'fixed'; 
@@ -418,42 +418,30 @@
             nameModalContent.style.transform = 'none'; 
             nameModalContent.style.margin = '0'; 
         }
-        
         modalDragOffsetX = clientX - nameModalContent.offsetLeft;
         modalDragOffsetY = clientY - nameModalContent.offsetTop;
-
         if (e.type === 'touchstart') e.preventDefault(); 
     }
-
     function dragModal(e) {
         if (!isDraggingModal) return;
-
         const clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
         const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
-
         let newLeft = clientX - modalDragOffsetX;
         let newTop = clientY - modalDragOffsetY;
-
-        const modalRect = nameModalContent.getBoundingClientRect(); // Get current dimensions
+        const modalRect = nameModalContent.getBoundingClientRect(); 
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-
         if (newLeft < 0) newLeft = 0;
         if (newTop < 0) newTop = 0;
         if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
         if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
-
         nameModalContent.style.left = `${newLeft}px`;
         nameModalContent.style.top = `${newTop}px`;
         if (e.type === 'touchmove') e.preventDefault(); 
     }
-
     function stopDragModal() {
-        if (isDraggingModal) {
-            isDraggingModal = false;
-        }
+        if (isDraggingModal) isDraggingModal = false;
     }
-
 
     // --- Direct Copy Full HTML Functionality ---
     async function attemptDirectCopyToClipboard() {
@@ -536,22 +524,39 @@
             rebuildAndRenderSummary();
         } else { showMessage(`Draft "${draftName}" not found.`, 'error'); }
     }
-    function confirmAndDeleteDraft(draftName) {
-        if (customConfirm(`Are you sure you want to delete draft "${draftName}"?`)) {
+    function confirmAndDeleteDraft(draftName) { // This deletes from localStorage
+        if (customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
             const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
             delete drafts[draftName];
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-            showMessage(`Draft "${draftName}" deleted.`, 'success');
+            showMessage(`Saved draft "${draftName}" deleted.`, 'success');
             renderDraftList(); 
         }
     }
-    function confirmAndClearAllDrafts() {
-        if (customConfirm('Are you sure you want to delete ALL drafts? This cannot be undone.')) {
-            localStorage.removeItem(DRAFTS_KEY);
-            showMessage('All drafts cleared!', 'success');
-            renderDraftList(); 
+    
+    // Renamed and modified function
+    function confirmAndClearActiveTableContent() {
+        const activeTableElement = document.getElementById(activeTableId);
+        if (!activeTableElement) {
+            showMessage('No active table to clear.', 'error');
+            return;
+        }
+        const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
+        if (customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
+            activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
+                cell.innerHTML = ''; 
+                if (cell.tagName === 'TH') cell.textContent = ''; // Ensure headers are visually empty
+                cell.rowSpan = 1;
+                cell.colSpan = 1;
+                cell.classList.remove('merged');
+                cell.classList.remove('selected');
+            });
+            selectedCells = []; 
+            rebuildAndRenderSummary();
+            showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
     }
+
 
     // --- Table Management ---
     function addTabButton(id, label) {
@@ -589,20 +594,20 @@
         newTable.dataset.tableName = label || defaultTableName; 
         const thead = newTable.createTHead();
         const headerRow = thead.insertRow();
-        // Create 7 empty header cells for a new table (matching initial table structure)
         for (let i = 0; i < 7; i++) { 
             const th = document.createElement('th');
             th.contentEditable = 'true'; 
-            th.textContent = ''; // Empty header cell
+            th.textContent = ''; 
             headerRow.appendChild(th);
         }
         const tbody = newTable.createTBody();
         for (let r = 0; r < 2; r++) { 
             const dataRow = tbody.insertRow();
-            for (let c = 0; c < headerRow.cells.length; c++) { // Match number of header cells
+            for (let c = 0; c < headerRow.cells.length; c++) { 
                 const td = dataRow.insertCell();
                 td.contentEditable = 'true';
-                if (c === 0) td.textContent = `Sample Row ${r+1}`; 
+                if (c === 0 && r === 0) td.textContent = `Sample A`; // Minimal sample content
+                if (c === 0 && r === 1) td.textContent = `Sample B`;
             }
         }
         tablesContainer.appendChild(newTable);
@@ -660,7 +665,7 @@
             cell.contentEditable = 'true';
             if (isHeaderRow) {
                  if (colIndex === -1 || colIndex >= row.cells.length) row.appendChild(cell); else row.insertBefore(cell, row.cells[colIndex]);
-                 cell.textContent = ""; // Empty header for new column
+                 cell.textContent = ""; 
             }
         }
     }
@@ -742,16 +747,58 @@
         const table = cellToUnmerge.closest('table'); if (!table) return; 
         const rSpan = cellToUnmerge.rowSpan || 1; const cSpan = cellToUnmerge.colSpan || 1;
         if (rSpan === 1 && cSpan === 1) { showMessage('Cell is not merged.', 'info'); return; }
-        const startRowIndex = cellToUnmerge.parentNode.rowIndex; const startCellIndex = cellToUnmerge.cellIndex;
-        cellToUnmerge.rowSpan = 1; cellToUnmerge.colSpan = 1; cellToUnmerge.classList.remove('merged');
+        
+        const startRowIndex = cellToUnmerge.parentNode.rowIndex; 
+        const startCellIndex = cellToUnmerge.cellIndex;
+        
+        // Store the content of the merged cell before changing its spans
+        // const originalHTML = cellToUnmerge.innerHTML; // Keep this if you want to preserve content
+
+        cellToUnmerge.rowSpan = 1; 
+        cellToUnmerge.colSpan = 1; 
+        cellToUnmerge.classList.remove('merged');
+        // cellToUnmerge.innerHTML = originalHTML; // Restore content to the top-left cell
+
+        // Re-create the other cells that were covered by the span
         for (let r = 0; r < rSpan; r++) {
+            const targetRow = table.rows[startRowIndex + r];
+            if (!targetRow) {
+                console.error(`Target row ${startRowIndex + r} not found during unmerge.`);
+                continue;
+            }
             for (let c = 0; c < cSpan; c++) {
-                if (r === 0 && c === 0) continue; 
-                const targetRow = table.rows[startRowIndex + r];
-                if (targetRow) { const newCell = targetRow.insertCell(startCellIndex + c); newCell.contentEditable = 'true'; }
+                if (r === 0 && c === 0) continue; // Skip the original cell itself
+                
+                // Calculate the correct insertion index.
+                // This needs to be robust, especially if other cells in the row have colSpans.
+                // For simplicity, assuming `startCellIndex + c` is the visual target.
+                // More robust: iterate cells in targetRow to find correct visual insertion point.
+                // However, `insertCell(index)` should usually handle this by inserting before current cell at `index`.
+                let insertAtIndex = startCellIndex + c;
+                
+                // Adjust insertAtIndex if cells before it have colSpans that push its effective index
+                let currentVisualIndex = 0;
+                for(let k=0; k < targetRow.cells.length; k++){
+                    if(currentVisualIndex >= insertAtIndex && k < targetRow.cells.length) {
+                        insertAtIndex = k; // Found the actual cell index to insert before
+                        break;
+                    }
+                    currentVisualIndex += (targetRow.cells[k].colSpan || 1);
+                    if (k === targetRow.cells.length -1 && currentVisualIndex < insertAtIndex) {
+                        // If we are at the end and still haven't reached the target, append
+                        insertAtIndex = targetRow.cells.length;
+                    }
+                }
+
+
+                const newCell = targetRow.insertCell(insertAtIndex);
+                newCell.contentEditable = 'true';
+                newCell.innerHTML = ''; // New cells are empty
             }
         }
-        deselectAllTableCells(); rebuildAndRenderSummary(); showMessage('Cell unmerged.', 'success');
+        deselectAllTableCells(); 
+        rebuildAndRenderSummary(); 
+        showMessage('Cell unmerged.', 'success');
     }
 
     // --- Name List Management (Modal) ---
