@@ -334,7 +334,7 @@
     // --- Event Listener Initialization ---
     function initializeEventListeners() {
         directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
-        closeNameModalButtonStandardElement.addEventListener('click', toggleNameListModalVisibility);
+        closeNameModalButtonStandardElement.addEventListener('click', toggleNameListModalVisibility); // This should work
 
         nameModalHeader.addEventListener('mousedown', startDragModal);
         document.addEventListener('mousemove', dragModal);
@@ -400,7 +400,7 @@
 
         window.addEventListener('click', (event) => { 
             if (event.target === nameModal && !isDraggingModal) { 
-                toggleNameListModalVisibility(); // Use the toggle function to ensure proper state handling
+                toggleNameListModalVisibility(); 
             }
         });
     }
@@ -755,44 +755,43 @@
         }
 
         const startRowIndex = cellToUnmerge.parentNode.rowIndex;
-        const startCellIndex = cellToUnmerge.cellIndex; // DOM index of the merged cell
+        const startCellIndex = cellToUnmerge.cellIndex; // Original DOM index of the merged cell
+
+        // Preserve content before altering spans
+        // const originalHTML = cellToUnmerge.innerHTML;
 
         cellToUnmerge.rowSpan = 1;
         cellToUnmerge.colSpan = 1;
         cellToUnmerge.classList.remove('merged');
+        // cellToUnmerge.innerHTML = originalHTML; // Restore content to the top-left cell
 
-        for (let r = 0; r < rSpan; r++) { // Iterate for each row the original cell spanned
+        // Re-create the cells that were covered by the span
+        for (let r = 0; r < rSpan; r++) {
             const currentRow = table.rows[startRowIndex + r];
             if (!currentRow) continue;
 
-            for (let c = 0; c < cSpan; c++) { // Iterate for each col the original cell spanned
+            for (let c = 0; c < cSpan; c++) {
                 if (r === 0 && c === 0) continue; // Skip the original cell itself
 
-                // Determine the correct DOM index to insert the new cell
-                let domInsertIndex = startCellIndex + c;
-                // This simple calculation for domInsertIndex might need adjustment if there are
-                // other complex colSpans in the row that are *not* part of this unmerge operation.
-                // For now, assuming `startCellIndex + c` is a reasonable approximation for many cases.
-                // A more robust solution would calculate the visual position.
-
-                // Check if a cell already exists at this visual position (it shouldn't if unmerging correctly)
-                // This part is complex if other merges exist. Let's try simpler insertion first.
-                try {
-                    const newCell = currentRow.insertCell(domInsertIndex);
-                    newCell.contentEditable = 'true';
-                    newCell.innerHTML = '';
-                } catch (e) {
-                    // If insertCell fails (e.g., index out of bounds due to complex existing spans),
-                    // try appending. This is a fallback.
-                    console.warn(`Unmerge: Could not insert cell at index ${domInsertIndex} for row ${startRowIndex + r}. Appending. Error: ${e.message}`);
-                    try {
-                        const newCell = currentRow.insertCell(-1); // Append
-                        newCell.contentEditable = 'true';
-                        newCell.innerHTML = '';
-                    } catch (appendError) {
-                         console.error(`Unmerge: Failed to append cell for row ${startRowIndex + r}. Error: ${appendError.message}`);
+                let domInsertionPoint = 0;
+                let currentVisualColumn = 0;
+                // Calculate the correct DOM index to insert the new cell
+                for (let k = 0; k < currentRow.cells.length; k++) {
+                    const cell = currentRow.cells[k];
+                    // If the visual column we want to insert at (startCellIndex + c)
+                    // is less than or equal to the current visual column position before this cell,
+                    // then this cell 'k' is where we insert before.
+                    if ((startCellIndex + c) <= currentVisualColumn) {
+                        domInsertionPoint = k;
+                        break;
                     }
+                    currentVisualColumn += (cell.colSpan || 1);
+                    domInsertionPoint = k + 1; // In case we insert after the last cell
                 }
+                
+                const newCell = currentRow.insertCell(domInsertionPoint);
+                newCell.contentEditable = 'true';
+                newCell.innerHTML = '';
             }
         }
         deselectAllTableCells();
@@ -805,11 +804,11 @@
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
     
     function toggleNameListModalVisibility() {
-        // console.log('Toggling Name List Modal. Current display:', nameModal.style.display); // For debugging
+        console.log('Toggling Name List Modal. Current display:', nameModal.style.display); // For debugging
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) {
             nameModal.style.display = 'none';
-            // console.log('Name List Modal closed.'); // For debugging
+            console.log('Name List Modal closed.'); // For debugging
         } else {
             nameModalContent.style.position = 'fixed'; 
             nameModalContent.style.left = '50%';
@@ -819,7 +818,7 @@
             nameModalContent.classList.remove('dragging'); 
 
             nameModal.style.display = 'flex'; 
-            // console.log('Name List Modal opened.'); // For debugging
+            console.log('Name List Modal opened.'); // For debugging
             renderNameList(); 
             newNameInput.focus(); 
         }
