@@ -110,89 +110,104 @@
         } /*[span_32](end_span) */
         #summaryTable td { background-color: #fff3cd;
         } /*[span_33](end_span) */
+
+        /* Modal Styles - Updated for click-through */
         .modal {
-            display: none;
-            position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; /*[span_34](end_span) */
-            overflow: hidden;
-            background-color: rgba(0,0,0,0.4);
-            align-items: center;
-            justify-content: center;
-        } /*[span_35](end_span) */
+            display: none; /* Initially hidden */
+            position: fixed;
+            z-index: 1000; /* High z-index to be on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Or 'auto' if modal content might scroll */
+            background-color: rgba(0,0,0,0.4); /* Semi-transparent background */
+            align-items: center; /* For centering modal-content via flexbox */
+            justify-content: center; /* For centering modal-content via flexbox */
+            pointer-events: none; /* <<< KEY CHANGE: Allows clicks to pass through the overlay */
+        }
+
         .modal-content {
             background-color: #fff;
-            padding: 20px; border: 1px solid #888; /*[span_36](end_span) */
-            width: 90%; max-width: 400px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            position: fixed;
-            top: 50%; left: 50%; /*[span_37](end_span) */
-            transform: translate(-50%, -50%);
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            /* position: fixed, top, left, transform are for centering if not using flex on parent.
+               With flex on .modal, these are less critical for centering but define its independent layer. */
+            position: relative; /* Or fixed, depending on desired scroll behavior with page */
+            pointer-events: auto; /* <<< KEY CHANGE: Makes the modal box itself interactive */
         }
+
         .modal-content.dragging {
-            transform: none;
-        } /*[span_38](end_span) */
+            transform: none; /* Adjusted by dragging logic */
+        }
         .modal-header {
             padding-bottom: 10px;
-            border-bottom: 1px solid #eee; margin-bottom: 15px; /*[span_39](end_span) */
+            border-bottom: 1px solid #eee; margin-bottom: 15px;
             font-size: 1.2em; color: #333; display: flex; justify-content: space-between; align-items: center;
             cursor: move;
             user-select: none;
-        } /*[span_40](end_span) */
+        }
         .modal-close-btn {
             font-size: 1.5rem;
-            font-weight: bold; line-height: 1; color: #000; /*[span_41](end_span) */
+            font-weight: bold; line-height: 1; color: #000;
             text-shadow: 0 1px 0 #fff; opacity: .5; background: transparent; border: 0; cursor: pointer;
-        } /*[span_42](end_span) */
+        }
         .modal-close-btn:hover { opacity: .75;
-        } /*[span_43](end_span) */
+        }
         .name-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px;
-            border-bottom: 1px solid #eee; /*[span_44](end_span) */
+            border-bottom: 1px solid #eee;
         }
         .name-item:last-child { border-bottom: none;
-        } /*[span_45](end_span) */
+        }
         .name-item span { flex-grow: 1; cursor: pointer; color: #007bff;
-        } /*[span_46](end_span) */
+        }
         .name-item span:hover { text-decoration: underline;
-        } /*[span_47](end_span) */
+        }
         .name-item button { background-color: #dc3545; color: white; border: none; border-radius: 4px;
-            padding: 5px 10px; font-size: 0.9em; /*[span_48](end_span) */
+            padding: 5px 10px; font-size: 0.9em;
         }
         .highlighted { background-color: #cfe2ff !important; font-weight: bold;
-        } /*[span_49](end_span) */
+        }
         #draftList { border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 5px;
-            background-color: #fff; /*[span_50](end_span) */
+            background-color: #fff;
         }
         .draft-item { display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 5px; border-bottom: 1px solid #eee; /*[span_51](end_span) */
+            padding: 8px 5px; border-bottom: 1px solid #eee;
         }
         .draft-item:last-child { border-bottom: none;
-        } /*[span_52](end_span) */
+        }
         .draft-item span { cursor: pointer; color: #007bff;
-        } /*[span_53](end_span) */
+        }
         .draft-item span:hover { text-decoration: underline;
-        } /*[span_54](end_span) */
+        }
         .draft-item button { background-color: #dc3545; color: white; border: none; border-radius: 4px;
-            padding: 5px 10px; font-size: 0.9em; /*[span_55](end_span) */
+            padding: 5px 10px; font-size: 0.9em;
         }
         #newNameInput { padding: 8px; margin-right: 5px;
-            border: 1px solid #ccc; border-radius: 4px; flex-grow: 1; /*[span_56](end_span) */
+            border: 1px solid #ccc; border-radius: 4px; flex-grow: 1;
         }
         .input-group { display: flex;
-            margin-bottom: 10px; /*[span_57](end_span) */
+            margin-bottom: 10px;
         }
         .input-group button { background-color: #28a745; color: white; border-color: #28a745;
-        } /*[span_58](end_span) */
+        }
         .custom-message-box {
             display: none;
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); /*[span_59](end_span) */
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             background-color: #333; color: white; padding: 15px 25px; border-radius: 5px;
-            z-index: 2000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 1em; /*[span_60](end_span) */
+            z-index: 2000; /* Ensure message box is above modal if needed */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 1em;
         }
         .custom-message-box.success { background-color: #28a745;
-        } /*[span_61](end_span) */
+        }
         .custom-message-box.error { background-color: #dc3545;
-        } /*[span_62](end_span) */
+        }
         .custom-message-box.info { background-color: #007bff;
-        } /*[span_63](end_span) */
+        }
     </style>
 </head>
 <body>
@@ -362,7 +377,6 @@
     function initializeEventListeners() {
         directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
 
-        // FIX: Use a dedicated close function for the modal's close button
         closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
 
         nameModalHeader.addEventListener('mousedown', startDragModal);
@@ -428,42 +442,50 @@
     // --- Draggable Modal Functionality ---
     function startDragModal(e) {
         isDraggingModal = true;
-        nameModalContent.classList.add('dragging');
-        const clientX = e.clientX ||
-        (e.changedTouches && e.changedTouches[0].clientX); /*[span_92](end_span) */
-        const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
-        if (nameModalContent.style.position !== 'fixed' || nameModalContent.style.transform === 'translate(-50%, -50%)' || nameModalContent.style.transform === '') { /*[span_93](end_span) */
-            const rect = nameModalContent.getBoundingClientRect();
-            nameModalContent.style.position = 'fixed'; /*[span_94](end_span) */
-            nameModalContent.style.left = `${rect.left}px`;
-            nameModalContent.style.top = `${rect.top}px`;
-            nameModalContent.style.transform = 'none';
-            nameModalContent.style.margin = '0';
-        } /*[span_95](end_span) */
+        // No need to add 'dragging' class if modal-content is position relative/static inside flex parent
+        // nameModalContent.classList.add('dragging');
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        // Make sure modal content is absolutely positioned for dragging
+        // This might conflict with flex centering if not handled carefully.
+        // For simplicity, we ensure it's fixed/absolute when dragging starts.
+        const rect = nameModalContent.getBoundingClientRect();
+        nameModalContent.style.position = 'fixed'; // Ensure it's fixed for dragging
+        nameModalContent.style.left = `${rect.left}px`;
+        nameModalContent.style.top = `${rect.top}px`;
+        nameModalContent.style.transform = 'none'; // Remove transform if it was used for centering
+
         modalDragOffsetX = clientX - nameModalContent.offsetLeft;
         modalDragOffsetY = clientY - nameModalContent.offsetTop;
         if (e.type === 'touchstart') e.preventDefault();
-    } /*[span_96](end_span) */
+    }
     function dragModal(e) {
         if (!isDraggingModal) return;
-        const clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
-        const clientY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY); /*[span_97](end_span) */
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         let newLeft = clientX - modalDragOffsetX;
         let newTop = clientY - modalDragOffsetY;
-        const modalRect = nameModalContent.getBoundingClientRect(); /*[span_98](end_span) */
+        const modalRect = nameModalContent.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         if (newLeft < 0) newLeft = 0;
-        if (newTop < 0) newTop = 0; /*[span_99](end_span) */
+        if (newTop < 0) newTop = 0;
         if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
-        if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height; /*[span_100](end_span) */
+        if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
         nameModalContent.style.left = `${newLeft}px`;
         nameModalContent.style.top = `${newTop}px`;
-        if (e.type === 'touchmove') e.preventDefault(); /*[span_101](end_span) */
+        if (e.type === 'touchmove') e.preventDefault();
     }
     function stopDragModal() {
-        if (isDraggingModal) isDraggingModal = false;
-    } /*[span_102](end_span) */
+        if (isDraggingModal) {
+            isDraggingModal = false;
+            // Optional: Reset to flex centering if needed, but fixed positioning after drag is usually fine.
+            // nameModalContent.style.position = 'relative'; // Or whatever it was
+            // nameModalContent.style.left = 'auto';
+            // nameModalContent.style.top = 'auto';
+        }
+    }
     // --- Direct Copy Full HTML Functionality ---
     async function attemptDirectCopyToClipboard() {
         const fullHtml = document.documentElement.outerHTML;
@@ -867,17 +889,17 @@
             nameModal.style.display = 'none';
             clearNameSelection();
         } else {
-            nameModalContent.style.position = 'fixed'; /*[span_195](end_span) */
-            nameModalContent.style.left = '50%';
-            nameModalContent.style.top = '50%';
-            nameModalContent.style.transform = 'translate(-50%, -50%)'; /*[span_196](end_span) */
-            nameModalContent.style.margin = '';
-            nameModalContent.classList.remove('dragging');
-            nameModal.style.display = 'flex';
+            // Reset modal position to center when opening
+            nameModalContent.style.position = 'relative'; // Use relative for flex centering
+            nameModalContent.style.left = 'auto';
+            nameModalContent.style.top = 'auto';
+            nameModalContent.style.transform = 'none'; // Remove any transform from dragging
+
+            nameModal.style.display = 'flex'; // This uses flex to center .modal-content
             renderNameList();
             newNameInput.focus();
             clearNameSelection(); // Clear previous selection when opening
-        } /*[span_197](end_span) */
+        }
     }
 
     function renderNameList() {
