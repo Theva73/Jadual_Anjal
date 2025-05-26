@@ -36,7 +36,7 @@
             border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            min-width: 100px;
+            min-width: 80px; /* Adjusted min-width for potentially more columns */
         }
         table th {
             background-color: #e9ecef;
@@ -94,7 +94,7 @@
             border-color: #20c997;}
         #renameTableBtn { background-color: #6c757d; color: white;
             border-color: #6c757d;}
-        #deleteTableBtn { background-color: #dc3545; color: white;
+        #deleteTableBtn, .delete-btn { background-color: #dc3545; color: white; /* Shared style for delete buttons */
             border-color: #dc3545;}
         #nameListBtn { background-color: #fd7e14; color: white;
             border-color: #fd7e14;}
@@ -110,11 +110,10 @@
         }
         #summaryTable td { background-color: #fff3cd;
         }
-        /* Style for highlighting cells where a teacher handles multiple classes at the same time */
         .highlight-conflict {
-            background-color: #ffcdd2 !important; /* Light red for conflict */
+            background-color: #ffcdd2 !important;
             font-weight: bold;
-            color: #c62828 !important; /* Darker red text for better contrast */
+            color: #c62828 !important;
         }
 
         .modal {
@@ -237,7 +236,7 @@
     <div class="bar">
         <button id="addTableBtn">➕ Add New Table</button>
         <button id="renameTableBtn">📝 Rename Active Table</button>
-        <button id="deleteTableBtn">❌ Delete Active Table</button>
+        <button id="deleteTableBtn" class="delete-btn">❌ Delete Active Table</button>
         <button id="nameListBtn">👥 Manage Names</button>
     </div>
     <div id="draftList" style="display:none;"></div>
@@ -266,10 +265,12 @@
                </table>
     </div>
     <div class="bar" id="rowColManipulationBar">
-        <button>⬆️ Add Row Above</button>
-        <button>⬇️ Add Row Below</button>
-        <button>⬅️ Add Column Left</button>
-        <button>➡️ Add Column Right</button>
+        <button id="addRowAboveBtn">⬆️ Add Row Above</button>
+        <button id="addRowBelowBtn">⬇️ Add Row Below</button>
+        <button id="addColLeftBtn">⬅️ Add Column Left</button>
+        <button id="addColRightBtn">➡️ Add Column Right</button>
+        <button id="deleteRowBtn" class="delete-btn">🗑️ Delete Row</button>
+        <button id="deleteColBtn" class="delete-btn">🗑️ Delete Column</button>
     </div>
     <div id="nameModal" class="modal">
         <div class="modal-content" id="nameModalContent">
@@ -406,14 +407,14 @@
         document.getElementById('deleteTableBtn').addEventListener('click', confirmAndDeleteActiveTable);
         document.getElementById('nameListBtn').addEventListener('click', toggleNameListModalVisibility);
 
-        const rowColBar = document.getElementById('rowColManipulationBar');
-        if (rowColBar) {
-            const buttons = rowColBar.getElementsByTagName('button');
-            if (buttons[0]) buttons[0].addEventListener('click', addRowAboveToActiveTable);
-            if (buttons[1]) buttons[1].addEventListener('click', addRowBelowToActiveTable);
-            if (buttons[2]) buttons[2].addEventListener('click', addColumnLeftToActiveTable);
-            if (buttons[3]) buttons[3].addEventListener('click', addColumnRightToActiveTable);
-        }
+        // Row/Column manipulation bar listeners
+        document.getElementById('addRowAboveBtn').addEventListener('click', addRowAboveToActiveTable);
+        document.getElementById('addRowBelowBtn').addEventListener('click', addRowBelowToActiveTable);
+        document.getElementById('addColLeftBtn').addEventListener('click', addColumnLeftToActiveTable);
+        document.getElementById('addColRightBtn').addEventListener('click', addColumnRightToActiveTable);
+        document.getElementById('deleteRowBtn').addEventListener('click', deleteClickedRowFromActiveTable);
+        document.getElementById('deleteColBtn').addEventListener('click', deleteClickedColumnFromActiveTable);
+
 
         document.getElementById('addNameBtnInModal').addEventListener('click', addNewNameToList);
         draftListElement.addEventListener('click', (e) => {
@@ -431,12 +432,11 @@
         tablesContainer.addEventListener('click', handleTableCellClick);
         tablesContainer.addEventListener('blur', (e) => {
             if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                setTimeout(rebuildAndRenderSummary, 0); // Use timeout to allow DOM to update from contenteditable
+                setTimeout(rebuildAndRenderSummary, 0);
             }
-        }, true); // Use capture phase
-        tablesContainer.addEventListener('input', (e) => { // 'input' is better for contenteditable changes
+        }, true);
+        tablesContainer.addEventListener('input', (e) => {
             if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                 // Debounce or use a more robust way if performance becomes an issue for rapid typing
                 setTimeout(rebuildAndRenderSummary, 300);
             }
         });
@@ -585,7 +585,7 @@
         if (customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
             activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
                 cell.innerHTML = '';
-                if (cell.tagName === 'TH') cell.textContent = ''; // Clear TH text content as well
+                if (cell.tagName === 'TH') cell.textContent = '';
                 cell.rowSpan = 1;
                 cell.colSpan = 1;
                 cell.classList.remove('merged');
@@ -633,14 +633,14 @@
         newTable.dataset.tableName = label || defaultTableName;
         const thead = newTable.createTHead();
         const headerRow = thead.insertRow();
-        for (let i = 0; i < 7; i++) { // Default 7 columns
+        for (let i = 0; i < 7; i++) {
             const th = document.createElement('th');
             th.contentEditable = 'true';
-            th.textContent = i === 0 ? 'Class/Time' : `Header ${i}`; // Example header
+            th.textContent = i === 0 ? 'Class/Time' : `Header ${i}`;
             headerRow.appendChild(th);
         }
         const tbody = newTable.createTBody();
-        for (let r = 0; r < 2; r++) { // Default 2 data rows
+        for (let r = 0; r < 2; r++) {
             const dataRow = tbody.insertRow();
             for (let c = 0; c < headerRow.cells.length; c++) {
                 const td = dataRow.insertCell();
@@ -676,7 +676,7 @@
             activeTab?.remove();
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) firstRemainingTab.click();
-            else { activeTableId = null; addNewTable(true); } // Should ideally not happen if check for <=1 is there
+            else { activeTableId = null; addNewTable(true); }
             showMessage('Table deleted.', 'success');
         }
     }
@@ -689,8 +689,8 @@
     }
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0] || table.rows.length === 0) return; // Check if table exists and has rows
-        const numCols = table.rows[0].cells.length; // Use first row's cell count
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return;
+        const numCols = table.rows[0].cells.length;
         addRowToTable(table.tBodies[0], 0, numCols);
         rebuildAndRenderSummary();
     }
@@ -698,7 +698,7 @@
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const numCols = table.rows[0].cells.length;
-        addRowToTable(table.tBodies[0], -1, numCols); // -1 appends to end of tbody
+        addRowToTable(table.tBodies[0], -1, numCols);
         rebuildAndRenderSummary();
     }
     function addColumnToTable(table, colIndex) {
@@ -709,7 +709,7 @@
             if (isHeaderRow) {
                 if (colIndex === -1 || colIndex >= row.cells.length) row.appendChild(cell);
                 else row.insertBefore(cell, row.cells[colIndex]);
-                cell.textContent = ""; // New header cells are blank
+                cell.textContent = "";
             }
         }
     }
@@ -721,6 +721,97 @@
         const table = document.getElementById(activeTableId);
         if (table) { addColumnToTable(table, -1); rebuildAndRenderSummary(); }
     }
+
+    function deleteClickedRowFromActiveTable() {
+        if (!lastClickedCell) {
+            showMessage('Please click a cell in the row you want to delete.', 'info');
+            return;
+        }
+        const table = document.getElementById(activeTableId);
+        if (!table || !table.tBodies[0]) {
+            showMessage('No active table or table body found.', 'error');
+            return;
+        }
+        const rowToDelete = lastClickedCell.closest('tr');
+        if (!rowToDelete || !rowToDelete.parentElement || rowToDelete.parentElement.tagName !== 'TBODY') {
+            showMessage('Cannot delete header row or invalid selection. Click a cell in a data row.', 'error');
+            return;
+        }
+        if (table.tBodies[0].rows.length <= 1) {
+            showMessage('Cannot delete the last data row.', 'error');
+            return;
+        }
+
+        if (customConfirm('Are you sure you want to delete this row?')) {
+            rowToDelete.remove();
+            lastClickedCell = null; // Clear last clicked cell
+            deselectAllTableCells(); // Clear any selections
+            rebuildAndRenderSummary();
+            showMessage('Row deleted.', 'success');
+        }
+    }
+
+    function deleteClickedColumnFromActiveTable() {
+        if (!lastClickedCell) {
+            showMessage('Please click a cell in the column you want to delete.', 'info');
+            return;
+        }
+        const table = document.getElementById(activeTableId);
+        if (!table) {
+            showMessage('No active table found.', 'error');
+            return;
+        }
+
+        // Check if it's the last column
+        if (table.rows.length > 0 && table.rows[0].cells.length <= 1) {
+             // More robust check for visual columns
+            let visualCols = 0;
+            if (table.rows[0]) {
+                for (let i = 0; i < table.rows[0].cells.length; i++) {
+                    visualCols += table.rows[0].cells[i].colSpan || 1;
+                }
+            }
+            if (visualCols <= 1) {
+                showMessage('Cannot delete the last column.', 'error');
+                return;
+            }
+        }
+
+
+        // Determine the visual index of the column to delete
+        let clickedCellVisualIndex = 0;
+        const clickedRow = lastClickedCell.parentNode;
+        for (let i = 0; i < clickedRow.cells.length; i++) {
+            if (clickedRow.cells[i] === lastClickedCell) break;
+            clickedCellVisualIndex += clickedRow.cells[i].colSpan || 1;
+        }
+
+
+        if (customConfirm('Are you sure you want to delete this column?')) {
+            for (const row of table.rows) {
+                let currentVisualCol = 0;
+                for (let i = 0; i < row.cells.length; i++) {
+                    const cell = row.cells[i];
+                    const cellColSpan = cell.colSpan || 1;
+                    // Check if the current cell spans the column to be deleted
+                    if (currentVisualCol <= clickedCellVisualIndex && clickedCellVisualIndex < currentVisualCol + cellColSpan) {
+                        if (cellColSpan > 1) {
+                            cell.colSpan -= 1; // Reduce colspan
+                        } else {
+                            cell.remove(); // Remove the cell
+                        }
+                        break; // Move to the next row
+                    }
+                    currentVisualCol += cellColSpan;
+                }
+            }
+            lastClickedCell = null;
+            deselectAllTableCells();
+            rebuildAndRenderSummary();
+            showMessage('Column deleted.', 'success');
+        }
+    }
+
 
     // --- Cell Selection, Merging, Unmerging ---
     function toggleCellSelectionMode() {
@@ -734,19 +825,18 @@
         const cell = event.target.closest('td, th');
         if (!cell || !cell.closest(`#${activeTableId}`)) return;
 
-        lastClickedCell = cell; // Keep track of the last clicked cell
+        lastClickedCell = cell;
 
         if (selectedNameFromList) {
-            // Allow inserting into TH cells in TBODY (e.g., if first column is TH for row headers)
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
                 cell.textContent = selectedNameFromList;
-                rebuildAndRenderSummary(); // Update summary after insertion
+                rebuildAndRenderSummary();
                 showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
-                clearNameSelection(); // Clear selection after insertion
+                clearNameSelection();
             } else {
                 showMessage('Click an editable data cell (or row header in body) to insert name.', 'info');
             }
-            return; // Exit after handling name insertion
+            return;
         }
 
         if (selectionMode) {
@@ -772,7 +862,7 @@
         const firstCell = table.rows[minR]?.cells[minC];
         if (!firstCell) { showMessage('Error finding merge starting cell.', 'error'); return;
         }
-        let contentToKeep = firstCell.innerHTML; // Keep content of the top-left cell
+        let contentToKeep = firstCell.innerHTML;
         let cellsToRemove = [];
         for (let r = minR; r <= maxR; r++) {
             for (let c = minC; c <= maxC; c++) {
@@ -786,17 +876,15 @@
         firstCell.rowSpan = maxR - minR + 1; firstCell.colSpan = maxC - minC + 1;
         firstCell.innerHTML = contentToKeep; firstCell.classList.add('merged');
         deselectAllTableCells();
-        if (selectionMode) toggleCellSelectionMode(); // Exit selection mode after merge
+        if (selectionMode) toggleCellSelectionMode();
         rebuildAndRenderSummary(); showMessage('Cells merged.', 'success');
     }
 
     function unmergeActiveCellIfMerged() {
         let cellToUnmerge = null;
-        // Priority 1: If a single cell is selected and it's merged
         if (selectedCells.length === 1 && (selectedCells[0].rowSpan > 1 || selectedCells[0].colSpan > 1)) {
             cellToUnmerge = selectedCells[0];
         }
-        // Priority 2: If no selection, use the last clicked cell if it's merged
         else if (lastClickedCell && (lastClickedCell.rowSpan > 1 || lastClickedCell.colSpan > 1) && lastClickedCell.closest(`#${activeTableId}`)) {
             cellToUnmerge = lastClickedCell;
         }
@@ -825,15 +913,12 @@
         cellToUnmerge.rowSpan = 1;
         cellToUnmerge.colSpan = 1;
         cellToUnmerge.classList.remove('merged');
-        cellToUnmerge.innerHTML = content; // Keep content in the original cell
+        cellToUnmerge.innerHTML = content;
 
-        // Re-create the cells that were covered by the rowspan/colspan
         for (let r = rowIndex; r < rowIndex + rowSpan; r++) {
             const row = table.rows[r];
-            if (!row) continue; // Should not happen in a well-formed table
+            if (!row) continue;
 
-            // Determine the correct insertion point for new cells in this row
-            // This needs to account for existing colSpans in the row to find the true visual column
             let currentVisualColIndex = 0;
             let insertAtIndex = 0;
             for(insertAtIndex = 0; insertAtIndex < row.cells.length; insertAtIndex++) {
@@ -843,14 +928,12 @@
 
 
             for (let c = 0; c < colSpan; c++) {
-                if (r === rowIndex && c === 0) continue; // Skip the original cell itself
+                if (r === rowIndex && c === 0) continue;
 
-                // For cells in the first row of the unmerged block (but not the very first cell)
                 if (r === rowIndex && c > 0) {
                      const newCell = row.insertCell(insertAtIndex + c);
                      newCell.contentEditable = 'true'; newCell.innerHTML = '';
                 }
-                // For cells in subsequent rows of the unmerged block
                 else if (r > rowIndex) {
                      const newCell = row.insertCell(insertAtIndex + c);
                      newCell.contentEditable = 'true'; newCell.innerHTML = '';
@@ -893,7 +976,7 @@
         } else {
             console.error('nameModal element not found in closeNameModal');
         }
-        clearNameSelection(); // Clear selection when modal is closed
+        clearNameSelection();
     }
 
     function toggleNameListModalVisibility() {
@@ -903,16 +986,15 @@
             nameModal.style.display = 'none';
             clearNameSelection();
         } else {
-            // Reset modal position before showing
-            nameModalContent.style.position = 'relative'; // Or 'static' if it's directly inside .modal
+            nameModalContent.style.position = 'relative';
             nameModalContent.style.left = 'auto';
             nameModalContent.style.top = 'auto';
-            nameModalContent.style.transform = 'none'; // Remove any transform from dragging
+            nameModalContent.style.transform = 'none';
 
-            nameModal.style.display = 'flex'; // Use flex for centering
+            nameModal.style.display = 'flex';
             renderNameList();
             newNameInput.focus();
-            clearNameSelection(); // Ensure no name is pre-selected
+            clearNameSelection();
         }
     }
 
@@ -923,7 +1005,6 @@
         return; }
         names.forEach(name => {
             const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
-            // Ensure name is properly escaped if it can contain special HTML characters, though for display it's usually fine.
             itemDiv.innerHTML = `<span data-name="${name}">${name}</span><button>Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
@@ -943,16 +1024,15 @@
             names = names.filter(n => n !== nameToDelete);
             saveNames(); renderNameList();
             rebuildAndRenderSummary(); showMessage(`"${nameToDelete}" removed.`, 'success');
-            if (selectedNameFromList === nameToDelete) { // If the deleted name was selected
+            if (selectedNameFromList === nameToDelete) {
                 clearNameSelection();
             }
         }
     }
     function selectNameForCellInsertion(name) {
         selectedNameFromList = name;
-        highlightSelectedNameInList(name); // Highlight in the list
+        highlightSelectedNameInList(name);
         showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
-        // Do not close modal, allow multiple insertions or changing selection
     }
 
     // --- Excel Export/Import ---
@@ -964,7 +1044,6 @@
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                 const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName];
-                // Using { raw: false } attempts to format dates/numbers, { editable: true } adds contenteditable
                 const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { editable: true, raw: false });
                 tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
@@ -982,7 +1061,7 @@
                 }
             } catch (error) { console.error("Excel import error:", error);
                 showMessage('Error processing Excel file.', 'error'); }
-            finally { event.target.value = ''; // Reset file input
+            finally { event.target.value = '';
             }
         };
         reader.readAsArrayBuffer(file);
@@ -998,18 +1077,17 @@
 
     // --- Summary Table Logic ---
     function rebuildAndRenderSummary() {
-        buildSummaryTableSkeleton(); // This will clear and set up the structure
-        updateSummaryTableData();   // This will populate and highlight
+        buildSummaryTableSkeleton();
+        updateSummaryTableData();
     }
 
     function parseTimeToMinutes(timeStr) {
         if (typeof timeStr !== 'string') return Infinity;
-        // Expects "HH:MM" or "HH:MM-..."
         const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
         if (match) {
             return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
         }
-        return Infinity; // Non-time strings sort last
+        return Infinity;
     }
 
     function buildSummaryTableSkeleton() {
@@ -1017,27 +1095,23 @@
             console.error("Summary table element not found.");
             return;
         }
-        summaryTableElement.innerHTML = ''; // Clear existing summary
+        summaryTableElement.innerHTML = '';
 
-        const summaryRowItems = new Set(names); // Start with globally managed names
+        const summaryRowItems = new Set(names);
         const summaryColumnHeadersSet = new Set();
 
-        // Collect names/subjects and headers from ALL tables
         tablesContainer.querySelectorAll('table').forEach(table => {
-            // Collect Names/Subjects from this table's body cells
-            table.querySelectorAll('tbody tr td, tbody tr th').forEach(td => { // Include th in tbody for row headers
-                // Only consider cells that are not the first in their row (to avoid row labels like time or class name)
-                if (td.cellIndex > 0) { // This assumes the first cell (index 0) is NOT a teacher/subject
+            table.querySelectorAll('tbody tr td, tbody tr th').forEach(td => {
+                if (td.cellIndex > 0) {
                      const text = td.textContent.trim();
-                    if (text && isNaN(text) && text.length > 1) { // Heuristic: if it's text, not a number, and has some length
+                    if (text && isNaN(text) && text.length > 1) {
                         summaryRowItems.add(text);
                     }
                 }
             });
 
-            // Collect Time Headers from this table's thead (column headers)
             if (table.tHead && table.tHead.rows.length > 0) {
-                Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => { // Skip first header cell (e.g., "Class")
+                Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => {
                     const headerText = th.textContent.trim();
                     if (headerText) {
                         summaryColumnHeadersSet.add(headerText);
@@ -1049,24 +1123,17 @@
         const sortedSummaryRowHeaders = Array.from(summaryRowItems).sort((a,b) => a.localeCompare(b));
         
         let rawColumnHeaders = Array.from(summaryColumnHeadersSet);
-        // Sort column headers, attempting to sort by time first
         rawColumnHeaders.sort((a, b) => {
             const timeA = parseTimeToMinutes(a);
             const timeB = parseTimeToMinutes(b);
-
-            if (timeA !== Infinity && timeB !== Infinity) { // Both are valid times
-                return timeA - timeB;
-            } else if (timeA !== Infinity) { // Only A is a valid time, so A comes first
-                return -1;
-            } else if (timeB !== Infinity) { // Only B is a valid time, so B comes first
-                return 1;
-            }
-            return a.localeCompare(b); // Fallback to alphabetical for non-times or if both are non-times
+            if (timeA !== Infinity && timeB !== Infinity) { return timeA - timeB; }
+            else if (timeA !== Infinity) { return -1; }
+            else if (timeB !== Infinity) { return 1; }
+            return a.localeCompare(b);
         });
 
         const finalSummaryColumnHeaders = ['Name/Subject', ...rawColumnHeaders];
 
-        // Build THead for Summary Table
         const thead = summaryTableElement.createTHead();
         const headerRowForSummary = thead.insertRow();
         finalSummaryColumnHeaders.forEach(headerText => {
@@ -1075,7 +1142,6 @@
             headerRowForSummary.appendChild(th);
         });
 
-        // Build TBody for Summary Table
         const tbody = summaryTableElement.createTBody();
         if (sortedSummaryRowHeaders.length === 0) {
             const tr = tbody.insertRow();
@@ -1087,25 +1153,20 @@
         } else {
             sortedSummaryRowHeaders.forEach(name => {
                 const tr = tbody.insertRow();
-                tr.insertCell().textContent = name; // Name/Subject cell
+                tr.insertCell().textContent = name;
                 for (let i = 1; i < finalSummaryColumnHeaders.length; i++) {
-                    tr.insertCell().textContent = ''; // Placeholder for attendance marks (class identifiers)
+                    tr.insertCell().textContent = '';
                 }
             });
         }
     }
 
     function updateSummaryTableData() {
-        // Ensure skeleton is built or exists
         if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0) {
-            // If the only row is the "No items to summarize" message
             if (summaryTableElement?.tBodies[0]?.rows[0]?.cells[0]?.colSpan > 1) return;
-            
-            // Attempt to build skeleton if it's truly empty or malformed, then re-check
-            buildSummaryTableSkeleton(); 
-            if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0 || 
+            buildSummaryTableSkeleton();
+            if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0 ||
                 (summaryTableElement.tBodies[0].rows[0].cells.length === 1 && summaryTableElement.tBodies[0].rows[0].cells[0].colSpan > 1) ) {
-                // console.warn("Summary table body still not ready after rebuild attempt.");
                 return;
             }
         }
@@ -1113,58 +1174,41 @@
         const summaryBody = summaryTableElement.tBodies[0];
         const summaryTableActualColumnHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
 
-        // 1. Clear previous data and highlights from summary cells
         Array.from(summaryBody.rows).forEach(summaryRow => {
-            // Start from index 1 to skip the Name/Subject cell (index 0)
             Array.from(summaryRow.cells).slice(1).forEach(cell => {
                 cell.textContent = '';
                 cell.classList.remove('highlight-conflict');
             });
         });
 
-        // 2. Iterate through ALL schedule tables in the container to populate summary
         tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-            // Ensure the schedule table has a header row and a body
             if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
-                // console.warn(`Table ${scheduleTable.id || 'unknown'} is malformed or empty, skipping for summary.`);
-                return; // Skip malformed or empty tables
+                return;
             }
             const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
 
-            // Iterate through data rows of the current schedule table
             Array.from(scheduleTable.tBodies[0].rows).forEach(scheduleDataRow => {
-                // The first cell of the schedule data row contains the class identifier (e.g., "5S1")
                 const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim();
-                
-                // If there's no class identifier in the first cell, we can't use this row for the summary logic as defined.
-                if (!classIdentifier) return; 
+                if (!classIdentifier) return;
 
-                // Iterate through cells of the schedule data row, starting from the second cell (index 1)
                 Array.from(scheduleDataRow.cells).forEach((scheduleCell, scheduleCellIndex) => {
-                    if (scheduleCellIndex === 0) return; // Skip the first cell (classIdentifier itself)
+                    if (scheduleCellIndex === 0) return;
 
-                    const entryInScheduleCell = scheduleCell.textContent.trim(); // This should be the teacher/subject name
-                    
-                    if (entryInScheduleCell) { // If there's a teacher/subject in this schedule cell
-                        // Find the corresponding row in the summary table for this teacher/subject
+                    const entryInScheduleCell = scheduleCell.textContent.trim();
+                    if (entryInScheduleCell) {
                         const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
-                        
                         if (targetSummaryRow) {
-                            // Get the column header from the schedule table for the current cell's column
                             const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[scheduleCellIndex];
-                            // Find the corresponding column index in the summary table
                             const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === scheduleColumnHeaderForThisCell);
 
-                            if (targetSummaryColumnCellIndex > 0) { // If column header found in summary (and it's not the Name/Subject column)
+                            if (targetSummaryColumnCellIndex > 0) {
                                 const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
                                 let existingClassesInSummaryCell = [];
                                 if (summaryCellToUpdate.textContent.trim() !== '') {
                                     existingClassesInSummaryCell = summaryCellToUpdate.textContent.trim().split(',')
                                                                     .map(s => s.trim())
-                                                                    .filter(s => s !== ''); // Filter out empty strings if any
+                                                                    .filter(s => s !== '');
                                 }
-
-                                // Add the classIdentifier if it's not already listed for this teacher/slot
                                 if (!existingClassesInSummaryCell.includes(classIdentifier)) {
                                     existingClassesInSummaryCell.push(classIdentifier);
                                     summaryCellToUpdate.textContent = existingClassesInSummaryCell.join(', ');
@@ -1176,17 +1220,16 @@
             });
         });
 
-        // 3. After populating, apply highlighting for conflicts (same teacher, same time, multiple different classes)
         Array.from(summaryBody.rows).forEach(summaryRow => {
             Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
-                if (cellIndex > 0) { // Skip the Name/Subject column (index 0)
+                if (cellIndex > 0) {
                     const cellText = cell.textContent.trim();
-                    if (cellText.includes(',')) { // Indicates multiple class identifiers are listed
+                    if (cellText.includes(',')) {
                         const classesListed = cellText.split(',')
                                                 .map(s => s.trim())
-                                                .filter(s => s !== ''); // Clean up
+                                                .filter(s => s !== '');
                         const uniqueClasses = new Set(classesListed);
-                        if (uniqueClasses.size > 1) { // If there's more than one unique class identifier
+                        if (uniqueClasses.size > 1) {
                             cell.classList.add('highlight-conflict');
                         }
                     }
