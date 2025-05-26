@@ -21,6 +21,10 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             background-color: #fff;
+            table-layout: auto; /* Allow table to expand as needed for non-wrapping headers */
+        }
+        #tablesContainer {
+            overflow-x: auto; /* Add horizontal scroll if table becomes too wide */
         }
         #tablesContainer > table {
             display: none;
@@ -36,12 +40,13 @@
             border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            min-width: 80px;
+            min-width: 100px; /* Adjusted min-width slightly */
         }
         table th {
             background-color: #e9ecef;
             color: #495057;
             font-weight: bold;
+            white-space: nowrap; /* Prevent header text from wrapping */
         }
         td.selected, th.selected {
             outline: 3px solid #007bff;
@@ -65,35 +70,34 @@
             cursor: pointer;
             border: 1px solid #adb5bd;
             background-color: #fff;
-            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease; /* Added transform */
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            display: inline-flex; /* For icon and text alignment */
-            align-items: center; /* For icon and text alignment */
-            gap: 5px; /* Space between icon and text */
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         .bar button:hover, .table-tabs button:hover {
             background-color: #f1f3f5;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .bar button:active, .table-tabs button:active {
-            transform: translateY(1px); /* Slight press effect */
+            transform: translateY(1px);
             box-shadow: 0 1px 1px rgba(0,0,0,0.1);
         }
 
-        /* More creative styling for row/col manipulation buttons */
         #rowColManipulationBar button {
             background-image: linear-gradient(to bottom, #fdfbfb 0%, #ebedee 100%);
             border: 1px solid #ced4da;
             color: #343a40;
             box-shadow: 0 2px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
-            padding: 8px 12px; /* Slightly smaller padding for these specific buttons */
+            padding: 8px 12px;
         }
         #rowColManipulationBar button:hover {
             background-image: linear-gradient(to bottom, #e2e6ea 0%, #d4d9df 100%);
             border-color: #b8c0c6;
             box-shadow: 0 2px 5px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
         }
-         #rowColManipulationBar button.delete-btn { /* Specific styling for delete buttons in this bar */
+         #rowColManipulationBar button.delete-btn {
             background-image: linear-gradient(to bottom, #f8d7da 0%, #f1c6cb 100%);
             border-color: #f5c6cb;
             color: #721c24;
@@ -794,7 +798,7 @@
         }
 
         let visualCols = 0;
-        if (table.rows.length > 0 && table.rows[0]) { // Ensure there's at least one row to check columns
+        if (table.rows.length > 0 && table.rows[0]) {
             for (let i = 0; i < table.rows[0].cells.length; i++) {
                 visualCols += table.rows[0].cells[i].colSpan || 1;
             }
