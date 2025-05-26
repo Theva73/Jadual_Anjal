@@ -36,7 +36,7 @@
             border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            min-width: 80px; /* Adjusted min-width for potentially more columns */
+            min-width: 80px;
         }
         table th {
             background-color: #e9ecef;
@@ -65,13 +65,45 @@
             cursor: pointer;
             border: 1px solid #adb5bd;
             background-color: #fff;
-            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease; /* Added transform */
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: inline-flex; /* For icon and text alignment */
+            align-items: center; /* For icon and text alignment */
+            gap: 5px; /* Space between icon and text */
         }
         .bar button:hover, .table-tabs button:hover {
             background-color: #f1f3f5;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .bar button:active, .table-tabs button:active {
+            transform: translateY(1px); /* Slight press effect */
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+
+        /* More creative styling for row/col manipulation buttons */
+        #rowColManipulationBar button {
+            background-image: linear-gradient(to bottom, #fdfbfb 0%, #ebedee 100%);
+            border: 1px solid #ced4da;
+            color: #343a40;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+            padding: 8px 12px; /* Slightly smaller padding for these specific buttons */
+        }
+        #rowColManipulationBar button:hover {
+            background-image: linear-gradient(to bottom, #e2e6ea 0%, #d4d9df 100%);
+            border-color: #b8c0c6;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+         #rowColManipulationBar button.delete-btn { /* Specific styling for delete buttons in this bar */
+            background-image: linear-gradient(to bottom, #f8d7da 0%, #f1c6cb 100%);
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        #rowColManipulationBar button.delete-btn:hover {
+            background-image: linear-gradient(to bottom, #f5c6cb 0%, #ebaeb3 100%);
+            border-color: #f1b0b7;
+        }
+
+
         #directCopyFullHtmlBtn { background-color: #545b62; color: white;
             border-color: #545b62; }
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white;
@@ -94,7 +126,7 @@
             border-color: #20c997;}
         #renameTableBtn { background-color: #6c757d; color: white;
             border-color: #6c757d;}
-        #deleteTableBtn, .delete-btn { background-color: #dc3545; color: white; /* Shared style for delete buttons */
+        #deleteTableBtn { background-color: #dc3545; color: white;
             border-color: #dc3545;}
         #nameListBtn { background-color: #fd7e14; color: white;
             border-color: #fd7e14;}
@@ -236,7 +268,7 @@
     <div class="bar">
         <button id="addTableBtn">➕ Add New Table</button>
         <button id="renameTableBtn">📝 Rename Active Table</button>
-        <button id="deleteTableBtn" class="delete-btn">❌ Delete Active Table</button>
+        <button id="deleteTableBtn">❌ Delete Active Table</button>
         <button id="nameListBtn">👥 Manage Names</button>
     </div>
     <div id="draftList" style="display:none;"></div>
@@ -407,7 +439,6 @@
         document.getElementById('deleteTableBtn').addEventListener('click', confirmAndDeleteActiveTable);
         document.getElementById('nameListBtn').addEventListener('click', toggleNameListModalVisibility);
 
-        // Row/Column manipulation bar listeners
         document.getElementById('addRowAboveBtn').addEventListener('click', addRowAboveToActiveTable);
         document.getElementById('addRowBelowBtn').addEventListener('click', addRowBelowToActiveTable);
         document.getElementById('addColLeftBtn').addEventListener('click', addColumnLeftToActiveTable);
@@ -744,8 +775,8 @@
 
         if (customConfirm('Are you sure you want to delete this row?')) {
             rowToDelete.remove();
-            lastClickedCell = null; // Clear last clicked cell
-            deselectAllTableCells(); // Clear any selections
+            lastClickedCell = null;
+            deselectAllTableCells();
             rebuildAndRenderSummary();
             showMessage('Row deleted.', 'success');
         }
@@ -762,23 +793,18 @@
             return;
         }
 
-        // Check if it's the last column
-        if (table.rows.length > 0 && table.rows[0].cells.length <= 1) {
-             // More robust check for visual columns
-            let visualCols = 0;
-            if (table.rows[0]) {
-                for (let i = 0; i < table.rows[0].cells.length; i++) {
-                    visualCols += table.rows[0].cells[i].colSpan || 1;
-                }
+        let visualCols = 0;
+        if (table.rows.length > 0 && table.rows[0]) { // Ensure there's at least one row to check columns
+            for (let i = 0; i < table.rows[0].cells.length; i++) {
+                visualCols += table.rows[0].cells[i].colSpan || 1;
             }
-            if (visualCols <= 1) {
-                showMessage('Cannot delete the last column.', 'error');
-                return;
-            }
+        }
+        if (visualCols <= 1) {
+            showMessage('Cannot delete the last column.', 'error');
+            return;
         }
 
 
-        // Determine the visual index of the column to delete
         let clickedCellVisualIndex = 0;
         const clickedRow = lastClickedCell.parentNode;
         for (let i = 0; i < clickedRow.cells.length; i++) {
@@ -793,14 +819,13 @@
                 for (let i = 0; i < row.cells.length; i++) {
                     const cell = row.cells[i];
                     const cellColSpan = cell.colSpan || 1;
-                    // Check if the current cell spans the column to be deleted
                     if (currentVisualCol <= clickedCellVisualIndex && clickedCellVisualIndex < currentVisualCol + cellColSpan) {
                         if (cellColSpan > 1) {
-                            cell.colSpan -= 1; // Reduce colspan
+                            cell.colSpan -= 1;
                         } else {
-                            cell.remove(); // Remove the cell
+                            cell.remove();
                         }
-                        break; // Move to the next row
+                        break;
                     }
                     currentVisualCol += cellColSpan;
                 }
