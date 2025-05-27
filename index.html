@@ -518,7 +518,7 @@
         }, true);
         tablesContainer.addEventListener('input', (e) => {
             if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                setTimeout(rebuildAndRenderSummary, 300);
+                setTimeout(rebuildAndRenderSummary, 300); // Debounce summary update
             }
         });
     }
@@ -1279,13 +1279,14 @@
 
     // --- Summary Table Logic ---
     function rebuildAndRenderSummary() {
+        console.log("--- rebuildAndRenderSummary called ---");
         buildSummaryTableSkeleton();
         updateSummaryTableData();
+        console.log("--- rebuildAndRenderSummary finished ---");
     }
 
     function parseTimeToMinutes(timeStr) {
         if (typeof timeStr !== 'string') return Infinity;
-        // Updated to handle both ":" and "." as separators, and potential spaces around the separator
         const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
         if (match) {
             return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
@@ -1294,8 +1295,9 @@
     }
 
     function buildSummaryTableSkeleton() {
+        console.log("--- buildSummaryTableSkeleton starting ---");
         if (!summaryTableElement) {
-            console.error("Summary table element not found.");
+            console.error("Summary table element not found in buildSummaryTableSkeleton.");
             return;
         }
         summaryTableElement.innerHTML = '';
@@ -1313,12 +1315,13 @@
                 });
             }
         });
-        // Ensure "10.15-10.30" (dot format) is always an option for the summary
-        const targetSlotForSpecialNamesInSkeleton = "10.15-10.30"; // Using dot format
+        
+        const targetSlotForSpecialNamesInSkeleton = "10.15-10.30";
         if (!summaryColumnHeadersSet.has(targetSlotForSpecialNamesInSkeleton)) {
              summaryColumnHeadersSet.add(targetSlotForSpecialNamesInSkeleton);
+             console.log(`BUILD: Added '${targetSlotForSpecialNamesInSkeleton}' to summary headers set because it was missing.`);
         }
-
+        console.log("BUILD: Summary column headers before sort:", JSON.stringify(Array.from(summaryColumnHeadersSet)));
 
         const sortedSummaryRowHeaders = Array.from(summaryRowItems).sort((a,b) => a.localeCompare(b));
         
@@ -1333,6 +1336,7 @@
         });
 
         const finalSummaryColumnHeaders = ['Name/Subject', ...rawColumnHeaders];
+        console.log("BUILD: Final sorted summary column headers:", JSON.stringify(finalSummaryColumnHeaders));
 
         const thead = summaryTableElement.createTHead();
         const headerRowForSummary = thead.insertRow();
@@ -1344,12 +1348,7 @@
 
         const tbody = summaryTableElement.createTBody();
         if (sortedSummaryRowHeaders.length === 0) {
-            const tr = tbody.insertRow();
-            const td = tr.insertCell();
-            td.colSpan = finalSummaryColumnHeaders.length || 1;
-            td.textContent = 'No items to summarize. Add names or content to tables.';
-            td.style.textAlign = 'center';
-            td.style.padding = '10px';
+            // ... (no items message)
         } else {
             sortedSummaryRowHeaders.forEach(name => {
                 const tr = tbody.insertRow();
@@ -1359,20 +1358,38 @@
                 }
             });
         }
+        console.log("--- buildSummaryTableSkeleton finished ---");
     }
 
     function updateSummaryTableData() {
-        if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0) {
-            if (summaryTableElement?.tBodies[0]?.rows[0]?.cells[0]?.colSpan > 1) return;
-            buildSummaryTableSkeleton();
-            if (!summaryTableElement?.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0 ||
+        console.log("--- updateSummaryTableData starting ---");
+        if (!summaryTableElement || !summaryTableElement.tBodies || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) {
+            console.error("UPDATE: Summary table element or its head/body not ready.");
+            return;
+        }
+        if (summaryTableElement.tBodies.length === 0 || summaryTableElement.tBodies[0].rows.length === 0) {
+            if (summaryTableElement.tBodies[0]?.rows[0]?.cells[0]?.colSpan > 1) {
+                 console.log("UPDATE: Summary table has placeholder 'no items' row, skipping update for now.");
+                 return;
+            }
+            console.log("UPDATE: Summary table body is empty, attempting to rebuild skeleton first.");
+            buildSummaryTableSkeleton(); // Re-ensure skeleton exists
+            if (!summaryTableElement.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0 ||
                 (summaryTableElement.tBodies[0].rows[0].cells.length === 1 && summaryTableElement.tBodies[0].rows[0].cells[0].colSpan > 1) ) {
+                console.error("UPDATE: Summary table still not properly structured after rebuild attempt.");
                 return;
             }
         }
 
         const summaryBody = summaryTableElement.tBodies[0];
         const summaryTableActualColumnHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
+        
+        console.log("UPDATE: Names for summary rows:", JSON.stringify(names));
+        console.log("UPDATE: Summary Table Headers (Raw from DOM):", JSON.stringify(Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent)));
+        console.log("UPDATE: Summary Table Headers (Trimmed for matching):", JSON.stringify(summaryTableActualColumnHeaders));
+        const normalizedSummaryHeadersForLookup = summaryTableActualColumnHeaders.map(h => h.replace(/\s/g, "").replace(":","."));
+        console.log("UPDATE: Summary Table Headers (Fully Normalized for findIndex):", JSON.stringify(normalizedSummaryHeadersForLookup));
+
 
         Array.from(summaryBody.rows).forEach(summaryRow => {
             Array.from(summaryRow.cells).slice(1).forEach(cell => {
@@ -1382,16 +1399,19 @@
         });
 
         tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+            console.log(`UPDATE: Processing Schedule Table: ${scheduleTable.id} (${scheduleTable.dataset.tableName || 'N/A'})`);
             if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
+                console.log("UPDATE: Skipping schedule table due to missing head/body.");
                 return;
             }
             const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+            console.log("UPDATE: Current Schedule Table Headers (Trimmed):", JSON.stringify(currentScheduleTableHeaders));
 
-            Array.from(scheduleTable.tBodies[0].rows).forEach(scheduleDataRow => {
+            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow, rowIndex) => {
                 const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim();
                 if (!classIdentifier) return;
-
-                let visualColumnOffsetForDataCells = 0; 
+                
+                let visualColumnOffsetForDataCells = 0;
 
                 for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
                     const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
@@ -1399,36 +1419,43 @@
                     const cellColSpan = scheduleCell.colSpan || 1;
 
                     if (entryInScheduleCell && names.includes(entryInScheduleCell)) {
+                        console.log(`  UPDATE: Found name '${entryInScheduleCell}' in schedule table '${scheduleTable.dataset.tableName}', class '${classIdentifier}', cell content '${scheduleCell.textContent}'`);
                         for (let k = 0; k < cellColSpan; k++) {
                             const actualHeaderIndexInScheduleTable = visualColumnOffsetForDataCells + k + 1;
 
                             if (actualHeaderIndexInScheduleTable < currentScheduleTableHeaders.length) {
                                 const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[actualHeaderIndexInScheduleTable];
-                                
+                                console.log(`    UPDATE: Span part ${k}: Corresponds to schedule header '${scheduleColumnHeaderForThisCell}' (raw)`);
+
                                 let summaryColumnToUse = scheduleColumnHeaderForThisCell;
                                 const specialNames = ["LAU", "LISAH"];
-                                // Using dot format and removing extra spaces for robust comparison
-                                const targetSlotForSpecialNames = "10.15-10.30"; 
-                                const sourceSlotToShift = "10.30-12.00";
+                                const targetSlotForSpecialNames = "10.15-10.30"; // Dot format, no extra spaces
+                                const sourceSlotToShift = "10.30-12.00";   // Dot format, no extra spaces
 
-                                // Normalize the schedule column header for comparison
-                                const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "");
-                                const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "");
+                                // Normalize schedule header: remove spaces, convert ':' to '.'
+                                const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(":",".");
+                                const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, ""); // Already dot, just remove spaces
 
+                                console.log(`      UPDATE: Normalized schedule header: '${normalizedScheduleColumnHeader}'. Comparing with normalized source slot: '${normalizedSourceSlotToShift}'`);
 
                                 if (specialNames.includes(entryInScheduleCell) && normalizedScheduleColumnHeader === normalizedSourceSlotToShift) {
-                                    summaryColumnToUse = targetSlotForSpecialNames;
+                                    summaryColumnToUse = targetSlotForSpecialNames; 
+                                    console.log(`        UPDATE: SPECIAL RULE TRIGGERED for '${entryInScheduleCell}'. Original schedule slot '${scheduleColumnHeaderForThisCell}' matched source '${sourceSlotToShift}'. Shifting to summary slot '${targetSlotForSpecialNames}'.`);
                                 }
-                                
+
                                 const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
 
                                 if (targetSummaryRow) {
-                                    // Normalize summaryColumnToUse for finding index as well
-                                    const normalizedSummaryColumnToUse = summaryColumnToUse.replace(/\s/g, "");
-                                    const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h.replace(/\s/g, "") === normalizedSummaryColumnToUse);
+                                    // Normalize summaryColumnToUse for lookup: remove spaces, convert ':' to '.'
+                                    const normalizedSummaryColumnToUseForLookup = summaryColumnToUse.replace(/\s/g, "").replace(":",".");
+                                    const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColumnToUseForLookup);
+                                    
+                                    console.log(`        UPDATE: Target summary row for '${entryInScheduleCell}'. Attempting to use summary column '${summaryColumnToUse}' (normalized for lookup: '${normalizedSummaryColumnToUseForLookup}').`);
+                                    console.log(`        UPDATE: Index found in summary headers: ${targetSummaryColumnCellIndex}. (Lookup was against: ${JSON.stringify(normalizedSummaryHeadersForLookup)})`);
 
-                                    if (targetSummaryColumnCellIndex > 0) { 
+                                    if (targetSummaryColumnCellIndex > 0) {
                                         const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
+                                        console.log(`          UPDATE: Updating summary cell: Row='${entryInScheduleCell}', ColHeader='${summaryTableActualColumnHeaders[targetSummaryColumnCellIndex]}', CurrentContent='${summaryCellToUpdate.textContent}'`);
                                         let existingClassesInSummaryCell = [];
                                         if (summaryCellToUpdate.textContent.trim() !== '') {
                                             existingClassesInSummaryCell = summaryCellToUpdate.textContent.trim().split(',')
@@ -1438,13 +1465,20 @@
                                         if (!existingClassesInSummaryCell.includes(classIdentifier)) {
                                             existingClassesInSummaryCell.push(classIdentifier);
                                             summaryCellToUpdate.textContent = existingClassesInSummaryCell.join(', ');
+                                            console.log(`            UPDATE: New content for summary cell: '${summaryCellToUpdate.textContent}'`);
+                                        } else {
+                                            console.log(`            UPDATE: Class '${classIdentifier}' already present in summary cell.`);
                                         }
+                                    } else {
+                                         console.warn(`        UPDATE WARN: Could not find summary column for '${summaryColumnToUse}' (normalized for lookup: '${normalizedSummaryColumnToUseForLookup}') for name '${entryInScheduleCell}'.`);
                                     }
+                                } else {
+                                     console.warn(`      UPDATE WARN: Could not find summary row for name '${entryInScheduleCell}'.`);
                                 }
                             }
                         }
                     }
-                    visualColumnOffsetForDataCells += cellColSpan; 
+                    visualColumnOffsetForDataCells += cellColSpan;
                 }
             });
         });
@@ -1465,6 +1499,7 @@
                 }
             });
         });
+        console.log("--- updateSummaryTableData finished ---");
     }
 </script>
 </body>
