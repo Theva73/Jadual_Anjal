@@ -1156,27 +1156,18 @@
 
     function deleteNameFromListAndStorage(nameToDelete) {
         if (customConfirm(`Delete "${nameToDelete}"? This will also remove the name from all schedule tables.`)) {
-            // 1. Remove from the main 'names' array
             names = names.filter(n => n !== nameToDelete);
             saveNames();
 
-            // 2. Clear the name from all schedule tables
             tablesContainer.querySelectorAll('table').forEach(table => {
                 table.querySelectorAll('tbody td, tbody th').forEach(cell => {
-                    // Check only cells that are not the first in their row (to avoid clearing class/time labels)
-                    // and whose content matches the name to delete.
                     if (cell.cellIndex > 0 && cell.textContent.trim() === nameToDelete) {
-                        cell.textContent = ''; // Clear the cell content
+                        cell.textContent = '';
                     }
                 });
             });
-
-            // 3. Re-render the name list in the modal (respecting current filter)
             renderNameList(searchNameInputElement.value);
-
-            // 4. Rebuild the summary table
             rebuildAndRenderSummary();
-
             showMessage(`"${nameToDelete}" removed from list and all schedules.`, 'success');
             if (selectedNameFromList === nameToDelete) {
                 clearNameSelection();
@@ -1308,26 +1299,12 @@
         }
         summaryTableElement.innerHTML = '';
 
-        const summaryRowItems = new Set(names); // Use the global 'names' array which is now authoritative
+        const summaryRowItems = new Set(names);
         const summaryColumnHeadersSet = new Set();
 
         tablesContainer.querySelectorAll('table').forEach(table => {
-            // Collect additional names that might be in tables but not in the 'names' list (e.g. from old drafts)
-            // This ensures summary rows are created for them, even if they are about to be cleared if 'names' is the sole source.
-            // However, the primary source for summary rows should be the 'names' array.
-            table.querySelectorAll('tbody tr td, tbody tr th').forEach(td => {
-                if (td.cellIndex > 0) { // Consider cells that are not the first in their row
-                     const text = td.textContent.trim();
-                    if (text && isNaN(text) && text.length > 1 && !names.includes(text)) { // If it's a name-like string not in master list
-                        // summaryRowItems.add(text); // Decide if these 'orphaned' names should still appear in summary
-                                                    // For now, let's stick to only 'names' list for summary rows.
-                                                    // If the name was deleted from 'names', it shouldn't have a summary row.
-                    }
-                }
-            });
-
             if (table.tHead && table.tHead.rows.length > 0) {
-                Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => {
+                Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => { // Skip first header cell (Class/Time)
                     const headerText = th.textContent.trim();
                     if (headerText) {
                         summaryColumnHeadersSet.add(headerText);
@@ -1401,39 +1378,53 @@
             if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
                 return;
             }
+            // currentScheduleTableHeaders includes "Class" at index 0, then time slots
             const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
 
             Array.from(scheduleTable.tBodies[0].rows).forEach(scheduleDataRow => {
                 const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim();
                 if (!classIdentifier) return;
 
-                Array.from(scheduleDataRow.cells).forEach((scheduleCell, scheduleCellIndex) => {
-                    if (scheduleCellIndex === 0) return;
+                let visualColumnOffsetForDataCells = 0; // Tracks the 0-indexed visual column for data cells
 
+                // Iterate data cells, starting from the first actual data cell (physical index 1)
+                for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
+                    const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
                     const entryInScheduleCell = scheduleCell.textContent.trim();
-                    // Only process if the entry is in our master 'names' list
-                    if (entryInScheduleCell && names.includes(entryInScheduleCell)) {
-                        const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
-                        if (targetSummaryRow) {
-                            const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[scheduleCellIndex];
-                            const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === scheduleColumnHeaderForThisCell);
+                    const cellColSpan = scheduleCell.colSpan || 1;
 
-                            if (targetSummaryColumnCellIndex > 0) {
-                                const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
-                                let existingClassesInSummaryCell = [];
-                                if (summaryCellToUpdate.textContent.trim() !== '') {
-                                    existingClassesInSummaryCell = summaryCellToUpdate.textContent.trim().split(',')
-                                                                    .map(s => s.trim())
-                                                                    .filter(s => s !== '');
-                                }
-                                if (!existingClassesInSummaryCell.includes(classIdentifier)) {
-                                    existingClassesInSummaryCell.push(classIdentifier);
-                                    summaryCellToUpdate.textContent = existingClassesInSummaryCell.join(', ');
+                    if (entryInScheduleCell && names.includes(entryInScheduleCell)) {
+                        // This entry applies to all actual header columns it spans
+                        for (let k = 0; k < cellColSpan; k++) {
+                            // actualHeaderIndexInScheduleTable is the index in currentScheduleTableHeaders
+                            // +1 because currentScheduleTableHeaders[0] is 'Class', data headers start at index 1
+                            const actualHeaderIndexInScheduleTable = visualColumnOffsetForDataCells + k + 1;
+
+                            if (actualHeaderIndexInScheduleTable < currentScheduleTableHeaders.length) {
+                                const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[actualHeaderIndexInScheduleTable];
+                                const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
+
+                                if (targetSummaryRow) {
+                                    const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === scheduleColumnHeaderForThisCell);
+                                    if (targetSummaryColumnCellIndex > 0) {
+                                        const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
+                                        let existingClassesInSummaryCell = [];
+                                        if (summaryCellToUpdate.textContent.trim() !== '') {
+                                            existingClassesInSummaryCell = summaryCellToUpdate.textContent.trim().split(',')
+                                                                            .map(s => s.trim())
+                                                                            .filter(s => s !== '');
+                                        }
+                                        if (!existingClassesInSummaryCell.includes(classIdentifier)) {
+                                            existingClassesInSummaryCell.push(classIdentifier);
+                                            summaryCellToUpdate.textContent = existingClassesInSummaryCell.join(', ');
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                });
+                    visualColumnOffsetForDataCells += cellColSpan; // Advance the visual offset
+                }
             });
         });
 
