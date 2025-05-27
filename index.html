@@ -1088,7 +1088,7 @@
         }
     }
 
-    function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C", "LAU", "LISAH"]'); // Added LAU and LISAH for easier testing
+    function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C", "LAU", "LISAH"]');
     }
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
 
@@ -1285,7 +1285,8 @@
 
     function parseTimeToMinutes(timeStr) {
         if (typeof timeStr !== 'string') return Infinity;
-        const match = timeStr.match(/^(\d{1,2})[:.](\d{2})/);
+        // Updated to handle both ":" and "." as separators, and potential spaces around the separator
+        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
         if (match) {
             return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
         }
@@ -1304,7 +1305,7 @@
 
         tablesContainer.querySelectorAll('table').forEach(table => {
             if (table.tHead && table.tHead.rows.length > 0) {
-                Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => { // Skip first header cell (Class/Time)
+                Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => { 
                     const headerText = th.textContent.trim();
                     if (headerText) {
                         summaryColumnHeadersSet.add(headerText);
@@ -1312,9 +1313,10 @@
                 });
             }
         });
-         // Ensure "10:15 - 10:30" is always an option for the summary if it's not already from a schedule table header
-        if (!summaryColumnHeadersSet.has("10:15 - 10:30")) {
-             summaryColumnHeadersSet.add("10:15 - 10:30");
+        // Ensure "10.15-10.30" (dot format) is always an option for the summary
+        const targetSlotForSpecialNamesInSkeleton = "10.15-10.30"; // Using dot format
+        if (!summaryColumnHeadersSet.has(targetSlotForSpecialNamesInSkeleton)) {
+             summaryColumnHeadersSet.add(targetSlotForSpecialNamesInSkeleton);
         }
 
 
@@ -1403,22 +1405,29 @@
                             if (actualHeaderIndexInScheduleTable < currentScheduleTableHeaders.length) {
                                 const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[actualHeaderIndexInScheduleTable];
                                 
-                                // MODIFICATION START: Determine the target summary column
                                 let summaryColumnToUse = scheduleColumnHeaderForThisCell;
                                 const specialNames = ["LAU", "LISAH"];
-                                const targetSlotForSpecialNames = "10:15 - 10:30";
-                                const sourceSlotToShift = "10:30 - 12:00";
+                                // Using dot format and removing extra spaces for robust comparison
+                                const targetSlotForSpecialNames = "10.15-10.30"; 
+                                const sourceSlotToShift = "10.30-12.00";
 
-                                if (specialNames.includes(entryInScheduleCell) && scheduleColumnHeaderForThisCell === sourceSlotToShift) {
+                                // Normalize the schedule column header for comparison
+                                const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "");
+                                const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "");
+
+
+                                if (specialNames.includes(entryInScheduleCell) && normalizedScheduleColumnHeader === normalizedSourceSlotToShift) {
                                     summaryColumnToUse = targetSlotForSpecialNames;
                                 }
-                                // MODIFICATION END
-
+                                
                                 const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
 
                                 if (targetSummaryRow) {
-                                    const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === summaryColumnToUse);
-                                    if (targetSummaryColumnCellIndex > 0) { // Ensure the target column exists in summary
+                                    // Normalize summaryColumnToUse for finding index as well
+                                    const normalizedSummaryColumnToUse = summaryColumnToUse.replace(/\s/g, "");
+                                    const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h.replace(/\s/g, "") === normalizedSummaryColumnToUse);
+
+                                    if (targetSummaryColumnCellIndex > 0) { 
                                         const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
                                         let existingClassesInSummaryCell = [];
                                         if (summaryCellToUpdate.textContent.trim() !== '') {
