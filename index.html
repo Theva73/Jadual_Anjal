@@ -581,6 +581,7 @@
         }, true);
         tablesContainer.addEventListener('input', (e) => {
             if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                // Using a small delay to allow DOM to update, especially if pasting multiple cells
                 setTimeout(rebuildAndRenderSummary, 300); 
             }
         });
@@ -596,13 +597,13 @@
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         const rect = nameModalContent.getBoundingClientRect();
-        nameModalContent.style.position = 'fixed';
+        nameModalContent.style.position = 'fixed'; // Ensure it's fixed for viewport-relative positioning
         nameModalContent.style.left = `${rect.left}px`;
         nameModalContent.style.top = `${rect.top}px`;
-        nameModalContent.style.transform = 'none';
+        nameModalContent.style.transform = 'none'; // Reset transform if any
         modalDragOffsetX = clientX - nameModalContent.offsetLeft;
         modalDragOffsetY = clientY - nameModalContent.offsetTop;
-        if (e.type === 'touchstart') e.preventDefault();
+        if (e.type === 'touchstart') e.preventDefault(); // Prevent page scroll on touch
     }
     function dragModal(e) {
         if (!isDraggingModal) return;
@@ -610,6 +611,7 @@
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         let newLeft = clientX - modalDragOffsetX;
         let newTop = clientY - modalDragOffsetY;
+        // Boundary checks
         const modalRect = nameModalContent.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
@@ -619,11 +621,12 @@
         if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
         nameModalContent.style.left = `${newLeft}px`;
         nameModalContent.style.top = `${newTop}px`;
-        if (e.type === 'touchmove') e.preventDefault();
+        if (e.type === 'touchmove') e.preventDefault(); // Prevent page scroll on touch
     }
     function stopDragModal() {
         if (isDraggingModal) {
             isDraggingModal = false;
+            // No need to revert position to relative if it's meant to stay where dragged
         }
     }
     // --- Direct Copy Full HTML Functionality ---
@@ -636,7 +639,7 @@
             console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
             const textarea = document.createElement('textarea');
             textarea.value = fullHtml;
-            textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
+            textarea.style.position = 'fixed'; textarea.style.left = '-9999px'; // Move off-screen
             document.body.appendChild(textarea);
             textarea.select();
             try {
@@ -691,22 +694,23 @@
         if (drafts[draftName]) {
             tablesContainer.innerHTML = drafts[draftName].html;
             const tableMeta = drafts[draftName].meta || {};
-            tableTabs.innerHTML = '';
+            tableTabs.innerHTML = ''; // Clear existing tabs
             tablesContainer.querySelectorAll('table').forEach(table => {
                 const id = table.id;
-                const metaInfo = tableMeta[id] || {};
-                const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
-                table.dataset.tableName = name;
+                const metaInfo = tableMeta[id] || {}; // Get meta info for this specific table
+                const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`; // Fallback name
+                table.dataset.tableName = name; // Ensure dataset is updated
                 addTabButton(id, name);
+                // Make all cells editable again after loading
                 table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
             });
-            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
+            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1'; // Sensible fallback
             if (document.getElementById(activeTableId)) switchTable(activeTableId);
-            else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id);
-            else addNewTable(true);
+            else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id); // Fallback to first table if active one is gone
+            else addNewTable(true); // Add a new table if container is empty
             showMessage(`Draft "${draftName}" loaded!`, 'success');
             draftListElement.style.display = 'none';
-            rebuildAndRenderSummary();
+            rebuildAndRenderSummary(); // Rebuild summary based on loaded data
         } else { showMessage(`Draft "${draftName}" not found.`, 'error'); }
     }
     async function confirmAndDeleteDraft(draftName) { // Made async
@@ -715,7 +719,7 @@
             delete drafts[draftName];
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
             showMessage(`Saved draft "${draftName}" deleted.`, 'success');
-            renderDraftList();
+            renderDraftList(); // Re-render the list
         }
     }
 
@@ -728,15 +732,15 @@
         const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
         if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) { // await customConfirm
             activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
-                cell.innerHTML = '';
-                if (cell.tagName === 'TH') cell.textContent = '';
-                cell.rowSpan = 1;
+                cell.innerHTML = ''; // Clear content
+                if (cell.tagName === 'TH') cell.textContent = ''; // Specifically for headers if they only had text
+                cell.rowSpan = 1; // Reset spans
                 cell.colSpan = 1;
-                cell.classList.remove('merged');
-                cell.classList.remove('selected');
+                cell.classList.remove('merged'); // Remove merged class
+                cell.classList.remove('selected'); // Remove selection class
             });
-            selectedCells = [];
-            rebuildAndRenderSummary();
+            selectedCells = []; // Clear selection array
+            rebuildAndRenderSummary(); // Update the summary table
             showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
     }
@@ -840,7 +844,7 @@
     function addTabButton(id, label) {
         const button = document.createElement('button');
         button.textContent = label;
-        button.dataset.tableId = id;
+        button.dataset.tableId = id; // Use dataset for easier retrieval
         button.onclick = () => switchTable(id);
         tableTabs.appendChild(button);
         return button;
@@ -848,11 +852,13 @@
     function switchTable(id) {
         const targetTable = document.getElementById(id);
         if (!targetTable) {
+            // If target table doesn't exist (e.g. after a delete), try to switch to the first available one
             const firstTableInDOM = tablesContainer.querySelector('table');
-            if (firstTableInDOM) id = firstTableInDOM.id;
-            else {
+            if (firstTableInDOM) {
+                id = firstTableInDOM.id;
+            } else {
                 showMessage('Cannot switch: Target table not found.', 'error');
-                if (tablesContainer.children.length === 0) addNewTable(true);
+                if (tablesContainer.children.length === 0) addNewTable(true); // If no tables, add one
                 return;
             }
         }
@@ -861,20 +867,21 @@
         tableTabs.querySelectorAll('button').forEach(b => {
             b.classList.toggle('active', b.dataset.tableId === id);
         });
-        deselectAllTableCells();
-        rebuildAndRenderSummary();
+        deselectAllTableCells(); // Deselect cells when switching tables
+        rebuildAndRenderSummary(); // Update summary for the new active table context
     }
     function addNewTable(isInitial = false) {
         tableCount++;
         const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
         const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
-        if (!label && !isInitial) return;
+        if (!label && !isInitial) return; // User cancelled prompt
         const newTable = document.createElement('table');
-        const newTableId = `tbl_${Date.now()}_${tableCount}`;
+        const newTableId = `tbl_${Date.now()}_${tableCount}`; // More unique ID
         newTable.id = newTableId;
-        newTable.dataset.tableName = label || defaultTableName;
+        newTable.dataset.tableName = label || defaultTableName; // Store name in dataset
         const thead = newTable.createTHead();
         const headerRow = thead.insertRow();
+        // Default headers
         for (let i = 0; i < 7; i++) {
             const th = document.createElement('th');
             th.contentEditable = 'true';
@@ -882,6 +889,7 @@
             headerRow.appendChild(th);
         }
         const tbody = newTable.createTBody();
+        // Default rows
         for (let r = 0; r < 2; r++) {
             const dataRow = tbody.insertRow();
             for (let c = 0; c < headerRow.cells.length; c++) {
@@ -893,7 +901,7 @@
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTableId, label || defaultTableName);
-        switchTable(newTableId);
+        switchTable(newTableId); // Make the new table active
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
     }
 
@@ -904,13 +912,13 @@
             return;
         }
 
-        let tableIdToRename = currentTab.dataset.tableId;
-        if (!tableIdToRename) {
+        let tableIdToRename = currentTab.dataset.tableId; // Prefer dataset
+        if (!tableIdToRename) { // Fallback for older structures if dataset isn't there
             const onclickAttr = currentTab.getAttribute('onclick');
             const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
             if (match && match[1]) {
                 tableIdToRename = match[1];
-                if(!currentTab.dataset.tableId) currentTab.dataset.tableId = tableIdToRename;
+                if(!currentTab.dataset.tableId) currentTab.dataset.tableId = tableIdToRename; // Retroactively add dataset
             } else {
                 showMessage('Could not identify table ID for renaming. Try switching tabs and trying again.', 'error');
                 return;
@@ -923,22 +931,23 @@
             return;
         }
 
-        const oldName = tableElement.dataset.tableName || currentTab.textContent;
+        const oldName = tableElement.dataset.tableName || currentTab.textContent; // Use dataset name or tab text
         const newName = customPrompt('Enter new table name:', oldName); // window.prompt is fine here
 
         if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
             const trimmedNewName = newName.trim();
             currentTab.textContent = trimmedNewName;
-            tableElement.dataset.tableName = trimmedNewName;
-            if (activeTableId !== tableIdToRename) {
-                activeTableId = tableIdToRename;
+            tableElement.dataset.tableName = trimmedNewName; // Update dataset
+            // No need to switch activeTableId if it's already the active one being renamed
+            if (activeTableId !== tableIdToRename) { // This case should ideally not happen if UI is consistent
+                activeTableId = tableIdToRename; // Ensure consistency if it was somehow different
             }
             showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
         } else if (newName && newName.trim() === oldName) {
             showMessage('New name is the same as the old name. No changes made.', 'info');
-        } else if (newName === null) {
+        } else if (newName === null) { // User cancelled
             showMessage('Rename cancelled.', 'info');
-        } else {
+        } else { // Empty name submitted
             showMessage('Invalid new name. Please enter a valid name.', 'error');
         }
     }
@@ -953,13 +962,14 @@
 
 
         if (await customConfirm(`Delete table "${tableName}"?`)) { // await customConfirm
-            if (tableElement) tableElement.remove(); else document.getElementById(activeTableId)?.remove();
-            activeTab?.remove();
+            if (tableElement) tableElement.remove(); else document.getElementById(activeTableId)?.remove(); // Remove from DOM
+            activeTab?.remove(); // Remove tab
+            // Switch to the first remaining tab or add a new one if all are gone
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) {
-                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1];
+                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; // Fallback for onclick
                 switchTable(nextActiveId);
-            } else {
+            } else { // Should not happen if we prevent deleting the last table, but as a safeguard
                 activeTableId = null;
                 addNewTable(true);
             }
@@ -969,34 +979,35 @@
 
     // --- Row/Column Operations ---
     function addRowToTable(tableBody, rowIndex, numCols) {
-        const row = tableBody.insertRow(rowIndex);
+        const row = tableBody.insertRow(rowIndex); // rowIndex -1 appends
         for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true';
         }
     }
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0] || table.rows.length === 0) return;
-        const numCols = table.rows[0].cells.length;
-        addRowToTable(table.tBodies[0], 0, numCols);
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return; // Check table and tbody
+        const numCols = table.rows[0].cells.length; // Number of columns from first row (header or data)
+        addRowToTable(table.tBodies[0], 0, numCols); // Insert at the beginning of tbody
         rebuildAndRenderSummary();
     }
     function addRowBelowToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const numCols = table.rows[0].cells.length;
-        addRowToTable(table.tBodies[0], -1, numCols);
+        addRowToTable(table.tBodies[0], -1, numCols); // Append to tbody
         rebuildAndRenderSummary();
     }
-    function addColumnToTable(table, colIndex) {
+    function addColumnToTable(table, colIndex) { // colIndex 0 for left, -1 for right
         for (const row of table.rows) {
             const isHeaderRow = row.parentElement.tagName === 'THEAD';
             const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex);
             cell.contentEditable = 'true';
-            if (isHeaderRow) {
-                if (colIndex === -1 || colIndex >= row.cells.length) row.appendChild(cell);
-                else row.insertBefore(cell, row.cells[colIndex]);
-                cell.textContent = "";
+            if (isHeaderRow) { // If it's a header row and we created a TH, we need to append/insert it correctly
+                if (colIndex === -1 || colIndex >= row.cells.length) row.appendChild(cell); // Append if TH was created for rightmost
+                else row.insertBefore(cell, row.cells[colIndex]); // Insert if TH was for leftmost
+                cell.textContent = ""; // New header cells are blank
             }
+            // For TD, insertCell already places it correctly.
         }
     }
     function addColumnLeftToActiveTable() {
@@ -1030,8 +1041,8 @@
 
         if (await customConfirm('Are you sure you want to delete this row?')) { // await customConfirm
             rowToDelete.remove();
-            lastClickedCell = null;
-            deselectAllTableCells();
+            lastClickedCell = null; // Reset last clicked cell
+            deselectAllTableCells(); // Clear any selections
             rebuildAndRenderSummary();
             showMessage('Row deleted.', 'success');
         }
@@ -1048,8 +1059,9 @@
             return;
         }
 
+        // Check if it's the last visual column (considering colSpans)
         let visualCols = 0;
-        if (table.rows.length > 0 && table.rows[0]) {
+        if (table.rows.length > 0 && table.rows[0]) { // Use first row for colSpan check
             for (let i = 0; i < table.rows[0].cells.length; i++) {
                 visualCols += table.rows[0].cells[i].colSpan || 1;
             }
@@ -1059,7 +1071,7 @@
             return;
         }
 
-
+        // Determine the visual index of the clicked column
         let clickedCellVisualIndex = 0;
         const clickedRow = lastClickedCell.parentNode;
         for (let i = 0; i < clickedRow.cells.length; i++) {
@@ -1067,25 +1079,26 @@
             clickedCellVisualIndex += clickedRow.cells[i].colSpan || 1;
         }
 
-
+        // Confirm deletion
         if (await customConfirm('Are you sure you want to delete this column?')) { // await customConfirm
             for (const row of table.rows) {
                 let currentVisualCol = 0;
                 for (let i = 0; i < row.cells.length; i++) {
                     const cell = row.cells[i];
                     const cellColSpan = cell.colSpan || 1;
+                    // Check if the current cell (or part of it, if spanned) falls into the clicked column's visual index
                     if (currentVisualCol <= clickedCellVisualIndex && clickedCellVisualIndex < currentVisualCol + cellColSpan) {
                         if (cellColSpan > 1) {
-                            cell.colSpan -= 1;
+                            cell.colSpan -= 1; // Reduce colspan
                         } else {
-                            cell.remove();
+                            cell.remove(); // Remove the cell
                         }
-                        break;
+                        break; // Move to the next row once the column part is handled for this row
                     }
                     currentVisualCol += cellColSpan;
                 }
             }
-            lastClickedCell = null;
+            lastClickedCell = null; // Reset
             deselectAllTableCells();
             rebuildAndRenderSummary();
             showMessage('Column deleted.', 'success');
@@ -1099,27 +1112,27 @@
         const btn = document.getElementById('selectBtn');
         btn.classList.toggle('active', selectionMode);
         btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
-        if (!selectionMode) deselectAllTableCells();
+        if (!selectionMode) deselectAllTableCells(); // Clear selection when turning off mode
     }
     function handleTableCellClick(event) {
-        const cell = event.target.closest('td, th');
-        if (!cell || !cell.closest(`#${activeTableId}`)) return;
+        const cell = event.target.closest('td, th'); // Get the cell (TD or TH)
+        if (!cell || !cell.closest(`#${activeTableId}`)) return; // Ensure click is on a cell within the active table
 
-        lastClickedCell = cell;
+        lastClickedCell = cell; // Update last clicked cell regardless of mode
 
-        if (selectedNameFromList) {
-            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
+        if (selectedNameFromList) { // If a name is selected from the list for insertion
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { // Allow insertion in data cells or body headers
                 cell.textContent = selectedNameFromList;
                 rebuildAndRenderSummary();
                 showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
-                clearNameSelection();
+                clearNameSelection(); // Clear selection after insertion
             } else {
                 showMessage('Click an editable data cell (or row header in body) to insert name.', 'info');
             }
-            return;
+            return; // Exit after handling name insertion
         }
 
-        if (selectionMode) {
+        if (selectionMode) { // If in cell selection mode
             cell.classList.toggle('selected');
             if (cell.classList.contains('selected')) selectedCells.push(cell);
             else selectedCells = selectedCells.filter(c => c !== cell);
@@ -1133,38 +1146,45 @@
         if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error');
         return; }
         const table = document.getElementById(activeTableId);
+        // Determine bounds of selection
         let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
         selectedCells.forEach(cell => {
-            const r = cell.parentNode.rowIndex; const c = cell.cellIndex;
+            const r = cell.parentNode.rowIndex; const c = cell.cellIndex; // Actual cell index in its row
             minR = Math.min(minR, r); maxR = Math.max(maxR, r + (cell.rowSpan || 1) - 1);
             minC = Math.min(minC, c); maxC = Math.max(maxC, c + (cell.colSpan || 1) - 1);
+            // Note: This simple minC/maxC might not be perfectly accurate for complex tables with existing colSpans.
+            // A more robust approach would map to a virtual grid. For now, this is a common simplification.
         });
-        const firstCell = table.rows[minR]?.cells[minC];
+        const firstCell = table.rows[minR]?.cells[minC]; // Top-left cell of the merge area
         if (!firstCell) { showMessage('Error finding merge starting cell.', 'error'); return;
         }
-        let contentToKeep = firstCell.innerHTML;
+        let contentToKeep = firstCell.innerHTML; // Keep content from the first cell
         let cellsToRemove = [];
+        // Iterate over the bounding box of selected cells to identify cells to remove
         for (let r = minR; r <= maxR; r++) {
-            for (let c = minC; c <= maxC; c++) {
-                if (table.rows[r]?.cells[c]) {
+            for (let c = minC; c <= maxC; c++) { // This loop is conceptual; actual cell removal needs care
+                // This part needs to be smarter if cells within the rect are not selected or already part of other merges
+                if (table.rows[r]?.cells[c]) { // Check if cell exists at this conceptual coordinate
                     const currentCell = table.rows[r].cells[c];
                     if (currentCell !== firstCell && selectedCells.includes(currentCell)) cellsToRemove.push(currentCell);
                 }
             }
         }
         cellsToRemove.forEach(cell => cell.remove());
-        firstCell.rowSpan = maxR - minR + 1; firstCell.colSpan = maxC - minC + 1;
+        firstCell.rowSpan = maxR - minR + 1; firstCell.colSpan = maxC - minC + 1; // This needs careful calculation
         firstCell.innerHTML = contentToKeep; firstCell.classList.add('merged');
         deselectAllTableCells();
-        if (selectionMode) toggleCellSelectionMode();
+        if (selectionMode) toggleCellSelectionMode(); // Optionally turn off selection mode
         rebuildAndRenderSummary(); showMessage('Cells merged.', 'success');
     }
 
     function unmergeActiveCellIfMerged() {
         let cellToUnmerge = null;
+        // Prefer a single selected cell if it's merged
         if (selectedCells.length === 1 && (selectedCells[0].rowSpan > 1 || selectedCells[0].colSpan > 1)) {
             cellToUnmerge = selectedCells[0];
         }
+        // Fallback to the last clicked cell if it's merged and part of the active table
         else if (lastClickedCell && (lastClickedCell.rowSpan > 1 || lastClickedCell.colSpan > 1) && lastClickedCell.closest(`#${activeTableId}`)) {
             cellToUnmerge = lastClickedCell;
         }
@@ -1183,38 +1203,45 @@
             return;
         }
         const rowIndex = cellToUnmerge.parentNode.rowIndex;
-        const cellIndex = cellToUnmerge.cellIndex;
+        const cellIndex = cellToUnmerge.cellIndex; // Actual index in the row's cells collection
         const rowSpan = cellToUnmerge.rowSpan || 1;
         const colSpan = cellToUnmerge.colSpan || 1;
         if (rowSpan === 1 && colSpan === 1) {
             showMessage('Cell is not merged.', 'info');
             return; }
-        const content = cellToUnmerge.innerHTML;
+        const content = cellToUnmerge.innerHTML; // Preserve content
+        // Reset the original cell
         cellToUnmerge.rowSpan = 1;
         cellToUnmerge.colSpan = 1;
         cellToUnmerge.classList.remove('merged');
-        cellToUnmerge.innerHTML = content;
+        cellToUnmerge.innerHTML = content; // Put content back into the now unmerged top-left cell
 
+        // Add back the other cells that were covered by the span
         for (let r = rowIndex; r < rowIndex + rowSpan; r++) {
             const row = table.rows[r];
-            if (!row) continue;
+            if (!row) continue; // Should not happen in a well-formed table
 
+            // Determine the correct insertion point for new cells in this row
+            // This needs to account for existing cells and their colSpans to find the true visual column.
             let currentVisualColIndex = 0;
-            let insertAtIndex = 0;
+            let insertAtIndex = 0; // This will be the physical cell index to insert before
             for(insertAtIndex = 0; insertAtIndex < row.cells.length; insertAtIndex++) {
-                if(currentVisualColIndex >= cellIndex) break;
+                if(currentVisualColIndex >= cellIndex) break; // Found the physical spot corresponding to the original merged cell's start
                 currentVisualColIndex += (row.cells[insertAtIndex].colSpan || 1);
             }
 
 
             for (let c = 0; c < colSpan; c++) {
-                if (r === rowIndex && c === 0) continue;
+                if (r === rowIndex && c === 0) continue; // Skip the original cell itself
 
+                // For cells in the first row of the unmerged block (but not the very first cell)
                 if (r === rowIndex && c > 0) {
-                     const newCell = row.insertCell(insertAtIndex + c);
-                     newCell.contentEditable = 'true'; newCell.innerHTML = '';
+                     const newCell = row.insertCell(insertAtIndex + c); // Insert at correct physical index
+                     newCell.contentEditable = 'true'; newCell.innerHTML = ''; // New cells are blank
                 }
+                // For cells in subsequent rows of the unmerged block
                 else if (r > rowIndex) {
+                     // For subsequent rows, new cells are inserted starting from the calculated insertAtIndex
                      const newCell = row.insertCell(insertAtIndex + c);
                      newCell.contentEditable = 'true'; newCell.innerHTML = '';
                 }
@@ -1254,8 +1281,8 @@
         if (nameModal) {
             nameModal.style.display = 'none';
         }
-        clearNameSelection();
-        if(searchNameInputElement) searchNameInputElement.value = '';
+        clearNameSelection(); // Clear any visual selection in the list
+        if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search input
     }
 
     function toggleNameListModalVisibility() {
@@ -1266,22 +1293,23 @@
             clearNameSelection();
             if(searchNameInputElement) searchNameInputElement.value = '';
         } else {
-            nameModalContent.style.position = 'relative';
+            // Reset modal position before showing for better centering if it was dragged
+            nameModalContent.style.position = 'relative'; // Or 'static' if it's centered by flexbox
             nameModalContent.style.left = 'auto';
             nameModalContent.style.top = 'auto';
-            nameModalContent.style.transform = 'none';
+            nameModalContent.style.transform = 'none'; // Remove any transform from dragging
 
-            nameModal.style.display = 'flex';
-            if(searchNameInputElement) searchNameInputElement.value = '';
-            renderNameList();
-            newNameInput.focus();
-            clearNameSelection();
+            nameModal.style.display = 'flex'; // Show modal
+            if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search
+            renderNameList(); // Populate list
+            newNameInput.focus(); // Focus on add name input
+            clearNameSelection(); // Ensure no name is pre-selected
         }
     }
 
     function renderNameList(filterText = '') {
         if (!nameListContainer) return;
-        nameListContainer.innerHTML = '';
+        nameListContainer.innerHTML = ''; // Clear current list
 
         const normalizedFilterText = filterText.toLowerCase().trim();
         const filteredNames = names.filter(name => name.toLowerCase().includes(normalizedFilterText));
@@ -1291,7 +1319,7 @@
             return;
         }
 
-        filteredNames.sort((a,b) => a.localeCompare(b));
+        filteredNames.sort((a,b) => a.localeCompare(b)); // Sort names alphabetically
 
         filteredNames.forEach(name => {
             const itemDiv = document.createElement('div');
@@ -1307,9 +1335,10 @@
         }
         if (names.includes(newName)) { showMessage('Name already exists.', 'error'); return; }
         names.push(newName); saveNames();
-        renderNameList(searchNameInputElement.value);
-        newNameInput.value = ''; newNameInput.focus();
-        rebuildAndRenderSummary(); showMessage(`"${newName}" added.`, 'success');
+        renderNameList(searchNameInputElement.value); // Re-render list with current filter
+        newNameInput.value = ''; newNameInput.focus(); // Clear input and refocus
+        rebuildAndRenderSummary(); // Update summary as names list changed
+        showMessage(`"${newName}" added.`, 'success');
     }
 
     async function deleteNameFromListAndStorage(nameToDelete) { // Made async
@@ -1317,17 +1346,19 @@
             names = names.filter(n => n !== nameToDelete);
             saveNames();
 
+            // Remove the name from all cells in all tables
             tablesContainer.querySelectorAll('table').forEach(table => {
-                table.querySelectorAll('tbody td, tbody th').forEach(cell => {
+                table.querySelectorAll('tbody td, tbody th').forEach(cell => { // Check data cells and body headers
+                    // Only clear if it's not the first column (typically class/subject identifier)
                     if (cell.cellIndex > 0 && cell.textContent.trim() === nameToDelete) {
-                        cell.textContent = '';
+                        cell.textContent = ''; // Clear the cell
                     }
                 });
             });
-            renderNameList(searchNameInputElement.value);
-            rebuildAndRenderSummary();
+            renderNameList(searchNameInputElement.value); // Update displayed name list
+            rebuildAndRenderSummary(); // Update summary table
             showMessage(`"${nameToDelete}" removed from list and all schedules.`, 'success');
-            if (selectedNameFromList === nameToDelete) {
+            if (selectedNameFromList === nameToDelete) { // If the deleted name was selected for insertion
                 clearNameSelection();
             }
         }
@@ -1335,7 +1366,7 @@
 
     function selectNameForCellInsertion(name) {
         selectedNameFromList = name;
-        highlightSelectedNameInList(name);
+        highlightSelectedNameInList(name); // Visually indicate selection
         showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
     }
 
@@ -1347,7 +1378,7 @@
         }
         if (file.type !== 'text/plain') {
             showMessage('Invalid file type. Please select a .txt file.', 'error');
-            event.target.value = '';
+            event.target.value = ''; // Reset file input
             return;
         }
 
@@ -1355,9 +1386,9 @@
         reader.onload = (e) => {
             try {
                 const content = e.target.result;
-                const importedNames = content.split(/\r?\n/)
-                                          .map(name => name.trim())
-                                          .filter(name => name !== '');
+                const importedNames = content.split(/\r?\n/) // Split by newline
+                                          .map(name => name.trim()) // Trim whitespace
+                                          .filter(name => name !== ''); // Remove empty lines
 
                 if (importedNames.length === 0) {
                     showMessage('No names found in the selected file.', 'info');
@@ -1366,7 +1397,7 @@
 
                 let newNamesAddedCount = 0;
                 importedNames.forEach(importedName => {
-                    if (!names.includes(importedName)) {
+                    if (!names.includes(importedName)) { // Add only if not already present
                         names.push(importedName);
                         newNamesAddedCount++;
                     }
@@ -1374,8 +1405,8 @@
 
                 if (newNamesAddedCount > 0) {
                     saveNames();
-                    renderNameList(searchNameInputElement.value);
-                    rebuildAndRenderSummary();
+                    renderNameList(searchNameInputElement.value); // Update display
+                    rebuildAndRenderSummary(); // Update summary
                     showMessage(`${newNamesAddedCount} new name(s) imported successfully!`, 'success');
                 } else {
                     showMessage('All names from the file already exist in the list.', 'info');
@@ -1384,12 +1415,12 @@
                 console.error("Error importing name list:", error);
                 showMessage('Error processing the name list file.', 'error');
             } finally {
-                event.target.value = '';
+                event.target.value = ''; // Reset file input
             }
         };
         reader.onerror = () => {
             showMessage('Failed to read the name list file.', 'error');
-            event.target.value = '';
+            event.target.value = ''; // Reset file input
         };
         reader.readAsText(file);
     }
@@ -1404,24 +1435,26 @@
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                 const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName];
+                // Generate HTML table from sheet, making cells editable
                 const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { editable: true, raw: false });
-                tableCount++;
+                tableCount++; // Increment global table counter
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
-                const importedTableName = file.name.replace(/\.xlsx?/i, '') || `Imported ${tableCount}`;
+                const importedTableName = file.name.replace(/\.xlsx?/i, '') || `Imported ${tableCount}`; // Use filename as table name
                 const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
                 const importedTableElement = tempDiv.querySelector('table');
                 if (importedTableElement) {
                     importedTableElement.id = newTableId;
                     importedTableElement.dataset.tableName = importedTableName;
+                    // Ensure all imported cells are contenteditable
                     importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
-                    addTabButton(newTableId, importedTableName); switchTable(newTableId);
+                    addTabButton(newTableId, importedTableName); switchTable(newTableId); // Add tab and switch
                     showMessage('Excel data imported into a new table!', 'success');
                 } else { showMessage('Could not parse table from Excel.', 'error');
                 }
             } catch (error) { console.error("Excel import error:", error);
                 showMessage('Error processing Excel file.', 'error'); }
-            finally { event.target.value = '';
+            finally { event.target.value = ''; // Reset file input
             }
         };
         reader.readAsArrayBuffer(file);
@@ -1429,27 +1462,28 @@
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
         if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
-        const tableName = tableToExport.dataset.tableName || activeTableId;
+        const tableName = tableToExport.dataset.tableName || activeTableId; // Use dataset name or ID
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
-        XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`); // Filename with date
         showMessage(`Table "${tableName}" exported.`, 'success');
     }
 
     // --- Summary Table Logic ---
     function rebuildAndRenderSummary() {
         console.log("--- rebuildAndRenderSummary called ---");
-        buildSummaryTableSkeleton();
-        updateSummaryTableData();
+        buildSummaryTableSkeleton(); // Build the structure (headers, rows for names)
+        updateSummaryTableData();    // Populate with data from schedule tables
         console.log("--- rebuildAndRenderSummary finished ---");
     }
 
     function parseTimeToMinutes(timeStr) {
-        if (typeof timeStr !== 'string') return Infinity;
+        if (typeof timeStr !== 'string') return Infinity; // Handle non-string inputs
+        // Regex to match HH:MM or HH.MM, allowing for optional leading zero on hour
         const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
         if (match) {
             return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
         }
-        return Infinity;
+        return Infinity; // Return Infinity if format is not matched, for sorting non-time strings last
     }
 
     function buildSummaryTableSkeleton() {
@@ -1458,22 +1492,25 @@
             console.error("Summary table element not found in buildSummaryTableSkeleton.");
             return;
         }
-        summaryTableElement.innerHTML = '';
+        summaryTableElement.innerHTML = ''; // Clear previous summary content
 
-        const summaryRowItems = new Set(names);
-        const summaryColumnHeadersSet = new Set();
+        const summaryRowItems = new Set(names); // Names for rows (unique)
+        const summaryColumnHeadersSet = new Set(); // Time slots for columns (unique)
 
+        // Collect all unique time headers from all schedule tables
         tablesContainer.querySelectorAll('table').forEach(table => {
             if (table.tHead && table.tHead.rows.length > 0) {
+                // Skip the first header cell (usually 'Class/Time')
                 Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => { 
                     const headerText = th.textContent.trim();
-                    if (headerText) {
+                    if (headerText) { // Add if not empty
                         summaryColumnHeadersSet.add(headerText);
                     }
                 });
             }
         });
         
+        // Ensure the special "10.15-10.30" slot is present for LAU/LISAH rule, if not already from tables
         const targetSlotForSpecialNamesInSkeleton = "10.15-10.30";
         if (!summaryColumnHeadersSet.has(targetSlotForSpecialNamesInSkeleton)) {
              summaryColumnHeadersSet.add(targetSlotForSpecialNamesInSkeleton);
@@ -1481,21 +1518,24 @@
         }
         console.log("BUILD: Summary column headers before sort:", JSON.stringify(Array.from(summaryColumnHeadersSet)));
 
-        const sortedSummaryRowHeaders = Array.from(summaryRowItems).sort((a,b) => a.localeCompare(b));
+        const sortedSummaryRowHeaders = Array.from(summaryRowItems).sort((a,b) => a.localeCompare(b)); // Sort names alphabetically
         
+        // Sort time headers chronologically, then alphabetically for non-time strings
         let rawColumnHeaders = Array.from(summaryColumnHeadersSet);
         rawColumnHeaders.sort((a, b) => {
             const timeA = parseTimeToMinutes(a);
             const timeB = parseTimeToMinutes(b);
-            if (timeA !== Infinity && timeB !== Infinity) { return timeA - timeB; }
-            else if (timeA !== Infinity) { return -1; }
-            else if (timeB !== Infinity) { return 1; }
-            return a.localeCompare(b);
+            if (timeA !== Infinity && timeB !== Infinity) { return timeA - timeB; } // Both are times
+            else if (timeA !== Infinity) { return -1; } // Only A is time, sort A first
+            else if (timeB !== Infinity) { return 1; }  // Only B is time, sort B first
+            return a.localeCompare(b); // Both are not times (or parse failed), sort alphabetically
         });
 
-        const finalSummaryColumnHeaders = ['Name/Subject', ...rawColumnHeaders];
+        // *** MODIFICATION: Set first column header to "Nama/Masa" ***
+        const finalSummaryColumnHeaders = ['Nama/Masa', ...rawColumnHeaders]; 
         console.log("BUILD: Final sorted summary column headers:", JSON.stringify(finalSummaryColumnHeaders));
 
+        // Create summary table header row
         const thead = summaryTableElement.createTHead();
         const headerRowForSummary = thead.insertRow();
         finalSummaryColumnHeaders.forEach(headerText => {
@@ -1504,15 +1544,22 @@
             headerRowForSummary.appendChild(th);
         });
 
+        // Create summary table body rows (one for each name)
         const tbody = summaryTableElement.createTBody();
         if (sortedSummaryRowHeaders.length === 0) {
-            // ... (no items message)
+            // Optional: Add a placeholder row if no names are present
+            // const tr = tbody.insertRow();
+            // const td = tr.insertCell();
+            // td.textContent = "No names in the list to summarize.";
+            // td.colSpan = finalSummaryColumnHeaders.length;
+            // td.style.textAlign = 'center';
         } else {
             sortedSummaryRowHeaders.forEach(name => {
                 const tr = tbody.insertRow();
-                tr.insertCell().textContent = name;
+                tr.insertCell().textContent = name; // First cell is the name
+                // Add empty cells for each time slot column
                 for (let i = 1; i < finalSummaryColumnHeaders.length; i++) {
-                    tr.insertCell().textContent = '';
+                    tr.insertCell().textContent = ''; // Initialize with empty string
                 }
             });
         }
@@ -1525,13 +1572,17 @@
             console.error("UPDATE: Summary table element or its head/body not ready.");
             return;
         }
+        // Check if the summary table body is empty or has a placeholder (e.g., "No items")
         if (summaryTableElement.tBodies.length === 0 || summaryTableElement.tBodies[0].rows.length === 0) {
+            // If a placeholder row exists (usually one cell spanning all columns)
             if (summaryTableElement.tBodies[0]?.rows[0]?.cells[0]?.colSpan > 1) {
                  console.log("UPDATE: Summary table has placeholder 'no items' row, skipping update for now.");
                  return;
             }
+            // If truly empty, might indicate an issue or that buildSummaryTableSkeleton needs to run first.
             console.log("UPDATE: Summary table body is empty, attempting to rebuild skeleton first.");
-            buildSummaryTableSkeleton(); 
+            buildSummaryTableSkeleton(); // Attempt to rebuild if it seems uninitialized
+            // Re-check after attempting rebuild
             if (!summaryTableElement.tBodies[0] || summaryTableElement.tBodies[0].rows.length === 0 ||
                 (summaryTableElement.tBodies[0].rows[0].cells.length === 1 && summaryTableElement.tBodies[0].rows[0].cells[0].colSpan > 1) ) {
                 console.error("UPDATE: Summary table still not properly structured after rebuild attempt.");
@@ -1540,22 +1591,26 @@
         }
 
         const summaryBody = summaryTableElement.tBodies[0];
+        // Get actual headers from the DOM of the summary table (should include "Nama/Masa" as first)
         const summaryTableActualColumnHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
         
         console.log("UPDATE: Names for summary rows:", JSON.stringify(names));
         console.log("UPDATE: Summary Table Headers (Raw from DOM):", JSON.stringify(Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent)));
         console.log("UPDATE: Summary Table Headers (Trimmed for matching):", JSON.stringify(summaryTableActualColumnHeaders));
-        const normalizedSummaryHeadersForLookup = summaryTableActualColumnHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,".")); // Normalize : to .
+        // Normalize headers for robust lookup (remove spaces, convert : to .)
+        const normalizedSummaryHeadersForLookup = summaryTableActualColumnHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
         console.log("UPDATE: Summary Table Headers (Fully Normalized for findIndex):", JSON.stringify(normalizedSummaryHeadersForLookup));
 
 
+        // Clear existing data and conflict highlights from summary cells (but not names in first col)
         Array.from(summaryBody.rows).forEach(summaryRow => {
-            Array.from(summaryRow.cells).slice(1).forEach(cell => {
+            Array.from(summaryRow.cells).slice(1).forEach(cell => { // Start from 2nd cell
                 cell.textContent = '';
                 cell.classList.remove('highlight-conflict');
             });
         });
 
+        // Iterate through each schedule table to populate the summary
         tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
             console.log(`UPDATE: Processing Schedule Table: ${scheduleTable.id} (${scheduleTable.dataset.tableName || 'N/A'})`);
             if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
@@ -1565,58 +1620,66 @@
             const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
             console.log("UPDATE: Current Schedule Table Headers (Trimmed):", JSON.stringify(currentScheduleTableHeaders));
 
+            // Iterate through data rows of the current schedule table
             Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow, rowIndex) => {
-                const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim();
-                if (!classIdentifier) return;
+                const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim(); // e.g., "5S1"
+                if (!classIdentifier) return; // Skip if no class identifier
                 
-                let visualColumnOffsetForDataCells = 0;
+                let visualColumnOffsetForDataCells = 0; // Tracks visual column index due to colSpans
 
+                // Iterate through cells in the schedule row (skip first cell - classIdentifier)
                 for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
                     const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
-                    const entryInScheduleCell = scheduleCell.textContent.trim();
+                    const entryInScheduleCell = scheduleCell.textContent.trim(); // Name found in schedule (e.g., "JAMES")
                     const cellColSpan = scheduleCell.colSpan || 1;
 
-                    if (entryInScheduleCell && names.includes(entryInScheduleCell)) {
+                    if (entryInScheduleCell && names.includes(entryInScheduleCell)) { // If cell has a recognized name
                         console.log(`  UPDATE: Found name '${entryInScheduleCell}' in schedule table '${scheduleTable.dataset.tableName}', class '${classIdentifier}', cell content '${scheduleCell.textContent}'`);
+                        // Handle colSpans: the name applies to all visual columns covered by this cell
                         for (let k = 0; k < cellColSpan; k++) {
-                            const actualHeaderIndexInScheduleTable = visualColumnOffsetForDataCells + k + 1;
+                            const actualHeaderIndexInScheduleTable = visualColumnOffsetForDataCells + k + 1; // +1 because schedule headers array includes the 'Class' col
 
                             if (actualHeaderIndexInScheduleTable < currentScheduleTableHeaders.length) {
-                                const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[actualHeaderIndexInScheduleTable];
+                                const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[actualHeaderIndexInScheduleTable]; // e.g., "09:00"
                                 console.log(`    UPDATE: Span part ${k}: Corresponds to schedule header '${scheduleColumnHeaderForThisCell}' (raw)`);
 
-                                let summaryColumnToUse = scheduleColumnHeaderForThisCell;
+                                let summaryColumnToUse = scheduleColumnHeaderForThisCell; // Default to the schedule's header
                                 const specialNames = ["LAU", "LISAH"];
                                 const targetSlotForSpecialNames = "10.15-10.30"; 
                                 const sourceSlotToShift = "10.30-12.00";   
 
-                                const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,"."); // Normalize : to .
-                                const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "").replace(/:/g,"."); // Ensure consistency
+                                // Normalize for comparison (remove spaces, convert : to .)
+                                const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
+                                const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "").replace(/:/g,".");
 
                                 console.log(`      UPDATE: Normalized schedule header: '${normalizedScheduleColumnHeader}'. Comparing with normalized source slot: '${normalizedSourceSlotToShift}'`);
 
+                                // Special rule for LAU/LISAH: if they are in "10.30-12.00", move them to "10.15-10.30" in summary
                                 if (specialNames.includes(entryInScheduleCell) && normalizedScheduleColumnHeader === normalizedSourceSlotToShift) {
                                     summaryColumnToUse = targetSlotForSpecialNames; 
                                     console.log(`        UPDATE: SPECIAL RULE TRIGGERED for '${entryInScheduleCell}'. Original schedule slot '${scheduleColumnHeaderForThisCell}' matched source '${sourceSlotToShift}'. Shifting to summary slot '${targetSlotForSpecialNames}'.`);
                                 }
 
+                                // Find the target row in the summary table for this name
                                 const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
 
                                 if (targetSummaryRow) {
-                                    const normalizedSummaryColumnToUseForLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,"."); // Normalize : to .
+                                    // Find the target column index in the summary table
+                                    const normalizedSummaryColumnToUseForLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
                                     const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColumnToUseForLookup);
                                     
                                     console.log(`        UPDATE: Target summary row for '${entryInScheduleCell}'. Attempting to use summary column '${summaryColumnToUse}' (normalized for lookup: '${normalizedSummaryColumnToUseForLookup}').`);
                                     console.log(`        UPDATE: Index found in summary headers: ${targetSummaryColumnCellIndex}. (Lookup was against: ${JSON.stringify(normalizedSummaryHeadersForLookup)})`);
 
-                                    if (targetSummaryColumnCellIndex > 0) {
+                                    // targetSummaryColumnCellIndex > 0 because index 0 is "Nama/Masa"
+                                    if (targetSummaryColumnCellIndex > 0) { 
                                         const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
                                         console.log(`          UPDATE: Updating summary cell: Row='${entryInScheduleCell}', ColHeader='${summaryTableActualColumnHeaders[targetSummaryColumnCellIndex]}', CurrentContent='${summaryCellToUpdate.textContent}'`);
                                         let existingClassesInSummaryCell = [];
                                         if (summaryCellToUpdate.textContent.trim() !== '') {
                                             existingClassesInSummaryCell = summaryCellToUpdate.textContent.trim().split(',')
                                                                             .map(s => s.trim())
-                                                                            .filter(s => s !== '');
+                                                                            .filter(s => s !== ''); // Remove empty strings from split
                                         }
                                         if (!existingClassesInSummaryCell.includes(classIdentifier)) {
                                             existingClassesInSummaryCell.push(classIdentifier);
@@ -1626,29 +1689,30 @@
                                             console.log(`            UPDATE: Class '${classIdentifier}' already present in summary cell.`);
                                         }
                                     } else {
-                                         console.warn(`        UPDATE WARN: Could not find summary column for '${summaryColumnToUse}' (normalized for lookup: '${normalizedSummaryColumnToUseForLookup}') for name '${entryInScheduleCell}'.`);
+                                         console.warn(`        UPDATE WARN: Could not find summary column for '${summaryColumnToUse}' (normalized for lookup: '${normalizedSummaryColumnToUseForLookup}') for name '${entryInScheduleCell}'. This might happen if a schedule header doesn't exist in the summary table after special rule processing or due to new headers.`);
                                     }
                                 } else {
-                                     console.warn(`      UPDATE WARN: Could not find summary row for name '${entryInScheduleCell}'.`);
+                                     console.warn(`      UPDATE WARN: Could not find summary row for name '${entryInScheduleCell}'. Ensure name exists in the managed name list.`);
                                 }
                             }
                         }
                     }
-                    visualColumnOffsetForDataCells += cellColSpan;
+                    visualColumnOffsetForDataCells += cellColSpan; // Advance by the colspan of the current schedule cell
                 }
             });
         });
 
+        // Highlight conflicts (multiple classes in one summary cell)
         Array.from(summaryBody.rows).forEach(summaryRow => {
             Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
-                if (cellIndex > 0) {
+                if (cellIndex > 0) { // Skip the name column
                     const cellText = cell.textContent.trim();
-                    if (cellText.includes(',')) {
+                    if (cellText.includes(',')) { // If multiple classes are listed
                         const classesListed = cellText.split(',')
                                                 .map(s => s.trim())
                                                 .filter(s => s !== '');
                         const uniqueClasses = new Set(classesListed);
-                        if (uniqueClasses.size > 1) {
+                        if (uniqueClasses.size > 1) { // More than one unique class means a conflict
                             cell.classList.add('highlight-conflict');
                         }
                     }
