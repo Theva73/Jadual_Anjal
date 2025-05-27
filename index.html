@@ -130,7 +130,7 @@
             border-color: #20c997;}
         #renameTableBtn { background-color: #6c757d; color: white;
             border-color: #6c757d;}
-        #deleteTableBtn { background-color: #dc3545; color: white; /* Applied .delete-btn style via specific ID */
+        #deleteTableBtn { background-color: #dc3545; color: white;
             border-color: #dc3545;}
         #nameListBtn { background-color: #fd7e14; color: white;
             border-color: #fd7e14;}
@@ -231,7 +231,18 @@
         .input-group { display: flex;
             margin-bottom: 10px;
         }
-        .input-group button { background-color: #28a745; color: white; border-color: #28a745;
+        .input-group button, #importNameListBtn { /* Style import button similar to add button */
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
+            padding: 8px 12px;
+            font-size: 1em;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #importNameListBtn {
+             margin-top: 10px; /* Add some space above the import button */
+             width: 100%; /* Make import button full width */
         }
         .custom-message-box {
             display: none;
@@ -317,6 +328,8 @@
                 <input id="newNameInput" placeholder="Add new name">
                 <button id="addNameBtnInModal">Add</button>
             </div>
+            <button id="importNameListBtn">📂 Import Names (.txt)</button>
+            <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
             <div id="nameList" style="margin-top:10px;max-height:200px;overflow-y:auto;"></div>
         </div>
     </div>
@@ -338,7 +351,7 @@
     let names = [];
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement; // Added nameListImportFileInputElement
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -368,7 +381,9 @@
         fileInputElement = document.getElementById('fileInput');
         directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn');
         closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard');
-        if (!tablesContainer || !tableTabs || !nameModal || !nameModalContent || !nameModalHeader || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement) {
+        nameListImportFileInputElement = document.getElementById('nameListImportFile'); // Initialize new file input
+
+        if (!tablesContainer || !tableTabs || !nameModal || !nameModalContent || !nameModalHeader || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement || !nameListImportFileInputElement) {
             console.error("Critical DOM elements missing. Application might not function correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements.</p>";
             return;
@@ -452,6 +467,11 @@
 
 
         document.getElementById('addNameBtnInModal').addEventListener('click', addNewNameToList);
+        // Event listener for the new import name list button
+        document.getElementById('importNameListBtn').addEventListener('click', () => nameListImportFileInputElement.click());
+        nameListImportFileInputElement.addEventListener('change', handleNameListImport);
+
+
         draftListElement.addEventListener('click', (e) => {
             const targetSpan = e.target.closest('.draft-item span');
             const targetButton = e.target.closest('.draft-item button');
@@ -588,7 +608,7 @@
                 const metaInfo = tableMeta[id] || {};
                 const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
                 table.dataset.tableName = name;
-                addTabButton(id, name); // This will now add dataset.tableId
+                addTabButton(id, name);
                 table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
             });
             activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
@@ -636,7 +656,7 @@
     function addTabButton(id, label) {
         const button = document.createElement('button');
         button.textContent = label;
-        button.dataset.tableId = id; // Store the table ID on the button
+        button.dataset.tableId = id;
         button.onclick = () => switchTable(id);
         tableTabs.appendChild(button);
         return button;
@@ -655,7 +675,7 @@
         activeTableId = id;
         tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
         tableTabs.querySelectorAll('button').forEach(b => {
-            b.classList.toggle('active', b.dataset.tableId === id); // Use dataset for reliable toggle
+            b.classList.toggle('active', b.dataset.tableId === id);
         });
         deselectAllTableCells();
         rebuildAndRenderSummary();
@@ -700,14 +720,12 @@
             return;
         }
 
-        const tableIdToRename = currentTab.dataset.tableId;
+        let tableIdToRename = currentTab.dataset.tableId;
         if (!tableIdToRename) {
-             // Fallback for older drafts that might not have dataset.tableId on button
             const onclickAttr = currentTab.getAttribute('onclick');
             const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
             if (match && match[1]) {
                 tableIdToRename = match[1];
-                 // Optionally, update the button's dataset here if it's missing for future calls
                 if(!currentTab.dataset.tableId) currentTab.dataset.tableId = tableIdToRename;
             } else {
                 showMessage('Could not identify table ID for renaming. Try switching tabs and trying again.', 'error');
@@ -728,19 +746,15 @@
             const trimmedNewName = newName.trim();
             currentTab.textContent = trimmedNewName;
             tableElement.dataset.tableName = trimmedNewName;
-            // Ensure activeTableId is also correctly set if it somehow got out of sync,
-            // though it should be correct if switchTable worked.
             if (activeTableId !== tableIdToRename) {
-                activeTableId = tableIdToRename; // Align if necessary
+                activeTableId = tableIdToRename;
             }
             showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
         } else if (newName && newName.trim() === oldName) {
             showMessage('New name is the same as the old name. No changes made.', 'info');
         } else if (newName === null) {
-            // User cancelled prompt
             showMessage('Rename cancelled.', 'info');
         } else {
-            // Empty name submitted
             showMessage('Invalid new name. Please enter a valid name.', 'error');
         }
     }
@@ -749,23 +763,21 @@
         if (tablesContainer.children.length <= 1) { showMessage('Cannot delete the last table.', 'error'); return;
         }
         const activeTab = tableTabs.querySelector('button.active');
-        // Use dataset.tableId from the active tab to get the correct table name
         const tableIdToDelete = activeTab ? activeTab.dataset.tableId : null;
         const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
         const tableName = tableElement ? tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
 
 
         if (customConfirm(`Delete table "${tableName}"?`)) {
-            if (tableElement) tableElement.remove(); else document.getElementById(activeTableId)?.remove(); // Fallback
+            if (tableElement) tableElement.remove(); else document.getElementById(activeTableId)?.remove();
             activeTab?.remove();
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) {
-                 // Extract ID from its dataset or onclick to switch
                 const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1];
                 switchTable(nextActiveId);
             } else {
                 activeTableId = null;
-                addNewTable(true); // Create a new default table if all are deleted
+                addNewTable(true);
             }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
@@ -1119,6 +1131,62 @@
         showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
     }
 
+    function handleNameListImport(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            showMessage('No file selected for import.', 'info');
+            return;
+        }
+        if (file.type !== 'text/plain') {
+            showMessage('Invalid file type. Please select a .txt file.', 'error');
+            event.target.value = ''; // Reset file input
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target.result;
+                const importedNames = content.split(/\r?\n/) // Split by new line (Windows or Unix)
+                                          .map(name => name.trim())
+                                          .filter(name => name !== ''); // Remove empty lines
+
+                if (importedNames.length === 0) {
+                    showMessage('No names found in the selected file.', 'info');
+                    return;
+                }
+
+                let newNamesAddedCount = 0;
+                importedNames.forEach(importedName => {
+                    if (!names.includes(importedName)) {
+                        names.push(importedName);
+                        newNamesAddedCount++;
+                    }
+                });
+
+                if (newNamesAddedCount > 0) {
+                    saveNames();
+                    renderNameList();
+                    rebuildAndRenderSummary(); // Update summary if names affect it
+                    showMessage(`${newNamesAddedCount} new name(s) imported successfully!`, 'success');
+                } else {
+                    showMessage('All names from the file already exist in the list.', 'info');
+                }
+            } catch (error) {
+                console.error("Error importing name list:", error);
+                showMessage('Error processing the name list file.', 'error');
+            } finally {
+                event.target.value = ''; // Reset file input to allow re-importing the same file
+            }
+        };
+        reader.onerror = () => {
+            showMessage('Failed to read the name list file.', 'error');
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+
     // --- Excel Export/Import ---
     function handleExcelFileImport(event) {
         const file = event.target.files[0];
@@ -1167,12 +1235,11 @@
 
     function parseTimeToMinutes(timeStr) {
         if (typeof timeStr !== 'string') return Infinity;
-        // Matches HH:MM or HH.MM or H:MM or H.MM at the start of the string
         const match = timeStr.match(/^(\d{1,2})[:.](\d{2})/);
         if (match) {
             return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
         }
-        return Infinity; // Non-time strings or unmatchable formats sort last
+        return Infinity;
     }
 
     function buildSummaryTableSkeleton() {
