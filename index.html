@@ -21,10 +21,10 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             background-color: #fff;
-            table-layout: auto; /* Allow table to expand as needed for non-wrapping headers */
+            table-layout: auto;
         }
         #tablesContainer {
-            overflow-x: auto; /* Add horizontal scroll if table becomes too wide */
+            overflow-x: auto;
         }
         #tablesContainer > table {
             display: none;
@@ -40,13 +40,13 @@
             border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            min-width: 100px; /* Adjusted min-width slightly */
+            min-width: 100px;
         }
         table th {
             background-color: #e9ecef;
             color: #495057;
             font-weight: bold;
-            white-space: nowrap; /* Prevent header text from wrapping */
+            white-space: nowrap;
         }
         td.selected, th.selected {
             outline: 3px solid #007bff;
@@ -130,7 +130,7 @@
             border-color: #20c997;}
         #renameTableBtn { background-color: #6c757d; color: white;
             border-color: #6c757d;}
-        #deleteTableBtn { background-color: #dc3545; color: white;
+        #deleteTableBtn { background-color: #dc3545; color: white; /* Applied .delete-btn style via specific ID */
             border-color: #dc3545;}
         #nameListBtn { background-color: #fd7e14; color: white;
             border-color: #fd7e14;}
@@ -588,7 +588,7 @@
                 const metaInfo = tableMeta[id] || {};
                 const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
                 table.dataset.tableName = name;
-                addTabButton(id, name);
+                addTabButton(id, name); // This will now add dataset.tableId
                 table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
             });
             activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
@@ -636,6 +636,7 @@
     function addTabButton(id, label) {
         const button = document.createElement('button');
         button.textContent = label;
+        button.dataset.tableId = id; // Store the table ID on the button
         button.onclick = () => switchTable(id);
         tableTabs.appendChild(button);
         return button;
@@ -653,7 +654,9 @@
         }
         activeTableId = id;
         tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
-        tableTabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes(`'${id}'`)));
+        tableTabs.querySelectorAll('button').forEach(b => {
+            b.classList.toggle('active', b.dataset.tableId === id); // Use dataset for reliable toggle
+        });
         deselectAllTableCells();
         rebuildAndRenderSummary();
     }
@@ -689,30 +692,82 @@
         switchTable(newTableId);
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
     }
+
     function promptAndRenameActiveTable() {
-        const currentTab = tableTabs.querySelector(`button.active`);
-        if (!currentTab) { showMessage('No active table to rename.', 'error'); return; }
-        const oldName = currentTab.textContent;
+        const currentTab = tableTabs.querySelector('button.active');
+        if (!currentTab) {
+            showMessage('No active table to rename. Please select a table.', 'error');
+            return;
+        }
+
+        const tableIdToRename = currentTab.dataset.tableId;
+        if (!tableIdToRename) {
+             // Fallback for older drafts that might not have dataset.tableId on button
+            const onclickAttr = currentTab.getAttribute('onclick');
+            const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
+            if (match && match[1]) {
+                tableIdToRename = match[1];
+                 // Optionally, update the button's dataset here if it's missing for future calls
+                if(!currentTab.dataset.tableId) currentTab.dataset.tableId = tableIdToRename;
+            } else {
+                showMessage('Could not identify table ID for renaming. Try switching tabs and trying again.', 'error');
+                return;
+            }
+        }
+        
+        const tableElement = document.getElementById(tableIdToRename);
+        if (!tableElement) {
+            showMessage(`Error: Table element for ID ${tableIdToRename} not found.`, 'error');
+            return;
+        }
+
+        const oldName = tableElement.dataset.tableName || currentTab.textContent;
         const newName = customPrompt('Enter new table name:', oldName);
-        if (newName && newName.trim() !== oldName) {
-            currentTab.textContent = newName.trim();
-            const tableElement = document.getElementById(activeTableId);
-            if (tableElement) tableElement.dataset.tableName = newName.trim();
-            showMessage(`Table renamed to "${newName.trim()}".`, 'success');
+
+        if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
+            const trimmedNewName = newName.trim();
+            currentTab.textContent = trimmedNewName;
+            tableElement.dataset.tableName = trimmedNewName;
+            // Ensure activeTableId is also correctly set if it somehow got out of sync,
+            // though it should be correct if switchTable worked.
+            if (activeTableId !== tableIdToRename) {
+                activeTableId = tableIdToRename; // Align if necessary
+            }
+            showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
+        } else if (newName && newName.trim() === oldName) {
+            showMessage('New name is the same as the old name. No changes made.', 'info');
+        } else if (newName === null) {
+            // User cancelled prompt
+            showMessage('Rename cancelled.', 'info');
+        } else {
+            // Empty name submitted
+            showMessage('Invalid new name. Please enter a valid name.', 'error');
         }
     }
+
     function confirmAndDeleteActiveTable() {
         if (tablesContainer.children.length <= 1) { showMessage('Cannot delete the last table.', 'error'); return;
         }
-        const activeTab = tableTabs.querySelector(`button.active`);
-        const tableName = activeTab ? activeTab.textContent : activeTableId;
+        const activeTab = tableTabs.querySelector('button.active');
+        // Use dataset.tableId from the active tab to get the correct table name
+        const tableIdToDelete = activeTab ? activeTab.dataset.tableId : null;
+        const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
+        const tableName = tableElement ? tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
+
+
         if (customConfirm(`Delete table "${tableName}"?`)) {
-            document.getElementById(activeTableId)?.remove();
+            if (tableElement) tableElement.remove(); else document.getElementById(activeTableId)?.remove(); // Fallback
             activeTab?.remove();
             const firstRemainingTab = tableTabs.querySelector('button');
-            if (firstRemainingTab) firstRemainingTab.click();
-            else { activeTableId = null; addNewTable(true); }
-            showMessage('Table deleted.', 'success');
+            if (firstRemainingTab) {
+                 // Extract ID from its dataset or onclick to switch
+                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1];
+                switchTable(nextActiveId);
+            } else {
+                activeTableId = null;
+                addNewTable(true); // Create a new default table if all are deleted
+            }
+            showMessage(`Table "${tableName}" deleted.`, 'success');
         }
     }
 
@@ -1112,11 +1167,12 @@
 
     function parseTimeToMinutes(timeStr) {
         if (typeof timeStr !== 'string') return Infinity;
-        const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
+        // Matches HH:MM or HH.MM or H:MM or H.MM at the start of the string
+        const match = timeStr.match(/^(\d{1,2})[:.](\d{2})/);
         if (match) {
             return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
         }
-        return Infinity;
+        return Infinity; // Non-time strings or unmatchable formats sort last
     }
 
     function buildSummaryTableSkeleton() {
