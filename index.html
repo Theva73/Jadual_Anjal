@@ -1088,7 +1088,7 @@
         }
     }
 
-    function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C"]');
+    function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C", "LAU", "LISAH"]'); // Added LAU and LISAH for easier testing
     }
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
 
@@ -1312,6 +1312,11 @@
                 });
             }
         });
+         // Ensure "10:15 - 10:30" is always an option for the summary if it's not already from a schedule table header
+        if (!summaryColumnHeadersSet.has("10:15 - 10:30")) {
+             summaryColumnHeadersSet.add("10:15 - 10:30");
+        }
+
 
         const sortedSummaryRowHeaders = Array.from(summaryRowItems).sort((a,b) => a.localeCompare(b));
         
@@ -1378,35 +1383,42 @@
             if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
                 return;
             }
-            // currentScheduleTableHeaders includes "Class" at index 0, then time slots
             const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
 
             Array.from(scheduleTable.tBodies[0].rows).forEach(scheduleDataRow => {
                 const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim();
                 if (!classIdentifier) return;
 
-                let visualColumnOffsetForDataCells = 0; // Tracks the 0-indexed visual column for data cells
+                let visualColumnOffsetForDataCells = 0; 
 
-                // Iterate data cells, starting from the first actual data cell (physical index 1)
                 for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
                     const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
                     const entryInScheduleCell = scheduleCell.textContent.trim();
                     const cellColSpan = scheduleCell.colSpan || 1;
 
                     if (entryInScheduleCell && names.includes(entryInScheduleCell)) {
-                        // This entry applies to all actual header columns it spans
                         for (let k = 0; k < cellColSpan; k++) {
-                            // actualHeaderIndexInScheduleTable is the index in currentScheduleTableHeaders
-                            // +1 because currentScheduleTableHeaders[0] is 'Class', data headers start at index 1
                             const actualHeaderIndexInScheduleTable = visualColumnOffsetForDataCells + k + 1;
 
                             if (actualHeaderIndexInScheduleTable < currentScheduleTableHeaders.length) {
                                 const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[actualHeaderIndexInScheduleTable];
+                                
+                                // MODIFICATION START: Determine the target summary column
+                                let summaryColumnToUse = scheduleColumnHeaderForThisCell;
+                                const specialNames = ["LAU", "LISAH"];
+                                const targetSlotForSpecialNames = "10:15 - 10:30";
+                                const sourceSlotToShift = "10:30 - 12:00";
+
+                                if (specialNames.includes(entryInScheduleCell) && scheduleColumnHeaderForThisCell === sourceSlotToShift) {
+                                    summaryColumnToUse = targetSlotForSpecialNames;
+                                }
+                                // MODIFICATION END
+
                                 const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
 
                                 if (targetSummaryRow) {
-                                    const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === scheduleColumnHeaderForThisCell);
-                                    if (targetSummaryColumnCellIndex > 0) {
+                                    const targetSummaryColumnCellIndex = summaryTableActualColumnHeaders.findIndex(h => h === summaryColumnToUse);
+                                    if (targetSummaryColumnCellIndex > 0) { // Ensure the target column exists in summary
                                         const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
                                         let existingClassesInSummaryCell = [];
                                         if (summaryCellToUpdate.textContent.trim() !== '') {
@@ -1423,7 +1435,7 @@
                             }
                         }
                     }
-                    visualColumnOffsetForDataCells += cellColSpan; // Advance the visual offset
+                    visualColumnOffsetForDataCells += cellColSpan; 
                 }
             });
         });
