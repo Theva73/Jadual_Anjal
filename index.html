@@ -1485,59 +1485,73 @@
         const specialNames = ["LAU", "LISAH"];
         const targetSlotForSpecialNames = "10.15-10.30";
         const sourceSlotToShift = "10.30-12.00";
-        const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "").replace(/:/g, ".");
+        // const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "").replace(/:/g, "."); // Not needed here, but for consistency in thought
 
         // First, collect all headers directly from schedule tables' theads
         tablesContainer.querySelectorAll('table').forEach(table => {
             if (table.tHead && table.tHead.rows.length > 0) {
-                Array.from(table.tHead.rows[0].cells).slice(1).forEach(th => {
+                // Iterate physical header cells, skipping the first one (e.g. "Class")
+                for (let hIdx = 1; hIdx < table.tHead.rows[0].cells.length; hIdx++) {
+                    const th = table.tHead.rows[0].cells[hIdx];
                     const headerText = th.textContent.trim();
                     if (headerText) {
                         summaryColumnHeadersSet.add(headerText);
                     }
-                });
+                }
             }
         });
-
+        
         // Then, check if the LAU/LISAH rule requires the special "10.15-10.30" slot
-        for (const table of tablesContainer.querySelectorAll('table')) {
-            if (laulisahRuleRequiresSpecialSlot) break; 
+        // This check needs to correctly identify the header for LAU/LISAH entries.
+        // We'll use the same improved header identification logic as in updateSummaryTableData for this check.
+        for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
+            if (laulisahRuleRequiresSpecialSlot) break;
+            if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
 
-            if (table.tHead && table.tHead.rows.length > 0 && table.tBodies[0]) {
-                const currentScheduleTableHeaders = Array.from(table.tHead.rows[0].cells).map(th => th.textContent.trim());
-                for (const scheduleDataRow of Array.from(table.tBodies[0].rows)) {
-                    if (laulisahRuleRequiresSpecialSlot) break;
+            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
+                if (laulisahRuleRequiresSpecialSlot) return;
+                let visualColumnOffsetForDataCells = 0;
 
-                    let visualColumnOffsetForDataCells = 0;
-                    for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
-                        if (laulisahRuleRequiresSpecialSlot) break;
+                for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
+                    if (laulisahRuleRequiresSpecialSlot) return;
+                    const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
+                    const entryInScheduleCell = scheduleCell.textContent.trim();
+                    const cellColSpan = scheduleCell.colSpan || 1;
 
-                        const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
-                        const entryInScheduleCell = scheduleCell.textContent.trim();
-                        const cellColSpan = scheduleCell.colSpan || 1;
+                    if (specialNames.includes(entryInScheduleCell)) {
+                        for (let k = 0; k < cellColSpan; k++) {
+                            const currentVisualDataColumnIndex = visualColumnOffsetForDataCells + k;
+                            let determinedScheduleColumnHeader = "";
+                            let coveredVisualDataColumns = 0;
+                            for (let hCellIdx = 1; hCellIdx < scheduleTable.tHead.rows[0].cells.length; hCellIdx++) {
+                                const headerCell = scheduleTable.tHead.rows[0].cells[hCellIdx];
+                                const headerColSpan = headerCell.colSpan || 1;
+                                if (currentVisualDataColumnIndex >= coveredVisualDataColumns &&
+                                    currentVisualDataColumnIndex < coveredVisualDataColumns + headerColSpan) {
+                                    determinedScheduleColumnHeader = headerCell.textContent.trim();
+                                    break;
+                                }
+                                coveredVisualDataColumns += headerColSpan;
+                            }
 
-                        if (specialNames.includes(entryInScheduleCell)) {
-                            for (let k = 0; k < cellColSpan; k++) {
-                                const actualHeaderIndexInScheduleTable = visualColumnOffsetForDataCells + k + 1;
-                                if (actualHeaderIndexInScheduleTable < currentScheduleTableHeaders.length) {
-                                    const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[actualHeaderIndexInScheduleTable];
-                                    const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
-                                    if (normalizedScheduleColumnHeader === normalizedSourceSlotToShift) {
-                                        laulisahRuleRequiresSpecialSlot = true;
-                                        break; 
-                                    }
+                            if (determinedScheduleColumnHeader) {
+                                const normalizedScheduleColumnHeader = determinedScheduleColumnHeader.replace(/\s/g, "").replace(/:/g,".");
+                                const normalizedSourceSlotToShiftRule = sourceSlotToShift.replace(/\s/g, "").replace(/:/g,".");
+                                if (normalizedScheduleColumnHeader === normalizedSourceSlotToShiftRule) {
+                                    laulisahRuleRequiresSpecialSlot = true;
+                                    return; // Exit k loop and parent loops if rule triggered
                                 }
                             }
                         }
-                        visualColumnOffsetForDataCells += cellColSpan;
                     }
+                    visualColumnOffsetForDataCells += cellColSpan;
                 }
-            }
+            });
         }
         
         if (laulisahRuleRequiresSpecialSlot) {
-            summaryColumnHeadersSet.add(targetSlotForSpecialNames); // Add if rule triggered
-            console.log(`BUILD: LAU/LISAH rule triggered or slot exists. Ensuring '${targetSlotForSpecialNames}' is in summary headers.`);
+            summaryColumnHeadersSet.add(targetSlotForSpecialNames); 
+            console.log(`BUILD: LAU/LISAH rule triggered. Ensuring '${targetSlotForSpecialNames}' is in summary headers.`);
         }
         console.log("BUILD: Summary column headers before sort (after LAU/LISAH check):", JSON.stringify(Array.from(summaryColumnHeadersSet)));
         
@@ -1591,17 +1605,13 @@
         
         const summaryBody = summaryTableElement.tBodies[0];
         if (!summaryBody || summaryBody.rows.length === 0) {
-             // If the body is empty (e.g. "No names scheduled" message is there, or truly empty)
-            if(summaryBody.rows[0]?.cells[0]?.colSpan > 1){ // Check for the placeholder message
-                 console.log("UPDATE: Summary table has placeholder 'no scheduled names' row, data update skipped as no rows to populate.");
+            if(summaryBody.rows[0]?.cells[0]?.colSpan > 1){ 
+                 console.log("UPDATE: Summary table has placeholder 'no scheduled names' row, data update skipped.");
                  return;
             }
-            // If it's empty because no names were scheduled, buildSummaryTableSkeleton would have handled it.
-            // If it's unexpectedly empty here, it's an issue.
             console.log("UPDATE: Summary table body is empty or not correctly structured for data population.");
             return;
         }
-
 
         const summaryTableActualColumnHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
         const normalizedSummaryHeadersForLookup = summaryTableActualColumnHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
@@ -1609,8 +1619,7 @@
         console.log("UPDATE: Summary Table Headers (Fully Normalized for findIndex):", JSON.stringify(normalizedSummaryHeadersForLookup));
 
         Array.from(summaryBody.rows).forEach(summaryRow => {
-            // Only clear data cells if it's not the placeholder row
-            if (summaryRow.cells.length > 1) { // Placeholder row has 1 cell with colspan
+            if (summaryRow.cells.length > 1) { 
                 Array.from(summaryRow.cells).slice(1).forEach(cell => { 
                     cell.textContent = '';
                     cell.classList.remove('highlight-conflict');
@@ -1624,7 +1633,7 @@
                 console.log("UPDATE: Skipping schedule table due to missing head/body.");
                 return;
             }
-            const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+            // const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim()); // Not directly used in fixed logic
 
             Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow, rowIndex) => {
                 const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim(); 
@@ -1639,48 +1648,73 @@
 
                     if (entryInScheduleCell && names.includes(entryInScheduleCell)) { 
                         for (let k = 0; k < cellColSpan; k++) {
-                            const actualHeaderIndexInScheduleTable = visualColumnOffsetForDataCells + k + 1; 
+                            // currentVisualDataColumnIndex is the 0-indexed visual position of this segment of the data cell,
+                            // relative to the start of the data columns (0 for first data column).
+                            const currentVisualDataColumnIndex = visualColumnOffsetForDataCells + k;
+                            
+                            let determinedScheduleColumnHeader = "";
+                            let coveredVisualDataColumns = 0; // Tracks visual span of headers for data columns
 
-                            if (actualHeaderIndexInScheduleTable < currentScheduleTableHeaders.length) {
-                                const scheduleColumnHeaderForThisCell = currentScheduleTableHeaders[actualHeaderIndexInScheduleTable]; 
-                                let summaryColumnToUse = scheduleColumnHeaderForThisCell; 
-                                const specialNames = ["LAU", "LISAH"];
-                                const targetSlotForSpecialNames = "10.15-10.30"; 
-                                const sourceSlotToShift = "10.30-12.00";   
-                                const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
-                                const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "").replace(/:/g,".");
+                            // Iterate through physical header cells in the schedule table, skipping the first one (e.g., "Class")
+                            // to find which header covers the currentVisualDataColumnIndex.
+                            for (let hCellIdx = 1; hCellIdx < scheduleTable.tHead.rows[0].cells.length; hCellIdx++) {
+                                const headerCell = scheduleTable.tHead.rows[0].cells[hCellIdx];
+                                const headerColSpan = headerCell.colSpan || 1;
 
-                                if (specialNames.includes(entryInScheduleCell) && normalizedScheduleColumnHeader === normalizedSourceSlotToShift) {
-                                    summaryColumnToUse = targetSlotForSpecialNames; 
+                                if (currentVisualDataColumnIndex >= coveredVisualDataColumns &&
+                                    currentVisualDataColumnIndex < coveredVisualDataColumns + headerColSpan) {
+                                    determinedScheduleColumnHeader = headerCell.textContent.trim();
+                                    break; // Found the header for this visual data column
                                 }
-
-                                const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
-
-                                if (targetSummaryRow && targetSummaryRow.cells.length > 1) { // Ensure it's not the placeholder row
-                                    const normalizedSummaryColumnToUseForLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
-                                    const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColumnToUseForLookup);
-                                    
-                                    if (targetSummaryColumnCellIndex > 0) { 
-                                        const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
-                                        let existingClassesInSummaryCell = [];
-                                        if (summaryCellToUpdate.textContent.trim() !== '') {
-                                            existingClassesInSummaryCell = summaryCellToUpdate.textContent.trim().split(',')
-                                                                            .map(s => s.trim())
-                                                                            .filter(s => s !== ''); 
-                                        }
-                                        if (!existingClassesInSummaryCell.includes(classIdentifier)) {
-                                            existingClassesInSummaryCell.push(classIdentifier);
-                                            summaryCellToUpdate.textContent = existingClassesInSummaryCell.join(', ');
-                                        }
-                                    } else {
-                                         console.warn(`        UPDATE WARN: Could not find summary column for '${summaryColumnToUse}' (normalized: '${normalizedSummaryColumnToUseForLookup}') for name '${entryInScheduleCell}'.`);
-                                    }
-                                } else if (targetSummaryRow && targetSummaryRow.cells.length === 1) {
-                                    console.log(`UPDATE: Skipping update for name '${entryInScheduleCell}' as summary table seems to have placeholder row.`);
-                                } else {
-                                     console.warn(`      UPDATE WARN: Could not find summary row for name '${entryInScheduleCell}'. This name might not be scheduled or an issue exists.`);
-                                }
+                                coveredVisualDataColumns += headerColSpan;
                             }
+                            
+                            let scheduleColumnHeaderForThisCell = determinedScheduleColumnHeader;
+
+                            if (!scheduleColumnHeaderForThisCell) {
+                                console.warn(`        UPDATE WARN: Could not determine schedule column header for visual data column index ${currentVisualDataColumnIndex} in table ${scheduleTable.id}, row ${rowIndex}, cell content "${entryInScheduleCell}". Skipping this segment.`);
+                                continue; // Skip this segment of the cell if header can't be found
+                            }
+                            
+                            // --- Original logic for special names and summary placement ---
+                            let summaryColumnToUse = scheduleColumnHeaderForThisCell; 
+                            const specialNames = ["LAU", "LISAH"];
+                            const targetSlotForSpecialNames = "10.15-10.30"; 
+                            const sourceSlotToShift = "10.30-12.00";   
+                            const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
+                            const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "").replace(/:/g,".");
+
+                            if (specialNames.includes(entryInScheduleCell) && normalizedScheduleColumnHeader === normalizedSourceSlotToShift) {
+                                summaryColumnToUse = targetSlotForSpecialNames; 
+                            }
+
+                            const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
+
+                            if (targetSummaryRow && targetSummaryRow.cells.length > 1) {
+                                const normalizedSummaryColumnToUseForLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
+                                const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColumnToUseForLookup);
+                                
+                                if (targetSummaryColumnCellIndex > 0) { 
+                                    const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
+                                    let existingClassesInSummaryCell = [];
+                                    if (summaryCellToUpdate.textContent.trim() !== '') {
+                                        existingClassesInSummaryCell = summaryCellToUpdate.textContent.trim().split(',')
+                                                                        .map(s => s.trim())
+                                                                        .filter(s => s !== ''); 
+                                    }
+                                    if (!existingClassesInSummaryCell.includes(classIdentifier)) {
+                                        existingClassesInSummaryCell.push(classIdentifier);
+                                        summaryCellToUpdate.textContent = existingClassesInSummaryCell.join(', ');
+                                    }
+                                } else {
+                                     console.warn(`        UPDATE WARN: Could not find summary column for '${summaryColumnToUse}' (normalized: '${normalizedSummaryColumnToUseForLookup}') for name '${entryInScheduleCell}'.`);
+                                }
+                            } else if (targetSummaryRow && targetSummaryRow.cells.length === 1) {
+                                console.log(`UPDATE: Skipping update for name '${entryInScheduleCell}' as summary table seems to have placeholder row.`);
+                            } else {
+                                 console.warn(`      UPDATE WARN: Could not find summary row for name '${entryInScheduleCell}'. This name might not be scheduled or an issue exists.`);
+                            }
+                            // --- End of original logic ---
                         }
                     }
                     visualColumnOffsetForDataCells += cellColSpan; 
@@ -1689,7 +1723,7 @@
         });
 
         Array.from(summaryBody.rows).forEach(summaryRow => {
-            if (summaryRow.cells.length > 1) { // Skip placeholder row
+            if (summaryRow.cells.length > 1) { 
                 Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
                     if (cellIndex > 0) { 
                         const cellText = cell.textContent.trim();
