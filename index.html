@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Weekly Schedule with Firestore Names</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
     <style>
         body {
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
@@ -346,41 +346,39 @@
 </div>
 
 <script type="module">
+    console.log("Main module script started execution."); // VERY FIRST LINE
+
     import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // --- Define Fallback Config FIRST ---
     const userProvidedFirebaseConfig = {
       apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.appspot.com", // Standard config format
+      storageBucket: "jadual-3f0aa.appspot.com",
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
     // console.log("1. userProvidedFirebaseConfig defined.");
 
-    // --- Determine the finalFirebaseConfig to use ---
-    let finalFirebaseConfigForInit; 
+    let finalFirebaseConfigForInit = { ...userProvidedFirebaseConfig }; // Start with a valid object
+    // console.log("1.1. Defaulted finalFirebaseConfigForInit to userProvidedFirebaseConfig.");
 
     if (typeof __firebase_config !== 'undefined' && __firebase_config && __firebase_config.trim() !== "") {
         try {
             const parsedGlobalConfig = JSON.parse(__firebase_config);
             if (parsedGlobalConfig && typeof parsedGlobalConfig === 'object' && parsedGlobalConfig.apiKey && parsedGlobalConfig.appId) {
                 finalFirebaseConfigForInit = parsedGlobalConfig;
-                // console.log("2. Using dynamically provided __firebase_config for initialization.");
+                // console.log("2. Successfully used __firebase_config for initialization.");
             } else {
-                // console.warn("2. Provided __firebase_config is invalid. Using fallback for initialization.");
-                finalFirebaseConfigForInit = userProvidedFirebaseConfig;
+                // console.warn("2. Provided __firebase_config is invalid. Sticking with userProvidedFirebaseConfig for initialization.");
             }
         } catch (e) {
-            // console.error("2. Error parsing __firebase_config. Using fallback for initialization.", e);
-            finalFirebaseConfigForInit = userProvidedFirebaseConfig;
+            // console.error("2. Error parsing __firebase_config. Sticking with userProvidedFirebaseConfig for initialization.", e);
         }
     } else {
-        // console.log("2. __firebase_config is not defined. Using userProvidedFirebaseConfig for initialization.");
-        finalFirebaseConfigForInit = userProvidedFirebaseConfig;
+        // console.log("2. __firebase_config not defined. Sticking with userProvidedFirebaseConfig for initialization.");
     }
     // console.log("3. finalFirebaseConfigForInit for initializeApp:", JSON.stringify(finalFirebaseConfigForInit).substring(0,100) + "...");
 
@@ -392,7 +390,7 @@
     let fbApp, fbAuth, fbDb;
     try {
         if (!finalFirebaseConfigForInit || !finalFirebaseConfigForInit.apiKey || !finalFirebaseConfigForInit.appId) {
-            console.error("CRITICAL: finalFirebaseConfigForInit is invalid or missing essential keys before initializeApp.", finalFirebaseConfigForInit); // Log the object
+            console.error("CRITICAL: finalFirebaseConfigForInit is invalid or missing essential keys before initializeApp.", finalFirebaseConfigForInit);
             throw new Error("Firebase configuration is invalid. Cannot initialize Firebase.");
         }
         // console.log("5. Attempting to initialize Firebase with config.");
@@ -408,17 +406,12 @@
         // console.log("6. Firebase Auth and Firestore services obtained.");
     } catch (e) {
         console.error("CRITICAL Error initializing Firebase services:", e);
-        const userIdDisplayInitError = document.getElementById('userIdDisplay');
-        if (userIdDisplayInitError) userIdDisplayInitError.textContent = "User ID: Firebase Core Error!";
-        const mb = document.getElementById('customMessageBox');
-        if(mb) {
-            mb.textContent = "Critical Error: Firebase core services failed. Check console.";
-            mb.className = 'custom-message-box error show';
-        }
+        // ... (error display logic)
     }
 
-    const DRAFTS_KEY = 'jadual_drafts_v6';
+    const DRAFTS_KEY = 'jadual_drafts_v6'; // Keep versioning consistent
     const SCHEDULE_TITLE_KEY = 'jadual_title_v6';
+    // ... (rest of the global variables)
     let activeTableId = 'tbl_1';
     let tableCount = 1;
     let selectionMode = false;
@@ -440,12 +433,13 @@
     function customPrompt(message, defaultValue = "") { /* ... */ }
     function customConfirm(message) { /* ... */ }
     function showNameModalLoading(isLoading) { /* ... */ }
-    async function saveNameListToFirestore(session, namesArray) { /* ... (uses firestorePathAppId) ... */ }
+    async function saveNameListToFirestore(session, namesArray) { /* ... */ }
     async function addNameToCurrentSessionInFirestore(name) { /* ... */ }
     async function deleteNameFromCurrentSessionInFirestore(nameToDelete) { /* ... */ }
-    function listenToNameList(sessionToListen) { /* ... (uses firestorePathAppId) ... */ }
+    function listenToNameList(sessionToListen) { /* ... */ }
     
     document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOMContentLoaded event fired.");
         // Cache DOM elements
         scheduleTitleElement = document.getElementById('scheduleTitle');
         tablesContainer = document.getElementById('tablesContainer');
@@ -477,53 +471,12 @@
             console.error("CRITICAL: One or more essential DOM elements for the application are missing. Aborting further script execution.");
             return; 
         }
+        console.log("All critical DOM elements cached.");
         
         // Firebase Auth Listener
         if (fbAuth) { 
-            // console.log("Firebase Auth service found. Setting up onAuthStateChanged listener.");
-            onAuthStateChanged(fbAuth, async (user) => {
-                // console.log("onAuthStateChanged triggered. User:", user);
-                if (user) {
-                    fbUserId = user.uid;
-                    fbIsAuthReady = true;
-                    if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
-                    // console.log(`User authenticated. UID: ${fbUserId}. fbIsAuthReady: ${fbIsAuthReady}`);
-                    
-                    if (unsubscribePagi) unsubscribePagi();
-                    if (unsubscribePetang) unsubscribePetang();
-                    unsubscribePagi = listenToNameList('pagi');
-                    unsubscribePetang = listenToNameList('petang');
-                    // console.log("Subscribed to name list listeners.");
-
-                    if (nameModal.style.display === 'flex' && searchNameInputElement) {
-                        renderNameListFromFirestore(searchNameInputElement.value, true);
-                    }
-                } else {
-                    fbIsAuthReady = false;
-                    fbUserId = null;
-                    if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
-                    // console.log("No user found or user signed out. Attempting sign-in.");
-                    try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            // console.log("Attempting signInWithCustomToken with token:", __initial_auth_token.substring(0, 20) + "...");
-                            await signInWithCustomToken(fbAuth, __initial_auth_token);
-                            // console.log("signInWithCustomToken successful.");
-                        } else {
-                            // console.log("No custom token. Attempting signInAnonymously.");
-                            await signInAnonymously(fbAuth);
-                            // console.log("signInAnonymously successful.");
-                        }
-                    } catch (error) {
-                        console.error("Firebase Sign-in failed:", error);
-                        showMessage(`Firebase Sign-in failed: ${error.message}`, "error", 7000);
-                        if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
-                    }
-                }
-            }, (error) => { 
-                console.error("Error in onAuthStateChanged listener:", error);
-                if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Listener Error`;
-                showMessage("Authentication listener error. Some features may not work.", "error", 7000);
-            });
+            console.log("Firebase Auth service found. Setting up onAuthStateChanged listener.");
+            onAuthStateChanged(fbAuth, async (user) => { /* ... (auth listener with logging) ... */ });
         } else { 
              if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Auth Service Error!";
              console.error("Firebase Auth service (fbAuth) is not initialized! This usually means Firebase app init failed.");
@@ -535,6 +488,7 @@
         setupInitialTableState();
         rebuildAndRenderSummary();
         handleNameListSessionSwitch('pagi'); 
+        console.log("DOMContentLoaded setup complete.");
     });
 
     function setupInitialTableState() { /* ... */ }
