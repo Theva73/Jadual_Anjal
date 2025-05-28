@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Weekly Schedule with Firestore Names</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             margin: 0;
-            background-color: #e9ecef;
+            background-color: #f0f2f5;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px;
+            padding: 10px; /* Reduced body padding for mobile */
             box-sizing: border-box;
-            font-size: 14px;
+            font-size: 14px; /* Base font size for mobile */
         }
         .main-container {
             width: 100%;
             max-width: 1400px;
             background-color: #ffffff;
-            padding: 15px;
+            padding: 15px; /* Reduced padding for mobile */
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0,0,0,0.08);
             box-sizing: border-box;
@@ -30,18 +30,18 @@
             color: #1c1e21;
             text-align: center;
             margin-top: 15px;
-            margin-bottom: 15px;
-            font-size: 1.5em;
+            margin-bottom: 15px; /* Adjusted margins */
+            font-size: 1.5em; /* Adjusted heading size for mobile */
         }
         #scheduleTitle {
-            font-size: 1.8em;
+            font-size: 1.8em; /* Adjusted for mobile */
             color: #0056b3;
             border-bottom: 2px solid #0056b3;
             padding-bottom: 8px;
         }
         #userIdDisplay {
             text-align: center;
-            font-size: 0.8em;
+            font-size: 0.8em; /* Adjusted for mobile */
             color: #555;
             margin-bottom: 15px;
             min-height: 1.2em;
@@ -53,59 +53,81 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             background-color: #fff;
-            table-layout: auto;
-            font-size: 0.85em;
+            table-layout: auto; 
+            font-size: 0.85em; /* Smaller font for tables on mobile */
         }
         #tablesContainer {
-            overflow-x: auto;
-            position: relative;
+            overflow-x: auto; 
+            position: relative; 
             width: 100%;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
-        #tablesContainer > table { display: none; }
-        #tablesContainer > table.active { display: table; }
-        #summaryTable { display: table; margin-top: 20px; font-size: 0.8em; }
-
+        #tablesContainer > table {
+            display: none; 
+        }
+        #tablesContainer > table.active {
+            display: table; 
+        }
+        #summaryTable {
+            display: table; 
+            margin-top: 20px;
+            font-size: 0.8em; /* Even smaller for summary if needed */
+        }
         th, td {
-            border: 1px solid #dee2e6; padding: 6px 8px; text-align: center;
-            min-width: 70px; box-sizing: border-box; word-break: break-word;
+            border: 1px solid #dee2e6; 
+            padding: 6px 8px; /* Reduced padding for mobile table cells */
+            text-align: center;
+            min-width: 70px; /* Reduced min-width for mobile */
+            box-sizing: border-box;
+            word-break: break-word; /* Allow words to break to prevent overflow */
         }
         table th {
-            background-color: #f8f9fa; color: #343a40; font-weight: 600;
-            white-space: normal; padding: 8px 5px;
+            background-color: #f8f9fa; 
+            color: #343a40; 
+            font-weight: 600; 
+            white-space: normal; /* Allow header text to wrap on mobile */
+            padding: 8px 5px; /* Adjusted header padding */
         }
-        td.selected, th.selected { outline: 2px solid #007bff; background-color: #dbeafe; }
-
+        td.selected, th.selected { 
+            outline: 2px solid #007bff; /* Thinner outline for mobile */
+            background-color: #dbeafe; 
+        }
         .bar {
-            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;
-            align-items: center; justify-content: center;
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 8px; /* Reduced gap for mobile */
+            margin-bottom: 15px;
+            align-items: center;
+            justify-content: center; 
         }
-        .bar button, .table-tabs button, .name-session-tabs button, #loadMoreNamesBtn {
-            padding: 8px 12px; font-size: 0.85em; border-radius: 6px; cursor: pointer;
-            border: 1px solid #ced4da; background-color: #fff;
-            transition: all 0.2s ease-in-out; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+        .bar button, .table-tabs button, .name-session-tabs button {
+            padding: 8px 12px; /* Reduced button padding for mobile */
+            font-size: 0.85em; /* Reduced button font size */
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid #ced4da;
+            background-color: #fff;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px; /* Reduced gap in buttons */
+            flex-shrink: 0; 
         }
-        .bar button:hover, .table-tabs button:hover, .name-session-tabs button:hover, #loadMoreNamesBtn:hover {
-            background-color: #f8f9fa; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transform: translateY(-1px);
+        .bar button:hover, .table-tabs button:hover, .name-session-tabs button:hover {
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Adjusted hover shadow */
+            transform: translateY(-1px); /* Subtle lift */
         }
-        .bar button:active, .table-tabs button:active, .name-session-tabs button:active, #loadMoreNamesBtn:active {
-            transform: translateY(0); box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        .bar button:active, .table-tabs button:active, .name-session-tabs button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-         #loadMoreNamesBtn {
-            display: block; 
-            margin: 10px auto 5px; 
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-            width: calc(100% - 20px); 
-            box-sizing: border-box;
-        }
-        #loadMoreNamesBtn:hover { background-color: #0056b3; }
 
-
-        #rowColManipulationBar button { padding: 6px 10px; }
+        #rowColManipulationBar button {
+            padding: 6px 10px; /* Further reduced for these specific buttons */
+        }
+        /* Specific button styling (colors remain the same) */
         #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;}
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
@@ -124,138 +146,242 @@
         #importDraftsBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;}
 
         .table-tabs {
-            margin-bottom: 10px; border-bottom: 2px solid #007bff; padding-bottom: 0;
-            display: flex; flex-wrap: wrap; gap: 5px;
+            margin-bottom: 10px; /* Adjusted margin */
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0;
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 5px; 
         }
         .table-tabs button {
-            background-color: transparent; border: none; border-bottom: 2px solid transparent;
-            border-radius: 6px 6px 0 0; color: #0056b3; font-weight: 500; padding: 8px 10px;
+            background-color: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 6px 6px 0 0;
+            color: #0056b3;
+            font-weight: 500;
+            padding: 8px 10px; /* Adjusted tab padding */
         }
-        .table-tabs button.active { background-color: #007bff; color: white; border-color: #007bff; }
+        .table-tabs button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
         
         .name-session-tabs {
-            margin-bottom: 10px; 
-            border-bottom: 2px solid #dee2e6; padding-bottom: 5px;
-            display: flex; flex-wrap: wrap; gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 5px; /* Adjusted padding */
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 5px;
         }
         .name-session-tabs button {
-            border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;
-            margin-bottom: -2px; padding: 8px 10px; font-size: 0.9em;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            border-bottom: none;
+            margin-bottom: -2px; 
+            padding: 8px 10px; /* Adjusted tab padding */
+            font-size: 0.9em; /* Slightly smaller for these tabs */
         }
         .name-session-tabs button.active {
-            background-color: #007bff; color: white; border-color: #007bff #007bff #fff; font-weight: bold;
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff #007bff #fff; 
+            font-weight: bold;
         }
 
-        #summaryTable th { background-color: #ffc107; color: #212529; }
-        #summaryTable td { background-color: #fff9e6; }
-        .highlight-conflict { background-color: #f8d7da !important; font-weight: bold; color: #721c24 !important; }
-
-        #nameModal {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: rgba(0,0,0,0.4); 
-            align-items: center; justify-content: center; pointer-events: none;
+        #summaryTable th {
+            background-color: #ffc107; 
+            color: #212529;
         }
-        #nameModalContent {
-            background-color: #fff; padding: 15px; border: 1px solid #ccc; 
-            width: 90%; max-width: 450px; border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.25); position: relative; 
-            pointer-events: auto; max-height: 75vh; 
-            display: flex; flex-direction: column; box-sizing: border-box;
+        #summaryTable td {
+            background-color: #fff9e6; 
         }
-        #nameModalContent.dragging { cursor: grabbing; }
-        #nameModalHeader {
-            padding-bottom: 10px; border-bottom: 1px solid #e9ecef; 
-            margin-bottom: 10px; font-size: 1.2em;
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: grab;
-        }
-        #nameModalHeader h3 { margin: 0; }
-        .modal-close-btn { 
-            font-size: 1.8rem; background: none; border: none; cursor: pointer;
-            padding: 0 5px; line-height: 1; color: #888;
-        }
-        .modal-close-btn:hover { color: #333; }
-
-        #nameModal .input-group { display: flex; margin-bottom: 8px; }
-        #nameModal #newNameInput { 
-            flex-grow: 1; padding: 8px; border: 1px solid #ccc; 
-            border-radius: 4px 0 0 4px; font-size: 0.9em;
-        }
-        #nameModal .input-group button {
-            border-radius: 0 4px 4px 0; padding: 8px 12px; font-size: 0.9em;
-        }
-        #nameModal #importNameListBtn { 
-            display: block; width: 100%; margin-bottom: 8px; font-size: 0.9em;
-        }
-        #nameModal #searchNameInput {
-            width: 100%; padding: 8px; box-sizing: border-box;
-            border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px;
-            font-size: 0.9em;
+        .highlight-conflict { 
+            background-color: #f8d7da !important;
+            font-weight: bold;
+            color: #721c24 !important;
         }
 
-        #nameList {
-            flex-grow: 1; overflow-y: auto; border: 1px solid #eee;
-            border-radius: 4px; padding: 5px; min-height: 100px;
-            margin-bottom: 5px; 
+        .modal {
+            display: none; 
+            position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: hidden; 
+            background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+            pointer-events: none; 
         }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px; /* Reduced padding for mobile modal */
+            border: 1px solid #ccc; width: 90%; max-width: 500px; /* Slightly reduced max-width for mobile */
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3); position: relative;
+            pointer-events: auto; 
+            max-height: 85vh; /* Adjusted max height */
+            overflow-y: auto; 
+            box-sizing: border-box;
+        }
+        .modal-content.dragging { transform: none; }
+        .modal-header {
+            padding-bottom: 10px; /* Adjusted padding */
+            border-bottom: 1px solid #e9ecef; margin-bottom: 15px; /* Adjusted margin */
+            font-size: 1.2em; /* Adjusted font size */
+        }
+        .modal-close-btn {
+            font-size: 1.6rem; /* Adjusted font size */
+        }
+
         .name-item {
-            padding: 7px 10px; display: flex; justify-content: space-between;
-            align-items: center; border-bottom: 1px solid #f0f0f0; cursor: pointer;
-            transition: background-color 0.15s ease;
-        }
-        .name-item:last-child { border-bottom: none; }
-        .name-item:hover { background-color: #f9f9f9; }
-        .name-item span { flex-grow: 1; font-size: 0.9em; }
-        .name-item span.highlighted {
-            background-color: #007bff; color: white; font-weight: bold;
-            padding: 3px 6px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            padding: 8px 6px; /* Adjusted padding */
         }
         .name-item button {
-            padding: 4px 8px; font-size: 0.75em; background-color: #f8f9fa;
-            border: 1px solid #ced4da; color: #dc3545; border-radius: 4px;
+            padding: 5px 10px; /* Adjusted padding */
+            font-size: 0.8em; /* Adjusted font size */
         }
-        .name-item button:hover { background-color: #e9ecef; }
+
+        #newNameInput, #searchNameInput {
+            padding: 8px; /* Adjusted padding */
+            width: calc(100% - 90px); /* Adjusted width */
+        }
+         #searchNameInput {
+            margin-bottom: 10px; /* Adjusted margin */
+         }
+        .input-group button, #importNameListBtn {
+            padding: 8px 12px; /* Adjusted padding */
+            font-size: 0.9em; /* Adjusted font size */
+        }
+        #nameList {
+            margin-top:10px; /* Adjusted margin */
+            max-height:200px; /* Adjusted max height */
+            column-count: 1; /* Default to single column on mobile */
+            column-gap: 15px;
+        }
         
+        .custom-message-box {
+            padding: 12px 20px; /* Adjusted padding */
+            font-size: 0.9em; /* Adjusted font size */
+            max-width: 90%; /* Ensure it fits well */
+        }
+
+        /* Desktop and larger screen adjustments */
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+                font-size: 16px; /* Restore base font size */
+            }
+            .main-container {
+                padding: 25px;
+            }
+            h2, h3 {
+                font-size: 2em; /* Restore heading size */
+            }
+            #scheduleTitle {
+                font-size: 2.2em;
+            }
+            #userIdDisplay {
+                font-size: 0.9em;
+            }
+            table {
+                font-size: 1em; /* Restore table font size */
+            }
+            #summaryTable {
+                font-size: 0.95em;
+            }
+            th, td {
+                padding: 12px 15px; /* Restore padding */
+                min-width: 100px; /* Restore min-width */
+            }
+            table th {
+                white-space: nowrap; /* No wrap for headers on desktop */
+                 padding: 12px 15px;
+            }
+            .bar {
+                gap: 10px;
+            }
+            .bar button, .table-tabs button, .name-session-tabs button {
+                padding: 10px 18px;
+                font-size: 14px; /* Restore button font size */
+                gap: 8px;
+            }
+            #rowColManipulationBar button {
+                 padding: 8px 14px;
+            }
+            .table-tabs button { padding: 10px 15px; }
+            .name-session-tabs button { padding: 10px 15px; font-size: 1em; }
+             .modal-content {
+                padding: 25px;
+                max-width: 650px;
+                max-height: 90vh;
+            }
+            .modal-header { padding-bottom: 15px; margin-bottom: 20px; font-size: 1.3em; }
+            .modal-close-btn { font-size: 1.8rem; }
+            .name-item { padding: 10px 8px; }
+            .name-item button { padding: 6px 12px; font-size: 0.9em; }
+            #newNameInput, #searchNameInput { padding: 10px; width: calc(100% - 120px); }
+            #searchNameInput { margin-bottom: 15px; }
+            .input-group button, #importNameListBtn { padding: 10px 15px; font-size: 1em; }
+            #nameList { margin-top:15px; max-height:250px; column-count: 2; }
+            .custom-message-box { padding: 15px 25px; font-size: 1.05em; max-width: 400px; }
+        }
+        @media (min-width: 480px) and (max-width: 767px) {
+            /* Specific tweaks for small tablets / large phones if needed */
+            #nameList {
+                column-count: 2; /* Two columns for name list on slightly larger mobile */
+            }
+            table th {
+                 white-space: normal; /* Allow wrapping for medium screens too if headers are long */
+            }
+        }
+
+        .merged-cell-container { position: relative; z-index: 2; vertical-align: top; }
+        .merged-cell-overlay {
+            position: absolute;
+            top: 0; left: 0; width: var(--merged-width); height: var(--merged-height);
+            background-color: rgba(240, 248, 255, 0.95); font-style: italic; border: 1px solid #add8e6;
+            display: flex; align-items: center;
+            justify-content: center; overflow: hidden;
+            box-sizing: border-box; z-index: 5;
+        }
+        .subsumed-cell { visibility: hidden; }
+
         #loadingIndicatorModal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.85);
             display: flex; align-items: center; justify-content: center;
-            z-index: 10; border-radius: 10px;
+            z-index: 10; 
+            border-radius: 10px; 
         }
         .spinner {
-            border: 5px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px;
-            border-radius: 50%; border-left-color: #007bff;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border-left-color: #007bff; 
             animation: spin 1s ease infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .custom-message-box {
-            padding: 12px 20px; font-size: 0.9em; max-width: 90%;
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background-color: #333; color: white; border-radius: 6px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 2000;
-            opacity: 0; transition: opacity 0.3s ease, bottom 0.3s ease;
-            pointer-events: none;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .custom-message-box.show { opacity: 1; bottom: 30px; pointer-events: auto; }
-        .custom-message-box.error { background-color: #dc3545; }
-        .custom-message-box.success { background-color: #28a745; }
-        .custom-message-box.info { background-color: #17a2b8; }
 
-        @media (min-width: 768px) { /* ... (desktop styles remain the same) ... */ }
-        @media (max-width: 480px) { /* ... (mobile styles remain the same) ... */ }
-
-        .merged-cell-container { /* ... */ }
-        .merged-cell-overlay { /* ... */ }
-        .subsumed-cell { /* ... */ }
         input[type="file"][style*="display:none"],
-        input[type="file"][style*="display: none"] { /* ... */ }
+        input[type="file"][style*="display: none"] {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
     </style>
 </head>
 <body>
 <div class="main-container">
     <h2 contenteditable="true" id="scheduleTitle">Weekly Schedule</h2>
     <div id="userIdDisplay">User ID: Loading...</div>
+
     <div class="bar">
         <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
     </div>
@@ -291,17 +417,24 @@
         <table id="tbl_1" class="active" data-table-name="Table 1">
             <thead>
                 <tr>
-                    <th contenteditable="true">Class</th><th contenteditable="true">08:00</th><th contenteditable="true">09:00</th><th contenteditable="true">10:00</th>
-                    <th contenteditable="true">11:00</th><th contenteditable="true">12:00</th><th contenteditable="true">13:00</th>
+                    <th contenteditable="true">Class</th>
+                    <th contenteditable="true">08:00</th>
+                    <th contenteditable="true">09:00</th>
+                    <th contenteditable="true">10:00</th>
+                    <th contenteditable="true">11:00</th>
+                    <th contenteditable="true">12:00</th>
+                    <th contenteditable="true">13:00</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true">JAMES</td><td contenteditable="true"></td>
+                    <td contenteditable="true">5S1</td>
+                    <td contenteditable="true"></td><td contenteditable="true">JAMES</td><td contenteditable="true"></td>
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
                  <tr>
-                    <td contenteditable="true">5S2</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
+                    <td contenteditable="true">5S2</td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
             </tbody>
@@ -317,38 +450,37 @@
         <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
     </div>
 
-    <h3 style="margin-top:32px">Teacher/Subject Attendance Summary</h3>
-    <table id="summaryTable"></table>
-    <div id="customMessageBox"></div>
-</div>
-
-<div id="nameModal">
-    <div id="nameModalContent">
-        <div id="nameModalHeader">
-            <h3 id="nameModalTitle">Name List Manager</h3>
-            <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
+    <div id="nameModal" class="modal">
+        <div class="modal-content" id="nameModalContent">
+            <div class="modal-header" id="nameModalHeader">
+                <h3 id="nameModalTitle">Name List Manager</h3>
+                <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
+            </div>
+            <div class="name-session-tabs">
+                <button id="namePagiTab" data-session="pagi" class="active">Pagi (Morning)</button>
+                <button id="namePetangTab" data-session="petang">Petang (Afternoon)</button>
+            </div>
+             <div class="input-group">
+                <input id="newNameInput" placeholder="Add new name to current session">
+                <button id="addNameBtnInModal" title="Add the name to the list">Add</button>
+            </div>
+            <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current session">📂 Import Names (.txt) to Session</button>
+            <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
+            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current session..." title="Filter the list of names">
+            <div id="nameList">
+            </div>
+            <div id="loadingIndicatorModal" style="display:none;"><div class="spinner"></div></div>
         </div>
-        <div class="name-session-tabs">
-            <button id="namePagiTab" data-session="pagi" class="active">Pagi (Morning)</button>
-            <button id="namePetangTab" data-session="petang">Petang (Afternoon)</button>
-        </div>
-        <div class="input-group">
-            <input id="newNameInput" placeholder="Add new name to current session">
-            <button id="addNameBtnInModal" title="Add the name to the list">Add</button>
-        </div>
-        <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current session">📂 Import Names (.txt)</button>
-        <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
-        <input type="text" id="searchNameInput" placeholder="🔍 Search names in current session..." title="Filter the list of names">
-        <div id="nameList"></div>
-        <button id="loadMoreNamesBtn" style="display:none;">Load More Names</button>
-        <div id="loadingIndicatorModal" style="display:none;"><div class="spinner"></div></div>
     </div>
+
+    <h3 style="margin-top:32px">Teacher/Subject Attendance Summary</h3>
+    <table id="summaryTable">
+    </table>
+    <div id="customMessageBox" class="custom-message-box"></div>
 </div>
 
 <script type="module">
-    console.log("Main module script started execution."); // VERY FIRST LINE
-
-    import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -356,62 +488,39 @@
       apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.appspot.com",
+      storageBucket: "jadual-3f0aa.firebasestorage.app",
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
-    // console.log("1. userProvidedFirebaseConfig defined.");
 
-    let finalFirebaseConfigForInit = { ...userProvidedFirebaseConfig }; // Start with a valid object
-    // console.log("1.1. Defaulted finalFirebaseConfigForInit to userProvidedFirebaseConfig.");
-
-    if (typeof __firebase_config !== 'undefined' && __firebase_config && __firebase_config.trim() !== "") {
-        try {
-            const parsedGlobalConfig = JSON.parse(__firebase_config);
-            if (parsedGlobalConfig && typeof parsedGlobalConfig === 'object' && parsedGlobalConfig.apiKey && parsedGlobalConfig.appId) {
-                finalFirebaseConfigForInit = parsedGlobalConfig;
-                // console.log("2. Successfully used __firebase_config for initialization.");
-            } else {
-                // console.warn("2. Provided __firebase_config is invalid. Sticking with userProvidedFirebaseConfig for initialization.");
-            }
-        } catch (e) {
-            // console.error("2. Error parsing __firebase_config. Sticking with userProvidedFirebaseConfig for initialization.", e);
-        }
-    } else {
-        // console.log("2. __firebase_config not defined. Sticking with userProvidedFirebaseConfig for initialization.");
-    }
-    // console.log("3. finalFirebaseConfigForInit for initializeApp:", JSON.stringify(finalFirebaseConfigForInit).substring(0,100) + "...");
-
-    const firestorePathAppId = (typeof __app_id !== 'undefined' && __app_id.trim() !== "")
-        ? __app_id
-        : (finalFirebaseConfigForInit.appId || 'default-app-id-jadual');
-    // console.log(`4. Using App ID for Firestore paths: ${firestorePathAppId}`);
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedFirebaseConfig;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-app-id');
 
     let fbApp, fbAuth, fbDb;
+    let fbUserId = null;
+    let fbIsAuthReady = false;
+    let unsubscribePagi = null;
+    let unsubscribePetang = null;
+
     try {
-        if (!finalFirebaseConfigForInit || !finalFirebaseConfigForInit.apiKey || !finalFirebaseConfigForInit.appId) {
-            console.error("CRITICAL: finalFirebaseConfigForInit is invalid or missing essential keys before initializeApp.", finalFirebaseConfigForInit);
-            throw new Error("Firebase configuration is invalid. Cannot initialize Firebase.");
-        }
-        // console.log("5. Attempting to initialize Firebase with config.");
-        if (!getApps().length) {
-            fbApp = initializeApp(finalFirebaseConfigForInit);
-            console.log("Firebase App initialized successfully via initializeApp().");
-        } else {
-            fbApp = getApp(); 
-            console.log("Firebase App already initialized. Using existing instance via getApp().");
-        }
+        fbApp = initializeApp(firebaseConfig);
         fbAuth = getAuth(fbApp);
         fbDb = getFirestore(fbApp);
-        // console.log("6. Firebase Auth and Firestore services obtained.");
     } catch (e) {
         console.error("CRITICAL Error initializing Firebase services:", e);
-        // ... (error display logic)
+        const userIdDisplayInitError = document.getElementById('userIdDisplay');
+        if (userIdDisplayInitError) userIdDisplayInitError.textContent = "User ID: Firebase Init Error!";
+        // Show message even if customMessageBox is not cached yet
+        const mb = document.getElementById('customMessageBox');
+        if(mb) {
+            mb.textContent = "Critical Error: Firebase initialization failed. Check console.";
+            mb.className = 'custom-message-box error';
+            mb.style.display = 'block';
+        }
     }
 
-    const DRAFTS_KEY = 'jadual_drafts_v6'; // Keep versioning consistent
-    const SCHEDULE_TITLE_KEY = 'jadual_title_v6';
-    // ... (rest of the global variables)
+    const DRAFTS_KEY = 'jadual_drafts_v3';
+    const SCHEDULE_TITLE_KEY = 'jadual_title_v3';
     let activeTableId = 'tbl_1';
     let tableCount = 1;
     let selectionMode = false;
@@ -421,26 +530,170 @@
     let currentNameListSession = 'pagi';
     let namesPagi = [];
     let namesPetang = [];
-    const NAMES_PER_PAGE = 30;
-    let displayedNamesCount = 0;
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
-    let nameModalDraggablePart;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement;
 
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, loadMoreNamesButton;
+    function showMessage(message, type = 'info', duration = 3000) {
+        if (!customMessageBox) {
+            customMessageBox = document.getElementById('customMessageBox');
+            if (!customMessageBox) {
+                console.warn("showMessage called but customMessageBox element not found. Message:", message);
+                return;
+            }
+        }
+        customMessageBox.textContent = message;
+        customMessageBox.className = `custom-message-box ${type}`;
+        customMessageBox.style.display = 'block';
+        setTimeout(() => { if (customMessageBox) customMessageBox.style.display = 'none'; }, duration);
+    }
 
-    function showMessage(message, type = 'info', duration = 3000) { /* ... */ }
-    function customPrompt(message, defaultValue = "") { /* ... */ }
-    function customConfirm(message) { /* ... */ }
-    function showNameModalLoading(isLoading) { /* ... */ }
-    async function saveNameListToFirestore(session, namesArray) { /* ... */ }
-    async function addNameToCurrentSessionInFirestore(name) { /* ... */ }
-    async function deleteNameFromCurrentSessionInFirestore(nameToDelete) { /* ... */ }
-    function listenToNameList(sessionToListen) { /* ... */ }
-    
+    function customPrompt(message, defaultValue = "") { return prompt(message, defaultValue); }
+
+    function customConfirm(message) {
+        return new Promise((resolve) => {
+            const confirmModalId = 'customConfirmModal';
+            let existingModal = document.getElementById(confirmModalId);
+            if (existingModal) existingModal.remove();
+            const modal = document.createElement('div');
+            modal.id = confirmModalId;
+            modal.style.cssText = `display: flex; position: fixed; z-index: 2001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;`;
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `background-color: #fff; padding: 25px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 280px; max-width: 90%;`; // Adjusted min-width
+            const messageP = document.createElement('p');
+            messageP.textContent = message;
+            messageP.style.marginBottom = '20px'; messageP.style.fontSize = '1.1em';
+            const yesButton = document.createElement('button');
+            yesButton.textContent = 'Yes';
+            yesButton.style.cssText = `padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; background-color: #28a745; color: white; border: none; font-size: 1em;`; // Added margin
+            const noButton = document.createElement('button');
+            noButton.textContent = 'No';
+            noButton.style.cssText = `padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; background-color: #dc3545; color: white; border: none; font-size: 1em;`; // Added margin
+            const buttonContainer = document.createElement('div'); // Container for buttons
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.flexWrap = 'wrap'; // Allow buttons to wrap
+            buttonContainer.style.justifyContent = 'center';
+            buttonContainer.appendChild(yesButton);
+            buttonContainer.appendChild(noButton);
+            const closeModal = (value) => { modal.remove(); resolve(value); };
+            yesButton.onclick = () => closeModal(true);
+            noButton.onclick = () => closeModal(false);
+            modalContent.appendChild(messageP);
+            modalContent.appendChild(buttonContainer); // Append button container
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        });
+    }
+
+    function showNameModalLoading(isLoading) {
+        if (loadingIndicatorModalElement) {
+            loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
+        }
+    }
+
+    async function saveNameListToFirestore(session, namesArray) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot save name list.", "error"); return;
+        }
+        showNameModalLoading(true);
+        const uniqueSortedNames = [...new Set(namesArray)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        if (!appId || appId === 'default-app-id') {
+            showMessage("Configuration error: App ID is missing.", "error"); showNameModalLoading(false); return;
+        }
+        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", session);
+        try {
+            await setDoc(docRef, { names: uniqueSortedNames });
+            showMessage(`Name list uploaded to ${session} session.`, "success");
+        } catch (error) {
+            showMessage(`Failed to save list to ${session}. Error: ${error.message}`, "error");
+        } finally {
+            showNameModalLoading(false);
+        }
+    }
+
+    async function addNameToCurrentSessionInFirestore(name) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot add name.", "error"); return;
+        }
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+            showMessage("Name cannot be empty.", "info"); return;
+        }
+        showNameModalLoading(true);
+        const sessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+        if (sessionNames.map(n => n.toLowerCase()).includes(trimmedName.toLowerCase())) {
+            showMessage(`Name "${trimmedName}" already exists in ${currentNameListSession} session.`, "info");
+            showNameModalLoading(false); return;
+        }
+        if (!appId || appId === 'default-app-id') {
+            showMessage("Configuration error: App ID is missing.", "error"); showNameModalLoading(false); return;
+        }
+        const updatedNames = [...sessionNames, trimmedName].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
+        try {
+            await setDoc(docRef, { names: updatedNames });
+            if(newNameInput) { newNameInput.value = ''; newNameInput.focus(); }
+        } catch (error) {
+            showMessage(`Failed to add name. Error: ${error.message}`, "error");
+        } finally {
+            showNameModalLoading(false);
+        }
+    }
+
+    async function deleteNameFromCurrentSessionInFirestore(nameToDelete) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot delete name.", "error"); return;
+        }
+        if (await customConfirm(`Delete "${nameToDelete}" from ${currentNameListSession} session? This also removes it from all schedule tables.`)) {
+            showNameModalLoading(true);
+            if (!appId || appId === 'default-app-id') {
+                showMessage("Configuration error: App ID is missing.", "error"); showNameModalLoading(false); return;
+            }
+            const currentNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+            const updatedNames = currentNames.filter(name => name !== nameToDelete);
+            const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
+            try {
+                await setDoc(docRef, { names: updatedNames });
+                tablesContainer.querySelectorAll('table').forEach(table => {
+                    table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
+                        if (cell.textContent.trim() === nameToDelete) cell.textContent = '';
+                    });
+                });
+                rebuildAndRenderSummary();
+                if (selectedNameFromList === nameToDelete) clearNameSelection();
+            } catch (error) {
+                showMessage(`Failed to delete name. Error: ${error.message}`, "error");
+            } finally {
+                showNameModalLoading(false);
+            }
+        }
+    }
+
+    function listenToNameList(sessionToListen) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) return () => {};
+        if (!appId || appId === 'default-app-id') return () => {};
+        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", sessionToListen);
+        return onSnapshot(docRef, (docSnap) => {
+            showNameModalLoading(true);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (sessionToListen === 'pagi') namesPagi = data.names || [];
+                else namesPetang = data.names || [];
+            } else {
+                if (sessionToListen === 'pagi') namesPagi = []; else namesPetang = [];
+            }
+            if (sessionToListen === currentNameListSession && nameModal.style.display === 'flex') {
+                renderNameListFromFirestore(searchNameInputElement ? searchNameInputElement.value : '');
+            }
+            rebuildAndRenderSummary();
+            showNameModalLoading(false);
+        }, (error) => {
+            showMessage(`Error fetching ${sessionToListen} names. Check console.`, "error");
+            showNameModalLoading(false);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        console.log("DOMContentLoaded event fired.");
-        // Cache DOM elements
         scheduleTitleElement = document.getElementById('scheduleTitle');
         tablesContainer = document.getElementById('tablesContainer');
         tableTabs = document.getElementById('tableTabs');
@@ -463,82 +716,1040 @@
         namePetangTabElement = document.getElementById('namePetangTab');
         loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
         nameModalTitleElement = document.getElementById('nameModalTitle');
-        nameModalDraggablePart = nameModalHeader;
-        loadMoreNamesButton = document.getElementById('loadMoreNamesBtn');
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !loadMoreNamesButton || !closeNameModalButtonStandardElement || !nameModalContent || !nameModalHeader || !nameListContainer || !newNameInput || !userIdDisplayElement || !customMessageBox) {
-            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: One or more critical page elements are missing. Application cannot start correctly.</p>";
-            console.error("CRITICAL: One or more essential DOM elements for the application are missing. Aborting further script execution.");
-            return; 
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement) {
+            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Critical page elements missing.</p>";
+            return;
         }
-        console.log("All critical DOM elements cached.");
-        
-        // Firebase Auth Listener
-        if (fbAuth) { 
-            console.log("Firebase Auth service found. Setting up onAuthStateChanged listener.");
-            onAuthStateChanged(fbAuth, async (user) => { /* ... (auth listener with logging) ... */ });
-        } else { 
-             if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Auth Service Error!";
-             console.error("Firebase Auth service (fbAuth) is not initialized! This usually means Firebase app init failed.");
-             showMessage("Critical Error: Firebase Auth service not available. App cannot function correctly.", "error", 10000);
+
+        if (fbAuth) {
+            onAuthStateChanged(fbAuth, async (user) => {
+                if (user) {
+                    fbUserId = user.uid;
+                    fbIsAuthReady = true;
+                    if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId.substring(0,8)}...`; // Show partial ID
+                    if (unsubscribePagi) unsubscribePagi();
+                    if (unsubscribePetang) unsubscribePetang();
+                    unsubscribePagi = listenToNameList('pagi');
+                    unsubscribePetang = listenToNameList('petang');
+                    if (nameModal.style.display === 'flex' && searchNameInputElement) {
+                        renderNameListFromFirestore(searchNameInputElement.value);
+                    }
+                } else {
+                    fbIsAuthReady = false;
+                    fbUserId = null;
+                    if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(fbAuth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(fbAuth);
+                        }
+                    } catch (error) {
+                        showMessage(`Firebase Auth failed: ${error.message}`, "error", 7000);
+                        if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
+                    }
+                }
+            });
+        } else {
+             if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Auth Error";
+             showMessage("Critical Error: Firebase Auth service not initialized.", "error", 10000);
         }
 
         loadScheduleTitle();
-        initializeEventListeners(); 
+        initializeEventListeners();
         setupInitialTableState();
         rebuildAndRenderSummary();
-        handleNameListSessionSwitch('pagi'); 
-        console.log("DOMContentLoaded setup complete.");
+        handleNameListSessionSwitch('pagi');
     });
 
-    function setupInitialTableState() { /* ... */ }
-    function loadScheduleTitle() { /* ... */ }
-    function initializeEventListeners() { /* ... (with try-catch for each listener) ... */ }
-    function startDragModal(e) { /* ... */ }
-    function dragModal(e) { /* ... */ }
-    function stopDragModal() { /* ... */ }
-    async function attemptDirectCopyToClipboard() { /* ... */ }
-    function handleExcelFileImport(event) { /* ... */ }
-    function exportActiveTableToExcel() { /* ... */ }
-    function promptAndSaveDraft() { /* ... */ }
-    function toggleDraftListVisibility() { /* ... */ }
-    function renderDraftList() { /* ... */ }
-    function loadSelectedDraft(draftName) { /* ... */ }
-    async function confirmAndDeleteDraft(draftName) { /* ... */ }
-    function exportAllDrafts() { /* ... */ }
-    async function handleDraftsFileImport(event) { /* ... */ }
-    function addTabButton(id, label) { /* ... */ }
-    function switchTable(id) { /* ... */ }
-    function addNewTable(isInitial = false) { /* ... */ }
-    async function promptAndRenameActiveTable() { /* ... */ }
-    async function confirmAndDeleteActiveTable() { /* ... */ }
-    function addRowToTable(tableBody, rowIndex, numCols) { /* ... */ }
-    function addRowAboveToActiveTable() { /* ... */ }
-    function addRowBelowToActiveTable() { /* ... */ }
-    function addColumnToTable(table, colIndex) { /* ... */ }
-    function addColumnLeftToActiveTable() { /* ... */ }
-    function addColumnRightToActiveTable() { /* ... */ }
-    async function deleteClickedRowFromActiveTable() { /* ... */ }
-    async function deleteClickedColumnFromActiveTable() { /* ... */ }
-    async function confirmAndClearActiveTableContent() { /* ... */ }
-    function toggleCellSelectionMode() { /* ... */ }
-    function handleTableCellClick(event) { /* ... */ }
-    function deselectAllTableCells() { /* ... */ }
-    function mergeSelectedTableCells() { /* ... */ }
-    function unmergeActiveCellIfMerged() { /* ... */ }
-    function updateAllMergeOverlays() { /* ... */ }
-    function handleNameListSessionSwitch(session) { /* ... */ }
-    function highlightSelectedNameInList(nameToHighlight) { /* ... */ }
-    function clearNameSelection() { /* ... */ }
-    function closeNameModal() { /* ... */ }
-    function toggleNameListModalVisibility() { /* ... */ }
-    function renderNameListFromFirestore(filterText = '', resetPagination = false) { /* ... */ }
-    function selectNameForCellInsertion(name) { /* ... */ }
-    function handleNameListImportFirestore(event) { /* ... */ }
-    function rebuildAndRenderSummary() { /* ... */ }
-    function parseTimeToMinutes(timeStr) { /* ... */ }
-    function buildSummaryTableSkeleton(allAvailableNames) { /* ... */ }
-    function updateSummaryTableData(allAvailableNames) { /* ... */ }
+    function setupInitialTableState() {
+        const existingTables = tablesContainer.querySelectorAll('table');
+        if (existingTables.length > 0) {
+            tableTabs.innerHTML = '';
+            existingTables.forEach((table, index) => {
+                const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`;
+                table.id = tableId;
+                const tableName = table.dataset.tableName || `Table ${index + 1}`;
+                table.dataset.tableName = tableName;
+                addTabButton(tableId, tableName);
+                if (index === 0) activeTableId = tableId;
+            });
+        } else {
+            addNewTable(true); 
+        }
+        if (activeTableId && document.getElementById(activeTableId)) {
+            switchTable(activeTableId);
+        } else if (tablesContainer.querySelector('table')) {
+            switchTable(tablesContainer.querySelector('table').id);
+        }
+    }
+
+    function loadScheduleTitle() {
+        const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
+        if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
+        if (scheduleTitleElement) {
+            scheduleTitleElement.addEventListener('blur', () => { 
+                localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent);
+                showMessage('Schedule title saved!', 'success');
+            });
+        }
+    }
+
+    function initializeEventListeners() {
+        if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
+        if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
+        if(nameModalHeader) {
+            nameModalHeader.addEventListener('mousedown', startDragModal);
+            nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false });
+        }
+        document.addEventListener('mousemove', dragModal);
+        document.addEventListener('mouseup', stopDragModal);
+        document.addEventListener('touchmove', dragModal, { passive: false });
+        document.addEventListener('touchend', stopDragModal);
+        document.getElementById('excelBtnTrigger')?.addEventListener('click', exportActiveTableToExcel);
+        document.getElementById('importExcelBtn')?.addEventListener('click', () => fileInputElement?.click());
+        if(fileInputElement) fileInputElement.addEventListener('change', handleExcelFileImport);
+        document.getElementById('saveDraftBtn')?.addEventListener('click', promptAndSaveDraft);
+        document.getElementById('loadDraftBtn')?.addEventListener('click', toggleDraftListVisibility);
+        document.getElementById('exportDraftsBtn')?.addEventListener('click', exportAllDrafts);
+        document.getElementById('importDraftsBtn')?.addEventListener('click', () => draftImportFileInputElement?.click());
+        if(draftImportFileInputElement) draftImportFileInputElement.addEventListener('change', handleDraftsFileImport);
+        if(draftListElement) draftListElement.addEventListener('click', async (e) => {
+            const targetSpan = e.target.closest('.draft-item span');
+            const targetButton = e.target.closest('.draft-item button');
+            if (targetSpan) loadSelectedDraft(targetSpan.textContent);
+            else if (targetButton) await confirmAndDeleteDraft(targetButton.parentElement.querySelector('span').textContent);
+        });
+        document.getElementById('clearActiveTableContentBtn')?.addEventListener('click', confirmAndClearActiveTableContent);
+        document.getElementById('selectBtn')?.addEventListener('click', toggleCellSelectionMode);
+        document.getElementById('mergeBtn')?.addEventListener('click', mergeSelectedTableCells);
+        document.getElementById('deselectBtn')?.addEventListener('click', deselectAllTableCells);
+        document.getElementById('unmergeBtn')?.addEventListener('click', unmergeActiveCellIfMerged);
+        document.getElementById('addTableBtn')?.addEventListener('click', () => addNewTable());
+        document.getElementById('renameTableBtn')?.addEventListener('click', promptAndRenameActiveTable);
+        document.getElementById('deleteTableBtn')?.addEventListener('click', confirmAndDeleteActiveTable);
+        document.getElementById('addRowAboveBtn')?.addEventListener('click', addRowAboveToActiveTable);
+        document.getElementById('addRowBelowBtn')?.addEventListener('click', addRowBelowToActiveTable);
+        document.getElementById('addColLeftBtn')?.addEventListener('click', addColumnLeftToActiveTable);
+        document.getElementById('addColRightBtn')?.addEventListener('click', addColumnRightToActiveTable);
+        document.getElementById('deleteRowBtn')?.addEventListener('click', deleteClickedRowFromActiveTable);
+        document.getElementById('deleteColBtn')?.addEventListener('click', deleteClickedColumnFromActiveTable);
+        document.getElementById('nameListBtn')?.addEventListener('click', toggleNameListModalVisibility);
+        document.getElementById('addNameBtnInModal')?.addEventListener('click', () => {
+            if(newNameInput) addNameToCurrentSessionInFirestore(newNameInput.value);
+        });
+        document.getElementById('importNameListBtn')?.addEventListener('click', () => nameListImportFileInputElement?.click());
+        if(nameListImportFileInputElement) nameListImportFileInputElement.addEventListener('change', handleNameListImportFirestore);
+        if(searchNameInputElement) searchNameInputElement.addEventListener('input', (e) => renderNameListFromFirestore(e.target.value));
+        if(namePagiTabElement) namePagiTabElement.addEventListener('click', () => handleNameListSessionSwitch('pagi'));
+        if(namePetangTabElement) namePetangTabElement.addEventListener('click', () => handleNameListSessionSwitch('petang'));
+        if(nameListContainer) nameListContainer.addEventListener('click', async (e) => {
+            const nameItemSpan = e.target.closest('.name-item span[data-name]');
+            const deleteButton = e.target.closest('.name-item button[data-name-delete]');
+            if (nameItemSpan) {
+                selectNameForCellInsertion(nameItemSpan.dataset.name);
+            } else if (deleteButton) {
+                await deleteNameFromCurrentSessionInFirestore(deleteButton.dataset.nameDelete);
+            }
+        });
+        if(tablesContainer) {
+            tablesContainer.addEventListener('click', handleTableCellClick);
+            tablesContainer.addEventListener('blur', (e) => { 
+                if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                    setTimeout(rebuildAndRenderSummary, 0); 
+                }
+            }, true); 
+            tablesContainer.addEventListener('input', (e) => { 
+                 if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                    setTimeout(rebuildAndRenderSummary, 300); 
+                }
+            });
+        }
+        window.addEventListener('resize', updateAllMergeOverlays); 
+    }
+
+    function startDragModal(e) {
+        if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; } 
+        isDraggingModal = true;
+        if(nameModalContent) nameModalContent.classList.add('dragging');
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const rect = nameModalContent.getBoundingClientRect();
+        nameModalContent.style.position = 'fixed';
+        nameModalContent.style.left = `${rect.left}px`;
+        nameModalContent.style.top = `${rect.top}px`;
+        nameModalContent.style.transform = 'none'; 
+        modalDragOffsetX = clientX - nameModalContent.offsetLeft;
+        modalDragOffsetY = clientY - nameModalContent.offsetTop;
+        if (e.type === 'touchstart') e.preventDefault(); 
+    }
+
+    function dragModal(e) {
+        if (!isDraggingModal || !nameModalContent) return;
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        let newLeft = clientX - modalDragOffsetX;
+        let newTop = clientY - modalDragOffsetY;
+        const modalRect = nameModalContent.getBoundingClientRect(); 
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        if (newLeft < 0) newLeft = 0;
+        if (newTop < 0) newTop = 0;
+        if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
+        if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
+        nameModalContent.style.left = `${newLeft}px`;
+        nameModalContent.style.top = `${newTop}px`;
+        if (e.type === 'touchmove') e.preventDefault(); 
+    }
+
+    function stopDragModal() {
+        if (isDraggingModal && nameModalContent) {
+            isDraggingModal = false;
+            nameModalContent.classList.remove('dragging');
+        }
+    }
+
+    async function attemptDirectCopyToClipboard() {
+        const fullHtml = document.documentElement.outerHTML;
+        try {
+            await navigator.clipboard.writeText(fullHtml);
+            showMessage('Full HTML copied to clipboard!', 'success');
+        } catch (err) {
+            const textarea = document.createElement('textarea');
+            textarea.value = fullHtml;
+            textarea.style.position = 'fixed'; 
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                if (document.execCommand('copy')) showMessage('Full HTML copied! (fallback)', 'success');
+                else showMessage('Direct copy failed.', 'error', 5000);
+            } catch (execErr) {
+                showMessage('Direct copy failed.', 'error', 5000);
+            }
+            document.body.removeChild(textarea);
+        }
+    }
+
+    function promptAndSaveDraft() {
+        if (!tablesContainer || tablesContainer.children.length === 0) {
+            showMessage('No schedule data to save.', 'error'); return;
+        }
+        const allTablesData = tablesContainer.innerHTML;
+        const allTableMeta = {};
+        tablesContainer.querySelectorAll('table').forEach(table => {
+            allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
+        });
+        const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`);
+        if (draftName) {
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+            drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId };
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+            showMessage(`Draft "${draftName}" saved!`, 'success');
+            if (draftListElement && draftListElement.style.display === 'block') renderDraftList();
+        }
+    }
+
+    function toggleDraftListVisibility() {
+        if (!draftListElement) return;
+        const isVisible = draftListElement.style.display === 'block';
+        draftListElement.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) renderDraftList();
+    }
+
+    function renderDraftList() {
+        if (!draftListElement) return;
+        draftListElement.innerHTML = ''; 
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+        if (Object.keys(drafts).length === 0) {
+            draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return;
+        }
+        for (const name in drafts) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'draft-item';
+            itemDiv.innerHTML = `<span>${name}</span><button title="Delete draft '${name}'">Delete</button>`;
+            draftListElement.appendChild(itemDiv);
+        }
+    }
+
+    function loadSelectedDraft(draftName) {
+        if (!tablesContainer || !tableTabs) return;
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+        if (drafts[draftName]) {
+            tablesContainer.innerHTML = drafts[draftName].html;
+            const tableMeta = drafts[draftName].meta || {};
+            tableTabs.innerHTML = ''; 
+            tablesContainer.querySelectorAll('table').forEach(table => {
+                const id = table.id;
+                const metaInfo = tableMeta[id] || {};
+                const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
+                table.dataset.tableName = name;
+                addTabButton(id, name);
+                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
+            });
+            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
+            if (document.getElementById(activeTableId)) {
+                switchTable(activeTableId);
+            } else if (tablesContainer.querySelector('table')) {
+                switchTable(tablesContainer.querySelector('table').id);
+            } else {
+                addNewTable(true); 
+            }
+            showMessage(`Draft "${draftName}" loaded!`, 'success');
+            if (draftListElement) draftListElement.style.display = 'none';
+            rebuildAndRenderSummary();
+            updateAllMergeOverlays(); 
+        } else {
+            showMessage(`Draft "${draftName}" not found.`, 'error');
+        }
+    }
+
+    async function confirmAndDeleteDraft(draftName) {
+        if (await customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+            delete drafts[draftName];
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+            showMessage(`Saved draft "${draftName}" deleted.`, 'success');
+            renderDraftList(); 
+        }
+    }
+
+    async function confirmAndClearActiveTableContent() {
+        const activeTableElement = document.getElementById(activeTableId);
+        if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return; }
+        const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
+        if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
+            activeTableElement.querySelectorAll('.merged-cell-container').forEach(containerCell => {
+                const mergeId = containerCell.dataset.mergeId;
+                if(mergeId){
+                    const cellsInGroup = activeTableElement.querySelectorAll(`[data-merge-id="${mergeId}"]`);
+                    cellsInGroup.forEach(c => {
+                        c.removeAttribute('data-merge-id');
+                        c.classList.remove('merged-cell-container', 'subsumed-cell');
+                        const overlay = c.querySelector('.merged-cell-overlay');
+                        if (overlay) c.textContent = overlay.textContent; 
+                        else c.innerHTML = ''; 
+                        const overlayChild = c.querySelector('.merged-cell-overlay'); 
+                        if(overlayChild) overlayChild.remove();
+                    });
+                }
+            });
+            activeTableElement.querySelectorAll('tbody td, tbody th').forEach(cell => {
+                cell.innerHTML = ''; 
+                cell.classList.remove('selected'); 
+            });
+            selectedCells = []; 
+            rebuildAndRenderSummary();
+            updateAllMergeOverlays();
+            showMessage(`Content of "${tableName}" cleared.`, 'success');
+        }
+    }
+
+    function exportAllDrafts() {
+        const drafts = localStorage.getItem(DRAFTS_KEY);
+        if (!drafts || drafts === '{}') { showMessage('No drafts to export.', 'info'); return; }
+        try {
+            const blob = new Blob([drafts], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'all_schedule_drafts.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage('All drafts exported successfully!', 'success');
+        } catch (error) {
+            showMessage('Failed to export drafts.', 'error');
+        }
+    }
+
+    async function handleDraftsFileImport(event) {
+        const file = event.target.files[0];
+        if (!file) { showMessage('No file selected for import.', 'info'); return; }
+        if (file.type !== 'application/json') {
+            showMessage('Invalid file type. Please select a .json file.', 'error');
+            event.target.value = ''; return;
+        }
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importedDraftsText = e.target.result;
+                const importedDraftsData = JSON.parse(importedDraftsText);
+                if (typeof importedDraftsData !== 'object' || importedDraftsData === null) {
+                    showMessage('Invalid draft file format.', 'error'); return;
+                }
+                let localDrafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+                let importedCount = 0, overwrittenCount = 0, skippedCount = 0;
+                for (const draftName in importedDraftsData) {
+                    if (Object.prototype.hasOwnProperty.call(importedDraftsData, draftName)) {
+                        const draftData = importedDraftsData[draftName];
+                        if (draftData && typeof draftData.html === 'string' && typeof draftData.meta === 'object' && typeof draftData.active === 'string') {
+                            if (localDrafts[draftName]) { 
+                                if (await customConfirm(`Draft "${draftName}" already exists. Overwrite?`)) {
+                                    localDrafts[draftName] = draftData; overwrittenCount++;
+                                } else { skippedCount++; }
+                            } else { 
+                                localDrafts[draftName] = draftData; importedCount++;
+                            }
+                        } else { skippedCount++; }
+                    }
+                }
+                localStorage.setItem(DRAFTS_KEY, JSON.stringify(localDrafts));
+                showMessage(`Drafts import complete: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
+                if (draftListElement && (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0)) {
+                    renderDraftList(); 
+                }
+            } catch (error) {
+                showMessage('Error processing draft file.', 'error', 5000);
+            }
+            finally { event.target.value = ''; } 
+        };
+        reader.onerror = () => {
+            showMessage('Failed to read the draft file.', 'error'); event.target.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    function addTabButton(id, label) {
+        if (!tableTabs) return null;
+        const button = document.createElement('button');
+        button.textContent = label; button.dataset.tableId = id;
+        button.title = `Switch to table: ${label}`;
+        button.onclick = () => switchTable(id);
+        tableTabs.appendChild(button); return button;
+    }
+
+    function switchTable(id) {
+        const targetTable = document.getElementById(id);
+        if (!targetTable && tablesContainer) { 
+            const firstTableInDOM = tablesContainer.querySelector('table');
+            if (firstTableInDOM) id = firstTableInDOM.id; 
+            else { 
+                if (tablesContainer && tablesContainer.children.length === 0) addNewTable(true); 
+                return;
+            }
+        }
+        activeTableId = id;
+        if(tablesContainer) tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
+        if(tableTabs) tableTabs.querySelectorAll('button').forEach(b => { b.classList.toggle('active', b.dataset.tableId === id); });
+        deselectAllTableCells(); 
+        rebuildAndRenderSummary();
+        updateAllMergeOverlays();
+    }
+
+    function addNewTable(isInitial = false) {
+        if (!tablesContainer || !tableTabs) return;
+        tableCount++; 
+        const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
+        const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
+        if (!label && !isInitial) return; 
+        const newTable = document.createElement('table');
+        const newTableId = `tbl_${Date.now()}_${tableCount}`; 
+        newTable.id = newTableId; newTable.dataset.tableName = label || defaultTableName;
+        const thead = newTable.createTHead(); const headerRow = thead.insertRow();
+        const defaultHeaders = ['Class/Time', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00'];
+        defaultHeaders.forEach(headerText => {
+            const th = document.createElement('th'); th.contentEditable = 'true';
+            th.textContent = headerText; headerRow.appendChild(th);
+        });
+        const tbody = newTable.createTBody();
+        for (let r = 0; r < 2; r++) {
+            const dataRow = tbody.insertRow();
+            for (let c = 0; c < headerRow.cells.length; c++) {
+                const td = dataRow.insertCell(); td.contentEditable = 'true';
+                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`; 
+            }
+        }
+        tablesContainer.appendChild(newTable);
+        addTabButton(newTableId, label || defaultTableName);
+        switchTable(newTableId); 
+        if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
+    }
+
+    async function promptAndRenameActiveTable() {
+        if (!tableTabs) return;
+        const currentTab = tableTabs.querySelector('button.active');
+        if (!currentTab) { showMessage('No active table to rename.', 'error'); return; }
+        let tableIdToRename = currentTab.dataset.tableId;
+        if (!tableIdToRename) {
+            const onclickAttr = currentTab.getAttribute('onclick');
+            const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
+            if (match && match[1]) tableIdToRename = match[1];
+            else { showMessage('Could not identify table ID.', 'error'); return; }
+        }
+        const tableElement = document.getElementById(tableIdToRename);
+        if (!tableElement) { showMessage(`Table element not found.`, 'error'); return; }
+        const oldName = tableElement.dataset.tableName || currentTab.textContent;
+        const newName = customPrompt('Enter new table name:', oldName);
+        if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
+            const trimmedNewName = newName.trim();
+            currentTab.textContent = trimmedNewName; currentTab.title = `Switch to table: ${trimmedNewName}`; 
+            tableElement.dataset.tableName = trimmedNewName;
+            showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
+        } else if (newName && newName.trim() === oldName) {
+            showMessage('Name unchanged.', 'info');
+        } else if (newName === null) { 
+            showMessage('Rename cancelled.', 'info');
+        } else { 
+            showMessage('Invalid name.', 'error');
+        }
+    }
+
+    async function confirmAndDeleteActiveTable() {
+        if (!tablesContainer || !tableTabs || tablesContainer.children.length <= 1) {
+            showMessage('Cannot delete the last table.', 'error'); return;
+        }
+        const activeTab = tableTabs.querySelector('button.active');
+        const tableIdToDelete = activeTab ? activeTab.dataset.tableId : null;
+        const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
+        const tableName = tableElement ? tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
+        if (await customConfirm(`Delete table "${tableName}"? This action cannot be undone.`)) {
+            if (tableElement) tableElement.remove();
+            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
+            activeTab?.remove(); 
+            const firstRemainingTab = tableTabs.querySelector('button');
+            if (firstRemainingTab) { 
+                const nextActiveId = firstRemainingTab.dataset.tableId ||
+                                     firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; 
+                switchTable(nextActiveId);
+            } else { 
+                activeTableId = null; addNewTable(true); 
+            }
+            showMessage(`Table "${tableName}" deleted.`, 'success');
+        }
+    }
+
+    function addRowToTable(tableBody, rowIndex, numCols) {
+        const row = tableBody.insertRow(rowIndex); 
+        for (let i = 0; i < numCols; i++) {
+            const cell = row.insertCell(); cell.contentEditable = 'true';
+        }
+    }
+
+    function addRowAboveToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return; 
+        const numCols = table.rows[0].cells.length; 
+        let insertAtIndex = 0; 
+        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) {
+            insertAtIndex = lastClickedCell.parentElement.rowIndex; 
+        }
+        addRowToTable(table.tBodies[0], insertAtIndex, numCols);
+        rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+
+    function addRowBelowToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return;
+        const numCols = table.rows[0].cells.length;
+        let insertAtIndex = -1; 
+        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) {
+            insertAtIndex = lastClickedCell.parentElement.rowIndex + 1; 
+        }
+        addRowToTable(table.tBodies[0], insertAtIndex, numCols);
+        rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+
+    function addColumnToTable(table, colIndex) { 
+        for (const row of table.rows) {
+            const isHeaderRow = row.parentElement.tagName === 'THEAD';
+            const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex);
+            cell.contentEditable = 'true';
+            if (isHeaderRow) {
+                cell.textContent = "New Header";
+                if (colIndex !== -1 && row.cells[colIndex]) {
+                     row.insertBefore(cell, row.cells[colIndex]);
+                } else { 
+                     row.appendChild(cell);
+                }
+            }
+        }
+    }
+
+    function addColumnLeftToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table) return;
+        let insertAtIndex = 0; 
+        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
+            insertAtIndex = lastClickedCell.cellIndex;
+        }
+        addColumnToTable(table, insertAtIndex);
+        rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+
+    function addColumnRightToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table) return;
+        let insertAtIndex = -1; 
+        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
+            insertAtIndex = lastClickedCell.cellIndex + 1;
+        }
+        addColumnToTable(table, insertAtIndex);
+        rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+
+    async function deleteClickedRowFromActiveTable() {
+        if (!lastClickedCell) { showMessage('Please click a cell in the row to delete.', 'info'); return; }
+        const table = document.getElementById(activeTableId);
+        if (!table || !table.tBodies[0]) { showMessage('No active table or table body.', 'error'); return; }
+        const rowToDelete = lastClickedCell.closest('tr');
+        if (!rowToDelete || !rowToDelete.parentElement || rowToDelete.parentElement.tagName !== 'TBODY') {
+            showMessage('Cannot delete header row. Click a data row.', 'error'); return;
+        }
+        if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete the last data row.', 'error'); return; }
+        if (await customConfirm('Are you sure you want to delete this row?')) {
+            rowToDelete.remove(); lastClickedCell = null; 
+            deselectAllTableCells(); 
+            rebuildAndRenderSummary(); updateAllMergeOverlays();
+            showMessage('Row deleted.', 'success');
+        }
+    }
+
+    async function deleteClickedColumnFromActiveTable() {
+        if (!lastClickedCell) { showMessage('Please click a cell in the column to delete.', 'info'); return; }
+        const table = document.getElementById(activeTableId);
+        if (!table) { showMessage('No active table found.', 'error'); return; }
+        if (table.rows[0] && table.rows[0].cells.length <= 1) { showMessage('Cannot delete the last column.', 'error'); return; }
+        const colIndexToDelete = lastClickedCell.cellIndex;
+        if (await customConfirm('Are you sure you want to delete this column?')) {
+            for (const row of table.rows) {
+                if (row.cells[colIndexToDelete]) row.cells[colIndexToDelete].remove();
+            }
+            lastClickedCell = null; 
+            deselectAllTableCells();
+            rebuildAndRenderSummary(); updateAllMergeOverlays();
+            showMessage('Column deleted.', 'success');
+        }
+    }
+
+    function toggleCellSelectionMode() {
+        selectionMode = !selectionMode;
+        const btn = document.getElementById('selectBtn');
+        if(btn) {
+            btn.classList.toggle('active', selectionMode);
+            btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
+        }
+        if (!selectionMode) deselectAllTableCells(); 
+    }
+
+    function handleTableCellClick(event) {
+        const cell = event.target.closest('td, th');
+        if (!cell || !cell.closest(`#${activeTableId}`)) return; 
+        lastClickedCell = cell; 
+        if (selectedNameFromList) { 
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
+                const overlay = cell.querySelector('.merged-cell-overlay');
+                if (overlay) overlay.textContent = selectedNameFromList;
+                else cell.textContent = selectedNameFromList;
+                rebuildAndRenderSummary(); 
+                showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500);
+                clearNameSelection(); 
+            } else {
+                showMessage('Click an editable data cell to insert name.', 'info');
+            }
+            return; 
+        }
+        if (selectionMode) { 
+            if (cell.classList.contains('subsumed-cell') ||
+                (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
+                showMessage('Cannot select subsumed or mixed merge groups.', 'warning'); return;
+            }
+            cell.classList.toggle('selected');
+            if (cell.classList.contains('selected')) selectedCells.push(cell);
+            else selectedCells = selectedCells.filter(c => c !== cell);
+        }
+    }
+
+    function deselectAllTableCells() {
+        selectedCells.forEach(c => c.classList.remove('selected'));
+        selectedCells = [];
+    }
+
+    function mergeSelectedTableCells() {
+        if (selectedCells.length < 2) { showMessage('Select at least two cells.', 'error'); return; }
+        if (selectedCells.some(cell => cell.dataset.mergeId)) {
+            showMessage('Cannot merge already merged cells. Unmerge first.', 'warning'); return;
+        }
+        let primaryCell = selectedCells[0];
+        let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top;
+        let minColGUI = primaryCell.getBoundingClientRect().left;
+        selectedCells.forEach(cell => {
+            const cellRowRect = cell.parentElement.getBoundingClientRect();
+            const cellRect = cell.getBoundingClientRect();
+            if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) {
+                primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left;
+            }
+        });
+        let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
+        selectedCells.forEach(cell => {
+            const rect = cell.getBoundingClientRect();
+            minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right);
+            minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom);
+        });
+        const totalWidth = maxRight - minLeft; const totalHeight = maxBottom - minTop;
+        const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const overlay = document.createElement('div');
+        overlay.className = 'merged-cell-overlay'; overlay.textContent = primaryCell.textContent; 
+        overlay.contentEditable = 'true'; 
+        overlay.style.setProperty('--merged-width', `${totalWidth}px`);
+        overlay.style.setProperty('--merged-height', `${totalHeight}px`);
+        overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); });
+        primaryCell.innerHTML = ''; primaryCell.appendChild(overlay);
+        primaryCell.classList.add('merged-cell-container');
+        primaryCell.setAttribute('data-merge-id', mergeId);
+        selectedCells.forEach(cell => {
+            if (cell !== primaryCell) {
+                cell.textContent = ''; cell.classList.add('subsumed-cell');
+                cell.setAttribute('data-merge-id', mergeId);
+            }
+        });
+        deselectAllTableCells(); if (selectionMode) toggleCellSelectionMode(); 
+        showMessage('Cells visually merged.', 'success');
+    }
+
+    function unmergeActiveCellIfMerged() {
+        const cell = lastClickedCell; 
+        if (!cell) { showMessage('Click a merged cell to unmerge.', 'info'); return; }
+        const containerCell = cell.closest('[data-merge-id]'); 
+        if (!containerCell) { showMessage('Clicked cell is not merged.', 'error'); return; }
+        const mergeId = containerCell.dataset.mergeId;
+        const table = containerCell.closest('table'); if (!table) return;
+        const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`);
+        let originalText = '';
+        const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
+        if (primaryCellInGroup) {
+            const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay');
+            if (overlay) originalText = overlay.textContent;
+            else originalText = primaryCellInGroup.textContent; 
+        }
+        cellsInGroup.forEach(c => {
+            c.removeAttribute('data-merge-id');
+            c.classList.remove('merged-cell-container', 'subsumed-cell');
+            const overlayChild = c.querySelector('.merged-cell-overlay');
+            if (overlayChild) overlayChild.remove(); 
+            c.innerHTML = ''; 
+        });
+        if (primaryCellInGroup) primaryCellInGroup.textContent = originalText;
+        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText;
+        rebuildAndRenderSummary(); showMessage('Cells unmerged.', 'success');
+    }
+
+    function updateAllMergeOverlays() {
+        const activeTable = document.getElementById(activeTableId);
+        if (!activeTable) return;
+        activeTable.querySelectorAll('.merged-cell-container').forEach(containerCell => {
+            const mergeId = containerCell.dataset.mergeId; if (!mergeId) return;
+            const overlay = containerCell.querySelector('.merged-cell-overlay'); if (!overlay) return;
+            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`));
+            if (cellsInGroup.length === 0) return;
+            let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
+            cellsInGroup.forEach(cellInMerge => {
+                const rect = cellInMerge.getBoundingClientRect();
+                minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right);
+                minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom);
+            });
+            if (minLeft === Infinity) return; 
+            overlay.style.setProperty('--merged-width', `${maxRight - minLeft}px`);
+            overlay.style.setProperty('--merged-height', `${maxBottom - minTop}px`);
+        });
+    }
+
+    function handleNameListSessionSwitch(session) {
+        currentNameListSession = session;
+        if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi');
+        if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang');
+        if(nameModalTitleElement) nameModalTitleElement.textContent = `Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
+        if(searchNameInputElement) searchNameInputElement.value = ''; 
+        renderNameListFromFirestore(); 
+    }
+
+    function highlightSelectedNameInList(nameToHighlight) {
+        if (!nameListContainer) return;
+        nameListContainer.querySelectorAll('.name-item span').forEach(span => {
+            span.classList.toggle('highlighted', span.dataset.name === nameToHighlight);
+        });
+    }
+
+    function clearNameSelection() {
+        selectedNameFromList = null;
+        if (nameListContainer) {
+            nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => {
+                span.classList.remove('highlighted');
+            });
+        }
+    }
+
+    function closeNameModal() {
+        if (nameModal) nameModal.style.display = 'none';
+        clearNameSelection(); 
+        if(searchNameInputElement) searchNameInputElement.value = ''; 
+    }
+
+    function toggleNameListModalVisibility() {
+        if (!nameModal || !nameModalContent || !newNameInput) return;
+        const isDisplayed = nameModal.style.display === 'flex';
+        if (isDisplayed) closeNameModal();
+        else {
+            nameModalContent.style.position = 'relative'; 
+            nameModalContent.style.left = 'auto'; nameModalContent.style.top = 'auto';
+            nameModalContent.style.transform = 'none'; 
+            nameModal.style.display = 'flex';
+            if(searchNameInputElement) searchNameInputElement.value = ''; 
+            handleNameListSessionSwitch(currentNameListSession); 
+            if(newNameInput) newNameInput.focus();
+            clearNameSelection();
+        }
+    }
+
+    function renderNameListFromFirestore(filterText = '') {
+        if (!nameListContainer) return;
+        if (!fbIsAuthReady) {
+            nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names or Firebase not ready...</p>'; return;
+        }
+        nameListContainer.innerHTML = ''; 
+        const namesToRender = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+        const normalizedFilterText = filterText.toLowerCase().trim();
+        const filteredNames = namesToRender.filter(name => name.toLowerCase().includes(normalizedFilterText));
+        if (filteredNames.length === 0) {
+            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ?
+            'No names match search.' : `No names in ${currentNameListSession} session.`}</p>`; return;
+        }
+        filteredNames.forEach(name => {
+            const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
+            itemDiv.innerHTML = `<span data-name="${name}" title="Select '${name}'">${name}</span><button data-name-delete="${name}" title="Delete '${name}'">Delete</button>`;
+            nameListContainer.appendChild(itemDiv);
+        });
+        highlightSelectedNameInList(selectedNameFromList); 
+    }
+
+    function selectNameForCellInsertion(name) {
+        selectedNameFromList = name; highlightSelectedNameInList(name); 
+        showMessage(`Selected "${name}". Click cell to insert.`, 'info', 4000);
+    }
+
+    function handleNameListImportFirestore(event) {
+        const file = event.target.files[0];
+        if (!file) { showMessage('No file selected.', 'info'); return; }
+        if (file.type !== 'text/plain') {
+            showMessage('Invalid file type. Select .txt file.', 'error'); event.target.value = ''; return;
+        }
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importedNames = e.target.result.split(/\r?\n/).map(n => n.trim()).filter(n => n !== ''); 
+                if (importedNames.length === 0) { showMessage('No names in file.', 'info'); return; }
+                const currentSessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+                const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
+                await saveNameListToFirestore(currentNameListSession, combinedNames);
+            } catch (error) { showMessage('Error processing name list file.', 'error');
+            } finally { event.target.value = ''; }
+        };
+        reader.onerror = () => { showMessage('Failed to read file.', 'error'); event.target.value = ''; };
+        reader.readAsText(file);
+    }
+
+    function handleExcelFileImport(event) {
+        const file = event.target.files[0];
+        if (!file || !tablesContainer) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                const sheetName = workbook.SheetNames[0]; 
+                const worksheet = workbook.Sheets[sheetName];
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); 
+                tableCount++;
+                const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
+                const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
+                const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
+                const importedTableElement = tempDiv.querySelector('table');
+                if (importedTableElement) {
+                    importedTableElement.id = newTableId; importedTableElement.dataset.tableName = importedTableName;
+                    importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
+                    tablesContainer.appendChild(importedTableElement);
+                    addTabButton(newTableId, importedTableName); switchTable(newTableId); 
+                    showMessage('Excel data imported!', 'success');
+                } else { showMessage('Could not parse table from Excel.', 'error'); }
+            } catch (error) { showMessage('Error processing Excel file.', 'error');
+            } finally { event.target.value = ''; } 
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function exportActiveTableToExcel() {
+        const tableToExport = document.getElementById(activeTableId);
+        if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
+        const overlaysData = [];
+        tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
+            const parentCell = overlay.parentElement;
+            overlaysData.push({ parent: parentCell, originalParentHTML: parentCell.innerHTML, text: overlay.textContent });
+            parentCell.textContent = overlay.textContent; 
+        });
+        const tableName = tableToExport.dataset.tableName || activeTableId;
+        const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
+        XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        overlaysData.forEach(data => {
+            data.parent.innerHTML = data.originalParentHTML; 
+            const newOverlay = data.parent.querySelector('.merged-cell-overlay');
+            if (newOverlay) newOverlay.addEventListener('blur', () => { rebuildAndRenderSummary(); });
+        });
+        if(overlaysData.length > 0) updateAllMergeOverlays(); 
+        showMessage(`Table "${tableName}" exported.`, 'success');
+    }
+
+    function rebuildAndRenderSummary() {
+        const scheduledNames = new Set(); 
+        if (tablesContainer) {
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+                if (!scheduleTable.tBodies[0]) return; 
+                scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
+                    Array.from(row.cells).forEach((cell, cellIndex) => {
+                        const overlay = cell.querySelector('.merged-cell-overlay');
+                        if (overlay) { 
+                            const nameFromOverlay = overlay.textContent.trim();
+                            if (nameFromOverlay) scheduledNames.add(nameFromOverlay);
+                        } else if (cellIndex > 0 && cell.tagName === 'TD') { 
+                            const nameFromTd = cell.textContent.trim();
+                            if (nameFromTd) scheduledNames.add(nameFromTd);
+                        }
+                    });
+                });
+            });
+        }
+        const allSummaryNames = [...scheduledNames].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        buildSummaryTableSkeleton(allSummaryNames);
+        updateSummaryTableData(allSummaryNames);
+    }
+
+    function parseTimeToMinutes(timeStr) {
+        if (typeof timeStr !== 'string') return Infinity; 
+        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
+        if (match) return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+        return Infinity; 
+    }
+
+    function buildSummaryTableSkeleton(allAvailableNames) { 
+        if (!summaryTableElement) return;
+        summaryTableElement.innerHTML = ''; 
+        const tempRawHeadersFromSchedules = new Set(); 
+        if (tablesContainer) {
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+                if (scheduleTable.tHead && scheduleTable.tHead.rows.length > 0) {
+                    for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) {
+                        const headerText = scheduleTable.tHead.rows[0].cells[hIdx].textContent.trim();
+                        if (headerText) tempRawHeadersFromSchedules.add(headerText);
+                    }
+                }
+            });
+        }
+        let laulisahRuleRequiresSpecialSlot = false;
+        const specialNamesForRule = ["LAU", "LISAH"];
+        const targetSlotForSpecialNamesRule = "10.15-10.30";
+        const sourceSlotToShiftRule = "10.30-12.00";
+        if (tablesContainer) {
+            for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
+                if (laulisahRuleRequiresSpecialSlot) break; 
+                if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
+                const currentHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+                Array.from(scheduleTable.tBodies[0].rows).forEach((dataRow) => {
+                    if (laulisahRuleRequiresSpecialSlot) return;
+                    for (let cIdx = 1; cIdx < dataRow.cells.length; cIdx++) {
+                         let entry = dataRow.cells[cIdx].textContent.trim();
+                         const overlay = dataRow.cells[cIdx].querySelector('.merged-cell-overlay');
+                         if (overlay) entry = overlay.textContent.trim();
+                         if (specialNamesForRule.includes(entry)) {
+                            const hdr = currentHeaders[cIdx];
+                            if (hdr && hdr.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
+                                laulisahRuleRequiresSpecialSlot = true; return; 
+                            }
+                         }
+                    }
+                });
+            }
+        }
+        if (laulisahRuleRequiresSpecialSlot) tempRawHeadersFromSchedules.add(targetSlotForSpecialNamesRule);
+        
+        let sortedUniqueHeaders = Array.from(tempRawHeadersFromSchedules).sort((a, b) => {
+            const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b);
+            if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
+            if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  
+            return a.localeCompare(b); 
+        });
+        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedUniqueHeaders];
+        const thead = summaryTableElement.createTHead(); const headerRow = thead.insertRow();
+        finalSummaryColumnHeaders.forEach(txt => {
+            const th = document.createElement('th'); th.textContent = txt; headerRow.appendChild(th);
+        });
+        const tbody = summaryTableElement.createTBody();
+        if (allAvailableNames.length === 0) { 
+            const tr = tbody.insertRow(); const td = tr.insertCell();
+            td.textContent = "No names scheduled."; td.colSpan = finalSummaryColumnHeaders.length || 1;
+            td.style.textAlign = 'center'; td.style.fontStyle = 'italic';
+        } else {
+            allAvailableNames.forEach(name => {
+                const tr = tbody.insertRow(); tr.insertCell().textContent = name; 
+                for (let i = 1; i < finalSummaryColumnHeaders.length; i++) tr.insertCell().textContent = '';
+            });
+        }
+    }
+
+    function updateSummaryTableData(allAvailableNames) { 
+        if (!summaryTableElement || !summaryTableElement.tBodies || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) return; 
+        const summaryBody = summaryTableElement.tBodies[0];
+        if (!summaryBody || (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1))) return;
+        
+        const summaryHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
+        const normalizedSummaryHeaders = summaryHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
+        
+        Array.from(summaryBody.rows).forEach(row => {
+            if (row.cells.length > 1) Array.from(row.cells).slice(1).forEach(cell => {
+                cell.textContent = ''; cell.classList.remove('highlight-conflict'); 
+            });
+        });
+        if (tablesContainer) {
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+                if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) return; 
+                const schHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+                Array.from(scheduleTable.tBodies[0].rows).forEach((dataRow) => {
+                    const classId = dataRow.cells[0]?.textContent.trim(); if (!classId) return; 
+                    for (let cIdx = 1; cIdx < dataRow.cells.length; cIdx++) {
+                        let entry = dataRow.cells[cIdx].textContent.trim(); 
+                        const overlay = dataRow.cells[cIdx].querySelector('.merged-cell-overlay');
+                        if (overlay) entry = overlay.textContent.trim(); 
+                        if (entry) { 
+                            let schColHeader = schHeaders[cIdx]; if (!schColHeader) continue; 
+                            let sumColToUse = schColHeader;
+                            const specialNames = ["LAU", "LISAH"], targetSlot = "10.15-10.30", sourceSlot = "10.30-12.00";
+                            const normSchColHdr = schColHeader.replace(/\s/g, "").replace(/:/g,".");
+                            const normSrcSlot = sourceSlot.replace(/\s/g, "").replace(/:/g,".");
+                            if (specialNames.includes(entry) && normSchColHdr === normSrcSlot) sumColToUse = targetSlot;
+                            
+                            const targetRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entry);
+                            if (targetRow && targetRow.cells.length > 1) {
+                                const normSumColLookup = sumColToUse.replace(/\s/g, "").replace(/:/g,".");
+                                const targetColIdx = normalizedSummaryHeaders.indexOf(normSumColLookup);
+                                if (targetColIdx > 0) { 
+                                    const sumCell = targetRow.cells[targetColIdx];
+                                    let classes = sumCell.textContent.trim() ? sumCell.textContent.trim().split(',').map(s => s.trim()) : [];
+                                    if (!classes.includes(classId)) {
+                                        classes.push(classId);
+                                        sumCell.textContent = classes.sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' })).join(', ');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+        Array.from(summaryBody.rows).forEach(row => {
+            if (row.cells.length > 1) Array.from(row.cells).forEach((cell, idx) => {
+                if (idx > 0 && cell.textContent.includes(',')) cell.classList.add('highlight-conflict');
+            });
+        });
+    }
 
 </script>
 </body>
