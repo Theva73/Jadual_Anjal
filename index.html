@@ -14,6 +14,7 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            box-sizing: border-box; /* Ensure padding doesn't add to width */
         }
         .main-container {
             width: 100%;
@@ -22,6 +23,7 @@
             padding: 25px;
             border-radius: 12px; /* Softer radius */
             box-shadow: 0 6px 20px rgba(0,0,0,0.08); /* More subtle shadow */
+            box-sizing: border-box;
         }
         h2, h3 {
             color: #1c1e21; /* Darker, less harsh color */
@@ -47,63 +49,66 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             background-color: #fff;
-            table-layout: auto;
+            table-layout: auto; /* Let browser determine column widths, good for varying content */
         }
         #tablesContainer {
-            overflow-x: auto;
-            position: relative;
+            overflow-x: auto; /* Allows horizontal scrolling for tables on small screens */
+            position: relative; /* For potential absolute positioned children if any */
+            width: 100%;
         }
         #tablesContainer > table {
-            display: none;
+            display: none; /* Tables are hidden by default, active one shown by JS */
         }
         #tablesContainer > table.active {
-            display: table;
+            display: table; /* Show the active table */
         }
         #summaryTable {
-            display: table;
+            display: table; /* Summary table is always visible below others */
             margin-top: 25px;
         }
         th, td {
             border: 1px solid #dee2e6; /* Lighter border color */
-            padding: 12px 15px; /* Increased padding */
+            padding: 12px 15px; /* Increased padding for better touch targets and readability */
             text-align: center;
-            min-width: 110px;
+            min-width: 100px; /* Minimum width for cells, helps with layout */
+            box-sizing: border-box;
         }
         table th {
             background-color: #f8f9fa; /* Lighter header background */
             color: #343a40; /* Darker header text */
             font-weight: 600; /* Slightly bolder font */
-            white-space: nowrap;
+            white-space: nowrap; /* Prevent header text from wrapping */
         }
-        td.selected, th.selected {
+        td.selected, th.selected { /* Styling for selected cells */
             outline: 3px solid #007bff;
             background-color: #dbeafe; /* Adjusted selection color */
         }
         .bar {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px; /* Increased gap */
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            gap: 10px;
             margin-bottom: 20px;
             align-items: center;
-            justify-content: center;
+            justify-content: center; /* Center buttons in the bar */
         }
         .bar button, .table-tabs button, .name-session-tabs button {
-            padding: 10px 18px; /* Adjusted padding */
+            padding: 10px 18px;
             font-size: 14px;
-            border-radius: 6px; /* Softer radius */
+            border-radius: 6px;
             cursor: pointer;
-            border: 1px solid #ced4da; /* Lighter border */
+            border: 1px solid #ced4da;
             background-color: #fff;
             transition: all 0.2s ease-in-out;
             box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             display: inline-flex;
             align-items: center;
-            gap: 8px; /* Increased gap */
+            gap: 8px;
+            flex-shrink: 0; /* Prevent buttons from shrinking too much */
         }
         .bar button:hover, .table-tabs button:hover, .name-session-tabs button:hover {
             background-color: #f8f9fa;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transform: translateY(-2px); /* Add a slight lift on hover */
+            transform: translateY(-2px);
         }
         .bar button:active, .table-tabs button:active, .name-session-tabs button:active {
             transform: translateY(0);
@@ -131,137 +136,161 @@
             background-image: linear-gradient(to bottom, #f5c6cb 0%, #ebaeb3 100%);
             border-color: #f1b0b7;
         }
-        #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;
-        }
-        #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white;
-            border-color: #28a745;}
-        #saveDraftBtn { background-color: #007bff; color: white;
-            border-color: #007bff;}
-        #loadDraftBtn { background-color: #ffc107; color: #212529;
-            border-color: #ffc107;}
-        #clearActiveTableContentBtn { background-color: #fd7e14; color: white;
-            border-color: #fd7e14;}
-        #selectBtn { background-color: #17a2b8; color: white;
-            border-color: #17a2b8;}
-        #selectBtn.active { background-color: #fd7e14;
-            border-color: #fd7e14;}
-        #mergeBtn { background-color: #6f42c1; color: white;
-            border-color: #6f42c1;}
-        #unmergeBtn { background-color: #e83e8c; color: white;
-            border-color: #e83e8c;}
-        #addTableBtn { background-color: #20c997; color: white;
-            border-color: #20c997;}
-        #renameTableBtn { background-color: #6c757d; color: white;
-            border-color: #6c757d;}
-        #deleteTableBtn { background-color: #dc3545; color: white;
-            border-color: #dc3545;}
-        #nameListBtn { background-color: #fd7e14; color: white;
-            border-color: #fd7e14;}
-        #deselectBtn { background-color: #6c757d; color: white;
-            border-color: #6c757d;}
-        #exportDraftsBtn { background-color: #4e54c8; color: white;
-            border-color: #4e54c8;}
-        #importDraftsBtn { background-color: #8f94fb; color: white;
-            border-color: #8f94fb;}
+        /* Specific button styling */
+        #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;}
+        #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
+        #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
+        #loadDraftBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
+        #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
+        #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
+        #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
+        #mergeBtn { background-color: #6f42c1; color: white; border-color: #6f42c1;}
+        #unmergeBtn { background-color: #e83e8c; color: white; border-color: #e83e8c;}
+        #addTableBtn { background-color: #20c997; color: white; border-color: #20c997;}
+        #renameTableBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
+        #deleteTableBtn { background-color: #dc3545; color: white; border-color: #dc3545;}
+        #nameListBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
+        #deselectBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
+        #exportDraftsBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;}
+        #importDraftsBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;}
 
-        .table-tabs { margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 0;
+        .table-tabs {
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0;
+            display: flex; /* Use flex for tabs */
+            flex-wrap: wrap; /* Allow tabs to wrap */
+            gap: 5px; /* Space between tab buttons */
         }
-        .table-tabs button { background-color: transparent; border: none; border-bottom: 2px solid transparent; border-radius: 6px 6px 0 0; color: #0056b3; font-weight: 500;
+        .table-tabs button {
+            background-color: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 6px 6px 0 0;
+            color: #0056b3;
+            font-weight: 500;
+            padding: 10px 15px; /* Adjust padding for tabs */
         }
-        .table-tabs button.active { background-color: #007bff; color: white; border-color: #007bff;
+        .table-tabs button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
         }
         
-        .name-session-tabs { margin-bottom: 20px;
-            border-bottom: 2px solid #dee2e6; padding-bottom: 8px; }
+        .name-session-tabs {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 8px;
+            display: flex; /* Use flex for tabs */
+            flex-wrap: wrap; /* Allow tabs to wrap */
+            gap: 5px;
+        }
         .name-session-tabs button {
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
             border-bottom: none;
-            margin-bottom: -2px;
+            margin-bottom: -2px; /* Align with bottom border */
             padding: 10px 15px;
             font-size: 1em;
         }
         .name-session-tabs button.active {
             background-color: #007bff;
             color: white;
-            border-color: #007bff #007bff #fff;
+            border-color: #007bff #007bff #fff; /* Creates the tab effect */
             font-weight: bold;
         }
 
-
-        #summaryTable th { background-color: #ffc107; color: #212529; /* Brighter, more distinct color */
+        #summaryTable th {
+            background-color: #ffc107; /* Brighter, more distinct color for summary header */
+            color: #212529;
         }
-        #summaryTable td { background-color: #fff9e6; /* Lighter version of header */
+        #summaryTable td {
+            background-color: #fff9e6; /* Lighter version of header for summary data cells */
         }
-        .highlight-conflict { background-color: #f8d7da !important; font-weight: bold; color: #721c24 !important;
+        .highlight-conflict { /* Style for cells with conflicting entries */
+            background-color: #f8d7da !important;
+            font-weight: bold;
+            color: #721c24 !important;
         }
 
         .modal {
-            display: none;
+            display: none; /* Hidden by default */
             position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: rgba(0,0,0,0.5); /* Darker backdrop */ align-items: center; justify-content: center;
-            pointer-events: none;
+            overflow: hidden; /* Prevent scrolling of background when modal is open */
+            background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+            pointer-events: none; /* Allow clicks to pass through overlay to content */
         }
         .modal-content {
             background-color: #fff;
-            padding: 25px; border: 1px solid #ccc; width: 90%; max-width: 650px;
+            padding: 25px; border: 1px solid #ccc; width: 90%; max-width: 650px; /* Responsive width */
             border-radius: 10px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3); position: relative; pointer-events: auto;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3); position: relative;
+            pointer-events: auto; /* Modal content should be interactive */
+            max-height: 90vh; /* Max height to prevent overflow on small screens */
+            overflow-y: auto; /* Allow scrolling within modal if content is too tall */
+            box-sizing: border-box;
         }
-        .modal-content.dragging { transform: none;
-        }
+        .modal-content.dragging { transform: none; /* Disable transform while dragging for smoother movement */ }
         .modal-header {
             padding-bottom: 15px;
             border-bottom: 1px solid #e9ecef; margin-bottom: 20px;
             font-size: 1.3em; color: #333; display: flex; justify-content: space-between; align-items: center;
-            cursor: move; user-select: none;
+            cursor: move; user-select: none; /* Prevent text selection while dragging header */
         }
         .modal-close-btn {
             font-size: 1.8rem;
             font-weight: bold; line-height: 1; color: #555;
             text-shadow: none; opacity: .7; background: transparent; border: 0; cursor: pointer;
+            padding: 0 5px; /* Add some padding for easier touch */
             transition: color 0.2s;
         }
-        .modal-close-btn:hover { opacity: 1; color: #dc3545;
-        }
+        .modal-close-btn:hover { opacity: 1; color: #dc3545; }
+
         .name-item {
             display: flex;
             justify-content: space-between; align-items: center;
-            padding: 10px 8px; border-bottom: 1px solid #f1f3f5; break-inside: avoid-column; page-break-inside: avoid;
+            padding: 10px 8px; border-bottom: 1px solid #f1f3f5;
+            /* Removed break-inside and page-break-inside as they are for print/multi-column layouts not directly relevant here */
             transition: background-color 0.2s;
         }
         .name-item:hover { background-color: #f8f9fa; }
-        .name-item:last-child { border-bottom: none;
-        }
-        .name-item span { flex-grow: 1; cursor: pointer; color: #007bff; font-weight: 500;
-        }
-        .name-item span:hover { text-decoration: none; color: #0056b3;
-        }
+        .name-item:last-child { border-bottom: none; }
+        .name-item span { flex-grow: 1; cursor: pointer; color: #007bff; font-weight: 500; }
+        .name-item span:hover { text-decoration: none; color: #0056b3; }
         .name-item button { background-color: #dc3545; color: white; border: none; border-radius: 5px;
             padding: 6px 12px; font-size: 0.9em; transition: background-color 0.2s; }
         .name-item button:hover { background-color: #c82333; }
-        .highlighted { background-color: #cfe2ff !important; font-weight: bold;
+        .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
+
+        #draftList {
+            border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px;
+            background-color: #f8f9fa;
         }
-        #draftList { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px;
-            background-color: #f8f9fa; }
         .draft-item { display: flex; justify-content: space-between; align-items: center;
             padding: 10px 8px; border-bottom: 1px solid #e9ecef; }
-        .draft-item:last-child { border-bottom: none;
-        }
-        .draft-item span { cursor: pointer; color: #007bff;
-        }
-        .draft-item span:hover { text-decoration: underline;
-        }
+        .draft-item:last-child { border-bottom: none; }
+        .draft-item span { cursor: pointer; color: #007bff; }
+        .draft-item span:hover { text-decoration: underline; }
         .draft-item button { background-color: #dc3545; color: white; border: none; border-radius: 5px;
             padding: 6px 12px; font-size: 0.9em; }
+
         #newNameInput, #searchNameInput {
             padding: 10px;
             margin-right: 8px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1;
-            width: calc(100% - 110px);
+            width: calc(100% - 120px); /* Adjusted for button width and margin */
+            box-sizing: border-box;
         }
-         #searchNameInput { margin-bottom: 15px; width: 100%; box-sizing: border-box;
+         #searchNameInput {
+            margin-bottom: 15px;
+            width: 100%; /* Full width for search */
+            box-sizing: border-box;
+            margin-right: 0; /* No right margin needed if full width */
          }
-        .input-group { display: flex; margin-bottom: 15px;
+        .input-group {
+            display: flex;
+            margin-bottom: 15px;
+            width: 100%; /* Ensure input group takes full width */
         }
         .input-group button, #importNameListBtn {
             background-color: #28a745;
@@ -270,25 +299,40 @@
             transition: background-color 0.2s;
         }
         .input-group button:hover, #importNameListBtn:hover { background-color: #218838; }
-        #importNameListBtn { margin-top: 10px; width: 100%;
+        #importNameListBtn {
+            margin-top: 10px;
+            width: 100%; /* Full width button */
         }
-        #nameList { margin-top:15px; max-height:300px; overflow-y:auto; column-count: 2; column-gap: 25px;
+        #nameList {
+            margin-top:15px;
+            max-height:250px; /* Reduced from 300px to better fit modal */
+            overflow-y:auto;
+            /* column-count is handled by media query now for better responsiveness */
         }
+        /* Responsive columns for name list */
+        @media (min-width: 480px) { /* Apply two columns on screens wider than 480px */
+            #nameList {
+                column-count: 2;
+                column-gap: 20px; /* Slightly reduced gap */
+            }
+        }
+
+
         .custom-message-box {
             display: none;
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             background-color: #333; color: white; padding: 15px 25px; border-radius: 8px;
             z-index: 2000;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25); font-size: 1.05em;
+            text-align: center; /* Center text in message box */
+            width: 90%; /* Responsive width */
+            max-width: 400px; /* Max width for message box */
         }
-        .custom-message-box.success { background-color: #28a745;
-        }
-        .custom-message-box.error { background-color: #dc3545;
-        }
-        .custom-message-box.info { background-color: #007bff;
-        }
-        .merged-cell-container { position: relative; z-index: 2; vertical-align: top;
-        }
+        .custom-message-box.success { background-color: #28a745; }
+        .custom-message-box.error { background-color: #dc3545; }
+        .custom-message-box.info { background-color: #007bff; }
+
+        .merged-cell-container { position: relative; z-index: 2; vertical-align: top; }
         .merged-cell-overlay {
             position: absolute;
             top: 0; left: 0; width: var(--merged-width); height: var(--merged-height);
@@ -297,28 +341,38 @@
             justify-content: center; overflow: hidden;
             box-sizing: border-box; z-index: 5;
         }
-        .subsumed-cell { visibility: hidden;
-        }
+        .subsumed-cell { visibility: hidden; }
+
         #loadingIndicatorModal {
-            position: absolute;
+            position: absolute; /* Position within its parent (modal content) */
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.85);
             display: flex; align-items: center; justify-content: center;
-            z-index: 10;
+            z-index: 10; /* Ensure it's above other modal content */
+            border-radius: 10px; /* Match modal content radius */
         }
         .spinner {
             border: 5px solid rgba(0, 0, 0, 0.1);
             width: 40px; height: 40px;
             border-radius: 50%;
-            border-left-color: #007bff;
+            border-left-color: #007bff; /* Spinner color */
             animation: spin 1s ease infinite;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg);
-            }
-            100% { transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
+
+        /* Ensure hidden file inputs don't take up space */
+        input[type="file"][style*="display:none"],
+        input[type="file"][style*="display: none"] {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -346,7 +400,6 @@
         <button id="selectBtn" title="Toggle cell selection mode on/off">✨ Select Cells</button>
         <button id="mergeBtn" title="Merge the currently selected cells">🔗 Merge Cells</button>
         <button id="deselectBtn" title="Clear current cell selection">🚫 Deselect All</button>
-  
         <button id="unmergeBtn" title="Unmerge the cell that was last clicked if it's part of a merge">💔 Unmerge Cell</button>
     </div>
     <div class="bar">
@@ -362,21 +415,23 @@
         <table id="tbl_1" class="active" data-table-name="Table 1">
             <thead>
                 <tr>
-                    <th contenteditable="true">Class</th> <th contenteditable="true">08:00</th>
-         
-                    <th contenteditable="true">09:00</th> <th contenteditable="true">10:00</th>
-                    <th contenteditable="true">11:00</th> <th contenteditable="true">12:00</th>
+                    <th contenteditable="true">Class</th>
+                    <th contenteditable="true">08:00</th>
+                    <th contenteditable="true">09:00</th>
+                    <th contenteditable="true">10:00</th>
+                    <th contenteditable="true">11:00</th>
+                    <th contenteditable="true">12:00</th>
                     <th contenteditable="true">13:00</th>
                 </tr>
             </thead>
             <tbody>
-  
-                <tr> <td contenteditable="true">5S1</td>
+                <tr>
+                    <td contenteditable="true">5S1</td>
                     <td contenteditable="true"></td><td contenteditable="true">JAMES</td><td contenteditable="true"></td>
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
-                 <tr> <td contenteditable="true">5S2</td>
-  
+                 <tr>
+                    <td contenteditable="true">5S2</td>
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
@@ -390,60 +445,59 @@
         <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Add Column Left</button>
         <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Add Column Right</button>
         <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
-   
-         <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
+        <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
     </div>
 
     <div id="nameModal" class="modal">
         <div class="modal-content" id="nameModalContent">
             <div class="modal-header" id="nameModalHeader">
-                <h3 id="nameModalTitle">Name List Manager</h3> <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
+                <h3 id="nameModalTitle">Name List Manager</h3>
+                <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
             </div>
             <div class="name-session-tabs">
- 
                 <button id="namePagiTab" data-session="pagi" class="active">Pagi (Morning)</button>
                 <button id="namePetangTab" data-session="petang">Petang (Afternoon)</button>
             </div>
              <div class="input-group">
                 <input id="newNameInput" placeholder="Add new name to current session">
-             
                 <button id="addNameBtnInModal" title="Add the name to the list">Add</button>
             </div>
             <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current session">📂 Import Names (.txt) to Session</button>
             <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
-            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current session..." style="margin-top: 10px;" title="Filter the list of names">
-            <div id="nameList" style="margin-top:10px;max-height:250px;overflow-y:auto;">
+            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current session..." title="Filter the list of names">
+            <div id="nameList">
                 </div>
             <div id="loadingIndicatorModal" style="display:none;"><div class="spinner"></div></div>
         </div>
     </div>
 
     <h3 style="margin-top:32px">Teacher/Subject Attendance Summary</h3>
-    <table id="summaryTable"></table>
+    <table id="summaryTable">
+        </table>
     <div id="customMessageBox" class="custom-message-box"></div>
 </div>
 
 <script type="module">
     // Firebase App (the core Firebase SDK) is always required and must be listed first
-  
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     // Add SDKs for Firebase products that you want to use
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
-    // THIS IS WHERE YOUR CONFIGURATION IS INJECTED
+    // THIS IS WHERE YOUR CONFIGURATION IS INJECTED (or use Canvas provided)
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
-      authDomain: "jadual-3f0aa.firebaseapp.com",
-      projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.firebasestorage.app", // Corrected from firebasestorage.app
-      messagingSenderId: "496526436851",
-      appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
+      apiKey: "YOUR_API_KEY", // Replace with your actual API key if not using Canvas injection
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
+
+    // Use Canvas-provided config if available, otherwise fallback to userProvidedFirebaseConfig
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedFirebaseConfig;
-    const appId = typeof __app_id !== 'undefined' ?
-    __app_id : firebaseConfig.appId;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-app-id');
 
 
     // --- Initialize Firebase ---
@@ -464,70 +518,82 @@
     // --- Global State and Configuration ---
     const DRAFTS_KEY = 'jadual_drafts_v3';
     const SCHEDULE_TITLE_KEY = 'jadual_title_v3';
-    let activeTableId = 'tbl_1';
-    let tableCount = 1;
-    let selectionMode = false;
-    let selectedCells = [];
-    let lastClickedCell = null;
-    let selectedNameFromList = null; 
+    let activeTableId = 'tbl_1'; // Default active table
+    let tableCount = 1; // Counter for new tables
+    let selectionMode = false; // Flag for cell selection mode
+    let selectedCells = []; // Array to store selected cells
+    let lastClickedCell = null; // Reference to the last clicked cell
+    let selectedNameFromList = null; // Name selected from the modal list for insertion
 
     // Firestore Name List State
-    let currentNameListSession = 'pagi';
-    let namesPagi = [];
-    let namesPetang = [];
+    let currentNameListSession = 'pagi'; // Default session for name list
+    let namesPagi = []; // Array for 'pagi' names
+    let namesPetang = []; // Array for 'petang' names
 
+    // Modal dragging state
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
-    // DOM Element Cache
+
+    // DOM Element Cache (initialized in DOMContentLoaded)
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement;
-    // --- Utility Functions (Existing) ---
+
+    // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
         if (!customMessageBox) return;
         customMessageBox.textContent = message;
-        customMessageBox.className = `custom-message-box ${type}`;
+        customMessageBox.className = `custom-message-box ${type}`; // Apply type class for styling
         customMessageBox.style.display = 'block';
         setTimeout(() => { if (customMessageBox) customMessageBox.style.display = 'none'; }, duration);
     }
+
     function customPrompt(message, defaultValue = "") {
+        // Standard browser prompt
         return prompt(message, defaultValue);
     }
+
     function customConfirm(message) {
+        // Custom confirm dialog implementation (as provided in original code)
         return new Promise((resolve) => {
             const confirmModalId = 'customConfirmModal';
             let existingModal = document.getElementById(confirmModalId);
             if (existingModal) existingModal.remove();
+
             const modal = document.createElement('div');
             modal.id = confirmModalId;
-         
             modal.style.cssText = `display: flex; position: fixed; z-index: 2001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;`;
+
             const modalContent = document.createElement('div');
             modalContent.style.cssText = `background-color: #fff; padding: 25px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 300px; max-width: 90%;`;
+
             const messageP = document.createElement('p');
-            messageP.textContent = 
-            message;
+            messageP.textContent = message;
             messageP.style.marginBottom = '20px'; messageP.style.fontSize = '1.1em';
+
             const yesButton = document.createElement('button');
             yesButton.textContent = 'Yes';
-            yesButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer;
-            background-color: #28a745; color: white; border: none; font-size: 1em;`;
+            yesButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #28a745; color: white; border: none; font-size: 1em;`;
+
             const noButton = document.createElement('button');
             noButton.textContent = 'No';
-            noButton.style.cssText = `padding: 10px 20px;
-            margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #dc3545; color: white; border: none; font-size: 1em;`;
+            noButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #dc3545; color: white; border: none; font-size: 1em;`;
+
             const closeModal = (value) => { modal.remove(); resolve(value); };
             yesButton.onclick = () => closeModal(true);
             noButton.onclick = () => closeModal(false);
+
             modalContent.appendChild(messageP);
-            modalContent.appendChild(yesButton); modalContent.appendChild(noButton);
-            modal.appendChild(modalContent); document.body.appendChild(modal);
+            modalContent.appendChild(yesButton);
+            modalContent.appendChild(noButton);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
         });
     }
+
 
     // --- Firestore Name List Functions ---
     function showNameModalLoading(isLoading) {
         if (loadingIndicatorModalElement) {
-            loadingIndicatorModalElement.style.display = isLoading ?
-            'flex' : 'none';
+            loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
         }
     }
 
@@ -537,6 +603,7 @@
             return;
         }
         showNameModalLoading(true);
+        // Ensure names are unique and sorted before saving
         const uniqueSortedNames = [...new Set(namesArray)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", session);
         try {
@@ -555,23 +622,28 @@
             showMessage("Firebase not ready. Cannot add name.", "error");
             return;
         }
-        if (!name || name.trim() === "") {
+        const trimmedName = name.trim();
+        if (!trimmedName) {
             showMessage("Name cannot be empty.", "info");
             return;
         }
         showNameModalLoading(true);
         const sessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
-        if (sessionNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
-            showMessage(`Name "${name}" already exists in ${currentNameListSession} session.`, "info");
+        // Check if name already exists (case-insensitive)
+        if (sessionNames.map(n => n.toLowerCase()).includes(trimmedName.toLowerCase())) {
+            showMessage(`Name "${trimmedName}" already exists in ${currentNameListSession} session.`, "info");
             showNameModalLoading(false);
             return;
         }
 
-        const updatedNames = [...sessionNames, name].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        const updatedNames = [...sessionNames, trimmedName].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
         try {
             await setDoc(docRef, { names: updatedNames });
-            if(newNameInput) newNameInput.value = ''; newNameInput.focus();
+            if(newNameInput) {
+                newNameInput.value = ''; // Clear input after adding
+                newNameInput.focus();
+            }
         } catch (error) {
             console.error(`Error adding name to ${currentNameListSession}:`, error);
             showMessage(`Failed to add name. Error: ${error.message}`, "error");
@@ -592,17 +664,16 @@
             const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
             try {
                 await setDoc(docRef, { names: updatedNames });
+                // Remove the deleted name from all schedule tables
                 tablesContainer.querySelectorAll('table').forEach(table => {
                     table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
                         if (cell.textContent.trim() === nameToDelete) {
-                            cell.textContent = '';
-              
+                            cell.textContent = ''; // Clear the cell content
                         }
                     });
                 });
-                rebuildAndRenderSummary(); 
-                if (selectedNameFromList === nameToDelete) clearNameSelection();
-
+                rebuildAndRenderSummary(); // Update the summary table
+                if (selectedNameFromList === nameToDelete) clearNameSelection(); // Clear selection if deleted name was selected
             } catch (error) {
                 console.error(`Error deleting name from ${currentNameListSession}:`, error);
                 showMessage(`Failed to delete name. Error: ${error.message}`, "error");
@@ -615,7 +686,7 @@
     function listenToNameList(sessionToListen) {
         if (!fbDb || !fbUserId || !fbIsAuthReady) {
             console.warn(`Firestore not ready for session ${sessionToListen}, listener not attached.`);
-            return () => {}; 
+            return () => {}; // Return a dummy unsubscribe function
         }
         const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", sessionToListen);
         return onSnapshot(docRef, (docSnap) => {
@@ -624,26 +695,24 @@
                 const data = docSnap.data();
                 if (sessionToListen === 'pagi') {
                     namesPagi = data.names || [];
-       
                 } else {
                     namesPetang = data.names || [];
                 }
-            } else { 
+            } else {
+                // Document doesn't exist, initialize with empty list
                 if (sessionToListen === 'pagi') namesPagi = [];
-            
                 else namesPetang = [];
                 console.log(`No names document found for ${sessionToListen}, initialized empty list.`);
             }
-            if (sessionToListen === currentNameListSession) { 
+            // If the currently viewed session in modal matches the updated list, re-render it
+            if (sessionToListen === currentNameListSession && nameModal.style.display === 'flex') {
                 renderNameListFromFirestore(searchNameInputElement ? searchNameInputElement.value : '');
             }
-        
-            rebuildAndRenderSummary(); 
+            rebuildAndRenderSummary(); // Update summary table as names might have changed
             showNameModalLoading(false);
         }, (error) => {
             console.error(`Error listening to ${sessionToListen} names:`, error);
-            showMessage(`Error fetching ${sessionToListen} names.
-            Check console.`, "error");
+            showMessage(`Error fetching ${sessionToListen} names. Check console.`, "error");
             showNameModalLoading(false);
         });
     }
@@ -651,6 +720,7 @@
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
+        // Cache DOM elements
         scheduleTitleElement = document.getElementById('scheduleTitle');
         tablesContainer = document.getElementById('tablesContainer');
         tableTabs = document.getElementById('tableTabs');
@@ -659,7 +729,6 @@
         nameModalHeader = document.getElementById('nameModalHeader');
         nameListContainer = document.getElementById('nameList');
         newNameInput = document.getElementById('newNameInput');
- 
         draftListElement = document.getElementById('draftList');
         summaryTableElement = document.getElementById('summaryTable');
         customMessageBox = document.getElementById('customMessageBox');
@@ -675,41 +744,41 @@
         loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
         nameModalTitleElement = document.getElementById('nameModalTitle');
 
-
-        if (!tablesContainer || !tableTabs || !nameModal || !nameModalContent || !nameModalHeader || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement || !nameListImportFileInputElement || !searchNameInputElement || !draftImportFileInputElement || !userIdDisplayElement || !namePagiTabElement || !namePetangTabElement || !loadingIndicatorModalElement || !nameModalTitleElement) {
+        // Basic check for critical elements
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !customMessageBox || !scheduleTitleElement) {
             console.error("Critical DOM elements missing. Application might not function correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements. Please ensure the HTML structure is correct.</p>";
             return;
         }
 
+        // Firebase Authentication
         if (fbAuth) {
             onAuthStateChanged(fbAuth, async (user) => {
                 if (user) {
                     fbUserId = user.uid;
                     fbIsAuthReady = true;
-           
                     if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
                     console.log("Firebase User is signed in with UID:", fbUserId);
 
+                    // Detach old listeners if they exist
                     if (unsubscribePagi) unsubscribePagi();
                     if (unsubscribePetang) unsubscribePetang();
 
-               
+                    // Attach new listeners for name lists
                     unsubscribePagi = listenToNameList('pagi');
                     unsubscribePetang = listenToNameList('petang');
                     
-                    if (nameModal.style.display === 'flex') {
+                    // If name modal is open, refresh its content
+                    if (nameModal.style.display === 'flex' && searchNameInputElement) {
                         renderNameListFromFirestore(searchNameInputElement.value);
-   
                     }
-
                 } else {
                     fbIsAuthReady = false;
                     fbUserId = null;
-                    if(userIdDisplayElement) 
-                    userIdDisplayElement.textContent = "User ID: Not authenticated";
-                    console.log("Firebase User is signed out or auth not yet complete.");
+                    if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Not authenticated";
+                    console.log("Firebase User is signed out or auth not yet complete. Attempting sign-in.");
                     try {
+                        // Use Canvas-provided token if available, otherwise sign in anonymously
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await signInWithCustomToken(fbAuth, __initial_auth_token);
                         } else {
@@ -726,148 +795,190 @@
              if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Error";
         }
 
-
-        loadScheduleTitle();
-        initializeEventListeners();
-        setupInitialTableState();
-        rebuildAndRenderSummary(); 
-        handleNameListSessionSwitch('pagi'); 
+        loadScheduleTitle(); // Load saved schedule title from localStorage
+        initializeEventListeners(); // Setup all event listeners
+        setupInitialTableState(); // Setup or create initial table
+        rebuildAndRenderSummary(); // Initial build of the summary table
+        handleNameListSessionSwitch('pagi'); // Set initial name list session
     });
+
     function setupInitialTableState() {
         const existingTables = tablesContainer.querySelectorAll('table');
         if (existingTables.length > 0) {
-            tableTabs.innerHTML = '';
+            tableTabs.innerHTML = ''; // Clear any existing tabs
             existingTables.forEach((table, index) => {
                 const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`;
                 table.id = tableId;
                 const tableName = table.dataset.tableName || `Table ${index + 1}`;
                 table.dataset.tableName = tableName;
-              
                 addTabButton(tableId, tableName);
-                if (index === 0) activeTableId = tableId;
+                if (index === 0) activeTableId = tableId; // Set first table as active
             });
         } else {
-            addNewTable(true);
+            // No tables exist, add a new default one
+            addNewTable(true); // true indicates it's an initial table
         }
 
+        // Ensure the active table is correctly displayed
         if (activeTableId && document.getElementById(activeTableId)) {
             switchTable(activeTableId);
         } else if (tablesContainer.querySelector('table')) {
+            // Fallback if activeTableId is somehow invalid but tables exist
             switchTable(tablesContainer.querySelector('table').id);
         }
     }
+
     function loadScheduleTitle() {
         const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
         if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
         if (scheduleTitleElement) {
-            scheduleTitleElement.addEventListener('blur', () => {
+            scheduleTitleElement.addEventListener('blur', () => { // Save title on blur
                 localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent);
                 showMessage('Schedule title saved!', 'success');
             });
         }
     }
+
     function initializeEventListeners() {
-        directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
-        closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
-        nameModalHeader.addEventListener('mousedown', startDragModal);
+        // General UI and Features
+        if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
+        if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
+        if(nameModalHeader) {
+            nameModalHeader.addEventListener('mousedown', startDragModal);
+            nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false });
+        }
         document.addEventListener('mousemove', dragModal);
         document.addEventListener('mouseup', stopDragModal);
-        nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false });
         document.addEventListener('touchmove', dragModal, { passive: false });
         document.addEventListener('touchend', stopDragModal);
-        document.getElementById('excelBtnTrigger').addEventListener('click', exportActiveTableToExcel);
-        document.getElementById('importExcelBtn').addEventListener('click', () => fileInputElement.click());
-        fileInputElement.addEventListener('change', handleExcelFileImport);
-        document.getElementById('saveDraftBtn').addEventListener('click', promptAndSaveDraft);
-        document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftListVisibility);
-        document.getElementById('exportDraftsBtn').addEventListener('click', exportAllDrafts);
-        document.getElementById('importDraftsBtn').addEventListener('click', () => draftImportFileInputElement.click());
-        draftImportFileInputElement.addEventListener('change', handleDraftsFileImport);
-        document.getElementById('clearActiveTableContentBtn').addEventListener('click', confirmAndClearActiveTableContent);
-        document.getElementById('selectBtn').addEventListener('click', toggleCellSelectionMode);
-        document.getElementById('mergeBtn').addEventListener('click', mergeSelectedTableCells);
-        document.getElementById('deselectBtn').addEventListener('click', deselectAllTableCells);
-        document.getElementById('unmergeBtn').addEventListener('click', unmergeActiveCellIfMerged);
-        document.getElementById('addTableBtn').addEventListener('click', () => addNewTable());
-        document.getElementById('renameTableBtn').addEventListener('click', promptAndRenameActiveTable);
-        document.getElementById('deleteTableBtn').addEventListener('click', confirmAndDeleteActiveTable);
-        document.getElementById('nameListBtn').addEventListener('click', toggleNameListModalVisibility);
-        document.getElementById('addNameBtnInModal').addEventListener('click', () => {
-            if(newNameInput) addNameToCurrentSessionInFirestore(newNameInput.value);
-        });
-        document.getElementById('importNameListBtn').addEventListener('click', () => nameListImportFileInputElement.click());
-        nameListImportFileInputElement.addEventListener('change', handleNameListImportFirestore);
-        if(searchNameInputElement) searchNameInputElement.addEventListener('input', () => renderNameListFromFirestore(searchNameInputElement.value));
-        
-        namePagiTabElement.addEventListener('click', () => handleNameListSessionSwitch('pagi'));
-        namePetangTabElement.addEventListener('click', () => handleNameListSessionSwitch('petang'));
-        draftListElement.addEventListener('click', async (e) => {
+
+        // Excel Import/Export
+        document.getElementById('excelBtnTrigger')?.addEventListener('click', exportActiveTableToExcel);
+        document.getElementById('importExcelBtn')?.addEventListener('click', () => fileInputElement?.click());
+        if(fileInputElement) fileInputElement.addEventListener('change', handleExcelFileImport);
+
+        // Draft Management
+        document.getElementById('saveDraftBtn')?.addEventListener('click', promptAndSaveDraft);
+        document.getElementById('loadDraftBtn')?.addEventListener('click', toggleDraftListVisibility);
+        document.getElementById('exportDraftsBtn')?.addEventListener('click', exportAllDrafts);
+        document.getElementById('importDraftsBtn')?.addEventListener('click', () => draftImportFileInputElement?.click());
+        if(draftImportFileInputElement) draftImportFileInputElement.addEventListener('change', handleDraftsFileImport);
+        if(draftListElement) draftListElement.addEventListener('click', async (e) => {
             const targetSpan = e.target.closest('.draft-item span');
             const targetButton = e.target.closest('.draft-item button');
             if (targetSpan) loadSelectedDraft(targetSpan.textContent);
             else if (targetButton) await confirmAndDeleteDraft(targetButton.parentElement.querySelector('span').textContent);
         });
-        nameListContainer.addEventListener('click', async (e) => {
+
+        // Table Content and Structure
+        document.getElementById('clearActiveTableContentBtn')?.addEventListener('click', confirmAndClearActiveTableContent);
+        document.getElementById('selectBtn')?.addEventListener('click', toggleCellSelectionMode);
+        document.getElementById('mergeBtn')?.addEventListener('click', mergeSelectedTableCells);
+        document.getElementById('deselectBtn')?.addEventListener('click', deselectAllTableCells);
+        document.getElementById('unmergeBtn')?.addEventListener('click', unmergeActiveCellIfMerged);
+        document.getElementById('addTableBtn')?.addEventListener('click', () => addNewTable());
+        document.getElementById('renameTableBtn')?.addEventListener('click', promptAndRenameActiveTable);
+        document.getElementById('deleteTableBtn')?.addEventListener('click', confirmAndDeleteActiveTable);
+
+        // Row/Column Manipulation
+        document.getElementById('addRowAboveBtn')?.addEventListener('click', addRowAboveToActiveTable);
+        document.getElementById('addRowBelowBtn')?.addEventListener('click', addRowBelowToActiveTable);
+        document.getElementById('addColLeftBtn')?.addEventListener('click', addColumnLeftToActiveTable);
+        document.getElementById('addColRightBtn')?.addEventListener('click', addColumnRightToActiveTable);
+        document.getElementById('deleteRowBtn')?.addEventListener('click', deleteClickedRowFromActiveTable);
+        document.getElementById('deleteColBtn')?.addEventListener('click', deleteClickedColumnFromActiveTable);
+
+        // Name List Modal
+        document.getElementById('nameListBtn')?.addEventListener('click', toggleNameListModalVisibility);
+        document.getElementById('addNameBtnInModal')?.addEventListener('click', () => {
+            if(newNameInput) addNameToCurrentSessionInFirestore(newNameInput.value);
+        });
+        document.getElementById('importNameListBtn')?.addEventListener('click', () => nameListImportFileInputElement?.click());
+        if(nameListImportFileInputElement) nameListImportFileInputElement.addEventListener('change', handleNameListImportFirestore);
+        if(searchNameInputElement) searchNameInputElement.addEventListener('input', (e) => renderNameListFromFirestore(e.target.value));
+        if(namePagiTabElement) namePagiTabElement.addEventListener('click', () => handleNameListSessionSwitch('pagi'));
+        if(namePetangTabElement) namePetangTabElement.addEventListener('click', () => handleNameListSessionSwitch('petang'));
+        if(nameListContainer) nameListContainer.addEventListener('click', async (e) => {
             const nameItemSpan = e.target.closest('.name-item span[data-name]');
             const deleteButton = e.target.closest('.name-item button[data-name-delete]');
             if (nameItemSpan) {
                 selectNameForCellInsertion(nameItemSpan.dataset.name);
             } else if (deleteButton) {
                 await deleteNameFromCurrentSessionInFirestore(deleteButton.dataset.nameDelete);
- 
             }
         });
-        document.getElementById('addRowAboveBtn').addEventListener('click', addRowAboveToActiveTable);
-        document.getElementById('addRowBelowBtn').addEventListener('click', addRowBelowToActiveTable);
-        document.getElementById('addColLeftBtn').addEventListener('click', addColumnLeftToActiveTable);
-        document.getElementById('addColRightBtn').addEventListener('click', addColumnRightToActiveTable);
-        document.getElementById('deleteRowBtn').addEventListener('click', deleteClickedRowFromActiveTable);
-        document.getElementById('deleteColBtn').addEventListener('click', deleteClickedColumnFromActiveTable);
 
-        tablesContainer.addEventListener('click', handleTableCellClick);
-        tablesContainer.addEventListener('blur', (e) => {
-            if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                setTimeout(rebuildAndRenderSummary, 0);
-            }
-        }, true);
-        tablesContainer.addEventListener('input', (e) => {
-            if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                setTimeout(rebuildAndRenderSummary, 300);
-            }
-        });
-        window.addEventListener('resize', updateAllMergeOverlays);
+        // Table Cell Interactions (Click, Blur, Input)
+        if(tablesContainer) {
+            tablesContainer.addEventListener('click', handleTableCellClick);
+            tablesContainer.addEventListener('blur', (e) => { // Update summary on cell blur (content change finalized)
+                if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                    setTimeout(rebuildAndRenderSummary, 0); // Use timeout to allow DOM to update
+                }
+            }, true); // Use capture phase
+            tablesContainer.addEventListener('input', (e) => { // Update summary on cell input (live changes)
+                 if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                    // Debounce or throttle this if performance becomes an issue on rapid typing
+                    setTimeout(rebuildAndRenderSummary, 300); // Small delay
+                }
+            });
+        }
+        window.addEventListener('resize', updateAllMergeOverlays); // Update merged cell overlays on window resize
     }
 
+    // --- Modal Dragging Functions ---
     function startDragModal(e) {
-        if (e.target.closest('.modal-close-btn')) { isDraggingModal = false;
-        return; }
-        isDraggingModal = true; nameModalContent.classList.add('dragging');
-        const clientX = e.clientX ||
-        (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        const rect = nameModalContent.getBoundingClientRect();
-        nameModalContent.style.position = 'fixed';
-        nameModalContent.style.left = `${rect.left}px`;
-        nameModalContent.style.top = `${rect.top}px`; nameModalContent.style.transform = 'none';
-        modalDragOffsetX = clientX - nameModalContent.offsetLeft; modalDragOffsetY = clientY - nameModalContent.offsetTop;
-        if (e.type === 'touchstart') e.preventDefault();
-    }
-    function dragModal(e) {
-        if (!isDraggingModal) return;
+        if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; } // Don't drag if close button is clicked
+        isDraggingModal = true;
+        if(nameModalContent) nameModalContent.classList.add('dragging');
+
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        let newLeft = clientX - modalDragOffsetX; let newTop = clientY - modalDragOffsetY;
-        const modalRect = nameModalContent.getBoundingClientRect(); const viewportWidth = window.innerWidth;
+        const rect = nameModalContent.getBoundingClientRect();
+
+        // Temporarily fix position for dragging
+        nameModalContent.style.position = 'fixed';
+        nameModalContent.style.left = `${rect.left}px`;
+        nameModalContent.style.top = `${rect.top}px`;
+        nameModalContent.style.transform = 'none'; // Important for correct offset calculation
+
+        modalDragOffsetX = clientX - nameModalContent.offsetLeft;
+        modalDragOffsetY = clientY - nameModalContent.offsetTop;
+
+        if (e.type === 'touchstart') e.preventDefault(); // Prevent page scroll on touch devices
+    }
+    function dragModal(e) {
+        if (!isDraggingModal || !nameModalContent) return;
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        let newLeft = clientX - modalDragOffsetX;
+        let newTop = clientY - modalDragOffsetY;
+
+        // Constrain modal within viewport
+        const modalRect = nameModalContent.getBoundingClientRect(); // Get current dimensions
+        const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        if (newLeft < 0) newLeft = 0; if (newTop < 0) newTop = 0;
+
+        if (newLeft < 0) newLeft = 0;
+        if (newTop < 0) newTop = 0;
         if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
         if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
-        nameModalContent.style.left = `${newLeft}px`; nameModalContent.style.top = `${newTop}px`;
-        if (e.type === 'touchmove') e.preventDefault();
-    }
-    function stopDragModal() { if (isDraggingModal) { isDraggingModal = false; nameModalContent.classList.remove('dragging');
-    } }
 
+        nameModalContent.style.left = `${newLeft}px`;
+        nameModalContent.style.top = `${newTop}px`;
+        if (e.type === 'touchmove') e.preventDefault(); // Prevent page scroll
+    }
+    function stopDragModal() {
+        if (isDraggingModal && nameModalContent) {
+            isDraggingModal = false;
+            nameModalContent.classList.remove('dragging');
+            // Optional: Reset position to relative if needed, or keep fixed.
+            // For simplicity, keeping it fixed after drag might be fine.
+        }
+    }
+
+    // --- Clipboard and Draft Functions (largely unchanged, ensure elements exist) ---
     async function attemptDirectCopyToClipboard() {
         const fullHtml = document.documentElement.outerHTML;
         try {
@@ -876,8 +987,11 @@
         } catch (err) {
             console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
             const textarea = document.createElement('textarea');
-            textarea.value = fullHtml; textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
-            document.body.appendChild(textarea); textarea.select();
+            textarea.value = fullHtml;
+            textarea.style.position = 'fixed'; // Prevent scrolling to bottom of page
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
             try {
                 const successful = document.execCommand('copy');
                 if (successful) showMessage('Full HTML copied! (using fallback method)', 'success');
@@ -889,30 +1003,38 @@
             document.body.removeChild(textarea);
         }
     }
-
     function promptAndSaveDraft() {
-        if (tablesContainer.children.length === 0) { showMessage('No schedule data to save.', 'error');
-        return; }
-        const allTablesData = tablesContainer.innerHTML; const allTableMeta = {};
-        tablesContainer.querySelectorAll('table').forEach(table => { allTableMeta[table.id] = { name: table.dataset.tableName || table.id }; });
+        if (!tablesContainer || tablesContainer.children.length === 0) {
+            showMessage('No schedule data to save.', 'error');
+            return;
+        }
+        const allTablesData = tablesContainer.innerHTML;
+        const allTableMeta = {};
+        tablesContainer.querySelectorAll('table').forEach(table => {
+            allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
+        });
         const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`);
         if (draftName) {
             const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
             drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId };
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
             showMessage(`Draft "${draftName}" saved!`, 'success');
-            if (draftListElement.style.display === 'block') renderDraftList();
+            if (draftListElement && draftListElement.style.display === 'block') renderDraftList();
         }
     }
     function toggleDraftListVisibility() {
+        if (!draftListElement) return;
         const isVisible = draftListElement.style.display === 'block';
         draftListElement.style.display = isVisible ? 'none' : 'block';
         if (!isVisible) renderDraftList();
     }
     function renderDraftList() {
-        draftListElement.innerHTML = '';
+        if (!draftListElement) return;
+        draftListElement.innerHTML = ''; // Clear previous list
         const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-        if (Object.keys(drafts).length === 0) { draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return;
+        if (Object.keys(drafts).length === 0) {
+            draftListElement.innerHTML = '<p>No drafts saved yet.</p>';
+            return;
         }
         for (const name in drafts) {
             const itemDiv = document.createElement('div');
@@ -922,390 +1044,586 @@
         }
     }
     function loadSelectedDraft(draftName) {
+        if (!tablesContainer || !tableTabs) return;
         const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
         if (drafts[draftName]) {
             tablesContainer.innerHTML = drafts[draftName].html;
             const tableMeta = drafts[draftName].meta || {};
-            tableTabs.innerHTML = '';
+            tableTabs.innerHTML = ''; // Clear existing tabs
             tablesContainer.querySelectorAll('table').forEach(table => {
-                const id = table.id; const metaInfo = tableMeta[id] || {};
+                const id = table.id;
+                const metaInfo = tableMeta[id] || {};
                 const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
-                table.dataset.tableName = name; addTabButton(id, name);
-                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable 
-                = 'true');
+                table.dataset.tableName = name;
+                addTabButton(id, name);
+                // Ensure cells are editable after loading
+                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
             });
-            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id ||
-            'tbl_1';
-            if (document.getElementById(activeTableId)) { switchTable(activeTableId); }
-            else if (tablesContainer.querySelector('table')) { switchTable(tablesContainer.querySelector('table').id);
+            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
+            if (document.getElementById(activeTableId)) {
+                switchTable(activeTableId);
+            } else if (tablesContainer.querySelector('table')) {
+                switchTable(tablesContainer.querySelector('table').id);
+            } else {
+                addNewTable(true); // Add a new table if none loaded
             }
-            else { addNewTable(true);
-            }
-            showMessage(`Draft "${draftName}" loaded!`, 'success'); draftListElement.style.display = 'none';
+            showMessage(`Draft "${draftName}" loaded!`, 'success');
+            if (draftListElement) draftListElement.style.display = 'none';
             rebuildAndRenderSummary();
-            updateAllMergeOverlays(); 
-        } else { showMessage(`Draft "${draftName}" not found.`, 'error'); }
+            updateAllMergeOverlays(); // Recalculate merged cell overlays
+        } else {
+            showMessage(`Draft "${draftName}" not found.`, 'error');
+        }
     }
     async function confirmAndDeleteDraft(draftName) {
         if (await customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
             const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
             delete drafts[draftName];
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-            showMessage(`Saved draft "${draftName}" deleted.`, 'success'); renderDraftList();
+            showMessage(`Saved draft "${draftName}" deleted.`, 'success');
+            renderDraftList(); // Re-render the draft list
         }
     }
     async function confirmAndClearActiveTableContent() {
         const activeTableElement = document.getElementById(activeTableId);
-        if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return;
-        }
+        if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return; }
         const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
         if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
+            // Unmerge cells first
             activeTableElement.querySelectorAll('.merged-cell-container').forEach(containerCell => {
                 const mergeId = containerCell.dataset.mergeId;
                 if(mergeId){
                     const cellsInGroup = activeTableElement.querySelectorAll(`[data-merge-id="${mergeId}"]`);
-      
                     cellsInGroup.forEach(c => {
-                        c.removeAttribute('data-merge-id'); c.classList.remove('merged-cell-container', 'subsumed-cell');
+                        c.removeAttribute('data-merge-id');
+                        c.classList.remove('merged-cell-container', 'subsumed-cell');
                         const overlay = c.querySelector('.merged-cell-overlay');
-                        if (overlay) c.textContent = overlay.textContent; else 
-                        c.innerHTML = '';
+                        if (overlay) c.textContent = overlay.textContent; // Restore text from overlay
+                        else c.innerHTML = ''; // Clear other subsumed cells
+                        const overlayChild = c.querySelector('.merged-cell-overlay'); // Remove overlay div
+                        if(overlayChild) overlayChild.remove();
                     });
                 }
             });
-            activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
-                if (cell.tagName === 'TH' && cell.parentElement.tagName === 'THEAD' && cell.cellIndex === 0) {}
-                else { cell.innerHTML = ''; }
-                cell.classList.remove('selected');
+            // Clear content from cells, preserving header structure if needed
+            activeTableElement.querySelectorAll('tbody td, tbody th').forEach(cell => {
+                cell.innerHTML = ''; // Clear content
+                cell.classList.remove('selected'); // Remove selection styling
             });
-            selectedCells = []; rebuildAndRenderSummary(); updateAllMergeOverlays();
+            // Optionally, preserve header row text if desired, or clear all:
+            // activeTableElement.querySelectorAll('thead th').forEach((th, index) => {
+            // if (index > 0) th.innerHTML = ''; // Example: clear headers except first
+            // });
+            selectedCells = []; // Clear selected cells array
+            rebuildAndRenderSummary();
+            updateAllMergeOverlays();
             showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
     }
     function exportAllDrafts() {
         const drafts = localStorage.getItem(DRAFTS_KEY);
-        if (!drafts || drafts === '{}') { showMessage('No drafts to export.', 'info'); return;
-        }
+        if (!drafts || drafts === '{}') { showMessage('No drafts to export.', 'info'); return; }
         try {
             const blob = new Blob([drafts], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'all_schedule_drafts.json';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'all_schedule_drafts.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
             showMessage('All drafts exported successfully!', 'success');
-        } catch (error) { console.error("Error exporting drafts:", error); showMessage('Failed to export drafts.', 'error');
+        } catch (error) {
+            console.error("Error exporting drafts:", error);
+            showMessage('Failed to export drafts.', 'error');
         }
     }
     async function handleDraftsFileImport(event) {
         const file = event.target.files[0];
-        if (!file) { showMessage('No file selected for import.', 'info'); return;
+        if (!file) { showMessage('No file selected for import.', 'info'); return; }
+        if (file.type !== 'application/json') {
+            showMessage('Invalid file type. Please select a .json file.', 'error');
+            event.target.value = ''; // Reset file input
+            return;
         }
-        if (file.type !== 'application/json') { showMessage('Invalid file type. Please select a .json file.', 'error');
-        event.target.value = ''; return; }
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
                 const importedDraftsText = e.target.result;
                 const importedDraftsData = JSON.parse(importedDraftsText);
-                if (typeof importedDraftsData !== 'object' || importedDraftsData === null) { showMessage('Invalid draft file format.', 'error'); return;
+                if (typeof importedDraftsData !== 'object' || importedDraftsData === null) {
+                    showMessage('Invalid draft file format.', 'error'); return;
                 }
                 let localDrafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
                 let importedCount = 0, overwrittenCount = 0, skippedCount = 0;
                 for (const draftName in importedDraftsData) {
                     if (Object.prototype.hasOwnProperty.call(importedDraftsData, draftName)) {
                         const draftData = importedDraftsData[draftName];
+                        // Basic validation of draft structure
                         if (draftData && typeof draftData.html === 'string' && typeof draftData.meta === 'object' && typeof draftData.active === 'string') {
-                            if (localDrafts[draftName]) {
-                                if (await customConfirm(`Draft "${draftName}" already exists. Overwrite?`)) { localDrafts[draftName] = draftData;
-                                overwrittenCount++; }
-                                else { skippedCount++;
+                            if (localDrafts[draftName]) { // Draft with same name exists
+                                if (await customConfirm(`Draft "${draftName}" already exists. Overwrite?`)) {
+                                    localDrafts[draftName] = draftData;
+                                    overwrittenCount++;
+                                } else {
+                                    skippedCount++;
                                 }
-                            } else { localDrafts[draftName] = draftData;
-                                importedCount++; }
-                        } else { console.warn(`Skipping invalid draft data for "${draftName}" during import.`);
-                            skippedCount++; }
+                            } else { // New draft
+                                localDrafts[draftName] = draftData;
+                                importedCount++;
+                            }
+                        } else {
+                            console.warn(`Skipping invalid draft data for "${draftName}" during import.`);
+                            skippedCount++;
+                        }
                     }
                 }
                 localStorage.setItem(DRAFTS_KEY, JSON.stringify(localDrafts));
                 showMessage(`Drafts import complete: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
-                if (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0) { renderDraftList();
+                if (draftListElement && (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0)) {
+                    renderDraftList(); // Refresh draft list if visible or if changes were made
                 }
-            } catch (error) { console.error("Error importing drafts:", error);
+            } catch (error) {
+                console.error("Error importing drafts:", error);
                 showMessage('Error processing draft file. Ensure it is a valid JSON export from this tool.', 'error', 5000);
             }
-            finally { event.target.value = '';
-            }
+            finally { event.target.value = ''; } // Reset file input
         };
-        reader.onerror = () => { showMessage('Failed to read the draft file.', 'error');
-        event.target.value = ''; };
+        reader.onerror = () => {
+            showMessage('Failed to read the draft file.', 'error');
+            event.target.value = ''; // Reset file input
+        };
         reader.readAsText(file);
     }
 
+    // --- Table Management (Tabs, Add, Rename, Delete) ---
     function addTabButton(id, label) {
+        if (!tableTabs) return null;
         const button = document.createElement('button');
-        button.textContent = label; button.dataset.tableId = id;
-        button.title = `Switch to table: ${label}`; button.onclick = () => switchTable(id);
-        tableTabs.appendChild(button); return button;
+        button.textContent = label;
+        button.dataset.tableId = id;
+        button.title = `Switch to table: ${label}`;
+        button.onclick = () => switchTable(id);
+        tableTabs.appendChild(button);
+        return button;
     }
     function switchTable(id) {
         const targetTable = document.getElementById(id);
-        if (!targetTable) {
+        if (!targetTable && tablesContainer) { // If target table not found
             const firstTableInDOM = tablesContainer.querySelector('table');
-            if (firstTableInDOM) { id = firstTableInDOM.id; }
-            else { showMessage('Cannot switch: Target table not found and no other tables exist.', 'error');
-                if (tablesContainer.children.length === 0) addNewTable(true); return; }
+            if (firstTableInDOM) {
+                id = firstTableInDOM.id; // Switch to the first available table
+            } else { // No tables exist at all
+                showMessage('Cannot switch: Target table not found and no other tables exist.', 'error');
+                if (tablesContainer && tablesContainer.children.length === 0) addNewTable(true); // Add a new one if container is empty
+                return;
+            }
         }
         activeTableId = id;
-        tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
-        tableTabs.querySelectorAll('button').forEach(b => { b.classList.toggle('active', b.dataset.tableId === id); });
-        deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays();
+        if(tablesContainer) tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
+        if(tableTabs) tableTabs.querySelectorAll('button').forEach(b => { b.classList.toggle('active', b.dataset.tableId === id); });
+        deselectAllTableCells(); // Clear selection when switching tables
+        rebuildAndRenderSummary();
+        updateAllMergeOverlays();
     }
     function addNewTable(isInitial = false) {
-        tableCount++;
+        if (!tablesContainer || !tableTabs) return;
+        tableCount++; // Increment global table counter
         const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
         const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
-        if (!label && !isInitial) return;
-        const newTable = document.createElement('table'); const newTableId = `tbl_${Date.now()}_${tableCount}`;
-        newTable.id = newTableId; newTable.dataset.tableName = label ||
-        defaultTableName;
-        const thead = newTable.createTHead(); const headerRow = thead.insertRow();
+        if (!label && !isInitial) return; // User cancelled prompt for non-initial table
+
+        const newTable = document.createElement('table');
+        const newTableId = `tbl_${Date.now()}_${tableCount}`; // Unique ID for the new table
+        newTable.id = newTableId;
+        newTable.dataset.tableName = label || defaultTableName;
+
+        const thead = newTable.createTHead();
+        const headerRow = thead.insertRow();
+        // Default headers for a new table
         const defaultHeaders = ['Class/Time', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00'];
-        defaultHeaders.forEach(headerText => { const th = document.createElement('th'); th.contentEditable = 'true'; th.textContent = headerText; headerRow.appendChild(th); });
+        defaultHeaders.forEach(headerText => {
+            const th = document.createElement('th');
+            th.contentEditable = 'true';
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+
         const tbody = newTable.createTBody();
+        // Add a couple of sample rows
         for (let r = 0; r < 2; r++) {
             const dataRow = tbody.insertRow();
             for (let c = 0; c < headerRow.cells.length; c++) {
                 const td = dataRow.insertCell();
                 td.contentEditable = 'true';
-                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`;
+                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`; // E.g., Sample Class A
             }
         }
         tablesContainer.appendChild(newTable);
-        addTabButton(newTableId, label || defaultTableName); switchTable(newTableId);
+        addTabButton(newTableId, label || defaultTableName);
+        switchTable(newTableId); // Make the new table active
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
     }
     async function promptAndRenameActiveTable() {
+        if (!tableTabs) return;
         const currentTab = tableTabs.querySelector('button.active');
-        if (!currentTab) { showMessage('No active table to rename. Please select a table.', 'error'); return;
-        }
+        if (!currentTab) { showMessage('No active table to rename. Please select a table.', 'error'); return; }
+
         let tableIdToRename = currentTab.dataset.tableId;
+        // Fallback if dataset.tableId is not set (shouldn't happen with addTabButton)
         if (!tableIdToRename) {
             const onclickAttr = currentTab.getAttribute('onclick');
             const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
             if (match && match[1]) tableIdToRename = match[1];
-            else { showMessage('Could not identify table ID for renaming.', 'error'); return;
-            }
+            else { showMessage('Could not identify table ID for renaming.', 'error'); return; }
         }
         const tableElement = document.getElementById(tableIdToRename);
-        if (!tableElement) { showMessage(`Error: Table element for ID ${tableIdToRename} not found.`, 'error'); return;
-        }
+        if (!tableElement) { showMessage(`Error: Table element for ID ${tableIdToRename} not found.`, 'error'); return; }
+
         const oldName = tableElement.dataset.tableName || currentTab.textContent;
         const newName = customPrompt('Enter new table name:', oldName);
         if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
             const trimmedNewName = newName.trim();
             currentTab.textContent = trimmedNewName;
-            currentTab.title = `Switch to table: ${trimmedNewName}`; tableElement.dataset.tableName = trimmedNewName;
+            currentTab.title = `Switch to table: ${trimmedNewName}`; // Update tooltip
+            tableElement.dataset.tableName = trimmedNewName;
             showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
-        } else if (newName && newName.trim() === oldName) { showMessage('New name is the same as the old name. No changes made.', 'info');
-        }
-        else if (newName === null) { showMessage('Rename cancelled.', 'info');
-        }
-        else { showMessage('Invalid new name. Please enter a valid name.', 'error');
+        } else if (newName && newName.trim() === oldName) {
+            showMessage('New name is the same as the old name. No changes made.', 'info');
+        } else if (newName === null) { // User cancelled prompt
+            showMessage('Rename cancelled.', 'info');
+        } else { // Empty or invalid new name
+            showMessage('Invalid new name. Please enter a valid name.', 'error');
         }
     }
     async function confirmAndDeleteActiveTable() {
-        if (tablesContainer.children.length <= 1) { showMessage('Cannot delete the last table.', 'error');
-        return; }
-        const activeTab = tableTabs.querySelector('button.active'); const tableIdToDelete = activeTab ?
-        activeTab.dataset.tableId : null;
+        if (!tablesContainer || !tableTabs || tablesContainer.children.length <= 1) {
+            showMessage('Cannot delete the last table.', 'error');
+            return;
+        }
+        const activeTab = tableTabs.querySelector('button.active');
+        const tableIdToDelete = activeTab ? activeTab.dataset.tableId : null;
         const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
-        const tableName = tableElement ?
-        tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
+        const tableName = tableElement ? tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
+
         if (await customConfirm(`Delete table "${tableName}"? This action cannot be undone.`)) {
             if (tableElement) tableElement.remove();
+            // Fallback if tableElement not found by ID but activeTableId is set
             else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
-            activeTab?.remove(); const firstRemainingTab = tableTabs.querySelector('button');
-            if (firstRemainingTab) {
+
+            activeTab?.remove(); // Remove the tab button
+            const firstRemainingTab = tableTabs.querySelector('button');
+            if (firstRemainingTab) { // Switch to the first remaining tab
                 const nextActiveId = firstRemainingTab.dataset.tableId ||
-                firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1];
+                                     firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; // Fallback for ID
                 switchTable(nextActiveId);
-            } else { activeTableId = null; addNewTable(true); }
+            } else { // No tabs left, should mean no tables left
+                activeTableId = null;
+                addNewTable(true); // Add a new default table
+            }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
     }
 
-    function addRowToTable(tableBody, rowIndex, numCols) { const row = tableBody.insertRow(rowIndex);
-    for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true';
-    } }
+    // --- Row and Column Manipulation ---
+    function addRowToTable(tableBody, rowIndex, numCols) {
+        const row = tableBody.insertRow(rowIndex); // rowIndex -1 appends
+        for (let i = 0; i < numCols; i++) {
+            const cell = row.insertCell();
+            cell.contentEditable = 'true';
+        }
+    }
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0] || table.rows.length === 0) return;
-        const numCols = table.rows[0].cells.length; let insertAtIndex = 0;
-        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) { insertAtIndex = lastClickedCell.parentElement.rowIndex;
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return; // No table or no rows
+        const numCols = table.rows[0].cells.length; // Number of columns from first row (usually header)
+        let insertAtIndex = 0; // Default to insert at the beginning of tbody
+        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) {
+            insertAtIndex = lastClickedCell.parentElement.rowIndex; // Insert above clicked row in tbody
         }
-        addRowToTable(table.tBodies[0], insertAtIndex, numCols); rebuildAndRenderSummary(); updateAllMergeOverlays();
+        addRowToTable(table.tBodies[0], insertAtIndex, numCols);
+        rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
     function addRowBelowToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
-        const numCols = table.rows[0].cells.length; let insertAtIndex = -1;
-        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) { insertAtIndex = lastClickedCell.parentElement.rowIndex + 1;
+        const numCols = table.rows[0].cells.length;
+        let insertAtIndex = -1; // Default to append to tbody
+        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) {
+            insertAtIndex = lastClickedCell.parentElement.rowIndex + 1; // Insert below clicked row
         }
-        addRowToTable(table.tBodies[0], insertAtIndex, numCols); rebuildAndRenderSummary(); updateAllMergeOverlays();
+        addRowToTable(table.tBodies[0], insertAtIndex, numCols);
+        rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    function addColumnToTable(table, colIndex) { for (const row of table.rows) { const isHeaderRow = row.parentElement.tagName === 'THEAD';
-    const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex); cell.contentEditable = 'true';
-    if (isHeaderRow) { cell.textContent = "New Header"; if(!isHeaderRow && colIndex != -1) row.insertBefore(cell, row.cells[colIndex]);
-    else row.appendChild(cell);} } }
+    function addColumnToTable(table, colIndex) { // colIndex -1 appends
+        for (const row of table.rows) {
+            const isHeaderRow = row.parentElement.tagName === 'THEAD';
+            const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex);
+            cell.contentEditable = 'true';
+            if (isHeaderRow) {
+                cell.textContent = "New Header";
+                // For THEAD, if not appending, explicitly insert before
+                if(!isHeaderRow && colIndex !== -1 && row.cells[colIndex]) { // This condition seems off, TH is for THEAD
+                     // row.insertBefore(cell, row.cells[colIndex]); // This line was problematic
+                } else if (isHeaderRow && colIndex !== -1 && row.cells[colIndex]) {
+                     row.insertBefore(cell, row.cells[colIndex]);
+                } else if (isHeaderRow) { // Appending to header
+                     row.appendChild(cell);
+                }
+            }
+        }
+    }
     function addColumnLeftToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table) return;
-        let insertAtIndex = 0; if (lastClickedCell && lastClickedCell.cellIndex >= 0) { insertAtIndex = lastClickedCell.cellIndex;
+        let insertAtIndex = 0; // Default to insert at the beginning
+        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
+            insertAtIndex = lastClickedCell.cellIndex;
         }
-        addColumnToTable(table, insertAtIndex); rebuildAndRenderSummary(); updateAllMergeOverlays();
+        addColumnToTable(table, insertAtIndex);
+        rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
     function addColumnRightToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table) return;
-        let insertAtIndex = -1; if (lastClickedCell && lastClickedCell.cellIndex >= 0) { insertAtIndex = lastClickedCell.cellIndex + 1;
+        let insertAtIndex = -1; // Default to append
+        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
+            insertAtIndex = lastClickedCell.cellIndex + 1;
         }
-        addColumnToTable(table, insertAtIndex); rebuildAndRenderSummary(); updateAllMergeOverlays();
+        addColumnToTable(table, insertAtIndex);
+        rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
     async function deleteClickedRowFromActiveTable() {
-        if (!lastClickedCell) { showMessage('Please click a cell in the row you want to delete.', 'info');
-        return; }
+        if (!lastClickedCell) { showMessage('Please click a cell in the row you want to delete.', 'info'); return; }
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0]) { showMessage('No active table or table body found.', 'error'); return;
-        }
+        if (!table || !table.tBodies[0]) { showMessage('No active table or table body found.', 'error'); return; }
+
         const rowToDelete = lastClickedCell.closest('tr');
-        if (!rowToDelete || !rowToDelete.parentElement || rowToDelete.parentElement.tagName !== 'TBODY') { showMessage('Cannot delete header row or invalid selection. Click a cell in a data row.', 'error');
-        return; }
-        if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete the last data row.', 'error');
-        return; }
+        if (!rowToDelete || !rowToDelete.parentElement || rowToDelete.parentElement.tagName !== 'TBODY') {
+            showMessage('Cannot delete header row or invalid selection. Click a cell in a data row.', 'error'); return;
+        }
+        if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete the last data row.', 'error'); return; }
+
         if (await customConfirm('Are you sure you want to delete this row?')) {
             rowToDelete.remove();
-            lastClickedCell = null; deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Row deleted.', 'success');
+            lastClickedCell = null; // Reset last clicked cell
+            deselectAllTableCells(); // Clear any selections
+            rebuildAndRenderSummary(); updateAllMergeOverlays();
+            showMessage('Row deleted.', 'success');
         }
     }
     async function deleteClickedColumnFromActiveTable() {
-        if (!lastClickedCell) { showMessage('Please click a cell in the column you want to delete.', 'info');
-        return; }
+        if (!lastClickedCell) { showMessage('Please click a cell in the column you want to delete.', 'info'); return; }
         const table = document.getElementById(activeTableId);
         if (!table) { showMessage('No active table found.', 'error'); return; }
-        if (table.rows[0] && table.rows[0].cells.length <= 1) { showMessage('Cannot delete the last column.', 'error');
-        return; }
+        if (table.rows[0] && table.rows[0].cells.length <= 1) { showMessage('Cannot delete the last column.', 'error'); return; }
+
         const colIndexToDelete = lastClickedCell.cellIndex;
         if (await customConfirm('Are you sure you want to delete this column?')) {
-            for (const row of table.rows) { if (row.cells[colIndexToDelete]) { row.cells[colIndexToDelete].remove();
-            } }
-            lastClickedCell = null; deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays();
+            for (const row of table.rows) {
+                if (row.cells[colIndexToDelete]) {
+                    row.cells[colIndexToDelete].remove();
+                }
+            }
+            lastClickedCell = null; // Reset
+            deselectAllTableCells();
+            rebuildAndRenderSummary(); updateAllMergeOverlays();
             showMessage('Column deleted.', 'success');
         }
     }
 
+    // --- Cell Selection, Merging, and Name Insertion ---
     function toggleCellSelectionMode() {
         selectionMode = !selectionMode;
         const btn = document.getElementById('selectBtn');
-        btn.classList.toggle('active', selectionMode); btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
-        if (!selectionMode) deselectAllTableCells();
+        if(btn) {
+            btn.classList.toggle('active', selectionMode);
+            btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
+        }
+        if (!selectionMode) deselectAllTableCells(); // Clear selection when turning off mode
     }
     function handleTableCellClick(event) {
         const cell = event.target.closest('td, th');
-        if (!cell || !cell.closest(`#${activeTableId}`)) return;
-        lastClickedCell = cell;
-        if (selectedNameFromList) {
-            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
+        if (!cell || !cell.closest(`#${activeTableId}`)) return; // Clicked outside active table or not on a cell
+        lastClickedCell = cell; // Update last clicked cell
+
+        if (selectedNameFromList) { // If a name is selected from the modal for insertion
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { // Insert into data cells or tbody headers
                 const overlay = cell.querySelector('.merged-cell-overlay');
-                if (overlay) { overlay.textContent = selectedNameFromList; } else { cell.textContent = selectedNameFromList;
+                if (overlay) { // If it's a merged cell, update the overlay
+                    overlay.textContent = selectedNameFromList;
+                } else {
+                    cell.textContent = selectedNameFromList;
                 }
-                rebuildAndRenderSummary();
+                rebuildAndRenderSummary(); // Update summary table
                 showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
-                clearNameSelection();
-            } else { showMessage('Click an editable data cell (or row header in body) to insert name.', 'info');
+                clearNameSelection(); // Clear the selected name from modal
+            } else {
+                showMessage('Click an editable data cell (or row header in body) to insert name.', 'info');
             }
-            return;
+            return; // Stop further processing for this click
         }
-        if (selectionMode) {
-            if (cell.classList.contains('subsumed-cell') || (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
+
+        if (selectionMode) { // If in cell selection mode
+            // Prevent selecting subsumed cells or mixing merge groups
+            if (cell.classList.contains('subsumed-cell') ||
+                (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
                 showMessage('Cannot select subsumed cells or mix different merge groups.', 'warning');
                 return;
             }
             cell.classList.toggle('selected');
-            if (cell.classList.contains('selected')) { selectedCells.push(cell);
-            } else { selectedCells = selectedCells.filter(c => c !== cell);
+            if (cell.classList.contains('selected')) {
+                selectedCells.push(cell);
+            } else {
+                selectedCells = selectedCells.filter(c => c !== cell);
             }
         }
     }
-    function deselectAllTableCells() { selectedCells.forEach(c => c.classList.remove('selected'));
-    selectedCells = []; }
+    function deselectAllTableCells() {
+        selectedCells.forEach(c => c.classList.remove('selected'));
+        selectedCells = [];
+    }
     function mergeSelectedTableCells() {
-        if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error');
-        return; }
-        if (selectedCells.some(cell => cell.dataset.mergeId)) { showMessage('Cannot merge cells that are already part of another merge. Unmerge them first.', 'warning');
-        return; }
-        let primaryCell = selectedCells[0]; let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top;
+        if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error'); return; }
+        // Check if any selected cell is already part of a merge
+        if (selectedCells.some(cell => cell.dataset.mergeId)) {
+            showMessage('Cannot merge cells that are already part of another merge. Unmerge them first.', 'warning');
+            return;
+        }
+
+        // Determine the primary cell (top-leftmost)
+        let primaryCell = selectedCells[0];
+        let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top;
         let minColGUI = primaryCell.getBoundingClientRect().left;
         selectedCells.forEach(cell => {
-            const cellRowRect = cell.parentElement.getBoundingClientRect(); const cellRect = cell.getBoundingClientRect();
-            if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) { primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left; }
+            const cellRowRect = cell.parentElement.getBoundingClientRect();
+            const cellRect = cell.getBoundingClientRect();
+            if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) {
+                primaryCell = cell;
+                minRowGUI = cellRowRect.top;
+                minColGUI = cellRect.left;
+            }
         });
+
+        // Calculate total width and height of the merged area
         let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
-        selectedCells.forEach(cell => { const rect = cell.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
-        const totalWidth = maxRight - minLeft; const totalHeight = maxBottom - minTop;
+        selectedCells.forEach(cell => {
+            const rect = cell.getBoundingClientRect();
+            minLeft = Math.min(minLeft, rect.left);
+            maxRight = Math.max(maxRight, rect.right);
+            minTop = Math.min(minTop, rect.top);
+            maxBottom = Math.max(maxBottom, rect.bottom);
+        });
+        const totalWidth = maxRight - minLeft;
+        const totalHeight = maxBottom - minTop;
+
         const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const overlay = document.createElement('div'); overlay.className = 'merged-cell-overlay'; overlay.textContent = primaryCell.textContent;
-        overlay.contentEditable = 'true'; overlay.style.setProperty('--merged-width', `${totalWidth}px`); overlay.style.setProperty('--merged-height', `${totalHeight}px`);
-        overlay.addEventListener('blur', () => { primaryCell.textContent = overlay.textContent; rebuildAndRenderSummary(); });
-        primaryCell.innerHTML = ''; primaryCell.appendChild(overlay); primaryCell.classList.add('merged-cell-container'); primaryCell.setAttribute('data-merge-id', mergeId);
-        selectedCells.forEach(cell => { if (cell !== primaryCell) { cell.textContent = ''; cell.classList.add('subsumed-cell'); cell.setAttribute('data-merge-id', mergeId); } });
-        deselectAllTableCells(); if (selectionMode) toggleCellSelectionMode();
+        const overlay = document.createElement('div');
+        overlay.className = 'merged-cell-overlay';
+        overlay.textContent = primaryCell.textContent; // Take text from primary cell
+        overlay.contentEditable = 'true'; // Make overlay editable
+        overlay.style.setProperty('--merged-width', `${totalWidth}px`);
+        overlay.style.setProperty('--merged-height', `${totalHeight}px`);
+        overlay.addEventListener('blur', () => { // On blur, update primary cell's actual content for data purposes
+            primaryCell.textContent = overlay.textContent; // This might be redundant if primaryCell only holds the overlay
+            rebuildAndRenderSummary();
+        });
+
+        primaryCell.innerHTML = ''; // Clear primary cell
+        primaryCell.appendChild(overlay);
+        primaryCell.classList.add('merged-cell-container');
+        primaryCell.setAttribute('data-merge-id', mergeId);
+
+        // Mark other cells as subsumed
+        selectedCells.forEach(cell => {
+            if (cell !== primaryCell) {
+                cell.textContent = ''; // Clear content
+                cell.classList.add('subsumed-cell');
+                cell.setAttribute('data-merge-id', mergeId);
+            }
+        });
+        deselectAllTableCells();
+        if (selectionMode) toggleCellSelectionMode(); // Optionally turn off selection mode
         showMessage('Cells visually merged.', 'success');
     }
     function unmergeActiveCellIfMerged() {
-        const cell = lastClickedCell;
-        if (!cell) { showMessage('Please click on a merged cell to unmerge it.', 'info'); return;
-        }
-        const containerCell = cell.closest('[data-merge-id]');
-        if (!containerCell) { showMessage('The clicked cell is not part of a visual merge.', 'error'); return;
-        }
-        const mergeId = containerCell.dataset.mergeId; const table = containerCell.closest('table'); if (!table) return;
-        const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`); let originalText = '';
+        const cell = lastClickedCell; // Use the last clicked cell
+        if (!cell) { showMessage('Please click on a merged cell to unmerge it.', 'info'); return; }
+
+        const containerCell = cell.closest('[data-merge-id]'); // Find the merge container
+        if (!containerCell) { showMessage('The clicked cell is not part of a visual merge.', 'error'); return; }
+
+        const mergeId = containerCell.dataset.mergeId;
+        const table = containerCell.closest('table');
+        if (!table) return;
+
+        const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`);
+        let originalText = '';
         const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
-        if (primaryCellInGroup) { const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay'); if (overlay) originalText = overlay.textContent; else originalText = primaryCellInGroup.textContent;
+
+        if (primaryCellInGroup) {
+            const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay');
+            if (overlay) originalText = overlay.textContent;
+            else originalText = primaryCellInGroup.textContent; // Fallback if overlay somehow missing
         }
+
         cellsInGroup.forEach(c => {
-            c.removeAttribute('data-merge-id'); c.classList.remove('merged-cell-container', 'subsumed-cell');
-            const overlayChild = c.querySelector('.merged-cell-overlay'); if (overlayChild) overlayChild.remove(); c.innerHTML = '';
+            c.removeAttribute('data-merge-id');
+            c.classList.remove('merged-cell-container', 'subsumed-cell');
+            const overlayChild = c.querySelector('.merged-cell-overlay');
+            if (overlayChild) overlayChild.remove(); // Remove the overlay div
+            c.innerHTML = ''; // Clear cell content
         });
-        if (primaryCellInGroup) { primaryCellInGroup.textContent = originalText; } else if (cellsInGroup.length > 0) { cellsInGroup[0].textContent = originalText;
+
+        // Restore text to the primary cell (or first cell if primary not clearly defined)
+        if (primaryCellInGroup) {
+            primaryCellInGroup.textContent = originalText;
+        } else if (cellsInGroup.length > 0) { // Fallback
+            cellsInGroup[0].textContent = originalText;
         }
-        rebuildAndRenderSummary(); showMessage('Cells unmerged.', 'success');
+        rebuildAndRenderSummary();
+        showMessage('Cells unmerged.', 'success');
     }
     function updateAllMergeOverlays() {
         const activeTable = document.getElementById(activeTableId);
         if (!activeTable) return;
         const mergedContainers = activeTable.querySelectorAll('.merged-cell-container');
         mergedContainers.forEach(containerCell => {
-            const mergeId = containerCell.dataset.mergeId; if (!mergeId) return;
-            const overlay = containerCell.querySelector('.merged-cell-overlay'); if (!overlay) return;
-            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`)); if (cellsInGroup.length === 0) return;
+            const mergeId = containerCell.dataset.mergeId;
+            if (!mergeId) return;
+            const overlay = containerCell.querySelector('.merged-cell-overlay');
+            if (!overlay) return;
+
+            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`));
+            if (cellsInGroup.length === 0) return;
+
             let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
-           
-             cellsInGroup.forEach(cellInvolvedInMerge => { const rect = cellInvolvedInMerge.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
-            if (minLeft === Infinity) return;
-            const newWidth = maxRight - minLeft; const newHeight = maxBottom - minTop;
-            overlay.style.setProperty('--merged-width', `${newWidth}px`); overlay.style.setProperty('--merged-height', `${newHeight}px`);
+            cellsInGroup.forEach(cellInvolvedInMerge => {
+                const rect = cellInvolvedInMerge.getBoundingClientRect();
+                minLeft = Math.min(minLeft, rect.left);
+                maxRight = Math.max(maxRight, rect.right);
+                minTop = Math.min(minTop, rect.top);
+                maxBottom = Math.max(maxBottom, rect.bottom);
+            });
+            if (minLeft === Infinity) return; // Should not happen if cellsInGroup is not empty
+
+            const newWidth = maxRight - minLeft;
+            const newHeight = maxBottom - minTop;
+            overlay.style.setProperty('--merged-width', `${newWidth}px`);
+            overlay.style.setProperty('--merged-height', `${newHeight}px`);
         });
     }
 
+    // --- Name List Modal Functionality ---
     function handleNameListSessionSwitch(session) {
         currentNameListSession = session;
-        namePagiTabElement.classList.toggle('active', session === 'pagi');
-        namePetangTabElement.classList.toggle('active', session === 'petang');
+        if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi');
+        if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang');
         if(nameModalTitleElement) nameModalTitleElement.textContent = `Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
-        if(searchNameInputElement) searchNameInputElement.value = ''; 
-        renderNameListFromFirestore();
+        if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search on tab switch
+        renderNameListFromFirestore(); // Re-render list for the new session
     }
-
     function highlightSelectedNameInList(nameToHighlight) {
         if (!nameListContainer) return;
         nameListContainer.querySelectorAll('.name-item span').forEach(span => {
@@ -1320,11 +1638,10 @@
             });
         }
     }
-
     function closeNameModal() {
         if (nameModal) nameModal.style.display = 'none';
-        clearNameSelection();
-        if(searchNameInputElement) searchNameInputElement.value = '';
+        clearNameSelection(); // Clear any selected name
+        if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search field
     }
     function toggleNameListModalVisibility() {
         if (!nameModal || !nameModalContent || !newNameInput) return;
@@ -1332,26 +1649,30 @@
         if (isDisplayed) {
             closeNameModal();
         } else {
-            nameModalContent.style.position = 'relative'; nameModalContent.style.left = 'auto';
-            nameModalContent.style.top = 'auto'; nameModalContent.style.transform = 'none';
+            // Reset modal position if it was dragged
+            nameModalContent.style.position = 'relative'; // Or initial position if different
+            nameModalContent.style.left = 'auto';
+            nameModalContent.style.top = 'auto';
+            nameModalContent.style.transform = 'none'; // Reset transform if any
+
             nameModal.style.display = 'flex';
-            if(searchNameInputElement) searchNameInputElement.value = '';
-            handleNameListSessionSwitch(currentNameListSession); 
+            if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search on open
+            handleNameListSessionSwitch(currentNameListSession); // Ensure correct session is shown
             if(newNameInput) newNameInput.focus();
             clearNameSelection();
         }
     }
-
     function renderNameListFromFirestore(filterText = '') {
-        if (!nameListContainer || !fbIsAuthReady) {
-            if(nameListContainer) nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names or Firebase not ready...</p>';
+        if (!nameListContainer) return;
+        if (!fbIsAuthReady) {
+            nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names or Firebase not ready...</p>';
             return;
         }
-        nameListContainer.innerHTML = ''; 
-        const namesToRender = currentNameListSession === 'pagi' ?
-        namesPagi : namesPetang;
+        nameListContainer.innerHTML = ''; // Clear previous list
+        const namesToRender = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
         const normalizedFilterText = filterText.toLowerCase().trim();
         const filteredNames = namesToRender.filter(name => name.toLowerCase().includes(normalizedFilterText));
+
         if (filteredNames.length === 0) {
             nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ?
             'No names match your search.' : `No names in ${currentNameListSession} session. Add some!`}</p>`;
@@ -1363,18 +1684,16 @@
             itemDiv.innerHTML = `<span data-name="${name}" title="Click to select '${name}' for insertion">${name}</span><button data-name-delete="${name}" title="Delete name '${name}' from ${currentNameListSession} list">Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
+        highlightSelectedNameInList(selectedNameFromList); // Re-apply highlight if a name was selected
     }
-
-    function selectNameForCellInsertion(name) { 
+    function selectNameForCellInsertion(name) {
         selectedNameFromList = name;
-        highlightSelectedNameInList(name);
+        highlightSelectedNameInList(name); // Highlight the selected name in the list
         showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
     }
-
-    function handleNameListImportFirestore(event) { 
+    function handleNameListImportFirestore(event) {
         const file = event.target.files[0];
-        if (!file) { showMessage('No file selected for import.', 'info'); return;
-        }
+        if (!file) { showMessage('No file selected for import.', 'info'); return; }
         if (file.type !== 'text/plain') {
             showMessage('Invalid file type. Please select a .txt file.', 'error');
             event.target.value = ''; return;
@@ -1383,23 +1702,22 @@
         reader.onload = async (e) => {
             try {
                 const content = e.target.result;
-                const importedNames = content.split(/\r?\n/)
+                const importedNames = content.split(/\r?\n/) // Split by new line
                                           .map(name => name.trim())
-                                          .filter(name => name !== '');
+                                          .filter(name => name !== ''); // Remove empty lines
                 if (importedNames.length === 0) {
                     showMessage('No names found in the selected file.', 'info');
                     return;
                 }
-                const currentSessionNames = currentNameListSession === 'pagi' ?
-                namesPagi : namesPetang;
+                const currentSessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+                // Combine and remove duplicates, then save
                 const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
-                
                 await saveNameListToFirestore(currentNameListSession, combinedNames);
             } catch (error) {
                 console.error("Error importing name list to Firestore:", error);
                 showMessage('Error processing the name list file for Firestore.', 'error');
             } finally {
-                event.target.value = '';
+                event.target.value = ''; // Reset file input
             }
         };
         reader.onerror = () => {
@@ -1409,184 +1727,328 @@
         reader.readAsText(file);
     }
 
+    // --- Excel Import/Export ---
     function handleExcelFileImport(event) {
         const file = event.target.files[0];
-        if (!file) return;
+        if (!file || !tablesContainer) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName];
-                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false });
+                const sheetName = workbook.SheetNames[0]; // Use the first sheet
+                const worksheet = workbook.Sheets[sheetName];
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); // Get HTML string
+
                 tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
                 const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
-                const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlTableString;
                 const importedTableElement = tempDiv.querySelector('table');
+
                 if (importedTableElement) {
                     importedTableElement.id = newTableId;
                     importedTableElement.dataset.tableName = importedTableName;
+                    // Make all cells in the imported table editable
                     importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
-                    tablesContainer.appendChild(importedTableElement); addTabButton(newTableId, importedTableName);
-                    switchTable(newTableId);
+                    tablesContainer.appendChild(importedTableElement);
+                    addTabButton(newTableId, importedTableName);
+                    switchTable(newTableId); // Switch to the newly imported table
                     showMessage('Excel data imported into a new table!', 'success');
-                } else { showMessage('Could not parse table from Excel file.', 'error');
+                } else {
+                    showMessage('Could not parse table from Excel file.', 'error');
                 }
-            } catch (error) { console.error("Excel import error:", error);
+            } catch (error) {
+                console.error("Excel import error:", error);
                 showMessage('Error processing Excel file. Ensure it is a valid .xlsx or .xls file.', 'error');
             }
-            finally { event.target.value = '';
-            }
+            finally { event.target.value = ''; } // Reset file input
         };
         reader.readAsArrayBuffer(file);
     }
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
-        if (!tableToExport) { showMessage('No active table to export.', 'error'); return;
-        }
+        if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
+
+        // Temporarily replace merged cell overlays with their text content for export
         const overlaysData = [];
         tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
             const parentCell = overlay.parentElement;
-            overlaysData.push({parent: parentCell, overlayHTML: overlay.outerHTML, originalParentHTML: parentCell.innerHTML, text: overlay.textContent});
-            parentCell.textContent = overlay.textContent;
+            overlaysData.push({
+                parent: parentCell,
+                originalParentHTML: parentCell.innerHTML, // Save original HTML to restore overlay
+                text: overlay.textContent // Text content for export
+            });
+            parentCell.textContent = overlay.textContent; // Set parent cell's text to overlay's text
         });
+
         const tableName = tableToExport.dataset.tableName || activeTableId;
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        // Restore merged cell overlays
         overlaysData.forEach(data => {
-            data.parent.innerHTML = data.originalParentHTML;
+            data.parent.innerHTML = data.originalParentHTML; // Restore original HTML (which includes the overlay div)
+            // Re-attach blur listener to the restored overlay if necessary, though it should be part of originalParentHTML
             const newOverlay = data.parent.querySelector('.merged-cell-overlay');
-            if (newOverlay) { newOverlay.textContent = data.text; newOverlay.addEventListener('blur', () => { data.parent.textContent = newOverlay.textContent; rebuildAndRenderSummary(); }); }
+            if (newOverlay) {
+                 // The text content should already be correct from originalParentHTML's restoration
+                 // newOverlay.textContent = data.text; // This might be redundant
+                 newOverlay.addEventListener('blur', () => {
+                    // data.parent.textContent = newOverlay.textContent; // This line was problematic, primary cell content is handled by merge logic
+                    rebuildAndRenderSummary();
+                });
+            }
         });
-        if(overlaysData.length > 0) updateAllMergeOverlays();
+        if(overlaysData.length > 0) updateAllMergeOverlays(); // Ensure overlays are correctly sized after manipulation
+
         showMessage(`Table "${tableName}" exported.`, 'success');
     }
 
+    // --- Summary Table Logic ---
     function rebuildAndRenderSummary() {
-        const scheduledNames = new Set();
-        tablesContainer.querySelectorAll('table').forEach(table => {
-            table.querySelectorAll('tbody td, .merged-cell-overlay').forEach(cell => {
-                const name = cell.textContent.trim();
-                if (name) {
-                    scheduledNames.add(name);
+        const scheduledNames = new Set(); // To store unique teacher/subject names
+
+        if (tablesContainer) {
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+                if (!scheduleTable.tBodies[0]) return; // Skip if table has no body
+
+                scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
+                    // Iterate over cells in the current row
+                    Array.from(row.cells).forEach((cell, cellIndex) => {
+                        const overlay = cell.querySelector('.merged-cell-overlay');
+                        if (overlay) { // If there's an overlay, its text is a name
+                            const nameFromOverlay = overlay.textContent.trim();
+                            if (nameFromOverlay) {
+                                scheduledNames.add(nameFromOverlay);
+                            }
+                        } else if (cellIndex > 0 && cell.tagName === 'TD') { // If it's a regular TD in a data column (not 'Class' column)
+                            const nameFromTd = cell.textContent.trim();
+                            if (nameFromTd) {
+                                scheduledNames.add(nameFromTd);
+                            }
+                        }
+                    });
+                });
+            });
+        }
+
+        // Sort the collected names (case-insensitive)
+        const allSummaryNames = [...scheduledNames].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+        buildSummaryTableSkeleton(allSummaryNames);
+        updateSummaryTableData(allSummaryNames);
+    }
+
+    function parseTimeToMinutes(timeStr) {
+        if (typeof timeStr !== 'string') return Infinity; // Handle non-string inputs
+        // Matches HH:MM or HH.MM, allowing for optional leading zero and spaces
+        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
+        if (match) {
+            return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+        }
+        return Infinity; // Return Infinity if format doesn't match, for sorting
+    }
+
+    function buildSummaryTableSkeleton(allAvailableNames) { // allAvailableNames are teacher/subject names
+        if (!summaryTableElement) { console.error("Summary table element not found."); return; }
+        summaryTableElement.innerHTML = ''; // Clear previous summary
+
+        // Collect all unique time slot headers from all schedule tables
+        const tempRawHeadersFromSchedules = new Set(); // Use a Set to store unique raw headers
+        if (tablesContainer) {
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+                if (scheduleTable.tHead && scheduleTable.tHead.rows.length > 0) {
+                    // Start from index 1 to skip the "Class" header
+                    for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) {
+                        const th = scheduleTable.tHead.rows[0].cells[hIdx];
+                        const headerText = th.textContent.trim();
+                        if (headerText) { // Add non-empty headers
+                            tempRawHeadersFromSchedules.add(headerText);
+                        }
+                    }
                 }
             });
+        }
+
+        // Logic for LAU/LISAH special time slot (as per original code)
+        let laulisahRuleRequiresSpecialSlot = false;
+        const specialNamesForRule = ["LAU", "LISAH"];
+        const targetSlotForSpecialNamesRule = "10.15-10.30";
+        const sourceSlotToShiftRule = "10.30-12.00";
+
+        if (tablesContainer) {
+            for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
+                if (laulisahRuleRequiresSpecialSlot) break; // Optimization
+                if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
+
+                const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+                Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
+                    if (laulisahRuleRequiresSpecialSlot) return;
+                    for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
+                         const scheduleCell = scheduleDataRow.cells[cellIdx];
+                         let entryInScheduleCell = scheduleCell.textContent.trim();
+                         const overlay = scheduleCell.querySelector('.merged-cell-overlay');
+                         if (overlay) entryInScheduleCell = overlay.textContent.trim();
+
+                         if (specialNamesForRule.includes(entryInScheduleCell)) {
+                            const headerText = currentScheduleTableHeaders[cellIdx];
+                            if (headerText) {
+                               const normalizedHeader = headerText.replace(/\s/g, "").replace(/:/g,".");
+                                const normalizedSourceSlot = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
+                                if (normalizedHeader === normalizedSourceSlot) {
+                                    laulisahRuleRequiresSpecialSlot = true;
+                                    return; // Exit inner loops
+                                }
+                            }
+                         }
+                    }
+                });
+            }
+        }
+        // If the special rule applies, add the target slot to headers if not already present
+        if (laulisahRuleRequiresSpecialSlot) {
+            tempRawHeadersFromSchedules.add(targetSlotForSpecialNamesRule);
+        }
+
+        // Sort the unique headers by time
+        let sortedOriginalUniqueHeaders = Array.from(tempRawHeadersFromSchedules);
+        sortedOriginalUniqueHeaders.sort((a, b) => {
+            const timeA = parseTimeToMinutes(a);
+            const timeB = parseTimeToMinutes(b);
+            if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
+            if (timeA !== Infinity) return -1; // Times before non-times
+            if (timeB !== Infinity) return 1;  // Non-times after times
+            return a.localeCompare(b); // Fallback to string compare for non-time headers
         });
 
-        const allSummaryNames = [...scheduledNames];
-        buildSummaryTableSkeleton(allSummaryNames); 
-        updateSummaryTableData(allSummaryNames);   
-    }
-    function parseTimeToMinutes(timeStr) {
-        if (typeof timeStr !== 'string') return Infinity;
-        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
-        if (match) { return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
-        }
-        return Infinity;
-    }
-    function buildSummaryTableSkeleton(allAvailableNames) { 
-        if (!summaryTableElement) { console.error("Summary table element not found.");
-        return; }
-        summaryTableElement.innerHTML = '';
-        const tempRawHeadersFromSchedules = [];
-        tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-            if (scheduleTable.tHead && scheduleTable.tHead.rows.length > 0) {
-                for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) {
-                    const th = scheduleTable.tHead.rows[0].cells[hIdx];
-                    const headerText = th.textContent.trim(); if (headerText) { tempRawHeadersFromSchedules.push(headerText); }
-    
-                }
-            }
+        // Final headers for the summary table
+        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedOriginalUniqueHeaders];
+
+        const thead = summaryTableElement.createTHead();
+        const headerRowForSummary = thead.insertRow();
+        finalSummaryColumnHeaders.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRowForSummary.appendChild(th);
         });
-        let laulisahRuleRequiresSpecialSlot = false; const specialNamesForRule = ["LAU", "LISAH"];
-        const targetSlotForSpecialNamesRule = "10.15-10.30"; const sourceSlotToShiftRule = "10.30-12.00";
-        for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
-            if (laulisahRuleRequiresSpecialSlot) break;
-            if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
-            const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
-            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
-                if (laulisahRuleRequiresSpecialSlot) return;
-                for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
-                     const scheduleCell = scheduleDataRow.cells[cellIdx]; let entryInScheduleCell = scheduleCell.textContent.trim();
-                     const overlay = scheduleCell.querySelector('.merged-cell-overlay'); if (overlay) 
-                     entryInScheduleCell = overlay.textContent.trim();
-                     if (specialNamesForRule.includes(entryInScheduleCell)) {
-                        const headerText = currentScheduleTableHeaders[cellIdx];
-                        if (headerText) {
-                      
-                           const normalizedHeader = headerText.replace(/\s/g, "").replace(/:/g,".");
-                            const normalizedSourceSlot = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
-                            if (normalizedHeader === normalizedSourceSlot) { laulisahRuleRequiresSpecialSlot = true;
-                            return; }
-                        }
-                     }
+
+        const tbody = summaryTableElement.createTBody();
+        // allAvailableNames are already sorted teacher/subject names
+        if (allAvailableNames.length === 0) { // If no teachers/subjects are scheduled
+            const tr = tbody.insertRow();
+            const td = tr.insertCell();
+            td.textContent = "No names have been scheduled yet.";
+            td.colSpan = finalSummaryColumnHeaders.length > 0 ? finalSummaryColumnHeaders.length : 1;
+            td.style.textAlign = 'center';
+            td.style.fontStyle = 'italic';
+        } else {
+            // Create a row for each teacher/subject name
+            allAvailableNames.forEach(name => {
+                const tr = tbody.insertRow();
+                tr.insertCell().textContent = name; // First cell is the teacher/subject name
+                // Add empty cells for each time slot
+                for (let i = 1; i < finalSummaryColumnHeaders.length; i++) {
+                    tr.insertCell().textContent = '';
                 }
             });
         }
-        const uniqueHeaderMap = new Map();
-        tempRawHeadersFromSchedules.forEach(h => { const norm = h.replace(/\s/g, "").replace(/:/g,"."); if (!uniqueHeaderMap.has(norm)) { uniqueHeaderMap.set(norm, h); } });
-        if (laulisahRuleRequiresSpecialSlot) { const normalizedTarget = targetSlotForSpecialNamesRule.replace(/\s/g, "").replace(/:/g,"."); if (!uniqueHeaderMap.has(normalizedTarget)) { uniqueHeaderMap.set(normalizedTarget, targetSlotForSpecialNamesRule);
-        } }
-        let sortedOriginalUniqueHeaders = Array.from(uniqueHeaderMap.values());
-        sortedOriginalUniqueHeaders.sort((a, b) => { const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b); if (timeA !== Infinity && timeB !== Infinity) { return timeA - timeB; } else if (timeA !== Infinity) { return -1; } else if (timeB !== Infinity) { return 1; } return a.localeCompare(b); });
-        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedOriginalUniqueHeaders];
-        const thead = summaryTableElement.createTHead(); const headerRowForSummary = thead.insertRow();
-        finalSummaryColumnHeaders.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRowForSummary.appendChild(th); });
-        const tbody = summaryTableElement.createTBody();
-        const sortedSummaryRowHeaders = allAvailableNames.sort((a, b) => a.localeCompare(b)); 
-        if (sortedSummaryRowHeaders.length === 0) {
-            const tr = tbody.insertRow();
-            const td = tr.insertCell(); td.textContent = "No names have been scheduled yet.";
-            td.colSpan = finalSummaryColumnHeaders.length > 0 ?
-            finalSummaryColumnHeaders.length : 1; td.style.textAlign = 'center'; td.style.fontStyle = 'italic';
-        } else {
-            sortedSummaryRowHeaders.forEach(name => { const tr = tbody.insertRow(); tr.insertCell().textContent = name; for (let i = 1; i < finalSummaryColumnHeaders.length; i++) { tr.insertCell().textContent = ''; } });
-        }
     }
-    function updateSummaryTableData(allAvailableNames) { 
-        if (!summaryTableElement || !summaryTableElement.tBodies || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) { return;
+
+    function updateSummaryTableData(allAvailableNames) { // allAvailableNames are teacher/subject names
+        if (!summaryTableElement || !summaryTableElement.tBodies || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) {
+            return; // Summary table structure not ready
         }
         const summaryBody = summaryTableElement.tBodies[0];
-        if (!summaryBody || summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1) ) { return;
+        if (!summaryBody || (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1))) {
+            // No rows to update, or it's the "No names scheduled" message
+            return;
         }
+
+        // Get the displayed headers from the summary table for lookup
         const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
+        // Normalize headers for consistent lookup (remove spaces, use '.' for time separator)
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
-        Array.from(summaryBody.rows).forEach(summaryRow => { if (summaryRow.cells.length > 1) { Array.from(summaryRow.cells).slice(1).forEach(cell => { cell.textContent = ''; cell.classList.remove('highlight-conflict'); }); } });
-        tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-            if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) { return; }
-            const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
-            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
-                const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim(); if (!classIdentifier) return;
-                for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) 
-                {
-                    const scheduleCell = scheduleDataRow.cells[cellIdx]; let entryInScheduleCell = scheduleCell.textContent.trim();
-                    const overlay = scheduleCell.querySelector('.merged-cell-overlay'); if (overlay) entryInScheduleCell = overlay.textContent.trim();
-                    if (entryInScheduleCell && allAvailableNames.includes(entryInScheduleCell)) {
-                     
-                       let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx]; if (!scheduleColumnHeaderForThisCell) continue;
-                        let summaryColumnToUse = scheduleColumnHeaderForThisCell; const specialNamesForRule = ["LAU", "LISAH"];
-                        const targetSlotForSpecialNamesRule = "10.15-10.30"; const sourceSlotToShiftRule = "10.30-12.00";
-                        const normalizedScheduleColHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
-                        const normalizedSourceSlotRule = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
-                        if (specialNamesForRule.includes(entryInScheduleCell) && normalizedScheduleColHeader === normalizedSourceSlotRule) { summaryColumnToUse = targetSlotForSpecialNamesRule;
-                        }
-                        const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
-                        if (targetSummaryRow && targetSummaryRow.cells.length > 1) {
-                            const normalizedSummaryColToUseLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
-                            const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColToUseLookup);
-                            if (targetSummaryColumnCellIndex > 0) {
-                                const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
-                                let existingClasses = summaryCellToUpdate.textContent.trim() ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim()) : [];
-                                if (!existingClasses.includes(classIdentifier)) { existingClasses.push(classIdentifier); summaryCellToUpdate.textContent = existingClasses.join(', ');
+
+        // Clear previous data from summary table cells (except the first 'Nama/Masa' column)
+        Array.from(summaryBody.rows).forEach(summaryRow => {
+            if (summaryRow.cells.length > 1) { // Ensure there are cells to clear
+                Array.from(summaryRow.cells).slice(1).forEach(cell => {
+                    cell.textContent = '';
+                    cell.classList.remove('highlight-conflict'); // Remove conflict styling
+                });
+            }
+        });
+
+        if (tablesContainer) {
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+                if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
+                    return; // Skip tables without proper header or body
+                }
+                const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+
+                Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
+                    const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim(); // e.g., "5S1"
+                    if (!classIdentifier) return; // Skip if no class identifier
+
+                    for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
+                        const scheduleCell = scheduleDataRow.cells[cellIdx];
+                        let entryInScheduleCell = scheduleCell.textContent.trim(); // This is a teacher/subject name
+                        const overlay = scheduleCell.querySelector('.merged-cell-overlay');
+                        if (overlay) entryInScheduleCell = overlay.textContent.trim(); // Get name from overlay if present
+
+                        if (entryInScheduleCell) { // If there's a name in the schedule cell
+                            let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx];
+                            if (!scheduleColumnHeaderForThisCell) continue; // Skip if no header for this column
+
+                            // Apply LAU/LISAH rule for time slot adjustment
+                            let summaryColumnToUse = scheduleColumnHeaderForThisCell;
+                            const specialNamesForRule = ["LAU", "LISAH"];
+                            const targetSlotForSpecialNamesRule = "10.15-10.30";
+                            const sourceSlotToShiftRule = "10.30-12.00";
+                            const normalizedScheduleColHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
+                            const normalizedSourceSlotRule = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
+                            if (specialNamesForRule.includes(entryInScheduleCell) && normalizedScheduleColHeader === normalizedSourceSlotRule) {
+                                summaryColumnToUse = targetSlotForSpecialNamesRule;
+                            }
+
+                            // Find the corresponding row in the summary table for this teacher/subject
+                            const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
+
+                            if (targetSummaryRow && targetSummaryRow.cells.length > 1) {
+                                const normalizedSummaryColToUseLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
+                                const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.indexOf(normalizedSummaryColToUseLookup);
+
+                                if (targetSummaryColumnCellIndex > 0) { // Found a matching column in summary
+                                    const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
+                                    let existingClasses = summaryCellToUpdate.textContent.trim() ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim()) : [];
+                                    if (!existingClasses.includes(classIdentifier)) {
+                                        existingClasses.push(classIdentifier);
+                                        // Sort class identifiers for consistent display
+                                        summaryCellToUpdate.textContent = existingClasses.sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' })).join(', ');
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            
+                });
             });
+        }
+
+        // Highlight cells with multiple classes (conflicts)
+        Array.from(summaryBody.rows).forEach(summaryRow => {
+            if (summaryRow.cells.length > 1) {
+                Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
+                    if (cellIndex > 0) { // Skip 'Nama/Masa' column
+                        const cellText = cell.textContent.trim();
+                        if (cellText.includes(',')) { // If multiple classes are listed
+                            cell.classList.add('highlight-conflict');
+                        }
+                    }
+                });
+            }
         });
-        Array.from(summaryBody.rows).forEach(summaryRow => { if (summaryRow.cells.length > 1) { Array.from(summaryRow.cells).forEach((cell, cellIndex) => { if (cellIndex > 0) { const cellText = cell.textContent.trim(); if (cellText.includes(',')) { cell.classList.add('highlight-conflict'); } } }); } });
     }
 </script>
 </body>
