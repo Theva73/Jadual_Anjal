@@ -2,1356 +2,276 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Weekly Schedule with Firestore Names</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>Weekly Schedule</title>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js"></script>
     <style>
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 20px;
-            background-color: #f9f9f9;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .main-container {
-            width: 100%;
-            max-width: 1200px; /* Adjust as needed */
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: #f4f4f4;
         }
         h2, h3 {
             color: #333;
-            text-align: center;
-        }
-        #userIdDisplay {
-            text-align: center;
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 15px;
         }
         table {
-            border-collapse: collapse;
             width: 100%;
-            margin-top: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-collapse: collapse;
+            margin: 20px 0;
             background-color: #fff;
-            table-layout: auto;
-        }
-        #tablesContainer {
-            overflow-x: auto;
-            position: relative;
-        }
-        #tablesContainer > table {
-            display: none;
-        }
-        #tablesContainer > table.active {
-            display: table;
-        }
-        #summaryTable {
-            display: table;
-            margin-top: 20px;
         }
         th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
+            border: 1px solid #ddd;
+            padding: 8px;
             text-align: center;
-            min-width: 100px;
         }
-        table th {
-            background-color: #e9ecef;
-            color: #495057;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        td.selected, th.selected {
-            outline: 3px solid #007bff;
-            background-color: #cfe2ff;
-        }
-        .bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 15px;
-            align-items: center;
-            justify-content: center;
-        }
-        .bar button, .table-tabs button, .name-session-tabs button {
-            padding: 10px 15px;
-            font-size: 14px;
-            border-radius: 5px;
-            cursor: pointer;
-            border: 1px solid #adb5bd;
-            background-color: #fff;
-            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .bar button:hover, .table-tabs button:hover, .name-session-tabs button:hover {
-            background-color: #f1f3f5;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .bar button:active, .table-tabs button:active, .name-session-tabs button:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-        }
-
-        #rowColManipulationBar button {
-            background-image: linear-gradient(to bottom, #fdfbfb 0%, #ebedee 100%);
-            border: 1px solid #ced4da;
-            color: #343a40;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
-            padding: 8px 12px;
-        }
-        #rowColManipulationBar button:hover {
-            background-image: linear-gradient(to bottom, #e2e6ea 0%, #d4d9df 100%);
-            border-color: #b8c0c6;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
-        }
-         #rowColManipulationBar button.delete-btn {
-            background-image: linear-gradient(to bottom, #f8d7da 0%, #f1c6cb 100%);
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
-        #rowColManipulationBar button.delete-btn:hover {
-            background-image: linear-gradient(to bottom, #f5c6cb 0%, #ebaeb3 100%);
-            border-color: #f1b0b7;
-        }
-        #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62; }
-        #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
-        #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
-        #loadDraftBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
-        #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
-        #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
-        #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
-        #mergeBtn { background-color: #6f42c1; color: white; border-color: #6f42c1;}
-        #unmergeBtn { background-color: #e83e8c; color: white; border-color: #e83e8c;}
-        #addTableBtn { background-color: #20c997; color: white; border-color: #20c997;}
-        #renameTableBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
-        #deleteTableBtn { background-color: #dc3545; color: white; border-color: #dc3545;}
-        #nameListBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
-        #deselectBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
-        #exportDraftsBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;}
-        #importDraftsBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;}
-
-        .table-tabs { margin-bottom: 10px; }
-        .table-tabs button { background-color: #f8f9fa; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-        .table-tabs button.active { background-color: #007bff; color: white; border-color: #007bff; }
-        
-        .name-session-tabs { margin-bottom: 15px; border-bottom: 2px solid #dee2e6; padding-bottom: 5px; }
-        .name-session-tabs button {
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-            border-bottom: none;
-            margin-bottom: -2px; /* Overlap with parent border */
-            padding: 8px 12px;
-            font-size: 0.95em;
-        }
-        .name-session-tabs button.active {
-            background-color: #007bff;
+        th {
+            background-color: #4CAF50;
             color: white;
-            border-color: #007bff #007bff #fff; /* Bottom border transparent to merge */
-            font-weight: bold;
-        }
-
-
-        #summaryTable th { background-color: #ffeeba; }
-        #summaryTable td { background-color: #fff3cd; }
-        .highlight-conflict { background-color: #ffcdd2 !important; font-weight: bold; color: #c62828 !important; }
-
-        .modal {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center;
-            pointer-events: none;
-        }
-        .modal-content {
-            background-color: #fff; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; /* Increased width for sessions */
-            border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; pointer-events: auto;
-        }
-        .modal-content.dragging { transform: none; }
-        .modal-header {
-            padding-bottom: 10px; border-bottom: 1px solid #eee; margin-bottom: 15px;
-            font-size: 1.2em; color: #333; display: flex; justify-content: space-between; align-items: center;
-            cursor: move; user-select: none;
-        }
-        .modal-close-btn {
-            font-size: 1.5rem; font-weight: bold; line-height: 1; color: #000;
-            text-shadow: 0 1px 0 #fff; opacity: .5; background: transparent; border: 0; cursor: pointer;
-        }
-        .modal-close-btn:hover { opacity: .75; }
-        .name-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 5px; border-bottom: 1px solid #eee; break-inside: avoid-column; page-break-inside: avoid;
-        }
-        .name-item:last-child { border-bottom: none; }
-        .name-item span { flex-grow: 1; cursor: pointer; color: #007bff; }
-        .name-item span:hover { text-decoration: underline; }
-        .name-item button { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.9em; }
-        .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
-        #draftList { border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 5px; background-color: #fff; }
-        .draft-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #eee; }
-        .draft-item:last-child { border-bottom: none; }
-        .draft-item span { cursor: pointer; color: #007bff; }
-        .draft-item span:hover { text-decoration: underline; }
-        .draft-item button { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.9em; }
-        #newNameInput, #searchNameInput {
-            padding: 8px; margin-right: 5px; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1;
-            width: calc(100% - 100px);
-        }
-         #searchNameInput { margin-bottom: 10px; width: 100%; box-sizing: border-box; }
-        .input-group { display: flex; margin-bottom: 10px; }
-        .input-group button, #importNameListBtn {
-            background-color: #28a745; color: white; border-color: #28a745; padding: 8px 12px;
-            font-size: 1em; border-radius: 4px; cursor: pointer; flex-shrink: 0;
-        }
-        #importNameListBtn { margin-top: 10px; width: 100%; }
-        #nameList { margin-top:10px; max-height:250px; overflow-y:auto; column-count: 2; column-gap: 20px; }
-        .custom-message-box {
-            display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background-color: #333; color: white; padding: 15px 25px; border-radius: 5px;
-            z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 1em;
-        }
-        .custom-message-box.success { background-color: #28a745; }
-        .custom-message-box.error { background-color: #dc3545; }
-        .custom-message-box.info { background-color: #007bff; }
-        .merged-cell-container { position: relative; z-index: 2; vertical-align: top; }
-        .merged-cell-overlay {
-            position: absolute; top: 0; left: 0; width: var(--merged-width); height: var(--merged-height);
-            background-color: #f0f8ff; font-style: italic; border: 1px solid #add8e6;
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
-            box-sizing: border-box; z-index: 5;
-        }
-        .subsumed-cell { visibility: hidden; }
-        #loadingIndicatorModal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 10; /* Ensure it's above other modal content */
-        }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            border-left-color: #09f;
-            animation: spin 1s ease infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-<div class="main-container">
-    <h2 contenteditable="true" id="scheduleTitle">Weekly Schedule</h2>
-    <div id="userIdDisplay">User ID: Loading...</div>
+    <h2>Weekly Schedule</h2>
+    <div id="userId">User ID: Loading...</div>
 
-    <div class="bar">
-        <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
-    </div>
-    <div class="bar">
-        <button id="excelBtnTrigger" title="Export the currently active table to an Excel file">💾 Export Active Table to Excel</button>
-        <button id="importExcelBtn" title="Import data from an Excel file into a new table">📂 Import from Excel</button>
-        <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
-    </div>
-    <div class="bar">
-        <button id="saveDraftBtn" title="Save all current tables and their state as a named draft">💠 Save All as Draft</button>
-        <button id="loadDraftBtn" title="Show list of saved drafts to load">📂 Load Draft</button>
-        <button id="exportDraftsBtn" title="Export all saved drafts to a JSON file">📤 Export All Drafts</button>
-        <button id="importDraftsBtn" title="Import drafts from a JSON file">📥 Import Drafts File</button>
-        <input type="file" id="draftImportFile" accept=".json" style="display:none;">
-        <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
-    </div>
-    <div class="bar">
-        <button id="selectBtn" title="Toggle cell selection mode on/off">✨ Select Cells</button>
-        <button id="mergeBtn" title="Merge the currently selected cells">🔗 Merge Cells</button>
-        <button id="deselectBtn" title="Clear current cell selection">🚫 Deselect All</button>
-        <button id="unmergeBtn" title="Unmerge the cell that was last clicked if it's part of a merge">💔 Unmerge Cell</button>
-    </div>
-    <div class="bar">
-        <button id="addTableBtn" title="Add a new, empty table/sheet">➕ Add New Table</button>
-        <button id="renameTableBtn" title="Rename the currently active table/sheet">📝 Rename Active Table</button>
-        <button id="deleteTableBtn" title="Delete the currently active table/sheet">❌ Delete Active Table</button>
-        <button id="nameListBtn" title="Open a dialog to manage a list of names for quick insertion">👥 Manage Names (Firestore)</button>
+    <div class="section">
+        <button onclick="copyFullHTML()">📋 Copy Full HTML (Direct)</button>
     </div>
 
-    <div id="draftList" style="display:none;"></div>
-    <div class="bar table-tabs" id="tableTabs"></div>
-    <div id="tablesContainer">
-        <table id="tbl_1" class="active" data-table-name="Table 1">
-            <thead>
-                <tr>
-                    <th contenteditable="true">Class</th> <th contenteditable="true">08:00</th>
-                    <th contenteditable="true">09:00</th> <th contenteditable="true">10:00</th>
-                    <th contenteditable="true">11:00</th> <th contenteditable="true">12:00</th>
-                    <th contenteditable="true">13:00</th>
-                </tr>
-            </thead>
-            <tbody>
-                 <tr> <td contenteditable="true">5S1</td>
-                    <td contenteditable="true"></td><td contenteditable="true">JAMES</td><td contenteditable="true"></td>
-                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
-                </tr>
-                 <tr> <td contenteditable="true">5S2</td>
-                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
-                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="section">
+        <button onclick="exportToExcel()">💾 Export Active Table to Excel</button>
+        <input type="file" id="importExcel" accept=".xlsx" onchange="importFromExcel(event)">
     </div>
 
-    <div class="bar" id="rowColManipulationBar">
-        <button id="addRowAboveBtn" title="Add a new row above the currently selected/clicked row">⬆️ Add Row Above</button>
-        <button id="addRowBelowBtn" title="Add a new row below the currently selected/clicked row">⬇️ Add Row Below</button>
-        <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Add Column Left</button>
-        <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Add Column Right</button>
-        <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
-        <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
+    <div class="section">
+        <button onclick="saveAllAsDraft()">💠 Save All as Draft</button>
+        <button onclick="loadDraft()">📂 Load Draft</button>
+        <button onclick="exportAllDrafts()">📤 Export All Drafts</button>
+        <input type="file" id="importDrafts" accept=".txt" onchange="importDraftsFile(event)">
+        <button onclick="clearTable()">🧹 Clear Active Table</button>
     </div>
 
-    <div id="nameModal" class="modal">
-        <div class="modal-content" id="nameModalContent">
-            <div class="modal-header" id="nameModalHeader">
-                <h3 id="nameModalTitle">Name List Manager</h3> <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
-            </div>
-            <div class="name-session-tabs">
-                <button id="namePagiTab" data-session="pagi" class="active">Pagi (Morning)</button>
-                <button id="namePetangTab" data-session="petang">Petang (Afternoon)</button>
-            </div>
-             <div class="input-group">
-                <input id="newNameInput" placeholder="Add new name to current session">
-                <button id="addNameBtnInModal" title="Add the name to the list">Add</button>
-            </div>
-            <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current session">📂 Import Names (.txt) to Session</button>
-            <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
-            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current session..." style="margin-top: 10px;" title="Filter the list of names">
-            <div id="nameList" style="margin-top:10px;max-height:250px;overflow-y:auto;">
-                </div>
-            <div id="loadingIndicatorModal" style="display:none;"><div class="spinner"></div></div>
-        </div>
+    <div class="section">
+        <button onclick="selectCells()">✨ Select Cells</button>
+        <button onclick="mergeCells()">🔗 Merge Cells</button>
+        <button onclick="deselectAll()">🚫 Deselect All</button>
+        <button onclick="unmergeCell()">💔 Unmerge Cell</button>
     </div>
 
-    <h3 style="margin-top:32px">Teacher/Subject Attendance Summary</h3>
-    <table id="summaryTable"></table>
-    <div id="customMessageBox" class="custom-message-box"></div>
-</div>
+    <div class="section">
+        <button onclick="addNewTable()">➕ Add New Table</button>
+        <button onclick="renameActiveTable()">📝 Rename Active Table</button>
+        <button onclick="deleteActiveTable()">❌ Delete Active Table</button>
+        <button onclick="manageNames()">👥 Manage Names (Firestore)</button>
+    </div>
 
-<script type="module">
-    // Firebase App (the core Firebase SDK) is always required and must be listed first
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    // Add SDKs for Firebase products that you want to use
-    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <table id="scheduleTable">
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>08:00</th>
+                <th>09:00</th>
+                <th>10:00</th>
+                <th>11:00</th>
+                <th>12:00</th>
+                <th>13:00</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>5S1</td><td id="5S1_08:00">JAMES</td><td id="5S1_09:00"></td><td id="5S1_10:00"></td><td id="5S1_11:00"></td><td id="5S1_12:00"></td><td id="5S1_13:00"></td></tr>
+            <tr><td>5S2</td><td id="5S2_08:00"></td><td id="5S2_09:00">LILY</td><td id="5S2_10:00"></td><td id="5S2_11:00"></td><td id="5S2_12:00"></td><td id="5S2_13:00"></td></tr>
+        </tbody>
+    </table>
 
-    // --- Firebase Configuration ---
-    // THIS IS WHERE YOUR CONFIGURATION IS INJECTED
-    const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
-      authDomain: "jadual-3f0aa.firebaseapp.com",
-      projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.firebasestorage.app", // Corrected from firebasestorage.app
-      messagingSenderId: "496526436851",
-      appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
-    };
+    <div class="section">
+        <button onclick="addRowAbove()">⬆️ Add Row Above</button>
+        <button onclick="addRowBelow()">⬇️ Add Row Below</button>
+        <button onclick="addColumnLeft()">⬅️ Add Column Left</button>
+        <button onclick="addColumnRight()">➡️ Add Column Right</button>
+        <button onclick="deleteRow()">🗑️ Delete Row</button>
+        <button onclick="deleteColumn()">🗑️ Delete Column</button>
+    </div>
 
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedFirebaseConfig;
-    const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.appId;
+    <h3>Name List Manager</h3>
+    <select id="sessionType">
+        <option value="morning">Pagi (Morning)</option>
+        <option value="afternoon">Petang (Afternoon)</option>
+    </select>
+    <input type="file" id="importNames" accept=".txt" onchange="importNames(event)">
+    <button onclick="addName()">Add</button>
+    <div id="nameList"></div>
+        <style>
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input[type="file"] {
+            margin: 5px;
+        }
+        #nameList {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+        }
+        select {
+            padding: 5px;
+            margin: 5px;
+        }
+        .section {
+            margin: 10px 0;
+        }
+    </style>
 
+    <h3>Teacher/Subject Attendance Summary</h3>
+    <div id="attendanceSummary"></div>
+        <script>
+        // Firebase Configuration from your SDK config.txt
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
+            authDomain: "jadual-3f0aa.firebaseapp.com",
+            projectId: "jadual-3f0aa",
+            storageBucket: "jadual-3f0aa.firebasestorage.app",
+            messagingSenderId: "496526436851",
+            appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
+        };
 
-    // --- Initialize Firebase ---
-    let fbApp, fbAuth, fbDb;
-    let fbUserId = null;
-    let fbIsAuthReady = false;
-    let unsubscribePagi = null;
-    let unsubscribePetang = null;
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-    try {
-        fbApp = initializeApp(firebaseConfig);
-        fbAuth = getAuth(fbApp);
-        fbDb = getFirestore(fbApp);
-    } catch (e) {
-        console.error("Error initializing Firebase:", e);
-        showMessage("Critical Error: Firebase initialization failed. Name list features will not work.", "error", 10000);
-    }
-
-    // --- Global State and Configuration ---
-    const DRAFTS_KEY = 'jadual_drafts_v3';
-    const SCHEDULE_TITLE_KEY = 'jadual_title_v3';
-    let activeTableId = 'tbl_1';
-    let tableCount = 1;
-    let selectionMode = false;
-    let selectedCells = [];
-    let lastClickedCell = null;
-    let selectedNameFromList = null; 
-
-    // Firestore Name List State
-    let currentNameListSession = 'pagi'; 
-    let namesPagi = [];
-    let namesPetang = [];
-
-    let isDraggingModal = false;
-    let modalDragOffsetX, modalDragOffsetY;
-
-    // DOM Element Cache
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement;
-
-    // --- Utility Functions (Existing) ---
-    function showMessage(message, type = 'info', duration = 3000) {
-        if (!customMessageBox) return;
-        customMessageBox.textContent = message;
-        customMessageBox.className = `custom-message-box ${type}`;
-        customMessageBox.style.display = 'block';
-        setTimeout(() => { if (customMessageBox) customMessageBox.style.display = 'none'; }, duration);
-    }
-    function customPrompt(message, defaultValue = "") {
-        return prompt(message, defaultValue);
-    }
-    function customConfirm(message) {
-        return new Promise((resolve) => {
-            const confirmModalId = 'customConfirmModal';
-            let existingModal = document.getElementById(confirmModalId);
-            if (existingModal) existingModal.remove();
-            const modal = document.createElement('div');
-            modal.id = confirmModalId;
-            modal.style.cssText = `display: flex; position: fixed; z-index: 2001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;`;
-            const modalContent = document.createElement('div');
-            modalContent.style.cssText = `background-color: #fff; padding: 25px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 300px; max-width: 90%;`;
-            const messageP = document.createElement('p');
-            messageP.textContent = message;
-            messageP.style.marginBottom = '20px'; messageP.style.fontSize = '1.1em';
-            const yesButton = document.createElement('button');
-            yesButton.textContent = 'Yes';
-            yesButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #28a745; color: white; border: none; font-size: 1em;`;
-            const noButton = document.createElement('button');
-            noButton.textContent = 'No';
-            noButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #dc3545; color: white; border: none; font-size: 1em;`;
-            const closeModal = (value) => { modal.remove(); resolve(value); };
-            yesButton.onclick = () => closeModal(true);
-            noButton.onclick = () => closeModal(false);
-            modalContent.appendChild(messageP); modalContent.appendChild(yesButton); modalContent.appendChild(noButton);
-            modal.appendChild(modalContent); document.body.appendChild(modal);
+        // User Authentication State
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('userId').textContent = `User ID: ${user.uid}`;
+                loadSchedule();
+                loadNames();
+                loadAttendanceSummary();
+            } else {
+                document.getElementById('userId').textContent = 'User ID: Not logged in';
+            }
         });
-    }
 
-    // --- Firestore Name List Functions ---
-    function showNameModalLoading(isLoading) {
-        if (loadingIndicatorModalElement) {
-            loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
-        }
-    }
-
-    async function saveNameListToFirestore(session, namesArray) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot save name list.", "error");
-            return;
-        }
-        showNameModalLoading(true);
-        const uniqueSortedNames = [...new Set(namesArray)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-
-        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", session);
-        try {
-            await setDoc(docRef, { names: uniqueSortedNames });
-            showMessage(`Name list uploaded to ${session} session.`, "success");
-        } catch (error) {
-            console.error(`Error saving list to ${session}:`, error);
-            showMessage(`Failed to save list to ${session}. Error: ${error.message}`, "error");
-        } finally {
-            showNameModalLoading(false);
-        }
-    }
-
-    async function addNameToCurrentSessionInFirestore(name) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot add name.", "error");
-            return;
-        }
-        if (!name || name.trim() === "") {
-            showMessage("Name cannot be empty.", "info");
-            return;
-        }
-        showNameModalLoading(true);
-        const sessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
-        if (sessionNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
-            showMessage(`Name "${name}" already exists in ${currentNameListSession} session.`, "info");
-            showNameModalLoading(false);
-            return;
+        // Load Schedule from Firestore
+        function loadSchedule() {
+            db.collection('schedules').doc(auth.currentUser.uid).get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    for (let [id, value] of Object.entries(data)) {
+                        const cell = document.getElementById(id);
+                        if (cell) cell.textContent = value || '';
+                    }
+                }
+            }).catch(error => console.error('Error loading schedule:', error));
         }
 
-        const updatedNames = [...sessionNames, name].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
-        try {
-            await setDoc(docRef, { names: updatedNames });
-            if(newNameInput) newNameInput.value = ''; newNameInput.focus();
-        } catch (error) {
-            console.error(`Error adding name to ${currentNameListSession}:`, error);
-            showMessage(`Failed to add name. Error: ${error.message}`, "error");
-        } finally {
-            showNameModalLoading(false);
+        // Save Schedule to Firestore
+        function saveSchedule() {
+            const scheduleData = {};
+            document.querySelectorAll('#scheduleTable td[id]').forEach(cell => {
+                scheduleData[cell.id] = cell.textContent;
+            });
+            db.collection('schedules').doc(auth.currentUser.uid).set(scheduleData)
+                .then(() => console.log('Schedule saved'))
+                .catch(error => console.error('Error saving schedule:', error));
         }
-    }
 
-    async function deleteNameFromCurrentSessionInFirestore(nameToDelete) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot delete name.", "error");
-            return;
+        // Import Names from .txt File
+        function importNames(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const names = e.target.result.split('\n').filter(name => name.trim());
+                    const session = document.getElementById('sessionType').value;
+                    db.collection('nameLists').doc(`${auth.currentUser.uid}_${session}`).set({ names })
+                        .then(() => loadNames())
+                        .catch(error => console.error('Error importing names:', error));
+                };
+                reader.readAsText(file);
+            }
         }
-        if (await customConfirm(`Delete "${nameToDelete}" from ${currentNameListSession} session? This also removes it from all schedule tables.`)) {
-            showNameModalLoading(true);
-            const currentNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
-            const updatedNames = currentNames.filter(name => name !== nameToDelete);
 
-            const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
-            try {
-                await setDoc(docRef, { names: updatedNames });
-                tablesContainer.querySelectorAll('table').forEach(table => {
-                    table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
-                        if (cell.textContent.trim() === nameToDelete) {
-                            cell.textContent = '';
-                        }
-                    });
+        // Load Names from Firestore
+        function loadNames() {
+            const session = document.getElementById('sessionType').value;
+            db.collection('nameLists').doc(`${auth.currentUser.uid}_${session}`).get().then(doc => {
+                if (doc.exists) {
+                    const nameListDiv = document.getElementById('nameList');
+                    nameListDiv.innerHTML = doc.data().names.map(name => `<p>${name}</p>`).join('');
+                }
+            }).catch(error => console.error('Error loading names:', error));
+        }
+    </script>
+        <script>
+        // Add New Name
+        function addName() {
+            const session = document.getElementById('sessionType').value;
+            const nameInput = prompt('Enter new name:');
+            if (nameInput) {
+                db.collection('nameLists').doc(`${auth.currentUser.uid}_${session}`).get().then(doc => {
+                    const names = doc.exists ? doc.data().names : [];
+                    names.push(nameInput);
+                    db.collection('nameLists').doc(`${auth.currentUser.uid}_${session}`).set({ names })
+                        .then(() => loadNames())
+                        .catch(error => console.error('Error adding name:', error));
                 });
-                rebuildAndRenderSummary(); 
-                if (selectedNameFromList === nameToDelete) clearNameSelection();
-
-            } catch (error) {
-                console.error(`Error deleting name from ${currentNameListSession}:`, error);
-                showMessage(`Failed to delete name. Error: ${error.message}`, "error");
-            } finally {
-                showNameModalLoading(false);
             }
         }
-    }
 
-    function listenToNameList(sessionToListen) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            console.warn(`Firestore not ready for session ${sessionToListen}, listener not attached.`);
-            return () => {}; 
-        }
-        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", sessionToListen);
-        return onSnapshot(docRef, (docSnap) => {
-            showNameModalLoading(true);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                if (sessionToListen === 'pagi') {
-                    namesPagi = data.names || [];
+        // Load Attendance Summary from Firestore
+        function loadAttendanceSummary() {
+            db.collection('attendance').doc(auth.currentUser.uid).get().then(doc => {
+                if (doc.exists) {
+                    document.getElementById('attendanceSummary').innerHTML = `<p>${JSON.stringify(doc.data())}</p>`;
                 } else {
-                    namesPetang = data.names || [];
+                    document.getElementById('attendanceSummary').innerHTML = '<p>No attendance data available.</p>';
                 }
-            } else { 
-                if (sessionToListen === 'pagi') namesPagi = [];
-                else namesPetang = [];
-                console.log(`No names document found for ${sessionToListen}, initialized empty list.`);
-            }
-            if (sessionToListen === currentNameListSession) { 
-                renderNameListFromFirestore(searchNameInputElement ? searchNameInputElement.value : '');
-            }
-            rebuildAndRenderSummary(); 
-            showNameModalLoading(false);
-        }, (error) => {
-            console.error(`Error listening to ${sessionToListen} names:`, error);
-            showMessage(`Error fetching ${sessionToListen} names. Check console.`, "error");
-            showNameModalLoading(false);
-        });
-    }
-
-
-    // --- Initialization ---
-    document.addEventListener('DOMContentLoaded', () => {
-        scheduleTitleElement = document.getElementById('scheduleTitle');
-        tablesContainer = document.getElementById('tablesContainer');
-        tableTabs = document.getElementById('tableTabs');
-        nameModal = document.getElementById('nameModal');
-        nameModalContent = document.getElementById('nameModalContent');
-        nameModalHeader = document.getElementById('nameModalHeader');
-        nameListContainer = document.getElementById('nameList');
-        newNameInput = document.getElementById('newNameInput');
-        draftListElement = document.getElementById('draftList');
-        summaryTableElement = document.getElementById('summaryTable');
-        customMessageBox = document.getElementById('customMessageBox');
-        fileInputElement = document.getElementById('fileInput');
-        directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn');
-        closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard');
-        nameListImportFileInputElement = document.getElementById('nameListImportFile');
-        searchNameInputElement = document.getElementById('searchNameInput');
-        draftImportFileInputElement = document.getElementById('draftImportFile');
-        userIdDisplayElement = document.getElementById('userIdDisplay');
-        namePagiTabElement = document.getElementById('namePagiTab');
-        namePetangTabElement = document.getElementById('namePetangTab');
-        loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
-        nameModalTitleElement = document.getElementById('nameModalTitle');
-
-
-        if (!tablesContainer || !tableTabs || !nameModal || !nameModalContent || !nameModalHeader || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement || !nameListImportFileInputElement || !searchNameInputElement || !draftImportFileInputElement || !userIdDisplayElement || !namePagiTabElement || !namePetangTabElement || !loadingIndicatorModalElement || !nameModalTitleElement) {
-            console.error("Critical DOM elements missing. Application might not function correctly.");
-            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements. Please ensure the HTML structure is correct.</p>";
-            return;
+            }).catch(error => console.error('Error loading attendance:', error));
         }
 
-        if (fbAuth) {
-            onAuthStateChanged(fbAuth, async (user) => {
-                if (user) {
-                    fbUserId = user.uid;
-                    fbIsAuthReady = true;
-                    if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
-                    console.log("Firebase User is signed in with UID:", fbUserId);
+        // Placeholder Functions (to be implemented)
+        function copyFullHTML() { console.log('Copy Full HTML functionality to be implemented'); }
+        function exportToExcel() { console.log('Export to Excel functionality to be implemented'); }
+        function importFromExcel(event) { console.log('Import from Excel functionality to be implemented'); }
+        function saveAllAsDraft() { console.log('Save All as Draft functionality to be implemented'); }
+        function loadDraft() { console.log('Load Draft functionality to be implemented'); }
+        function exportAllDrafts() { console.log('Export All Drafts functionality to be implemented'); }
+        function importDraftsFile(event) { console.log('Import Drafts File functionality to be implemented'); }
+        function selectCells() { console.log('Select Cells functionality to be implemented'); }
+        function mergeCells() { console.log('Merge Cells functionality to be implemented'); }
+        function deselectAll() { console.log('Deselect All functionality to be implemented'); }
+        function unmergeCell() { console.log('Unmerge Cell functionality to be implemented'); }
+        function addNewTable() { console.log('Add New Table functionality to be implemented'); }
+        function renameActiveTable() { console.log('Rename Active Table functionality to be implemented'); }
+        function deleteActiveTable() { console.log('Delete Active Table functionality to be implemented'); }
+        function manageNames() { console.log('Manage Names functionality to be implemented'); }
+        function addRowAbove() { console.log('Add Row Above functionality to be implemented'); }
+        function addRowBelow() { console.log('Add Row Below functionality to be implemented'); }
+        function addColumnLeft() { console.log('Add Column Left functionality to be implemented'); }
+        function addColumnRight() { console.log('Add Column Right functionality to be implemented'); }
+        function deleteRow() { console.log('Delete Row functionality to be implemented'); }
+        function deleteColumn() { console.log('Delete Column functionality to be implemented'); }
+        function clearTable() { document.querySelectorAll('#scheduleTable td[id]').forEach(cell => cell.textContent = ''); }
 
-                    if (unsubscribePagi) unsubscribePagi();
-                    if (unsubscribePetang) unsubscribePetang();
-
-                    unsubscribePagi = listenToNameList('pagi');
-                    unsubscribePetang = listenToNameList('petang');
-                    
-                    if (nameModal.style.display === 'flex') {
-                        renderNameListFromFirestore(searchNameInputElement.value);
-                    }
-
-                } else {
-                    fbIsAuthReady = false;
-                    fbUserId = null;
-                    if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Not authenticated";
-                    console.log("Firebase User is signed out or auth not yet complete.");
-                    try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(fbAuth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(fbAuth);
-                        }
-                    } catch (error) {
-                        console.error("Error during Firebase sign-in:", error);
-                        showMessage("Firebase Authentication failed. Name list features may not work.", "error", 5000);
-                        if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
-                    }
-                }
-            });
-        } else {
-             if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Error";
-        }
-
-
-        loadScheduleTitle();
-        initializeEventListeners();
-        setupInitialTableState();
-        rebuildAndRenderSummary(); 
-        handleNameListSessionSwitch('pagi'); 
-    });
-
-    function setupInitialTableState() {
-        const existingTables = tablesContainer.querySelectorAll('table');
-        if (existingTables.length > 0) {
-            tableTabs.innerHTML = '';
-            existingTables.forEach((table, index) => {
-                const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`;
-                table.id = tableId;
-                const tableName = table.dataset.tableName || `Table ${index + 1}`;
-                table.dataset.tableName = tableName;
-                addTabButton(tableId, tableName);
-                if (index === 0) activeTableId = tableId;
-            });
-        } else {
-            addNewTable(true);
-        }
-
-        if (activeTableId && document.getElementById(activeTableId)) {
-            switchTable(activeTableId);
-        } else if (tablesContainer.querySelector('table')) {
-            switchTable(tablesContainer.querySelector('table').id);
-        }
-    }
-    function loadScheduleTitle() {
-        const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
-        if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
-        if (scheduleTitleElement) {
-            scheduleTitleElement.addEventListener('blur', () => {
-                localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent);
-                showMessage('Schedule title saved!', 'success');
-            });
-        }
-    }
-    function initializeEventListeners() {
-        directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
-        closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
-        nameModalHeader.addEventListener('mousedown', startDragModal);
-        document.addEventListener('mousemove', dragModal);
-        document.addEventListener('mouseup', stopDragModal);
-        nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false });
-        document.addEventListener('touchmove', dragModal, { passive: false });
-        document.addEventListener('touchend', stopDragModal);
-        document.getElementById('excelBtnTrigger').addEventListener('click', exportActiveTableToExcel);
-        document.getElementById('importExcelBtn').addEventListener('click', () => fileInputElement.click());
-        fileInputElement.addEventListener('change', handleExcelFileImport);
-        document.getElementById('saveDraftBtn').addEventListener('click', promptAndSaveDraft);
-        document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftListVisibility);
-        document.getElementById('exportDraftsBtn').addEventListener('click', exportAllDrafts);
-        document.getElementById('importDraftsBtn').addEventListener('click', () => draftImportFileInputElement.click());
-        draftImportFileInputElement.addEventListener('change', handleDraftsFileImport);
-        document.getElementById('clearActiveTableContentBtn').addEventListener('click', confirmAndClearActiveTableContent);
-        document.getElementById('selectBtn').addEventListener('click', toggleCellSelectionMode);
-        document.getElementById('mergeBtn').addEventListener('click', mergeSelectedTableCells);
-        document.getElementById('deselectBtn').addEventListener('click', deselectAllTableCells);
-        document.getElementById('unmergeBtn').addEventListener('click', unmergeActiveCellIfMerged);
-        document.getElementById('addTableBtn').addEventListener('click', () => addNewTable());
-        document.getElementById('renameTableBtn').addEventListener('click', promptAndRenameActiveTable);
-        document.getElementById('deleteTableBtn').addEventListener('click', confirmAndDeleteActiveTable);
-        
-        document.getElementById('nameListBtn').addEventListener('click', toggleNameListModalVisibility);
-        document.getElementById('addNameBtnInModal').addEventListener('click', () => {
-            if(newNameInput) addNameToCurrentSessionInFirestore(newNameInput.value);
-        });
-        document.getElementById('importNameListBtn').addEventListener('click', () => nameListImportFileInputElement.click());
-        nameListImportFileInputElement.addEventListener('change', handleNameListImportFirestore);
-        if(searchNameInputElement) searchNameInputElement.addEventListener('input', () => renderNameListFromFirestore(searchNameInputElement.value));
-        
-        namePagiTabElement.addEventListener('click', () => handleNameListSessionSwitch('pagi'));
-        namePetangTabElement.addEventListener('click', () => handleNameListSessionSwitch('petang'));
-
-        draftListElement.addEventListener('click', async (e) => {
-            const targetSpan = e.target.closest('.draft-item span');
-            const targetButton = e.target.closest('.draft-item button');
-            if (targetSpan) loadSelectedDraft(targetSpan.textContent);
-            else if (targetButton) await confirmAndDeleteDraft(targetButton.parentElement.querySelector('span').textContent);
-        });
-        nameListContainer.addEventListener('click', async (e) => {
-            const nameItemSpan = e.target.closest('.name-item span[data-name]');
-            const deleteButton = e.target.closest('.name-item button[data-name-delete]');
-            if (nameItemSpan) {
-                selectNameForCellInsertion(nameItemSpan.dataset.name);
-            } else if (deleteButton) {
-                await deleteNameFromCurrentSessionInFirestore(deleteButton.dataset.nameDelete);
+        // Initial Load
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loadSchedule();
+                loadNames();
+                loadAttendanceSummary();
             }
         });
-
-        document.getElementById('addRowAboveBtn').addEventListener('click', addRowAboveToActiveTable);
-        document.getElementById('addRowBelowBtn').addEventListener('click', addRowBelowToActiveTable);
-        document.getElementById('addColLeftBtn').addEventListener('click', addColumnLeftToActiveTable);
-        document.getElementById('addColRightBtn').addEventListener('click', addColumnRightToActiveTable);
-        document.getElementById('deleteRowBtn').addEventListener('click', deleteClickedRowFromActiveTable);
-        document.getElementById('deleteColBtn').addEventListener('click', deleteClickedColumnFromActiveTable);
-
-        tablesContainer.addEventListener('click', handleTableCellClick);
-        tablesContainer.addEventListener('blur', (e) => {
-            if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                setTimeout(rebuildAndRenderSummary, 0);
-            }
-        }, true);
-        tablesContainer.addEventListener('input', (e) => {
-            if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                setTimeout(rebuildAndRenderSummary, 300);
-            }
-        });
-        window.addEventListener('resize', updateAllMergeOverlays);
-    }
-
-    function startDragModal(e) {
-        if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; }
-        isDraggingModal = true; nameModalContent.classList.add('dragging');
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        const rect = nameModalContent.getBoundingClientRect();
-        nameModalContent.style.position = 'fixed'; nameModalContent.style.left = `${rect.left}px`;
-        nameModalContent.style.top = `${rect.top}px`; nameModalContent.style.transform = 'none';
-        modalDragOffsetX = clientX - nameModalContent.offsetLeft; modalDragOffsetY = clientY - nameModalContent.offsetTop;
-        if (e.type === 'touchstart') e.preventDefault();
-    }
-    function dragModal(e) {
-        if (!isDraggingModal) return;
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        let newLeft = clientX - modalDragOffsetX; let newTop = clientY - modalDragOffsetY;
-        const modalRect = nameModalContent.getBoundingClientRect(); const viewportWidth = window.innerWidth; const viewportHeight = window.innerHeight;
-        if (newLeft < 0) newLeft = 0; if (newTop < 0) newTop = 0;
-        if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
-        if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
-        nameModalContent.style.left = `${newLeft}px`; nameModalContent.style.top = `${newTop}px`;
-        if (e.type === 'touchmove') e.preventDefault();
-    }
-    function stopDragModal() { if (isDraggingModal) { isDraggingModal = false; nameModalContent.classList.remove('dragging'); } }
-
-    async function attemptDirectCopyToClipboard() {
-        const fullHtml = document.documentElement.outerHTML;
-        try {
-            await navigator.clipboard.writeText(fullHtml);
-            showMessage('Full HTML copied to clipboard!', 'success');
-        } catch (err) {
-            console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
-            const textarea = document.createElement('textarea');
-            textarea.value = fullHtml; textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
-            document.body.appendChild(textarea); textarea.select();
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) showMessage('Full HTML copied! (using fallback method)', 'success');
-                else showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
-            } catch (execErr) {
-                console.error('execCommand copy failed: ', execErr);
-                showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
-            }
-            document.body.removeChild(textarea);
-        }
-    }
-
-    function promptAndSaveDraft() {
-        if (tablesContainer.children.length === 0) { showMessage('No schedule data to save.', 'error'); return; }
-        const allTablesData = tablesContainer.innerHTML; const allTableMeta = {};
-        tablesContainer.querySelectorAll('table').forEach(table => { allTableMeta[table.id] = { name: table.dataset.tableName || table.id }; });
-        const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`);
-        if (draftName) {
-            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-            drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId };
-            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-            showMessage(`Draft "${draftName}" saved!`, 'success');
-            if (draftListElement.style.display === 'block') renderDraftList();
-        }
-    }
-    function toggleDraftListVisibility() {
-        const isVisible = draftListElement.style.display === 'block';
-        draftListElement.style.display = isVisible ? 'none' : 'block';
-        if (!isVisible) renderDraftList();
-    }
-    function renderDraftList() {
-        draftListElement.innerHTML = ''; const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-        if (Object.keys(drafts).length === 0) { draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return; }
-        for (const name in drafts) {
-            const itemDiv = document.createElement('div'); itemDiv.className = 'draft-item';
-            itemDiv.innerHTML = `<span>${name}</span><button title="Delete draft '${name}'">Delete</button>`;
-            draftListElement.appendChild(itemDiv);
-        }
-    }
-    function loadSelectedDraft(draftName) {
-        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-        if (drafts[draftName]) {
-            tablesContainer.innerHTML = drafts[draftName].html; const tableMeta = drafts[draftName].meta || {};
-            tableTabs.innerHTML = '';
-            tablesContainer.querySelectorAll('table').forEach(table => {
-                const id = table.id; const metaInfo = tableMeta[id] || {};
-                const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
-                table.dataset.tableName = name; addTabButton(id, name);
-                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
-            });
-            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
-            if (document.getElementById(activeTableId)) { switchTable(activeTableId); }
-            else if (tablesContainer.querySelector('table')) { switchTable(tablesContainer.querySelector('table').id); }
-            else { addNewTable(true); }
-            showMessage(`Draft "${draftName}" loaded!`, 'success'); draftListElement.style.display = 'none';
-            rebuildAndRenderSummary(); updateAllMergeOverlays(); 
-        } else { showMessage(`Draft "${draftName}" not found.`, 'error'); }
-    }
-    async function confirmAndDeleteDraft(draftName) {
-        if (await customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
-            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}'); delete drafts[draftName];
-            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-            showMessage(`Saved draft "${draftName}" deleted.`, 'success'); renderDraftList();
-        }
-    }
-    async function confirmAndClearActiveTableContent() {
-        const activeTableElement = document.getElementById(activeTableId);
-        if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return; }
-        const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
-        if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
-            activeTableElement.querySelectorAll('.merged-cell-container').forEach(containerCell => {
-                const mergeId = containerCell.dataset.mergeId;
-                if(mergeId){
-                    const cellsInGroup = activeTableElement.querySelectorAll(`[data-merge-id="${mergeId}"]`);
-                     cellsInGroup.forEach(c => {
-                        c.removeAttribute('data-merge-id'); c.classList.remove('merged-cell-container', 'subsumed-cell');
-                        const overlay = c.querySelector('.merged-cell-overlay');
-                        if (overlay) c.textContent = overlay.textContent; else c.innerHTML = '';
-                    });
-                }
-            });
-            activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
-                if (cell.tagName === 'TH' && cell.parentElement.tagName === 'THEAD' && cell.cellIndex === 0) {}
-                else { cell.innerHTML = ''; }
-                cell.classList.remove('selected');
-            });
-            selectedCells = []; rebuildAndRenderSummary(); updateAllMergeOverlays();
-            showMessage(`Content of "${tableName}" cleared.`, 'success');
-        }
-    }
-    function exportAllDrafts() {
-        const drafts = localStorage.getItem(DRAFTS_KEY);
-        if (!drafts || drafts === '{}') { showMessage('No drafts to export.', 'info'); return; }
-        try {
-            const blob = new Blob([drafts], { type: 'application/json' }); const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'all_schedule_drafts.json';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-            showMessage('All drafts exported successfully!', 'success');
-        } catch (error) { console.error("Error exporting drafts:", error); showMessage('Failed to export drafts.', 'error'); }
-    }
-    async function handleDraftsFileImport(event) {
-        const file = event.target.files[0]; if (!file) { showMessage('No file selected for import.', 'info'); return; }
-        if (file.type !== 'application/json') { showMessage('Invalid file type. Please select a .json file.', 'error'); event.target.value = ''; return; }
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const importedDraftsText = e.target.result; const importedDraftsData = JSON.parse(importedDraftsText);
-                if (typeof importedDraftsData !== 'object' || importedDraftsData === null) { showMessage('Invalid draft file format.', 'error'); return; }
-                let localDrafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-                let importedCount = 0, overwrittenCount = 0, skippedCount = 0;
-                for (const draftName in importedDraftsData) {
-                    if (Object.prototype.hasOwnProperty.call(importedDraftsData, draftName)) {
-                        const draftData = importedDraftsData[draftName];
-                        if (draftData && typeof draftData.html === 'string' && typeof draftData.meta === 'object' && typeof draftData.active === 'string') {
-                            if (localDrafts[draftName]) {
-                                if (await customConfirm(`Draft "${draftName}" already exists. Overwrite?`)) { localDrafts[draftName] = draftData; overwrittenCount++; }
-                                else { skippedCount++; }
-                            } else { localDrafts[draftName] = draftData; importedCount++; }
-                        } else { console.warn(`Skipping invalid draft data for "${draftName}" during import.`); skippedCount++; }
-                    }
-                }
-                localStorage.setItem(DRAFTS_KEY, JSON.stringify(localDrafts));
-                showMessage(`Drafts import complete: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
-                if (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0) { renderDraftList(); }
-            } catch (error) { console.error("Error importing drafts:", error); showMessage('Error processing draft file. Ensure it is a valid JSON export from this tool.', 'error', 5000); }
-            finally { event.target.value = ''; }
-        };
-        reader.onerror = () => { showMessage('Failed to read the draft file.', 'error'); event.target.value = ''; };
-        reader.readAsText(file);
-    }
-
-    function addTabButton(id, label) {
-        const button = document.createElement('button'); button.textContent = label; button.dataset.tableId = id;
-        button.title = `Switch to table: ${label}`; button.onclick = () => switchTable(id);
-        tableTabs.appendChild(button); return button;
-    }
-    function switchTable(id) {
-        const targetTable = document.getElementById(id);
-        if (!targetTable) {
-            const firstTableInDOM = tablesContainer.querySelector('table');
-            if (firstTableInDOM) { id = firstTableInDOM.id; }
-            else { showMessage('Cannot switch: Target table not found and no other tables exist.', 'error'); if (tablesContainer.children.length === 0) addNewTable(true); return; }
-        }
-        activeTableId = id; tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
-        tableTabs.querySelectorAll('button').forEach(b => { b.classList.toggle('active', b.dataset.tableId === id); });
-        deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays();
-    }
-    function addNewTable(isInitial = false) {
-        tableCount++; const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
-        const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
-        if (!label && !isInitial) return;
-        const newTable = document.createElement('table'); const newTableId = `tbl_${Date.now()}_${tableCount}`;
-        newTable.id = newTableId; newTable.dataset.tableName = label || defaultTableName;
-        const thead = newTable.createTHead(); const headerRow = thead.insertRow();
-        const defaultHeaders = ['Class/Time', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00'];
-        defaultHeaders.forEach(headerText => { const th = document.createElement('th'); th.contentEditable = 'true'; th.textContent = headerText; headerRow.appendChild(th); });
-        const tbody = newTable.createTBody();
-        for (let r = 0; r < 2; r++) {
-            const dataRow = tbody.insertRow();
-            for (let c = 0; c < headerRow.cells.length; c++) {
-                const td = dataRow.insertCell(); td.contentEditable = 'true';
-                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`;
-            }
-        }
-        tablesContainer.appendChild(newTable); addTabButton(newTableId, label || defaultTableName); switchTable(newTableId);
-        if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
-    }
-    async function promptAndRenameActiveTable() {
-        const currentTab = tableTabs.querySelector('button.active');
-        if (!currentTab) { showMessage('No active table to rename. Please select a table.', 'error'); return; }
-        let tableIdToRename = currentTab.dataset.tableId;
-        if (!tableIdToRename) {
-            const onclickAttr = currentTab.getAttribute('onclick'); const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
-            if (match && match[1]) tableIdToRename = match[1]; else { showMessage('Could not identify table ID for renaming.', 'error'); return; }
-        }
-        const tableElement = document.getElementById(tableIdToRename);
-        if (!tableElement) { showMessage(`Error: Table element for ID ${tableIdToRename} not found.`, 'error'); return; }
-        const oldName = tableElement.dataset.tableName || currentTab.textContent; const newName = customPrompt('Enter new table name:', oldName);
-        if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
-            const trimmedNewName = newName.trim(); currentTab.textContent = trimmedNewName;
-            currentTab.title = `Switch to table: ${trimmedNewName}`; tableElement.dataset.tableName = trimmedNewName;
-            showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
-        } else if (newName && newName.trim() === oldName) { showMessage('New name is the same as the old name. No changes made.', 'info'); }
-        else if (newName === null) { showMessage('Rename cancelled.', 'info'); }
-        else { showMessage('Invalid new name. Please enter a valid name.', 'error'); }
-    }
-    async function confirmAndDeleteActiveTable() {
-        if (tablesContainer.children.length <= 1) { showMessage('Cannot delete the last table.', 'error'); return; }
-        const activeTab = tableTabs.querySelector('button.active'); const tableIdToDelete = activeTab ? activeTab.dataset.tableId : null;
-        const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
-        const tableName = tableElement ? tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
-        if (await customConfirm(`Delete table "${tableName}"? This action cannot be undone.`)) {
-            if (tableElement) tableElement.remove(); else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
-            activeTab?.remove(); const firstRemainingTab = tableTabs.querySelector('button');
-            if (firstRemainingTab) {
-                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1];
-                switchTable(nextActiveId);
-            } else { activeTableId = null; addNewTable(true); }
-            showMessage(`Table "${tableName}" deleted.`, 'success');
-        }
-    }
-
-    function addRowToTable(tableBody, rowIndex, numCols) { const row = tableBody.insertRow(rowIndex); for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true'; } }
-    function addRowAboveToActiveTable() {
-        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
-        const numCols = table.rows[0].cells.length; let insertAtIndex = 0;
-        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) { insertAtIndex = lastClickedCell.parentElement.rowIndex; }
-        addRowToTable(table.tBodies[0], insertAtIndex, numCols); rebuildAndRenderSummary(); updateAllMergeOverlays();
-    }
-    function addRowBelowToActiveTable() {
-        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
-        const numCols = table.rows[0].cells.length; let insertAtIndex = -1;
-        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) { insertAtIndex = lastClickedCell.parentElement.rowIndex + 1; }
-        addRowToTable(table.tBodies[0], insertAtIndex, numCols); rebuildAndRenderSummary(); updateAllMergeOverlays();
-    }
-    function addColumnToTable(table, colIndex) { for (const row of table.rows) { const isHeaderRow = row.parentElement.tagName === 'THEAD'; const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex); cell.contentEditable = 'true'; if (isHeaderRow) { cell.textContent = "New Header"; if(!isHeaderRow && colIndex != -1) row.insertBefore(cell, row.cells[colIndex]); else row.appendChild(cell);} } }
-    function addColumnLeftToActiveTable() {
-        const table = document.getElementById(activeTableId); if (!table) return;
-        let insertAtIndex = 0; if (lastClickedCell && lastClickedCell.cellIndex >= 0) { insertAtIndex = lastClickedCell.cellIndex; }
-        addColumnToTable(table, insertAtIndex); rebuildAndRenderSummary(); updateAllMergeOverlays();
-    }
-    function addColumnRightToActiveTable() {
-        const table = document.getElementById(activeTableId); if (!table) return;
-        let insertAtIndex = -1; if (lastClickedCell && lastClickedCell.cellIndex >= 0) { insertAtIndex = lastClickedCell.cellIndex + 1; }
-        addColumnToTable(table, insertAtIndex); rebuildAndRenderSummary(); updateAllMergeOverlays();
-    }
-    async function deleteClickedRowFromActiveTable() {
-        if (!lastClickedCell) { showMessage('Please click a cell in the row you want to delete.', 'info'); return; }
-        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0]) { showMessage('No active table or table body found.', 'error'); return; }
-        const rowToDelete = lastClickedCell.closest('tr');
-        if (!rowToDelete || !rowToDelete.parentElement || rowToDelete.parentElement.tagName !== 'TBODY') { showMessage('Cannot delete header row or invalid selection. Click a cell in a data row.', 'error'); return; }
-        if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete the last data row.', 'error'); return; }
-        if (await customConfirm('Are you sure you want to delete this row?')) {
-            rowToDelete.remove(); lastClickedCell = null; deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Row deleted.', 'success');
-        }
-    }
-    async function deleteClickedColumnFromActiveTable() {
-        if (!lastClickedCell) { showMessage('Please click a cell in the column you want to delete.', 'info'); return; }
-        const table = document.getElementById(activeTableId); if (!table) { showMessage('No active table found.', 'error'); return; }
-        if (table.rows[0] && table.rows[0].cells.length <= 1) { showMessage('Cannot delete the last column.', 'error'); return; }
-        const colIndexToDelete = lastClickedCell.cellIndex;
-        if (await customConfirm('Are you sure you want to delete this column?')) {
-            for (const row of table.rows) { if (row.cells[colIndexToDelete]) { row.cells[colIndexToDelete].remove(); } }
-            lastClickedCell = null; deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Column deleted.', 'success');
-        }
-    }
-
-    function toggleCellSelectionMode() {
-        selectionMode = !selectionMode; const btn = document.getElementById('selectBtn');
-        btn.classList.toggle('active', selectionMode); btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
-        if (!selectionMode) deselectAllTableCells();
-    }
-    function handleTableCellClick(event) {
-        const cell = event.target.closest('td, th'); if (!cell || !cell.closest(`#${activeTableId}`)) return;
-        lastClickedCell = cell;
-        if (selectedNameFromList) {
-            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
-                const overlay = cell.querySelector('.merged-cell-overlay');
-                if (overlay) { overlay.textContent = selectedNameFromList; } else { cell.textContent = selectedNameFromList; }
-                rebuildAndRenderSummary(); showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
-                clearNameSelection();
-            } else { showMessage('Click an editable data cell (or row header in body) to insert name.', 'info'); }
-            return;
-        }
-        if (selectionMode) {
-            if (cell.classList.contains('subsumed-cell') || (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
-                showMessage('Cannot select subsumed cells or mix different merge groups.', 'warning'); return;
-            }
-            cell.classList.toggle('selected');
-            if (cell.classList.contains('selected')) { selectedCells.push(cell); } else { selectedCells = selectedCells.filter(c => c !== cell); }
-        }
-    }
-    function deselectAllTableCells() { selectedCells.forEach(c => c.classList.remove('selected')); selectedCells = []; }
-    function mergeSelectedTableCells() {
-        if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error'); return; }
-        if (selectedCells.some(cell => cell.dataset.mergeId)) { showMessage('Cannot merge cells that are already part of another merge. Unmerge them first.', 'warning'); return; }
-        let primaryCell = selectedCells[0]; let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top; let minColGUI = primaryCell.getBoundingClientRect().left;
-        selectedCells.forEach(cell => {
-            const cellRowRect = cell.parentElement.getBoundingClientRect(); const cellRect = cell.getBoundingClientRect();
-            if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) { primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left; }
-        });
-        let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
-        selectedCells.forEach(cell => { const rect = cell.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
-        const totalWidth = maxRight - minLeft; const totalHeight = maxBottom - minTop;
-        const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const overlay = document.createElement('div'); overlay.className = 'merged-cell-overlay'; overlay.textContent = primaryCell.textContent;
-        overlay.contentEditable = 'true'; overlay.style.setProperty('--merged-width', `${totalWidth}px`); overlay.style.setProperty('--merged-height', `${totalHeight}px`);
-        overlay.addEventListener('blur', () => { primaryCell.textContent = overlay.textContent; rebuildAndRenderSummary(); });
-        primaryCell.innerHTML = ''; primaryCell.appendChild(overlay); primaryCell.classList.add('merged-cell-container'); primaryCell.setAttribute('data-merge-id', mergeId);
-        selectedCells.forEach(cell => { if (cell !== primaryCell) { cell.textContent = ''; cell.classList.add('subsumed-cell'); cell.setAttribute('data-merge-id', mergeId); } });
-        deselectAllTableCells(); if (selectionMode) toggleCellSelectionMode(); showMessage('Cells visually merged.', 'success');
-    }
-    function unmergeActiveCellIfMerged() {
-        const cell = lastClickedCell; if (!cell) { showMessage('Please click on a merged cell to unmerge it.', 'info'); return; }
-        const containerCell = cell.closest('[data-merge-id]'); if (!containerCell) { showMessage('The clicked cell is not part of a visual merge.', 'error'); return; }
-        const mergeId = containerCell.dataset.mergeId; const table = containerCell.closest('table'); if (!table) return;
-        const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`); let originalText = '';
-        const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
-        if (primaryCellInGroup) { const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay'); if (overlay) originalText = overlay.textContent; else originalText = primaryCellInGroup.textContent; }
-        cellsInGroup.forEach(c => {
-            c.removeAttribute('data-merge-id'); c.classList.remove('merged-cell-container', 'subsumed-cell');
-            const overlayChild = c.querySelector('.merged-cell-overlay'); if (overlayChild) overlayChild.remove(); c.innerHTML = '';
-        });
-        if (primaryCellInGroup) { primaryCellInGroup.textContent = originalText; } else if (cellsInGroup.length > 0) { cellsInGroup[0].textContent = originalText; }
-        rebuildAndRenderSummary(); showMessage('Cells unmerged.', 'success');
-    }
-    function updateAllMergeOverlays() {
-        const activeTable = document.getElementById(activeTableId); if (!activeTable) return;
-        const mergedContainers = activeTable.querySelectorAll('.merged-cell-container');
-        mergedContainers.forEach(containerCell => {
-            const mergeId = containerCell.dataset.mergeId; if (!mergeId) return;
-            const overlay = containerCell.querySelector('.merged-cell-overlay'); if (!overlay) return;
-            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`)); if (cellsInGroup.length === 0) return;
-            let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
-            cellsInGroup.forEach(cellInvolvedInMerge => { const rect = cellInvolvedInMerge.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
-            if (minLeft === Infinity) return;
-            const newWidth = maxRight - minLeft; const newHeight = maxBottom - minTop;
-            overlay.style.setProperty('--merged-width', `${newWidth}px`); overlay.style.setProperty('--merged-height', `${newHeight}px`);
-        });
-    }
-
-    function handleNameListSessionSwitch(session) {
-        currentNameListSession = session;
-        namePagiTabElement.classList.toggle('active', session === 'pagi');
-        namePetangTabElement.classList.toggle('active', session === 'petang');
-        if(nameModalTitleElement) nameModalTitleElement.textContent = `Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
-        if(searchNameInputElement) searchNameInputElement.value = ''; 
-        renderNameListFromFirestore();
-    }
-
-    function highlightSelectedNameInList(nameToHighlight) {
-        if (!nameListContainer) return;
-        nameListContainer.querySelectorAll('.name-item span').forEach(span => {
-            span.classList.toggle('highlighted', span.dataset.name === nameToHighlight);
-        });
-    }
-    function clearNameSelection() {
-        selectedNameFromList = null;
-        if (nameListContainer) {
-            nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => {
-                span.classList.remove('highlighted');
-            });
-        }
-    }
-
-    function closeNameModal() {
-        if (nameModal) nameModal.style.display = 'none';
-        clearNameSelection();
-        if(searchNameInputElement) searchNameInputElement.value = '';
-    }
-    function toggleNameListModalVisibility() {
-        if (!nameModal || !nameModalContent || !newNameInput) return;
-        const isDisplayed = nameModal.style.display === 'flex';
-        if (isDisplayed) {
-            closeNameModal();
-        } else {
-            nameModalContent.style.position = 'relative'; nameModalContent.style.left = 'auto';
-            nameModalContent.style.top = 'auto'; nameModalContent.style.transform = 'none';
-            nameModal.style.display = 'flex';
-            if(searchNameInputElement) searchNameInputElement.value = '';
-            handleNameListSessionSwitch(currentNameListSession); 
-            if(newNameInput) newNameInput.focus();
-            clearNameSelection();
-        }
-    }
-
-    function renderNameListFromFirestore(filterText = '') {
-        if (!nameListContainer || !fbIsAuthReady) {
-            if(nameListContainer) nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names or Firebase not ready...</p>';
-            return;
-        }
-        nameListContainer.innerHTML = ''; 
-        const namesToRender = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
-        const normalizedFilterText = filterText.toLowerCase().trim();
-        const filteredNames = namesToRender.filter(name => name.toLowerCase().includes(normalizedFilterText));
-
-        if (filteredNames.length === 0) {
-            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ? 'No names match your search.' : `No names in ${currentNameListSession} session. Add some!`}</p>`;
-            return;
-        }
-        filteredNames.forEach(name => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'name-item';
-            itemDiv.innerHTML = `<span data-name="${name}" title="Click to select '${name}' for insertion">${name}</span><button data-name-delete="${name}" title="Delete name '${name}' from ${currentNameListSession} list">Delete</button>`;
-            nameListContainer.appendChild(itemDiv);
-        });
-    }
-
-    function selectNameForCellInsertion(name) { 
-        selectedNameFromList = name;
-        highlightSelectedNameInList(name);
-        showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
-    }
-
-    function handleNameListImportFirestore(event) { 
-        const file = event.target.files[0];
-        if (!file) { showMessage('No file selected for import.', 'info'); return; }
-        if (file.type !== 'text/plain') {
-            showMessage('Invalid file type. Please select a .txt file.', 'error');
-            event.target.value = ''; return;
-        }
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const content = e.target.result;
-                const importedNames = content.split(/\r?\n/)
-                                          .map(name => name.trim())
-                                          .filter(name => name !== '');
-                if (importedNames.length === 0) {
-                    showMessage('No names found in the selected file.', 'info'); return;
-                }
-                const currentSessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
-                const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
-                
-                await saveNameListToFirestore(currentNameListSession, combinedNames);
-                
-            } catch (error) {
-                console.error("Error importing name list to Firestore:", error);
-                showMessage('Error processing the name list file for Firestore.', 'error');
-            } finally {
-                event.target.value = ''; 
-            }
-        };
-        reader.onerror = () => {
-            showMessage('Failed to read the name list file.', 'error');
-            event.target.value = '';
-        };
-        reader.readAsText(file);
-    }
-
-    function handleExcelFileImport(event) {
-        const file = event.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName];
-                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false });
-                tableCount++; const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
-                const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
-                const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
-                const importedTableElement = tempDiv.querySelector('table');
-                if (importedTableElement) {
-                    importedTableElement.id = newTableId; importedTableElement.dataset.tableName = importedTableName;
-                    importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
-                    tablesContainer.appendChild(importedTableElement); addTabButton(newTableId, importedTableName);
-                    switchTable(newTableId); showMessage('Excel data imported into a new table!', 'success');
-                } else { showMessage('Could not parse table from Excel file.', 'error'); }
-            } catch (error) { console.error("Excel import error:", error); showMessage('Error processing Excel file. Ensure it is a valid .xlsx or .xls file.', 'error'); }
-            finally { event.target.value = ''; }
-        };
-        reader.readAsArrayBuffer(file);
-    }
-    function exportActiveTableToExcel() {
-        const tableToExport = document.getElementById(activeTableId); if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
-        const overlaysData = [];
-        tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
-            const parentCell = overlay.parentElement;
-            overlaysData.push({parent: parentCell, overlayHTML: overlay.outerHTML, originalParentHTML: parentCell.innerHTML, text: overlay.textContent});
-            parentCell.textContent = overlay.textContent;
-        });
-        const tableName = tableToExport.dataset.tableName || activeTableId;
-        const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
-        XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
-        overlaysData.forEach(data => {
-            data.parent.innerHTML = data.originalParentHTML;
-            const newOverlay = data.parent.querySelector('.merged-cell-overlay');
-            if (newOverlay) { newOverlay.textContent = data.text; newOverlay.addEventListener('blur', () => { data.parent.textContent = newOverlay.textContent; rebuildAndRenderSummary(); }); }
-        });
-        if(overlaysData.length > 0) updateAllMergeOverlays();
-        showMessage(`Table "${tableName}" exported.`, 'success');
-    }
-
-    function rebuildAndRenderSummary() {
-        const allFirestoreNames = [...new Set([...namesPagi, ...namesPetang])];
-        buildSummaryTableSkeleton(allFirestoreNames); 
-        updateSummaryTableData(allFirestoreNames);   
-    }
-    function parseTimeToMinutes(timeStr) {
-        if (typeof timeStr !== 'string') return Infinity;
-        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
-        if (match) { return parseInt(match[1], 10) * 60 + parseInt(match[2], 10); }
-        return Infinity;
-    }
-    function buildSummaryTableSkeleton(allAvailableNames) { 
-        if (!summaryTableElement) { console.error("Summary table element not found."); return; }
-        summaryTableElement.innerHTML = '';
-        const tempRawHeadersFromSchedules = [];
-        tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-            if (scheduleTable.tHead && scheduleTable.tHead.rows.length > 0) {
-                for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) {
-                    const th = scheduleTable.tHead.rows[0].cells[hIdx];
-                    const headerText = th.textContent.trim(); if (headerText) { tempRawHeadersFromSchedules.push(headerText); }
-                }
-            }
-        });
-        let laulisahRuleRequiresSpecialSlot = false; const specialNamesForRule = ["LAU", "LISAH"];
-        const targetSlotForSpecialNamesRule = "10.15-10.30"; const sourceSlotToShiftRule = "10.30-12.00";
-        for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
-            if (laulisahRuleRequiresSpecialSlot) break;
-            if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
-            const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
-            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
-                if (laulisahRuleRequiresSpecialSlot) return;
-                for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
-                     const scheduleCell = scheduleDataRow.cells[cellIdx]; let entryInScheduleCell = scheduleCell.textContent.trim();
-                     const overlay = scheduleCell.querySelector('.merged-cell-overlay'); if (overlay) entryInScheduleCell = overlay.textContent.trim();
-                     if (specialNamesForRule.includes(entryInScheduleCell)) {
-                        const headerText = currentScheduleTableHeaders[cellIdx];
-                        if (headerText) {
-                            const normalizedHeader = headerText.replace(/\s/g, "").replace(/:/g,".");
-                            const normalizedSourceSlot = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
-                            if (normalizedHeader === normalizedSourceSlot) { laulisahRuleRequiresSpecialSlot = true; return; }
-                        }
-                     }
-                }
-            });
-        }
-        const uniqueHeaderMap = new Map(); tempRawHeadersFromSchedules.forEach(h => { const norm = h.replace(/\s/g, "").replace(/:/g,"."); if (!uniqueHeaderMap.has(norm)) { uniqueHeaderMap.set(norm, h); } });
-        if (laulisahRuleRequiresSpecialSlot) { const normalizedTarget = targetSlotForSpecialNamesRule.replace(/\s/g, "").replace(/:/g,"."); if (!uniqueHeaderMap.has(normalizedTarget)) { uniqueHeaderMap.set(normalizedTarget, targetSlotForSpecialNamesRule); } }
-        let sortedOriginalUniqueHeaders = Array.from(uniqueHeaderMap.values());
-        sortedOriginalUniqueHeaders.sort((a, b) => { const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b); if (timeA !== Infinity && timeB !== Infinity) { return timeA - timeB; } else if (timeA !== Infinity) { return -1; } else if (timeB !== Infinity) { return 1; } return a.localeCompare(b); });
-        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedOriginalUniqueHeaders];
-        const thead = summaryTableElement.createTHead(); const headerRowForSummary = thead.insertRow();
-        finalSummaryColumnHeaders.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRowForSummary.appendChild(th); });
-        const tbody = summaryTableElement.createTBody();
-        const sortedSummaryRowHeaders = allAvailableNames.sort((a, b) => a.localeCompare(b)); 
-        if (sortedSummaryRowHeaders.length === 0) {
-            const tr = tbody.insertRow(); const td = tr.insertCell(); td.textContent = "No names available to display in summary.";
-            td.colSpan = finalSummaryColumnHeaders.length > 0 ? finalSummaryColumnHeaders.length : 1; td.style.textAlign = 'center'; td.style.fontStyle = 'italic';
-        } else {
-            sortedSummaryRowHeaders.forEach(name => { const tr = tbody.insertRow(); tr.insertCell().textContent = name; for (let i = 1; i < finalSummaryColumnHeaders.length; i++) { tr.insertCell().textContent = ''; } });
-        }
-    }
-    function updateSummaryTableData(allAvailableNames) { 
-        if (!summaryTableElement || !summaryTableElement.tBodies || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) { return; }
-        const summaryBody = summaryTableElement.tBodies[0]; if (!summaryBody || summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1) ) { return; }
-        const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
-        const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
-        Array.from(summaryBody.rows).forEach(summaryRow => { if (summaryRow.cells.length > 1) { Array.from(summaryRow.cells).slice(1).forEach(cell => { cell.textContent = ''; cell.classList.remove('highlight-conflict'); }); } });
-        tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-            if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) { return; }
-            const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
-            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
-                const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim(); if (!classIdentifier) return;
-                for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
-                    const scheduleCell = scheduleDataRow.cells[cellIdx]; let entryInScheduleCell = scheduleCell.textContent.trim();
-                    const overlay = scheduleCell.querySelector('.merged-cell-overlay'); if (overlay) entryInScheduleCell = overlay.textContent.trim();
-                    if (entryInScheduleCell && allAvailableNames.includes(entryInScheduleCell)) {
-                        let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx]; if (!scheduleColumnHeaderForThisCell) continue;
-                        let summaryColumnToUse = scheduleColumnHeaderForThisCell; const specialNamesForRule = ["LAU", "LISAH"];
-                        const targetSlotForSpecialNamesRule = "10.15-10.30"; const sourceSlotToShiftRule = "10.30-12.00";
-                        const normalizedScheduleColHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
-                        const normalizedSourceSlotRule = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
-                        if (specialNamesForRule.includes(entryInScheduleCell) && normalizedScheduleColHeader === normalizedSourceSlotRule) { summaryColumnToUse = targetSlotForSpecialNamesRule; }
-                        const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
-                        if (targetSummaryRow && targetSummaryRow.cells.length > 1) {
-                            const normalizedSummaryColToUseLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
-                            const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColToUseLookup);
-                            if (targetSummaryColumnCellIndex > 0) {
-                                const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
-                                let existingClasses = summaryCellToUpdate.textContent.trim() ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim()) : [];
-                                if (!existingClasses.includes(classIdentifier)) { existingClasses.push(classIdentifier); summaryCellToUpdate.textContent = existingClasses.join(', '); }
-                            }
-                        }
-                    }
-                }
-            });
-        });
-        Array.from(summaryBody.rows).forEach(summaryRow => { if (summaryRow.cells.length > 1) { Array.from(summaryRow.cells).forEach((cell, cellIndex) => { if (cellIndex > 0) { const cellText = cell.textContent.trim(); if (cellText.includes(',')) { cell.classList.add('highlight-conflict'); } } }); } });
-    }
-</script>
+    </script>
 </body>
 </html>
