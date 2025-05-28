@@ -21,10 +21,11 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             background-color: #fff;
-            table-layout: auto;
+            table-layout: auto; /* Changed from fixed to auto to allow natural column sizing */
         }
         #tablesContainer {
             overflow-x: auto;
+            position: relative; /* Added for potential future overlay calculations if needed relative to this */
         }
         #tablesContainer > table {
             display: none;
@@ -40,7 +41,7 @@
             border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            min-width: 100px;
+            min-width: 100px; /* Provides a base width, but table-layout:auto allows flexibility */
         }
         table th {
             background-color: #e9ecef;
@@ -162,11 +163,11 @@
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden;
+            overflow: hidden; /* Changed from auto to hidden to prevent body scroll when modal is open */
             background-color: rgba(0,0,0,0.4);
             align-items: center;
             justify-content: center;
-            pointer-events: none;
+            pointer-events: none; /* Allow clicks to pass through overlay unless on content */
         }
 
         .modal-content {
@@ -177,19 +178,20 @@
             max-width: 500px;
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            position: relative;
-            pointer-events: auto;
+            position: relative; /* Will be changed to fixed during drag */
+            pointer-events: auto; /* Modal content should be interactive */
         }
 
+        /* This class is added during drag to ensure smooth movement */
         .modal-content.dragging {
-            transform: none;
+            transform: none; /* Override any transform if needed during drag */
         }
         .modal-header {
             padding-bottom: 10px;
             border-bottom: 1px solid #eee; margin-bottom: 15px;
             font-size: 1.2em; color: #333; display: flex; justify-content: space-between; align-items: center;
             cursor: move;
-            user-select: none;
+            user-select: none; /* Prevent text selection while dragging header */
         }
         .modal-close-btn {
             font-size: 1.5rem;
@@ -204,8 +206,8 @@
             align-items: center;
             padding: 8px 5px;
             border-bottom: 1px solid #eee;
-            break-inside: avoid-column;
-            page-break-inside: avoid;
+            break-inside: avoid-column; /* For multi-column layout */
+            page-break-inside: avoid; /* For printing */
         }
         .name-item:last-child { border-bottom: none;
         }
@@ -239,12 +241,12 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             flex-grow: 1;
-            width: calc(100% - 100px);
+            width: calc(100% - 100px); /* Adjust based on button size */
         }
          #searchNameInput {
             margin-bottom: 10px;
-            width: 100%;
-            box-sizing: border-box;
+            width: 100%; /* Full width for search */
+            box-sizing: border-box; /* Include padding and border in width */
         }
         .input-group { display: flex;
             margin-bottom: 10px;
@@ -252,12 +254,12 @@
         .input-group button, #importNameListBtn {
             background-color: #28a745;
             color: white;
-            border-color: #28a745;
+            border-color: #28a745; /* Ensure consistent button styling */
             padding: 8px 12px;
             font-size: 1em;
             border-radius: 4px;
             cursor: pointer;
-            flex-shrink: 0;
+            flex-shrink: 0; /* Prevent button from shrinking */
         }
         #importNameListBtn {
              margin-top: 10px;
@@ -267,7 +269,7 @@
             margin-top:10px;
             max-height:250px;
             overflow-y:auto;
-            column-count: 2;
+            column-count: 2; /* For better display of many names */
             column-gap: 20px;
         }
         .custom-message-box {
@@ -285,14 +287,12 @@
         }
 
         /* --- STYLES FOR VISUAL MERGE --- */
-        /* The primary cell that contains the overlay */
         .merged-cell-container {
-            position: relative; /* Essential for positioning the overlay */
-            z-index: 2;         /* Puts it above other cells */
-            vertical-align: top;/* Aligns content to the top */
+            position: relative;
+            z-index: 2; /* Ensure it's above normal cells but below modal if any overlap */
+            vertical-align: top; /* Align content to the top for consistency */
         }
 
-        /* The visual overlay that looks like a merged cell */
         .merged-cell-overlay {
             position: absolute;
             top: 0;
@@ -300,52 +300,60 @@
             /* These CSS variables will be set by JavaScript */
             width: var(--merged-width);
             height: var(--merged-height);
-            background-color: #f8f9fa;
+            background-color: #f0f8ff; /* AliceBlue for a slightly different merged look */
             font-style: italic;
-            /* Additional styling for appearance and function */
-            border: 1px solid #ccc;
+            border: 1px solid #add8e6; /* LightBlue border */
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            z-index: 5; /* Ensures it's on top */
+            box-sizing: border-box; /* Include padding and border in width/height */
+            z-index: 5; /* Higher z-index to be on top of subsumed cells */
+            /* Add transition for smoother size changes, though JS updates might be too fast for it */
+            /* transition: width 0.05s linear, height 0.05s linear; */
         }
 
-        /* Class for the cells that are hidden 'under' the overlay */
         .subsumed-cell {
             visibility: hidden; /* Hides the cell but preserves its space in the grid */
+            /* background-color: #eee; /* Optional: for debugging, to see where subsumed cells are */
         }
     </style>
 </head>
 <body>
     <h2 contenteditable="true" id="scheduleTitle">Weekly Schedule</h2>
     <div class="bar">
-        <button id="directCopyFullHtmlBtn">📋 Copy Full HTML (Direct)</button>
+        <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
     </div>
     <div class="bar">
-        <button id="excelBtnTrigger">💾 Export Active Table to Excel</button>
-        <button id="importExcelBtn">📂 Import from Excel</button>
-        <input type="file" id="fileInput" accept=".xlsx" style="display:none">
+        <button id="excelBtnTrigger" title="Export the currently active table to an Excel file">💾 Export Active Table to Excel</button>
+        <button id="importExcelBtn" title="Import data from an Excel file into a new table">📂 Import from Excel</button>
+        <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
     <div class="bar">
-        <button id="saveDraftBtn">💠 Save All as Draft</button>
-        <button id="loadDraftBtn">📂 Load Draft</button>
-        <button id="exportDraftsBtn">📤 Export All Drafts</button> <button id="importDraftsBtn">📥 Import Drafts File</button> <input type="file" id="draftImportFile" accept=".json" style="display:none;"> <button id="clearActiveTableContentBtn">🧹 Clear Active Table</button>
+        <button id="saveDraftBtn" title="Save all current tables and their state as a named draft">💠 Save All as Draft</button>
+        <button id="loadDraftBtn" title="Show list of saved drafts to load">📂 Load Draft</button>
+        <button id="exportDraftsBtn" title="Export all saved drafts to a JSON file">📤 Export All Drafts</button>
+        <button id="importDraftsBtn" title="Import drafts from a JSON file">📥 Import Drafts File</button>
+        <input type="file" id="draftImportFile" accept=".json" style="display:none;">
+        <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
     </div>
     <div class="bar">
-        <button id="selectBtn">✨ Select Cells</button>
-        <button id="mergeBtn">🔗 Merge Cells</button>
-        <button id="deselectBtn">🚫 Deselect All</button>
-        <button id="unmergeBtn">💔 Unmerge Cell</button>
+        <button id="selectBtn" title="Toggle cell selection mode on/off">✨ Select Cells</button>
+        <button id="mergeBtn" title="Merge the currently selected cells">🔗 Merge Cells</button>
+        <button id="deselectBtn" title="Clear current cell selection">🚫 Deselect All</button>
+        <button id="unmergeBtn" title="Unmerge the cell that was last clicked if it's part of a merge">💔 Unmerge Cell</button>
     </div>
     <div class="bar">
-        <button id="addTableBtn">➕ Add New Table</button>
-        <button id="renameTableBtn">📝 Rename Active Table</button>
-        <button id="deleteTableBtn">❌ Delete Active Table</button>
-        <button id="nameListBtn">👥 Manage Names</button>
+        <button id="addTableBtn" title="Add a new, empty table/sheet">➕ Add New Table</button>
+        <button id="renameTableBtn" title="Rename the currently active table/sheet">📝 Rename Active Table</button>
+        <button id="deleteTableBtn" title="Delete the currently active table/sheet">❌ Delete Active Table</button>
+        <button id="nameListBtn" title="Open a dialog to manage a list of names for quick insertion">👥 Manage Names</button>
     </div>
+
     <div id="draftList" style="display:none;"></div>
+
     <div class="bar table-tabs" id="tableTabs"></div>
+
     <div id="tablesContainer">
         <table id="tbl_1" class="active" data-table-name="Table 1">
             <thead>
@@ -367,33 +375,37 @@
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
             </tbody>
-               </table>
+        </table>
     </div>
+
     <div class="bar" id="rowColManipulationBar">
-        <button id="addRowAboveBtn">⬆️ Add Row Above</button>
-        <button id="addRowBelowBtn">⬇️ Add Row Below</button>
-        <button id="addColLeftBtn">⬅️ Add Column Left</button>
-        <button id="addColRightBtn">➡️ Add Column Right</button>
-        <button id="deleteRowBtn" class="delete-btn">🗑️ Delete Row</button>
-        <button id="deleteColBtn" class="delete-btn">🗑️ Delete Column</button>
+        <button id="addRowAboveBtn" title="Add a new row above the currently selected/clicked row">⬆️ Add Row Above</button>
+        <button id="addRowBelowBtn" title="Add a new row below the currently selected/clicked row">⬇️ Add Row Below</button>
+        <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Add Column Left</button>
+        <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Add Column Right</button>
+        <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
+        <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
     </div>
+
     <div id="nameModal" class="modal">
         <div class="modal-content" id="nameModalContent">
             <div class="modal-header" id="nameModalHeader">
-                <h3>Name List</h3> <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard">×</button>
+                <h3>Name List</h3> <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
             </div>
              <div class="input-group">
                 <input id="newNameInput" placeholder="Add new name">
-                <button id="addNameBtnInModal">Add</button>
+                <button id="addNameBtnInModal" title="Add the name to the list">Add</button>
             </div>
-            <button id="importNameListBtn">📂 Import Names (.txt)</button>
+            <button id="importNameListBtn" title="Import names from a .txt file (one name per line)">📂 Import Names (.txt)</button>
             <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
-             <input type="text" id="searchNameInput" placeholder="🔍 Search names..." style="margin-top: 10px;">
+             <input type="text" id="searchNameInput" placeholder="🔍 Search names..." style="margin-top: 10px;" title="Filter the list of names">
             <div id="nameList" style="margin-top:10px;max-height:250px;overflow-y:auto;"></div>
         </div>
     </div>
+
     <h3 style="margin-top:32px">Teacher/Subject Attendance Summary</h3>
     <table id="summaryTable"></table>
+
     <div id="customMessageBox" class="custom-message-box"></div>
 
 <script>
@@ -402,31 +414,38 @@
     const NAMES_KEY = 'jadual_names_v3';
     const SCHEDULE_TITLE_KEY = 'jadual_title_v3';
     let activeTableId = 'tbl_1';
-    let tableCount = 1;
+    let tableCount = 1; // Used for generating unique IDs for new tables
     let selectionMode = false;
     let selectedCells = [];
-    let lastClickedCell = null;
-    let selectedNameFromList = null;
-    let names = [];
+    let lastClickedCell = null; // Stores the last cell clicked, useful for context-sensitive operations
+    let selectedNameFromList = null; // Stores name picked from modal for insertion
+    let names = []; // Master list of names
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
+
+    // DOM Element Cache (initialized in DOMContentLoaded)
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement;
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
         if (!customMessageBox) return;
         customMessageBox.textContent = message;
-        customMessageBox.className = `custom-message-box ${type}`;
+        customMessageBox.className = `custom-message-box ${type}`; // Applies status class (success, error, info)
         customMessageBox.style.display = 'block';
         setTimeout(() => { if (customMessageBox) customMessageBox.style.display = 'none'; }, duration);
     }
-    function customPrompt(message, defaultValue = "") { return prompt(message, defaultValue);
+
+    function customPrompt(message, defaultValue = "") {
+        // Using window.prompt as a fallback, can be replaced with a custom modal if needed
+        return prompt(message, defaultValue);
     }
+
     function customConfirm(message) {
+        // Using window.confirm as a fallback. For a better UX, this could be a custom modal.
         return new Promise((resolve) => {
             const confirmModalId = 'customConfirmModal';
             let existingModal = document.getElementById(confirmModalId);
-            if (existingModal) existingModal.remove();
+            if (existingModal) existingModal.remove(); // Remove if one already exists
 
             const modal = document.createElement('div');
             modal.id = confirmModalId;
@@ -478,6 +497,7 @@
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
+        // Cache frequently accessed DOM elements
         scheduleTitleElement = document.getElementById('scheduleTitle');
         tablesContainer = document.getElementById('tablesContainer');
         tableTabs = document.getElementById('tableTabs');
@@ -496,38 +516,44 @@
         searchNameInputElement = document.getElementById('searchNameInput');
         draftImportFileInputElement = document.getElementById('draftImportFile');
 
+        // Critical element check
         if (!tablesContainer || !tableTabs || !nameModal || !nameModalContent || !nameModalHeader || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement || !nameListImportFileInputElement || !searchNameInputElement || !draftImportFileInputElement) {
             console.error("Critical DOM elements missing. Application might not function correctly.");
-            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements.</p>";
-            return;
+            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements. Please ensure the HTML structure is correct.</p>";
+            return; // Stop further execution if critical elements are missing
         }
 
         loadScheduleTitle();
         loadNames();
         initializeEventListeners();
-        setupInitialTableState();
-        renderNameList();
-        rebuildAndRenderSummary();
+        setupInitialTableState(); // Sets up or loads the first table
+        renderNameList(); // Initial render of names in the (hidden) modal
+        rebuildAndRenderSummary(); // Initial summary table build
     });
+
     function setupInitialTableState() {
         const existingTables = tablesContainer.querySelectorAll('table');
         if (existingTables.length > 0) {
-            tableTabs.innerHTML = '';
+            tableTabs.innerHTML = ''; // Clear any existing tabs
             existingTables.forEach((table, index) => {
-                const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`;
+                const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`; // Ensure ID
                 table.id = tableId;
                 const tableName = table.dataset.tableName || `Table ${index + 1}`;
                 table.dataset.tableName = tableName;
                 addTabButton(tableId, tableName);
-                if (index === 0) activeTableId = tableId;
+                if (index === 0) activeTableId = tableId; // Set first table as active
             });
-        } else { addNewTable(true); }
+        } else {
+            addNewTable(true); // Add a default table if none exist
+        }
 
         if (activeTableId && document.getElementById(activeTableId)) {
             switchTable(activeTableId);
         } else if (tablesContainer.querySelector('table')) {
+            // Fallback if activeTableId is somehow invalid but tables exist
             switchTable(tablesContainer.querySelector('table').id);
         }
+        // updateAllMergeOverlays will be called by switchTable
     }
 
     function loadScheduleTitle() {
@@ -540,41 +566,44 @@
             });
         }
     }
+
     // --- Event Listener Initialization ---
     function initializeEventListeners() {
         directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
 
+        // Modal Drag Listeners
         nameModalHeader.addEventListener('mousedown', startDragModal);
         document.addEventListener('mousemove', dragModal);
         document.addEventListener('mouseup', stopDragModal);
-        nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false });
+        nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false }); // passive:false to allow preventDefault
         document.addEventListener('touchmove', dragModal, { passive: false });
         document.addEventListener('touchend', stopDragModal);
 
+        // File and Draft Buttons
         document.getElementById('excelBtnTrigger').addEventListener('click', exportActiveTableToExcel);
         document.getElementById('importExcelBtn').addEventListener('click', () => fileInputElement.click());
         fileInputElement.addEventListener('change', handleExcelFileImport);
-
         document.getElementById('saveDraftBtn').addEventListener('click', promptAndSaveDraft);
         document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftListVisibility);
         document.getElementById('exportDraftsBtn').addEventListener('click', exportAllDrafts);
         document.getElementById('importDraftsBtn').addEventListener('click', () => draftImportFileInputElement.click());
         draftImportFileInputElement.addEventListener('change', handleDraftsFileImport);
-
-
         document.getElementById('clearActiveTableContentBtn').addEventListener('click', confirmAndClearActiveTableContent);
 
+        // Cell Operation Buttons
         document.getElementById('selectBtn').addEventListener('click', toggleCellSelectionMode);
         document.getElementById('mergeBtn').addEventListener('click', mergeSelectedTableCells);
         document.getElementById('deselectBtn').addEventListener('click', deselectAllTableCells);
         document.getElementById('unmergeBtn').addEventListener('click', unmergeActiveCellIfMerged);
 
+        // Table Structure Buttons
         document.getElementById('addTableBtn').addEventListener('click', () => addNewTable());
         document.getElementById('renameTableBtn').addEventListener('click', promptAndRenameActiveTable);
         document.getElementById('deleteTableBtn').addEventListener('click', confirmAndDeleteActiveTable);
         document.getElementById('nameListBtn').addEventListener('click', toggleNameListModalVisibility);
 
+        // Row/Column Manipulation Buttons
         document.getElementById('addRowAboveBtn').addEventListener('click', addRowAboveToActiveTable);
         document.getElementById('addRowBelowBtn').addEventListener('click', addRowBelowToActiveTable);
         document.getElementById('addColLeftBtn').addEventListener('click', addColumnLeftToActiveTable);
@@ -582,13 +611,13 @@
         document.getElementById('deleteRowBtn').addEventListener('click', deleteClickedRowFromActiveTable);
         document.getElementById('deleteColBtn').addEventListener('click', deleteClickedColumnFromActiveTable);
 
-
+        // Name List Modal Buttons & Inputs
         document.getElementById('addNameBtnInModal').addEventListener('click', addNewNameToList);
         document.getElementById('importNameListBtn').addEventListener('click', () => nameListImportFileInputElement.click());
         nameListImportFileInputElement.addEventListener('change', handleNameListImport);
         searchNameInputElement.addEventListener('input', () => renderNameList(searchNameInputElement.value));
 
-
+        // Event Delegation for dynamic content
         draftListElement.addEventListener('click', async (e) => {
             const targetSpan = e.target.closest('.draft-item span');
             const targetButton = e.target.closest('.draft-item button');
@@ -601,36 +630,46 @@
             if (nameItemSpan) selectNameForCellInsertion(nameItemSpan.dataset.name);
             else if (deleteButton) await deleteNameFromListAndStorage(deleteButton.parentElement.querySelector('span[data-name]').dataset.name);
         });
+
+        // Table cell interaction (click for selection/insertion, blur/input for summary update)
         tablesContainer.addEventListener('click', handleTableCellClick);
-        tablesContainer.addEventListener('blur', (e) => {
+        tablesContainer.addEventListener('blur', (e) => { // Update summary when cell content changes
             if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                setTimeout(rebuildAndRenderSummary, 0);
+                setTimeout(rebuildAndRenderSummary, 0); // Use timeout to allow DOM to update
             }
-        }, true);
-        tablesContainer.addEventListener('input', (e) => {
+        }, true); // Use capture phase
+        tablesContainer.addEventListener('input', (e) => { // More immediate update for summary
             if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                // Debounce or throttle if performance becomes an issue with rapid typing
                 setTimeout(rebuildAndRenderSummary, 300);
             }
         });
+
+        // Listener for window resize (handles zoom) to update overlay dimensions
+        window.addEventListener('resize', updateAllMergeOverlays);
     }
 
     // --- Draggable Modal Functionality ---
     function startDragModal(e) {
-        if (e.target.closest('.modal-close-btn')) {
+        if (e.target.closest('.modal-close-btn')) { // Don't drag if close button is clicked
             isDraggingModal = false;
             return;
         }
         isDraggingModal = true;
+        nameModalContent.classList.add('dragging'); // Add class for styling or state
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        // Temporarily set to fixed for viewport-relative positioning during drag
         const rect = nameModalContent.getBoundingClientRect();
         nameModalContent.style.position = 'fixed';
         nameModalContent.style.left = `${rect.left}px`;
         nameModalContent.style.top = `${rect.top}px`;
-        nameModalContent.style.transform = 'none';
+        nameModalContent.style.transform = 'none'; // Clear any transform
+
         modalDragOffsetX = clientX - nameModalContent.offsetLeft;
         modalDragOffsetY = clientY - nameModalContent.offsetTop;
-        if (e.type === 'touchstart') e.preventDefault();
+        if (e.type === 'touchstart') e.preventDefault(); // Prevent page scroll on touch devices
     }
     function dragModal(e) {
         if (!isDraggingModal) return;
@@ -638,22 +677,29 @@
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         let newLeft = clientX - modalDragOffsetX;
         let newTop = clientY - modalDragOffsetY;
-        const modalRect = nameModalContent.getBoundingClientRect();
+
+        // Constrain to viewport
+        const modalRect = nameModalContent.getBoundingClientRect(); // Get current dimensions
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         if (newLeft < 0) newLeft = 0;
         if (newTop < 0) newTop = 0;
         if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
         if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
+
         nameModalContent.style.left = `${newLeft}px`;
         nameModalContent.style.top = `${newTop}px`;
-        if (e.type === 'touchmove') e.preventDefault();
+        if (e.type === 'touchmove') e.preventDefault(); // Prevent page scroll
     }
     function stopDragModal() {
         if (isDraggingModal) {
             isDraggingModal = false;
+            nameModalContent.classList.remove('dragging');
+            // Optionally, revert to original positioning if needed, but fixed usually works well.
+            // If reverting, ensure it's placed back correctly within its flex container.
         }
     }
+
     // --- Direct Copy Full HTML Functionality ---
     async function attemptDirectCopyToClipboard() {
         const fullHtml = document.documentElement.outerHTML;
@@ -664,7 +710,7 @@
             console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
             const textarea = document.createElement('textarea');
             textarea.value = fullHtml;
-            textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
+            textarea.style.position = 'fixed'; textarea.style.left = '-9999px'; // Hide it
             document.body.appendChild(textarea);
             textarea.select();
             try {
@@ -681,8 +727,10 @@
 
     // --- Draft Management ---
     function promptAndSaveDraft() {
-        if (tablesContainer.children.length === 0) { showMessage('No schedule data to save.', 'error');
-            return; }
+        if (tablesContainer.children.length === 0) {
+            showMessage('No schedule data to save.', 'error');
+            return;
+        }
         const allTablesData = tablesContainer.innerHTML;
         const allTableMeta = {};
         tablesContainer.querySelectorAll('table').forEach(table => {
@@ -694,23 +742,25 @@
             drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId };
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
             showMessage(`Draft "${draftName}" saved!`, 'success');
-            if (draftListElement.style.display === 'block') renderDraftList();
+            if (draftListElement.style.display === 'block') renderDraftList(); // Refresh list if visible
         }
     }
     function toggleDraftListVisibility() {
         const isVisible = draftListElement.style.display === 'block';
         draftListElement.style.display = isVisible ? 'none' : 'block';
-        if (!isVisible) renderDraftList();
+        if (!isVisible) renderDraftList(); // Load and show list
     }
     function renderDraftList() {
-        draftListElement.innerHTML = '';
+        draftListElement.innerHTML = ''; // Clear previous list
         const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-        if (Object.keys(drafts).length === 0) { draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return;
+        if (Object.keys(drafts).length === 0) {
+            draftListElement.innerHTML = '<p>No drafts saved yet.</p>';
+            return;
         }
         for (const name in drafts) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'draft-item';
-            itemDiv.innerHTML = `<span>${name}</span><button>Delete</button>`;
+            itemDiv.innerHTML = `<span>${name}</span><button title="Delete draft '${name}'">Delete</button>`;
             draftListElement.appendChild(itemDiv);
         }
     }
@@ -719,24 +769,30 @@
         if (drafts[draftName]) {
             tablesContainer.innerHTML = drafts[draftName].html;
             const tableMeta = drafts[draftName].meta || {};
-            tableTabs.innerHTML = '';
+            tableTabs.innerHTML = ''; // Clear existing tabs
             tablesContainer.querySelectorAll('table').forEach(table => {
                 const id = table.id;
                 const metaInfo = tableMeta[id] || {};
                 const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
                 table.dataset.tableName = name;
-
                 addTabButton(id, name);
+                // Ensure all cells are editable after loading
                 table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
             });
             activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
-            if (document.getElementById(activeTableId)) switchTable(activeTableId);
-            else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id);
-            else addNewTable(true);
+
+            if (document.getElementById(activeTableId)) {
+                switchTable(activeTableId); // This will also call updateAllMergeOverlays
+            } else if (tablesContainer.querySelector('table')) {
+                switchTable(tablesContainer.querySelector('table').id);
+            } else {
+                addNewTable(true); // Should not happen if draft was valid
+            }
             showMessage(`Draft "${draftName}" loaded!`, 'success');
-            draftListElement.style.display = 'none';
+            draftListElement.style.display = 'none'; // Hide draft list
             rebuildAndRenderSummary();
-        } else { showMessage(`Draft "${draftName}" not found.`, 'error');
+        } else {
+            showMessage(`Draft "${draftName}" not found.`, 'error');
         }
     }
     async function confirmAndDeleteDraft(draftName) {
@@ -745,10 +801,9 @@
             delete drafts[draftName];
             localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
             showMessage(`Saved draft "${draftName}" deleted.`, 'success');
-            renderDraftList();
+            renderDraftList(); // Refresh the list
         }
     }
-
     async function confirmAndClearActiveTableContent() {
         const activeTableElement = document.getElementById(activeTableId);
         if (!activeTableElement) {
@@ -757,27 +812,33 @@
         }
         const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
         if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
-            // Unmerge all cells first
-            activeTableElement.querySelectorAll('[data-merge-id]').forEach(cell => {
-                const mergeId = cell.dataset.mergeId;
+            // Unmerge all cells in the active table first
+            activeTableElement.querySelectorAll('.merged-cell-container').forEach(containerCell => {
+                const mergeId = containerCell.dataset.mergeId;
                 if(mergeId){
                     const cellsInGroup = activeTableElement.querySelectorAll(`[data-merge-id="${mergeId}"]`);
                      cellsInGroup.forEach(c => {
                         c.removeAttribute('data-merge-id');
                         c.classList.remove('merged-cell-container', 'subsumed-cell');
-                        c.innerHTML = '';
+                        const overlay = c.querySelector('.merged-cell-overlay');
+                        if (overlay) c.textContent = overlay.textContent; // Restore text from overlay
+                        else c.innerHTML = ''; // Clear if no overlay (shouldn't happen for primary)
                     });
                 }
             });
-
-            // Clear content from all cells
+             // Clear content from all cells
             activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
-                cell.innerHTML = '';
-                if (cell.tagName === 'TH') cell.textContent = '';
-                cell.classList.remove('selected');
+                // For header cells, preserve their role but clear text if it's not the first column's header
+                if (cell.tagName === 'TH' && cell.parentElement.tagName === 'THEAD' && cell.cellIndex === 0) {
+                    // Potentially keep "Class" or similar, or make it configurable
+                } else {
+                     cell.innerHTML = ''; // Clear content
+                }
+                cell.classList.remove('selected'); // Remove selection styling
             });
-            selectedCells = [];
+            selectedCells = []; // Clear selection array
             rebuildAndRenderSummary();
+            updateAllMergeOverlays(); // Recalculate any remaining overlays (should be none after this)
             showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
     }
@@ -805,7 +866,6 @@
             showMessage('Failed to export drafts.', 'error');
         }
     }
-
     async function handleDraftsFileImport(event) {
         const file = event.target.files[0];
         if (!file) {
@@ -814,7 +874,7 @@
         }
         if (file.type !== 'application/json') {
             showMessage('Invalid file type. Please select a .json file.', 'error');
-            event.target.value = '';
+            event.target.value = ''; // Clear file input
             return;
         }
 
@@ -834,17 +894,19 @@
                 let overwrittenCount = 0;
                 let skippedCount = 0;
                 for (const draftName in importedDraftsData) {
+                    // Ensure it's a property of the object itself, not from prototype
                     if (Object.prototype.hasOwnProperty.call(importedDraftsData, draftName)) {
                         const draftData = importedDraftsData[draftName];
+                        // Basic validation of draft structure
                         if (draftData && typeof draftData.html === 'string' && typeof draftData.meta === 'object' && typeof draftData.active === 'string') {
-                            if (localDrafts[draftName]) {
+                            if (localDrafts[draftName]) { // Draft with same name exists
                                 if (await customConfirm(`Draft "${draftName}" already exists. Overwrite?`)) {
                                     localDrafts[draftName] = draftData;
                                     overwrittenCount++;
                                 } else {
                                     skippedCount++;
                                 }
-                            } else {
+                            } else { // New draft
                                 localDrafts[draftName] = draftData;
                                 importedCount++;
                             }
@@ -858,28 +920,28 @@
                 localStorage.setItem(DRAFTS_KEY, JSON.stringify(localDrafts));
                 showMessage(`Drafts import complete: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
                 if (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0) {
-                    renderDraftList();
+                    renderDraftList(); // Refresh list if visible or if changes were made
                 }
             } catch (error) {
                 console.error("Error importing drafts:", error);
                 showMessage('Error processing draft file. Ensure it is a valid JSON export from this tool.', 'error', 5000);
             } finally {
-                event.target.value = '';
+                event.target.value = ''; // Clear file input
             }
         };
         reader.onerror = () => {
             showMessage('Failed to read the draft file.', 'error');
-            event.target.value = '';
+            event.target.value = ''; // Clear file input
         };
         reader.readAsText(file);
     }
-
 
     // --- Table Management ---
     function addTabButton(id, label) {
         const button = document.createElement('button');
         button.textContent = label;
-        button.dataset.tableId = id;
+        button.dataset.tableId = id; // Store ID for easy access
+        button.title = `Switch to table: ${label}`;
         button.onclick = () => switchTable(id);
         tableTabs.appendChild(button);
         return button;
@@ -887,104 +949,106 @@
     function switchTable(id) {
         const targetTable = document.getElementById(id);
         if (!targetTable) {
+            // Attempt to find first available table if target is missing
             const firstTableInDOM = tablesContainer.querySelector('table');
             if (firstTableInDOM) {
                 id = firstTableInDOM.id;
-            } else {
-                showMessage('Cannot switch: Target table not found.', 'error');
-                if (tablesContainer.children.length === 0) addNewTable(true);
+            } else { // No tables left at all
+                showMessage('Cannot switch: Target table not found and no other tables exist.', 'error');
+                if (tablesContainer.children.length === 0) addNewTable(true); // Create one if none
                 return;
             }
         }
         activeTableId = id;
+        // Toggle 'active' class on tables
         tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
+        // Toggle 'active' class on tab buttons
         tableTabs.querySelectorAll('button').forEach(b => {
             b.classList.toggle('active', b.dataset.tableId === id);
         });
-        deselectAllTableCells();
+        deselectAllTableCells(); // Clear selection from previous table
         rebuildAndRenderSummary();
+        updateAllMergeOverlays(); // Crucial for fixing zoom issue on tab switch
     }
     function addNewTable(isInitial = false) {
-        tableCount++;
+        tableCount++; // Increment for unique IDs, though Date.now() helps more
         const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
         const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
-        if (!label && !isInitial) return;
+        if (!label && !isInitial) return; // User cancelled prompt
+
         const newTable = document.createElement('table');
-        const newTableId = `tbl_${Date.now()}_${tableCount}`;
+        const newTableId = `tbl_${Date.now()}_${tableCount}`; // More robust unique ID
         newTable.id = newTableId;
         newTable.dataset.tableName = label || defaultTableName;
+
         const thead = newTable.createTHead();
         const headerRow = thead.insertRow();
-        for (let i = 0; i < 7; i++) {
+        // Default headers
+        const defaultHeaders = ['Class/Time', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00'];
+        defaultHeaders.forEach(headerText => {
             const th = document.createElement('th');
             th.contentEditable = 'true';
-            th.textContent = i === 0 ? 'Class/Time' : `Header ${i}`;
+            th.textContent = headerText;
             headerRow.appendChild(th);
-        }
+        });
+
         const tbody = newTable.createTBody();
-        for (let r = 0; r < 2; r++) {
+        for (let r = 0; r < 2; r++) { // Add a couple of sample rows
             const dataRow = tbody.insertRow();
             for (let c = 0; c < headerRow.cells.length; c++) {
                 const td = dataRow.insertCell();
                 td.contentEditable = 'true';
-                if (c === 0 && r === 0) td.textContent = `Sample A`;
-                if (c === 0 && r === 1) td.textContent = `Sample B`;
+                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`; // A, B
             }
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTableId, label || defaultTableName);
-        switchTable(newTableId);
+        switchTable(newTableId); // Make the new table active
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
     }
-
     async function promptAndRenameActiveTable() {
         const currentTab = tableTabs.querySelector('button.active');
         if (!currentTab) {
             showMessage('No active table to rename. Please select a table.', 'error');
             return;
         }
-
         let tableIdToRename = currentTab.dataset.tableId;
+        // Fallback if dataset.tableId is missing (shouldn't happen with current addTabButton)
         if (!tableIdToRename) {
             const onclickAttr = currentTab.getAttribute('onclick');
             const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
-            if (match && match[1]) {
-                tableIdToRename = match[1];
-                if(!currentTab.dataset.tableId) currentTab.dataset.tableId = tableIdToRename;
-            } else {
-                showMessage('Could not identify table ID for renaming. Try switching tabs and trying again.', 'error');
+            if (match && match[1]) tableIdToRename = match[1];
+            else {
+                showMessage('Could not identify table ID for renaming.', 'error');
                 return;
             }
         }
-
         const tableElement = document.getElementById(tableIdToRename);
         if (!tableElement) {
             showMessage(`Error: Table element for ID ${tableIdToRename} not found.`, 'error');
             return;
         }
-
         const oldName = tableElement.dataset.tableName || currentTab.textContent;
         const newName = customPrompt('Enter new table name:', oldName);
 
         if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
             const trimmedNewName = newName.trim();
             currentTab.textContent = trimmedNewName;
+            currentTab.title = `Switch to table: ${trimmedNewName}`;
             tableElement.dataset.tableName = trimmedNewName;
-            if (activeTableId !== tableIdToRename) {
-                activeTableId = tableIdToRename;
-            }
+            // No need to switch activeTableId if it's already the active one being renamed
             showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
         } else if (newName && newName.trim() === oldName) {
             showMessage('New name is the same as the old name. No changes made.', 'info');
-        } else if (newName === null) {
+        } else if (newName === null) { // User cancelled prompt
             showMessage('Rename cancelled.', 'info');
-        } else {
+        } else { // Empty name submitted
             showMessage('Invalid new name. Please enter a valid name.', 'error');
         }
     }
-
     async function confirmAndDeleteActiveTable() {
-        if (tablesContainer.children.length <= 1) { showMessage('Cannot delete the last table.', 'error');
+        if (tablesContainer.children.length <= 1) {
+            showMessage('Cannot delete the last table.', 'error');
             return;
         }
         const activeTab = tableTabs.querySelector('button.active');
@@ -992,19 +1056,20 @@
         const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
         const tableName = tableElement ? tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
 
-
-        if (await customConfirm(`Delete table "${tableName}"?`)) {
+        if (await customConfirm(`Delete table "${tableName}"? This action cannot be undone.`)) {
             if (tableElement) tableElement.remove();
-            else document.getElementById(activeTableId)?.remove();
-            activeTab?.remove();
+            // Also remove the old activeTableId if it's the one being deleted (should be)
+            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
+
+            activeTab?.remove(); // Remove the tab button
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) {
                 const nextActiveId = firstRemainingTab.dataset.tableId ||
-                firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1];
+                                   firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; // Fallback
                 switchTable(nextActiveId);
-            } else {
+            } else { // Should not happen if we prevent deleting last table
                 activeTableId = null;
-                addNewTable(true);
+                addNewTable(true); // Add a new default table
             }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
@@ -1012,45 +1077,75 @@
 
     // --- Row/Column Operations ---
     function addRowToTable(tableBody, rowIndex, numCols) {
-        const row = tableBody.insertRow(rowIndex);
-        for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true';
+        const row = tableBody.insertRow(rowIndex); // rowIndex -1 appends
+        for (let i = 0; i < numCols; i++) {
+            const cell = row.insertCell();
+            cell.contentEditable = 'true';
         }
     }
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
-        const numCols = table.rows[0].cells.length;
-        addRowToTable(table.tBodies[0], 0, numCols);
+        const numCols = table.rows[0].cells.length; // Get col count from header or first row
+        // Determine insertion index: if lastClickedCell is in tbody, insert above its row
+        let insertAtIndex = 0; // Default to top of tbody
+        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) {
+            insertAtIndex = lastClickedCell.parentElement.rowIndex;
+        }
+        addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary();
+        updateAllMergeOverlays();
     }
     function addRowBelowToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const numCols = table.rows[0].cells.length;
-        addRowToTable(table.tBodies[0], -1, numCols);
+        let insertAtIndex = -1; // Default to end of tbody
+        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) {
+            insertAtIndex = lastClickedCell.parentElement.rowIndex + 1;
+        }
+        addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary();
+        updateAllMergeOverlays();
     }
-    function addColumnToTable(table, colIndex) {
+    function addColumnToTable(table, colIndex) { // colIndex -1 appends
         for (const row of table.rows) {
             const isHeaderRow = row.parentElement.tagName === 'THEAD';
             const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex);
             cell.contentEditable = 'true';
-            if (isHeaderRow) {
-                if (colIndex === -1 || colIndex >= row.cells.length) row.appendChild(cell);
-                else row.insertBefore(cell, row.cells[colIndex]);
-                cell.textContent = "";
+            if (isHeaderRow) { // If it's a header cell, might need specific handling or styling
+                cell.textContent = "New Header"; // Default text
+                // If inserting not at the end, use insertBefore for THEAD
+                if (colIndex !== -1 && colIndex < row.cells.length -1) { // -1 adjustment because cell was already added by insertCell
+                     // This logic is tricky for THEAD. Simpler to append then reorder if needed, or handle THEAD separately.
+                     // For now, insertCell handles tbody, and for thead, we're creating 'th'.
+                     // The provided code used appendChild/insertBefore for THs, let's stick to simpler insertCell for TD and create TH for THEAD.
+                }
             }
         }
     }
     function addColumnLeftToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (table) { addColumnToTable(table, 0); rebuildAndRenderSummary(); }
+        if (!table) return;
+        let insertAtIndex = 0; // Default to beginning
+        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
+            insertAtIndex = lastClickedCell.cellIndex;
+        }
+        addColumnToTable(table, insertAtIndex);
+        rebuildAndRenderSummary();
+        updateAllMergeOverlays();
     }
     function addColumnRightToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (table) { addColumnToTable(table, -1); rebuildAndRenderSummary(); }
+        if (!table) return;
+        let insertAtIndex = -1; // Default to end
+        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
+            insertAtIndex = lastClickedCell.cellIndex + 1;
+        }
+        addColumnToTable(table, insertAtIndex);
+        rebuildAndRenderSummary();
+        updateAllMergeOverlays();
     }
-
     async function deleteClickedRowFromActiveTable() {
         if (!lastClickedCell) {
             showMessage('Please click a cell in the row you want to delete.', 'info');
@@ -1070,16 +1165,15 @@
             showMessage('Cannot delete the last data row.', 'error');
             return;
         }
-
         if (await customConfirm('Are you sure you want to delete this row?')) {
             rowToDelete.remove();
-            lastClickedCell = null;
-            deselectAllTableCells();
+            lastClickedCell = null; // Reset last clicked cell
+            deselectAllTableCells(); // Clear any selections
             rebuildAndRenderSummary();
+            updateAllMergeOverlays();
             showMessage('Row deleted.', 'success');
         }
     }
-
     async function deleteClickedColumnFromActiveTable() {
         if (!lastClickedCell) {
             showMessage('Please click a cell in the column you want to delete.', 'info');
@@ -1090,14 +1184,11 @@
             showMessage('No active table found.', 'error');
             return;
         }
-
-        if (table.tHead.rows[0].cells.length <= 1) {
+        if (table.rows[0] && table.rows[0].cells.length <= 1) { // Check based on first row (usually header)
             showMessage('Cannot delete the last column.', 'error');
             return;
         }
-
         const colIndexToDelete = lastClickedCell.cellIndex;
-
         if (await customConfirm('Are you sure you want to delete this column?')) {
             for (const row of table.rows) {
                 if (row.cells[colIndexToDelete]) {
@@ -1107,10 +1198,10 @@
             lastClickedCell = null;
             deselectAllTableCells();
             rebuildAndRenderSummary();
+            updateAllMergeOverlays();
             showMessage('Column deleted.', 'success');
         }
     }
-
 
     // --- Cell Selection, Merging, Unmerging ---
     function toggleCellSelectionMode() {
@@ -1118,30 +1209,45 @@
         const btn = document.getElementById('selectBtn');
         btn.classList.toggle('active', selectionMode);
         btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
-        if (!selectionMode) deselectAllTableCells();
+        if (!selectionMode) deselectAllTableCells(); // Clear selection when turning off mode
     }
     function handleTableCellClick(event) {
         const cell = event.target.closest('td, th');
-        if (!cell || !cell.closest(`#${activeTableId}`)) return;
+        if (!cell || !cell.closest(`#${activeTableId}`)) return; // Clicked outside active table or not on a cell
 
-        lastClickedCell = cell;
+        lastClickedCell = cell; // Always update last clicked cell
 
-        if (selectedNameFromList) {
+        if (selectedNameFromList) { // If a name is pending insertion
+            // Allow insertion into data cells (TD) or body THs (like row headers)
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
-                cell.textContent = selectedNameFromList;
+                // If cell is a merged-cell-container, put text in its overlay
+                const overlay = cell.querySelector('.merged-cell-overlay');
+                if (overlay) {
+                    overlay.textContent = selectedNameFromList;
+                } else {
+                    cell.textContent = selectedNameFromList;
+                }
                 rebuildAndRenderSummary();
                 showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
-                clearNameSelection();
+                clearNameSelection(); // Clear after insertion
             } else {
                 showMessage('Click an editable data cell (or row header in body) to insert name.', 'info');
             }
-            return;
+            return; // Stop further processing for this click
         }
 
         if (selectionMode) {
+            // Prevent selecting already merged cells or parts of different merges
+            if (cell.classList.contains('subsumed-cell') || (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
+                showMessage('Cannot select subsumed cells or mix different merge groups.', 'warning');
+                return;
+            }
             cell.classList.toggle('selected');
-            if (cell.classList.contains('selected')) selectedCells.push(cell);
-            else selectedCells = selectedCells.filter(c => c !== cell);
+            if (cell.classList.contains('selected')) {
+                selectedCells.push(cell);
+            } else {
+                selectedCells = selectedCells.filter(c => c !== cell);
+            }
         }
     }
     function deselectAllTableCells() {
@@ -1150,9 +1256,8 @@
     }
 
     /**
-     * VISUAL MERGE (OVERLAY METHOD) - CORRECTED
+     * VISUAL MERGE (OVERLAY METHOD)
      * Merges cells by creating a visual overlay, keeping the table's grid structure intact.
-     * This version uses getBoundingClientRect for accurate width calculation.
      */
     function mergeSelectedTableCells() {
         if (selectedCells.length < 2) {
@@ -1160,49 +1265,56 @@
             return;
         }
 
-        // 1. Find the top-left cell of the selection
+        // Check if any selected cell is already part of a merge
+        if (selectedCells.some(cell => cell.dataset.mergeId)) {
+            showMessage('Cannot merge cells that are already part of another merge. Unmerge them first.', 'warning');
+            return;
+        }
+
+        // 1. Find the top-left cell of the selection (this will be the primaryCell)
         let primaryCell = selectedCells[0];
-        let minRowIndex = primaryCell.parentElement.rowIndex;
-        let minCellIndex = primaryCell.cellIndex;
+        let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top; // Use GUI position for primary cell
+        let minColGUI = primaryCell.getBoundingClientRect().left;
 
         selectedCells.forEach(cell => {
-            if (cell.parentElement.rowIndex < minRowIndex ||
-               (cell.parentElement.rowIndex === minRowIndex && cell.cellIndex < minCellIndex)) {
+            const cellRowRect = cell.parentElement.getBoundingClientRect();
+            const cellRect = cell.getBoundingClientRect();
+            if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) {
                 primaryCell = cell;
-                minRowIndex = cell.parentElement.rowIndex;
-                minCellIndex = cell.cellIndex;
+                minRowGUI = cellRowRect.top;
+                minColGUI = cellRect.left;
             }
         });
 
-        // 2. Calculate the exact visual dimensions using getBoundingClientRect
+        // 2. Calculate the exact visual dimensions using getBoundingClientRect for all selected cells
         let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
-
         selectedCells.forEach(cell => {
             const rect = cell.getBoundingClientRect();
-            if (rect.left < minLeft) minLeft = rect.left;
-            if (rect.right > maxRight) maxRight = rect.right;
-            if (rect.top < minTop) minTop = rect.top;
-            if (rect.bottom > maxBottom) maxBottom = rect.bottom;
+            minLeft = Math.min(minLeft, rect.left);
+            maxRight = Math.max(maxRight, rect.right);
+            minTop = Math.min(minTop, rect.top);
+            maxBottom = Math.max(maxBottom, rect.bottom);
         });
 
-        // The final width and height are the difference between the outer boundaries
         const totalWidth = maxRight - minLeft;
         const totalHeight = maxBottom - minTop;
 
         // 3. Generate a unique ID for this merge group
-        const mergeId = `merge-${Date.now()}`;
+        const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-        // 4. Create and append the overlay element
+        // 4. Create and append the overlay element to the primaryCell
         const overlay = document.createElement('div');
         overlay.className = 'merged-cell-overlay';
         overlay.textContent = primaryCell.textContent; // Use content from the primary cell
         overlay.contentEditable = 'true'; // Make the overlay itself editable
+
+        // Set CSS variables for width and height
         overlay.style.setProperty('--merged-width', `${totalWidth}px`);
         overlay.style.setProperty('--merged-height', `${totalHeight}px`);
 
-        // When the overlay is edited, update the primary cell's actual text content
+        // When the overlay is edited, update the primary cell's actual text content (for data model)
         overlay.addEventListener('blur', () => {
-            primaryCell.textContent = overlay.textContent;
+            primaryCell.textContent = overlay.textContent; // Update the hidden primary cell's text
             rebuildAndRenderSummary(); // Update summary after editing
         });
 
@@ -1212,6 +1324,7 @@
         // 5. Apply classes and data attributes to all selected cells
         primaryCell.classList.add('merged-cell-container');
         primaryCell.setAttribute('data-merge-id', mergeId);
+        // The primary cell is NOT subsumed
 
         selectedCells.forEach(cell => {
             if (cell !== primaryCell) {
@@ -1222,8 +1335,9 @@
         });
 
         deselectAllTableCells();
-        if (selectionMode) toggleCellSelectionMode();
+        if (selectionMode) toggleCellSelectionMode(); // Optionally turn off selection mode
         showMessage('Cells visually merged.', 'success');
+        // updateAllMergeOverlays(); // Ensure it's perfectly sized immediately, though setProperty should do it.
     }
 
     /**
@@ -1231,31 +1345,99 @@
      * Unmerges cells by removing the visual overlay and restoring individual cell visibility.
      */
     function unmergeActiveCellIfMerged() {
-        const cell = lastClickedCell;
-        // Check if the clicked cell (or its container) is part of a merge
+        const cell = lastClickedCell; // Use the last clicked cell as context
+        if (!cell) {
+            showMessage('Please click on a merged cell to unmerge it.', 'info');
+            return;
+        }
+        // Find the container cell if the click was on the overlay or the container itself
         const containerCell = cell.closest('[data-merge-id]');
 
         if (!containerCell) {
-            showMessage('Click on a visually merged cell to unmerge it.', 'error');
+            showMessage('The clicked cell is not part of a visual merge.', 'error');
             return;
         }
 
         const mergeId = containerCell.dataset.mergeId;
         const table = containerCell.closest('table');
+        if (!table) return; // Should not happen
+
         const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`);
+
+        let originalText = '';
+        // Find the primary cell (the one with the overlay) to get the text content
+        const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
+        if (primaryCellInGroup) {
+            const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay');
+            if (overlay) originalText = overlay.textContent;
+            else originalText = primaryCellInGroup.textContent; // Fallback if overlay somehow missing
+        }
+
 
         cellsInGroup.forEach(c => {
             c.removeAttribute('data-merge-id');
             c.classList.remove('merged-cell-container', 'subsumed-cell');
-            // If it was the primary cell, remove the overlay and restore content
-            const overlay = c.querySelector('.merged-cell-overlay');
-            if (overlay) {
-                c.textContent = overlay.textContent;
+            const overlayChild = c.querySelector('.merged-cell-overlay');
+            if (overlayChild) {
+                overlayChild.remove(); // Remove the overlay div
             }
+            c.innerHTML = ''; // Clear any residual content or structure
         });
 
+        // Restore the text content to the primary cell (top-left most cell of the original group)
+        // This requires knowing which one was the primary. The one that had merged-cell-container.
+        if (primaryCellInGroup) {
+            primaryCellInGroup.textContent = originalText;
+        } else if (cellsInGroup.length > 0) {
+            // Fallback: put text in the first cell of the group if primary couldn't be identified
+            cellsInGroup[0].textContent = originalText;
+        }
+
+
         rebuildAndRenderSummary();
+        // updateAllMergeOverlays(); // Not strictly needed after unmerge, but good for consistency.
         showMessage('Cells unmerged.', 'success');
+    }
+
+    /**
+     * Updates the dimensions of all merged cell overlays in the active table.
+     * This is crucial for keeping overlays synchronized during zoom/resize.
+     */
+    function updateAllMergeOverlays() {
+        const activeTable = document.getElementById(activeTableId);
+        if (!activeTable) return;
+
+        const mergedContainers = activeTable.querySelectorAll('.merged-cell-container');
+        mergedContainers.forEach(containerCell => {
+            const mergeId = containerCell.dataset.mergeId;
+            if (!mergeId) return;
+
+            const overlay = containerCell.querySelector('.merged-cell-overlay');
+            if (!overlay) return;
+
+            // Find all cells belonging to this merge group in the active table
+            // This includes the container cell itself and all subsumed cells
+            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`));
+            if (cellsInGroup.length === 0) return; // Should not happen if containerCell was found
+
+            let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
+
+            cellsInGroup.forEach(cellInvolvedInMerge => {
+                const rect = cellInvolvedInMerge.getBoundingClientRect();
+                minLeft = Math.min(minLeft, rect.left);
+                maxRight = Math.max(maxRight, rect.right);
+                minTop = Math.min(minTop, rect.top);
+                maxBottom = Math.max(maxBottom, rect.bottom);
+            });
+
+            if (minLeft === Infinity) return; // No valid rects found
+
+            const newWidth = maxRight - minLeft;
+            const newHeight = maxBottom - minTop;
+
+            overlay.style.setProperty('--merged-width', `${newWidth}px`);
+            overlay.style.setProperty('--merged-height', `${newHeight}px`);
+        });
     }
 
 
@@ -1263,14 +1445,9 @@
     function highlightSelectedNameInList(nameToHighlight) {
         if (!nameListContainer) return;
         nameListContainer.querySelectorAll('.name-item span').forEach(span => {
-            if (span.dataset.name === nameToHighlight) {
-                span.classList.add('highlighted');
-            } else {
-                span.classList.remove('highlighted');
-            }
+            span.classList.toggle('highlighted', span.dataset.name === nameToHighlight);
         });
     }
-
     function clearNameSelection() {
         selectedNameFromList = null;
         if (nameListContainer) {
@@ -1279,129 +1456,113 @@
             });
         }
     }
-
-    function loadNames() { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '["Teacher A", "Subject B", "Class C", "LAU", "LISAH"]');
+    function loadNames() {
+        // Default names if none in localStorage
+        const defaultNames = ["Teacher A", "Subject B", "Class C", "LAU", "LISAH", "AISYAH", "JAMES", "LILY"];
+        names = JSON.parse(localStorage.getItem(NAMES_KEY) || JSON.stringify(defaultNames));
     }
     function saveNames() { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }
-
     function closeNameModal() {
-        if (nameModal) {
-            nameModal.style.display = 'none';
-        }
+        if (nameModal) nameModal.style.display = 'none';
         clearNameSelection();
-        if(searchNameInputElement) searchNameInputElement.value = '';
+        if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search
     }
-
     function toggleNameListModalVisibility() {
         if (!nameModal || !nameModalContent || !newNameInput) return;
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) {
-            nameModal.style.display = 'none';
-            clearNameSelection();
-            if(searchNameInputElement) searchNameInputElement.value = '';
+            closeNameModal();
         } else {
-            nameModalContent.style.position = 'relative';
+            // Reset modal position before showing (in case it was dragged off-screen)
+            nameModalContent.style.position = 'relative'; // Revert from fixed if dragged
             nameModalContent.style.left = 'auto';
             nameModalContent.style.top = 'auto';
-            nameModalContent.style.transform = 'none';
+            nameModalContent.style.transform = 'none'; // Reset transform
 
             nameModal.style.display = 'flex';
-            if(searchNameInputElement) searchNameInputElement.value = '';
+            if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search on open
             renderNameList();
             newNameInput.focus();
-            clearNameSelection();
+            clearNameSelection(); // Ensure no name is pre-selected
         }
     }
-
-    function renderNameList(filterText = '') { // Renders the master list in the modal
+    function renderNameList(filterText = '') {
         if (!nameListContainer) return;
-        nameListContainer.innerHTML = '';
+        nameListContainer.innerHTML = ''; // Clear current list
 
         const normalizedFilterText = filterText.toLowerCase().trim();
-        // Filter from the global 'names' array for the modal
         const filteredNames = names.filter(name => name.toLowerCase().includes(normalizedFilterText));
+
         if (filteredNames.length === 0) {
             nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ? 'No names match your search.' : 'No names. Add some!'}</p>`;
             return;
         }
 
-        filteredNames.sort((a,b) => a.localeCompare(b));
+        filteredNames.sort((a,b) => a.localeCompare(b)); // Sort alphabetically
         filteredNames.forEach(name => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'name-item';
-            itemDiv.innerHTML = `<span data-name="${name}">${name}</span><button>Delete</button>`;
+            itemDiv.innerHTML = `<span data-name="${name}" title="Click to select '${name}' for insertion">${name}</span><button title="Delete name '${name}' from list">Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
     }
-    function addNewNameToList() { // Adds to the master 'names' list
+    function addNewNameToList() {
         if (!newNameInput) return;
         const newName = newNameInput.value.trim();
-        if (!newName) { showMessage('Enter a name.', 'error'); return;
-        }
-        if (names.includes(newName)) { showMessage('Name already exists.', 'error'); return;
+        if (!newName) { showMessage('Enter a name.', 'error'); return; }
+        if (names.some(name => name.toLowerCase() === newName.toLowerCase())) { // Case-insensitive check
+            showMessage('Name already exists.', 'error'); return;
         }
         names.push(newName); saveNames();
-        renderNameList(searchNameInputElement.value);
-        newNameInput.value = ''; newNameInput.focus();
-        rebuildAndRenderSummary();
+        renderNameList(searchNameInputElement.value); // Refresh list with current filter
+        newNameInput.value = ''; newNameInput.focus(); // Clear input and focus
+        rebuildAndRenderSummary(); // Names list changed, summary might need update
         showMessage(`"${newName}" added.`, 'success');
     }
-
-    async function deleteNameFromListAndStorage(nameToDelete) { // Deletes from master 'names' list
+    async function deleteNameFromListAndStorage(nameToDelete) {
         if (await customConfirm(`Delete "${nameToDelete}"? This will also remove the name from all schedule tables.`)) {
             names = names.filter(n => n !== nameToDelete);
             saveNames();
 
+            // Remove the name from all cells in all tables
             tablesContainer.querySelectorAll('table').forEach(table => {
-                table.querySelectorAll('tbody td, tbody th').forEach(cell => {
-                    if (cell.cellIndex > 0 && cell.textContent.trim() === nameToDelete) {
-                        cell.textContent = '';
-
+                table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
+                    if (cell.textContent.trim() === nameToDelete) {
+                        cell.textContent = ''; // Clear the cell
                     }
                 });
             });
-            renderNameList(searchNameInputElement.value);
-            rebuildAndRenderSummary();
+            renderNameList(searchNameInputElement.value); // Refresh list
+            rebuildAndRenderSummary(); // Update summary as content changed
             showMessage(`"${nameToDelete}" removed from list and all schedules.`, 'success');
-            if (selectedNameFromList === nameToDelete) {
-                clearNameSelection();
-            }
+            if (selectedNameFromList === nameToDelete) clearNameSelection();
         }
     }
-
     function selectNameForCellInsertion(name) {
         selectedNameFromList = name;
-        highlightSelectedNameInList(name);
+        highlightSelectedNameInList(name); // Visually indicate selection
         showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
     }
-
-    function handleNameListImport(event) { // Imports to master 'names' list
+    function handleNameListImport(event) {
         const file = event.target.files[0];
-        if (!file) {
-            showMessage('No file selected for import.', 'info');
-            return;
-        }
+        if (!file) { showMessage('No file selected for import.', 'info'); return; }
         if (file.type !== 'text/plain') {
             showMessage('Invalid file type. Please select a .txt file.', 'error');
-            event.target.value = '';
-            return;
+            event.target.value = ''; return;
         }
-
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const content = e.target.result;
-                const importedNames = content.split(/\r?\n/)
+                const importedNames = content.split(/\r?\n/) // Split by newline
                                           .map(name => name.trim())
-                                          .filter(name => name !== '');
+                                          .filter(name => name !== ''); // Remove empty lines
                 if (importedNames.length === 0) {
-                    showMessage('No names found in the selected file.', 'info');
-                    return;
+                    showMessage('No names found in the selected file.', 'info'); return;
                 }
-
                 let newNamesAddedCount = 0;
                 importedNames.forEach(importedName => {
-                    if (!names.includes(importedName)) {
+                    if (!names.some(n => n.toLowerCase() === importedName.toLowerCase())) {
                         names.push(importedName);
                         newNamesAddedCount++;
                     }
@@ -1418,7 +1579,7 @@
                 console.error("Error importing name list:", error);
                 showMessage('Error processing the name list file.', 'error');
             } finally {
-                event.target.value = '';
+                event.target.value = ''; // Clear file input
             }
         };
         reader.onerror = () => {
@@ -1428,7 +1589,6 @@
         reader.readAsText(file);
     }
 
-
     // --- Excel Export/Import ---
     function handleExcelFileImport(event) {
         const file = event.target.files[0];
@@ -1437,71 +1597,111 @@
         reader.onload = (e) => {
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName];
-                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { editable: true, raw: false });
+                const sheetName = workbook.SheetNames[0]; // Use first sheet
+                const worksheet = workbook.Sheets[sheetName];
+                // Convert sheet to HTML table string. `editable:true` might not be needed here.
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false });
                 tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
-                const importedTableName = file.name.replace(/\.xlsx?/i, '') || `Imported ${tableCount}`;
-                const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
+                const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlTableString;
                 const importedTableElement = tempDiv.querySelector('table');
+
                 if (importedTableElement) {
                     importedTableElement.id = newTableId;
                     importedTableElement.dataset.tableName = importedTableName;
+                    // Make all cells contentEditable
                     importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
-                    addTabButton(newTableId, importedTableName); switchTable(newTableId);
+                    addTabButton(newTableId, importedTableName);
+                    switchTable(newTableId); // Activate the new table
                     showMessage('Excel data imported into a new table!', 'success');
-                } else { showMessage('Could not parse table from Excel.', 'error');
+                } else {
+                    showMessage('Could not parse table from Excel file.', 'error');
                 }
-            } catch (error) { console.error("Excel import error:", error);
-                showMessage('Error processing Excel file.', 'error'); }
-            finally { event.target.value = '';
+            } catch (error) {
+                console.error("Excel import error:", error);
+                showMessage('Error processing Excel file. Ensure it is a valid .xlsx or .xls file.', 'error');
+            } finally {
+                event.target.value = ''; // Clear file input
             }
         };
         reader.readAsArrayBuffer(file);
     }
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
-        if (!tableToExport) { showMessage('No active table to export.', 'error'); return;
+        if (!tableToExport) {
+            showMessage('No active table to export.', 'error'); return;
         }
+        // Temporarily remove overlays before export to get clean data
+        const overlaysData = [];
+        tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
+            const parentCell = overlay.parentElement;
+            overlaysData.push({parent: parentCell, overlayHTML: overlay.outerHTML, originalParentHTML: parentCell.innerHTML});
+            parentCell.textContent = overlay.textContent; // Put text directly into cell
+        });
+
+
         const tableName = tableToExport.dataset.tableName || activeTableId;
+        // Create a workbook and add the table
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        // Restore overlays
+        overlaysData.forEach(data => {
+            data.parent.innerHTML = data.originalParentHTML; // Restore original HTML of parent
+             // Re-attach event listeners if they were on the overlay itself and got wiped.
+             // The current blur listener for overlay is added dynamically in mergeSelectedTableCells.
+             // If it was a complex overlay, this might need more care.
+        });
+        if(overlaysData.length > 0) updateAllMergeOverlays(); // Ensure they are correctly sized after restoration
+
+
         showMessage(`Table "${tableName}" exported.`, 'success');
     }
 
-    // --- Summary Table Logic ---
+    // --- Summary Table Logic (largely unchanged, ensure it handles merged cells correctly if needed) ---
+    // Note: The summary logic primarily reads textContent. For merged cells,
+    // the textContent of the primary cell (or its overlay) should be the source.
+    // The current implementation of merge puts text in the overlay, and on blur, updates primary cell's textContent.
+    // This should be compatible with summary logic.
     function rebuildAndRenderSummary() {
-        console.log("--- rebuildAndRenderSummary called ---");
+        // console.log("--- rebuildAndRenderSummary called ---");
         buildSummaryTableSkeleton();
         updateSummaryTableData();
-        console.log("--- rebuildAndRenderSummary finished ---");
+        // console.log("--- rebuildAndRenderSummary finished ---");
     }
-
     function parseTimeToMinutes(timeStr) {
-        if (typeof timeStr !== 'string') return Infinity;
-        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
+        if (typeof timeStr !== 'string') return Infinity; // Not a string
+        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/); // Matches HH:MM or HH.MM
         if (match) {
             return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
         }
-        return Infinity;
+        return Infinity; // Cannot parse
     }
-
     function buildSummaryTableSkeleton() {
-        console.log("--- buildSummaryTableSkeleton starting ---");
+        // console.log("--- buildSummaryTableSkeleton starting ---");
         if (!summaryTableElement) {
             console.error("Summary table element not found in buildSummaryTableSkeleton.");
             return;
         }
-        summaryTableElement.innerHTML = '';
+        summaryTableElement.innerHTML = ''; // Clear existing summary
 
-        const scheduledNamesSet = new Set();
+        const scheduledNamesSet = new Set(); // Names that appear in any schedule
+        tablesContainer.querySelectorAll('table.active').forEach(scheduleTable => { // Process only active table for summary, or all? User might expect all. Let's assume all for now.
+        // Reverted to all tables for summary:
         tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
             if (scheduleTable.tBodies[0]) {
                 Array.from(scheduleTable.tBodies[0].rows).forEach(scheduleDataRow => {
                     for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
                         const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
-                        const entryInScheduleCell = scheduleCell.textContent.trim();
+                        let entryInScheduleCell = scheduleCell.textContent.trim();
+                        // If it's a merged cell container, get text from overlay
+                        const overlay = scheduleCell.querySelector('.merged-cell-overlay');
+                        if (overlay) entryInScheduleCell = overlay.textContent.trim();
+
                         if (entryInScheduleCell && names.includes(entryInScheduleCell)) {
                             scheduledNamesSet.add(entryInScheduleCell);
                         }
@@ -1510,12 +1710,12 @@
             }
         });
         const sortedSummaryRowHeaders = Array.from(scheduledNamesSet).sort((a, b) => a.localeCompare(b));
-        console.log("BUILD: Scheduled names for summary rows:", JSON.stringify(sortedSummaryRowHeaders));
+        // console.log("BUILD: Scheduled names for summary rows:", JSON.stringify(sortedSummaryRowHeaders));
 
         const tempRawHeadersFromSchedules = [];
         tablesContainer.querySelectorAll('table').forEach(table => {
             if (table.tHead && table.tHead.rows.length > 0) {
-                for (let hIdx = 1; hIdx < table.tHead.rows[0].cells.length; hIdx++) {
+                for (let hIdx = 1; hIdx < table.tHead.rows[0].cells.length; hIdx++) { // Skip first column (Class/Time)
                     const th = table.tHead.rows[0].cells[hIdx];
                     const headerText = th.textContent.trim();
                     if (headerText) {
@@ -1524,81 +1724,76 @@
                 }
             }
         });
+
+        // LAU/LISAH rule: if they are in "10.30-12.00", summary needs a "10.15-10.30" slot
         let laulisahRuleRequiresSpecialSlot = false;
-        const specialNames = ["LAU", "LISAH"];
-        const targetSlotForSpecialNames = "10.15-10.30";
-        const sourceSlotToShift = "10.30-12.00";
+        const specialNamesForRule = ["LAU", "LISAH"];
+        const targetSlotForSpecialNamesRule = "10.15-10.30"; // The slot to add/ensure exists
+        const sourceSlotToShiftRule = "10.30-12.00"; // The slot that triggers the rule
+
         for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
             if (laulisahRuleRequiresSpecialSlot) break;
             if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
 
             Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
                 if (laulisahRuleRequiresSpecialSlot) return;
-                let visualColumnOffsetForDataCells = 0;
+                // Iterate through cells, considering their effective column headers
+                // This part is complex due to potential colSpans in headers.
+                // Assuming data cells align with header cells by index for simplicity here.
+                // A more robust way would map data cell indices to header cell texts.
+                for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
+                     const scheduleCell = scheduleDataRow.cells[cellIdx];
+                     let entryInScheduleCell = scheduleCell.textContent.trim();
+                     const overlay = scheduleCell.querySelector('.merged-cell-overlay');
+                     if (overlay) entryInScheduleCell = overlay.textContent.trim();
 
-                for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
-                    if (laulisahRuleRequiresSpecialSlot) return;
-                    const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
-                    const entryInScheduleCell = scheduleCell.textContent.trim();
-                    const cellColSpan = scheduleCell.colSpan || 1; // This is now 1 for data cells in our new model
-
-                    if (specialNames.includes(entryInScheduleCell)) {
-                        for (let k = 0; k < cellColSpan; k++) {
-                            const currentVisualDataColumnIndex = visualColumnOffsetForDataCells + k;
-                            let determinedScheduleColumnHeader = "";
-                            let coveredVisualDataColumns = 0;
-                            for (let hCellIdx = 1; hCellIdx < scheduleTable.tHead.rows[0].cells.length; hCellIdx++) {
-                                const headerCell = scheduleTable.tHead.rows[0].cells[hCellIdx];
-                                const headerColSpan = headerCell.colSpan || 1; // Crucial: use actual colSpan of schedule header
-                                if (currentVisualDataColumnIndex >= coveredVisualDataColumns &&
-                                    currentVisualDataColumnIndex < coveredVisualDataColumns + headerColSpan) {
-                                    determinedScheduleColumnHeader = headerCell.textContent.trim();
-                                    break;
-                                }
-                                coveredVisualDataColumns += headerColSpan;
-                            }
-
-                            if (determinedScheduleColumnHeader) {
-                                const normalizedScheduleColumnHeader = determinedScheduleColumnHeader.replace(/\s/g, "").replace(/:/g,".");
-                                const normalizedSourceSlotToShiftRule = sourceSlotToShift.replace(/\s/g, "").replace(/:/g,".");
-                                if (normalizedScheduleColumnHeader === normalizedSourceSlotToShiftRule) {
-                                    laulisahRuleRequiresSpecialSlot = true;
-                                    return;
-                                }
+                     if (specialNamesForRule.includes(entryInScheduleCell)) {
+                        // Determine the header for this cell
+                        // This simplified logic assumes data cells map 1-to-1 to header columns after the first.
+                        // If headers have colspans, this needs to be more sophisticated.
+                        const headerCell = scheduleTable.tHead.rows[0].cells[cellIdx];
+                        if (headerCell) {
+                            const headerText = headerCell.textContent.trim();
+                            const normalizedHeader = headerText.replace(/\s/g, "").replace(/:/g,".");
+                            const normalizedSourceSlot = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
+                            if (normalizedHeader === normalizedSourceSlot) {
+                                laulisahRuleRequiresSpecialSlot = true;
+                                return; // Found, exit inner loop
                             }
                         }
-                    }
-                    visualColumnOffsetForDataCells += cellColSpan;
+                     }
                 }
             });
         }
 
-        const uniqueHeaderMap = new Map();
+
+        const uniqueHeaderMap = new Map(); // Use a map to store unique headers (normalized -> original)
         tempRawHeadersFromSchedules.forEach(h => {
-            const norm = h.replace(/\s/g, "").replace(/:/g,".");
+            const norm = h.replace(/\s/g, "").replace(/:/g,"."); // Normalize: remove spaces, replace : with .
             if (!uniqueHeaderMap.has(norm)) {
-                uniqueHeaderMap.set(norm, h);
+                uniqueHeaderMap.set(norm, h); // Store original format
             }
         });
         if (laulisahRuleRequiresSpecialSlot) {
-            const normalizedTarget = targetSlotForSpecialNames.replace(/\s/g, "").replace(/:/g,".");
+            const normalizedTarget = targetSlotForSpecialNamesRule.replace(/\s/g, "").replace(/:/g,".");
             if (!uniqueHeaderMap.has(normalizedTarget)) {
-                uniqueHeaderMap.set(normalizedTarget, targetSlotForSpecialNames);
-                console.log(`BUILD: LAU/LISAH rule added '${targetSlotForSpecialNames}' (normalized: ${normalizedTarget}) to summary headers.`);
+                uniqueHeaderMap.set(normalizedTarget, targetSlotForSpecialNamesRule);
+                // console.log(`BUILD: LAU/LISAH rule added '${targetSlotForSpecialNamesRule}' to summary headers.`);
             }
         }
 
         let sortedOriginalUniqueHeaders = Array.from(uniqueHeaderMap.values());
+        // Sort headers by time
         sortedOriginalUniqueHeaders.sort((a, b) => {
             const timeA = parseTimeToMinutes(a);
             const timeB = parseTimeToMinutes(b);
-            if (timeA !== Infinity && timeB !== Infinity) { return timeA - timeB; }
-            else if (timeA !== Infinity) { return -1; }
-            else if (timeB !== Infinity) { return 1; }
-            return a.localeCompare(b);
+            if (timeA !== Infinity && timeB !== Infinity) { return timeA - timeB; } // Both are times
+            else if (timeA !== Infinity) { return -1; } // Only A is time, A comes first
+            else if (timeB !== Infinity) { return 1; }  // Only B is time, B comes first
+            return a.localeCompare(b); // Fallback to string compare for non-time headers
         });
         const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedOriginalUniqueHeaders];
-        console.log("BUILD: Final sorted unique summary column headers (original format):", JSON.stringify(finalSummaryColumnHeaders));
+        // console.log("BUILD: Final sorted unique summary column headers:", JSON.stringify(finalSummaryColumnHeaders));
 
         const thead = summaryTableElement.createTHead();
         const headerRowForSummary = thead.insertRow();
@@ -1613,45 +1808,43 @@
             const td = tr.insertCell();
             td.textContent = "No names currently scheduled to display in summary.";
             td.colSpan = finalSummaryColumnHeaders.length > 0 ? finalSummaryColumnHeaders.length : 1;
-            td.style.textAlign = 'center';
-            td.style.fontStyle = 'italic';
+            td.style.textAlign = 'center'; td.style.fontStyle = 'italic';
         } else {
             sortedSummaryRowHeaders.forEach(name => {
                 const tr = tbody.insertRow();
-                tr.insertCell().textContent = name;
+                tr.insertCell().textContent = name; // First cell is the name
                 for (let i = 1; i < finalSummaryColumnHeaders.length; i++) {
-                    tr.insertCell().textContent = '';
+                    tr.insertCell().textContent = ''; // Placeholder for attendance data
                 }
             });
         }
-        console.log("--- buildSummaryTableSkeleton finished ---");
+        // console.log("--- buildSummaryTableSkeleton finished ---");
     }
-
     function updateSummaryTableData() {
-        console.log("--- updateSummaryTableData starting ---");
+        // console.log("--- updateSummaryTableData starting ---");
         if (!summaryTableElement || !summaryTableElement.tBodies || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) {
-            console.error("UPDATE: Summary table element or its head/body not ready.");
+            // console.error("UPDATE: Summary table element or its head/body not ready.");
             return;
         }
-
         const summaryBody = summaryTableElement.tBodies[0];
         if (!summaryBody || summaryBody.rows.length === 0) {
-            if(summaryBody.rows[0]?.cells[0]?.colSpan > 1){
-                 console.log("UPDATE: Summary table has placeholder 'no scheduled names' row, data update skipped.");
+            if(summaryBody.rows[0]?.cells[0]?.colSpan > 1){ // Check for "no scheduled names" placeholder
+                // console.log("UPDATE: Summary table has placeholder 'no scheduled names' row, data update skipped.");
                 return;
             }
-            console.log("UPDATE: Summary table body is empty or not correctly structured for data population.");
+            // console.log("UPDATE: Summary table body is empty or not correctly structured for data population.");
             return;
         }
 
         const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
-        console.log("UPDATE: Summary Table Display Headers (Original, Unique, Sorted):", JSON.stringify(summaryTableDisplayHeaders));
-        console.log("UPDATE: Summary Table Headers (Fully Normalized for findIndex):", JSON.stringify(normalizedSummaryHeadersForLookup));
+        // console.log("UPDATE: Summary Table Display Headers (Original):", JSON.stringify(summaryTableDisplayHeaders));
+        // console.log("UPDATE: Summary Table Headers (Normalized for lookup):", JSON.stringify(normalizedSummaryHeadersForLookup));
 
+        // Clear previous data and conflict highlights from summary cells
         Array.from(summaryBody.rows).forEach(summaryRow => {
-            if (summaryRow.cells.length > 1) {
-                Array.from(summaryRow.cells).slice(1).forEach(cell => {
+            if (summaryRow.cells.length > 1) { // Ensure it's not the placeholder row
+                Array.from(summaryRow.cells).slice(1).forEach(cell => { // Skip first cell (name)
                     cell.textContent = '';
                     cell.classList.remove('highlight-conflict');
                 });
@@ -1659,113 +1852,87 @@
         });
 
         tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-            console.log(`UPDATE: Processing Schedule Table: ${scheduleTable.id} (${scheduleTable.dataset.tableName || 'N/A'})`);
+            // console.log(`UPDATE: Processing Schedule Table: ${scheduleTable.id} (${scheduleTable.dataset.tableName || 'N/A'})`);
             if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
-                console.log("UPDATE: Skipping schedule table due to missing head/body.");
+                // console.log("UPDATE: Skipping schedule table due to missing head/body.");
                 return;
             }
 
-            const currentScheduleTableHeadersRaw = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
-            console.log(`UPDATE: Current Schedule Table Headers (Raw for ${scheduleTable.id}):`, JSON.stringify(currentScheduleTableHeadersRaw));
+            // This needs a robust way to map a data cell to its corresponding header(s), especially with colSpans.
+            // For now, a simplified approach:
+            const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
 
-
-            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow, rowIndex) => {
+            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
                 const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim();
-                if (!classIdentifier) return;
+                if (!classIdentifier) return; // Skip if no class identifier
 
-                let visualColumnOffsetForDataCells = 0;
-                for (let physicalCellIndex = 1; physicalCellIndex < scheduleDataRow.cells.length; physicalCellIndex++) {
-                    const scheduleCell = scheduleDataRow.cells[physicalCellIndex];
-                    const entryInScheduleCell = scheduleCell.textContent.trim();
-                    const cellColSpan = scheduleCell.colSpan || 1; // Now always 1 for data cells.
+                for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
+                    const scheduleCell = scheduleDataRow.cells[cellIdx];
+                    let entryInScheduleCell = scheduleCell.textContent.trim();
+                    const overlay = scheduleCell.querySelector('.merged-cell-overlay');
+                    if (overlay) entryInScheduleCell = overlay.textContent.trim();
+
 
                     if (entryInScheduleCell && names.includes(entryInScheduleCell)) {
-                        for (let k = 0; k < cellColSpan; k++) {
-                            const currentVisualDataColumnIndex = visualColumnOffsetForDataCells + k;
-                            let determinedScheduleColumnHeader = "";
-                            let coveredVisualDataColumns = 0;
-                            for (let hCellIdx = 1; hCellIdx < scheduleTable.tHead.rows[0].cells.length; hCellIdx++) {
-                                const headerCell = scheduleTable.tHead.rows[0].cells[hCellIdx];
-                                const headerColSpan = headerCell.colSpan || 1; // Actual colSpan of schedule header
-                                const headerTextContent = headerCell.textContent.trim();
-                                if (currentVisualDataColumnIndex >= coveredVisualDataColumns &&
-                                    currentVisualDataColumnIndex < coveredVisualDataColumns + headerColSpan) {
-                                    determinedScheduleColumnHeader = headerTextContent;
-                                    console.log(`      UPDATE DETAIL (${entryInScheduleCell}/${classIdentifier}): Matched schedule header '${headerTextContent}' (colSpan: ${headerColSpan}) for visual index ${currentVisualDataColumnIndex}. CoveredVisual: ${coveredVisualDataColumns}.`);
-                                    break;
+                        // Determine the actual header for this cell. This is the tricky part with colspans.
+                        // For this version, assume scheduleHeaders[cellIdx] is the relevant header.
+                        // A more robust solution would calculate effective column index.
+                        let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx];
+                        if (!scheduleColumnHeaderForThisCell) continue; // Skip if no header for this column
+
+                        // Apply LAU/LISAH rule for summary column
+                        let summaryColumnToUse = scheduleColumnHeaderForThisCell;
+                        const specialNamesForRule = ["LAU", "LISAH"];
+                        const targetSlotForSpecialNamesRule = "10.15-10.30";
+                        const sourceSlotToShiftRule = "10.30-12.00";
+                        const normalizedScheduleColHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
+                        const normalizedSourceSlotRule = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
+
+                        if (specialNamesForRule.includes(entryInScheduleCell) && normalizedScheduleColHeader === normalizedSourceSlotRule) {
+                            summaryColumnToUse = targetSlotForSpecialNamesRule;
+                            // console.log(`    UPDATE (${entryInScheduleCell}): LAU/LISAH rule. Using summary column '${summaryColumnToUse}'.`);
+                        }
+
+                        const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
+                        if (targetSummaryRow && targetSummaryRow.cells.length > 1) {
+                            const normalizedSummaryColToUseLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
+                            const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColToUseLookup);
+
+                            if (targetSummaryColumnCellIndex > 0) { // Found corresponding column in summary
+                                const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
+                                let existingClasses = summaryCellToUpdate.textContent.trim()
+                                    ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim())
+                                    : [];
+                                if (!existingClasses.includes(classIdentifier)) {
+                                    existingClasses.push(classIdentifier);
+                                    summaryCellToUpdate.textContent = existingClasses.join(', ');
                                 }
-                                coveredVisualDataColumns += headerColSpan;
-                            }
-
-                            let scheduleColumnHeaderForThisCell = determinedScheduleColumnHeader;
-                            if (!scheduleColumnHeaderForThisCell) {
-                                console.warn(`        UPDATE WARN: Could not determine schedule column header for visual data column index ${currentVisualDataColumnIndex} in table ${scheduleTable.id}, row ${rowIndex}, cell content "${entryInScheduleCell}". Skipping this segment.`);
-                                continue;
-                            }
-
-                            let summaryColumnToUse = scheduleColumnHeaderForThisCell;
-                            const specialNames = ["LAU", "LISAH"];
-                            const targetSlotForSpecialNames = "10.15-10.30";
-                            const sourceSlotToShift = "10.30-12.00";
-                            const normalizedScheduleColumnHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
-                            const normalizedSourceSlotToShift = sourceSlotToShift.replace(/\s/g, "").replace(/:/g,".");
-
-                            if (specialNames.includes(entryInScheduleCell) && normalizedScheduleColumnHeader === normalizedSourceSlotToShift) {
-                                summaryColumnToUse = targetSlotForSpecialNames;
-                                console.log(`        UPDATE (${entryInScheduleCell}): LAU/LISAH rule triggered. Shifting from '${scheduleColumnHeaderForThisCell}' to '${summaryColumnToUse}'.`);
-                            }
-
-                            const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
-                            if (targetSummaryRow && targetSummaryRow.cells.length > 1) {
-                                const normalizedSummaryColumnToUseForLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
-                                const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColumnToUseForLookup);
-
-                                if (targetSummaryColumnCellIndex > 0) {
-                                    const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
-                                    let existingClassesInSummaryCell = [];
-                                    if (summaryCellToUpdate.textContent.trim() !== '') {
-                                        existingClassesInSummaryCell = summaryCellToUpdate.textContent.trim().split(',')
-                                                                        .map(s => s.trim())
-                                                                        .filter(s => s !== '');
-                                    }
-                                    if (!existingClassesInSummaryCell.includes(classIdentifier)) {
-                                        existingClassesInSummaryCell.push(classIdentifier);
-                                        summaryCellToUpdate.textContent = existingClassesInSummaryCell.join(', ');
-                                    }
-                                    console.log(`        UPDATE (${entryInScheduleCell}/${classIdentifier}): Placed in summary column '${summaryTableDisplayHeaders[targetSummaryColumnCellIndex]}' (Index: ${targetSummaryColumnCellIndex}). Content: ${summaryCellToUpdate.textContent}`);
-                                } else {
-                                     console.warn(`        UPDATE WARN: Could not find summary column for '${summaryColumnToUse}' (normalized: '${normalizedSummaryColumnToUseForLookup}') for name '${entryInScheduleCell}'. Lookup array: ${JSON.stringify(normalizedSummaryHeadersForLookup)}`);
-                                }
-                            } else if (targetSummaryRow && targetSummaryRow.cells.length === 1) {
-                                console.log(`UPDATE: Skipping update for name '${entryInScheduleCell}' as summary table seems to have placeholder row.`);
+                                // console.log(`        UPDATE (${entryInScheduleCell}/${classIdentifier}): Placed in summary column '${summaryTableDisplayHeaders[targetSummaryColumnCellIndex]}'. Content: ${summaryCellToUpdate.textContent}`);
                             } else {
-                                 console.warn(`      UPDATE WARN: Could not find summary row for name '${entryInScheduleCell}'. This name might not be scheduled or an issue exists.`);
+                                // console.warn(`        UPDATE WARN: No summary column for '${summaryColumnToUse}' (norm: '${normalizedSummaryColToUseLookup}') for name '${entryInScheduleCell}'.`);
                             }
+                        } else {
+                            // console.warn(`      UPDATE WARN: No summary row for name '${entryInScheduleCell}'.`);
                         }
                     }
-                    visualColumnOffsetForDataCells += cellColSpan;
                 }
             });
         });
+
+        // Highlight conflicts (multiple classes for one person at one time)
         Array.from(summaryBody.rows).forEach(summaryRow => {
             if (summaryRow.cells.length > 1) {
                 Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
-                    if (cellIndex > 0) {
+                    if (cellIndex > 0) { // Skip name cell
                         const cellText = cell.textContent.trim();
-                        if (cellText.includes(',')) {
-                            const classesListed = cellText.split(',')
-                                                        .map(s => s.trim())
-                                                        .filter(s => s !== '');
-                            const uniqueClasses = new Set(classesListed);
-                            if (uniqueClasses.size > 1) {
-                                cell.classList.add('highlight-conflict');
-                            }
+                        if (cellText.includes(',')) { // Indicates multiple classes
+                            cell.classList.add('highlight-conflict');
                         }
                     }
                 });
             }
         });
-        console.log("--- updateSummaryTableData finished ---");
+        // console.log("--- updateSummaryTableData finished ---");
     }
 </script>
 </body>
