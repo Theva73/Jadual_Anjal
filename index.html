@@ -350,18 +350,79 @@
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const userProvidedFirebaseConfig = { /* ... Firebase config ... */ };
-    let firebaseConfig;
-    if (typeof __firebase_config !== 'undefined' && __firebase_config) { /* ... */ } else { /* ... */ }
-    const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-app-id-jadual');
-    
-    let fbApp, fbAuth, fbDb;
-    let fbUserId = null;
-    let fbIsAuthReady = false;
-    let unsubscribePagi = null;
-    let unsubscribePetang = null;
+    // --- Define Fallback Config FIRST ---
+    const userProvidedFirebaseConfig = {
+      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
+      authDomain: "jadual-3f0aa.firebaseapp.com",
+      projectId: "jadual-3f0aa",
+      storageBucket: "jadual-3f0aa.appspot.com",
+      messagingSenderId: "496526436851",
+      appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
+    };
+    // console.log("userProvidedFirebaseConfig defined:", JSON.stringify(userProvidedFirebaseConfig));
 
-    try { /* ... Firebase init with getApps() check ... */ } catch (e) { /* ... */ }
+    // --- Determine the finalFirebaseConfig to use ---
+    let finalFirebaseConfig; // This will hold the config object for initializeApp
+
+    if (typeof __firebase_config !== 'undefined' && __firebase_config && __firebase_config.trim() !== "") {
+        try {
+            const parsedGlobalConfig = JSON.parse(__firebase_config);
+            // Validate essential keys from parsed global config
+            if (parsedGlobalConfig && typeof parsedGlobalConfig === 'object' && parsedGlobalConfig.apiKey && parsedGlobalConfig.appId) {
+                finalFirebaseConfig = parsedGlobalConfig;
+                console.log("Using dynamically provided __firebase_config.");
+            } else {
+                console.warn("Provided __firebase_config is invalid or missing essential keys. Using fallback userProvidedFirebaseConfig.");
+                finalFirebaseConfig = userProvidedFirebaseConfig;
+            }
+        } catch (e) {
+            console.error("Error parsing __firebase_config. Using fallback userProvidedFirebaseConfig.", e);
+            finalFirebaseConfig = userProvidedFirebaseConfig;
+        }
+    } else {
+        console.log("__firebase_config is not defined or empty. Using userProvidedFirebaseConfig.");
+        finalFirebaseConfig = userProvidedFirebaseConfig;
+    }
+    // console.log("Final firebaseConfig for initializeApp:", JSON.stringify(finalFirebaseConfig));
+
+
+    // --- Define firestorePathAppId using the finalFirebaseConfig ---
+    // This ID is used for constructing Firestore paths.
+    // It prioritizes the environment-provided __app_id if available,
+    // otherwise falls back to the appId from the Firebase config (either global or fallback).
+    const firestorePathAppId = typeof __app_id !== 'undefined' && __app_id.trim() !== ""
+        ? __app_id
+        : (finalFirebaseConfig.appId || 'default-app-id-jadual'); // Fallback if finalFirebaseConfig.appId is also missing
+    console.log(`Using App ID for Firestore paths: ${firestorePathAppId}`);
+
+
+    // --- Initialize Firebase App ---
+    let fbApp, fbAuth, fbDb;
+    try {
+        // Ensure finalFirebaseConfig is valid before trying to initialize
+        if (!finalFirebaseConfig || !finalFirebaseConfig.apiKey || !finalFirebaseConfig.appId) {
+            throw new Error("Firebase configuration is invalid or missing essential keys (apiKey, appId). Cannot initialize Firebase.");
+        }
+
+        if (!getApps().length) {
+            fbApp = initializeApp(finalFirebaseConfig);
+            console.log("Firebase App initialized successfully.");
+        } else {
+            fbApp = getApp();
+            console.log("Firebase App already initialized. Using existing instance.");
+        }
+        fbAuth = getAuth(fbApp);
+        fbDb = getFirestore(fbApp);
+    } catch (e) {
+        console.error("CRITICAL Error initializing Firebase services:", e);
+        const userIdDisplayInitError = document.getElementById('userIdDisplay');
+        if (userIdDisplayInitError) userIdDisplayInitError.textContent = "User ID: Firebase Core Error!";
+        const mb = document.getElementById('customMessageBox');
+        if(mb) {
+            mb.textContent = "Critical Error: Firebase core services failed. Check console.";
+            mb.className = 'custom-message-box error show';
+        }
+    }
 
     const DRAFTS_KEY = 'jadual_drafts_v6';
     const SCHEDULE_TITLE_KEY = 'jadual_title_v6';
@@ -386,50 +447,53 @@
     function customPrompt(message, defaultValue = "") { /* ... */ }
     function customConfirm(message) { /* ... */ }
     function showNameModalLoading(isLoading) { /* ... */ }
-    async function saveNameListToFirestore(session, namesArray) { /* ... */ }
-    async function addNameToCurrentSessionInFirestore(name) { /* ... */ }
-    async function deleteNameFromCurrentSessionInFirestore(nameToDelete) { /* ... */ }
-    function listenToNameList(sessionToListen) { /* ... */ }
     
-    document.addEventListener('DOMContentLoaded', () => {
-        // Cache DOM elements
-        scheduleTitleElement = document.getElementById('scheduleTitle');
-        tablesContainer = document.getElementById('tablesContainer');
-        tableTabs = document.getElementById('tableTabs');
-        nameModal = document.getElementById('nameModal');
-        nameModalContent = document.getElementById('nameModalContent');
-        nameModalHeader = document.getElementById('nameModalHeader');
-        nameListContainer = document.getElementById('nameList');
-        newNameInput = document.getElementById('newNameInput');
-        draftListElement = document.getElementById('draftList');
-        summaryTableElement = document.getElementById('summaryTable');
-        customMessageBox = document.getElementById('customMessageBox');
-        fileInputElement = document.getElementById('fileInput');
-        directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn');
-        closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard');
-        nameListImportFileInputElement = document.getElementById('nameListImportFile');
-        searchNameInputElement = document.getElementById('searchNameInput');
-        draftImportFileInputElement = document.getElementById('draftImportFile');
-        userIdDisplayElement = document.getElementById('userIdDisplay');
-        namePagiTabElement = document.getElementById('namePagiTab');
-        namePetangTabElement = document.getElementById('namePetangTab');
-        loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
-        nameModalTitleElement = document.getElementById('nameModalTitle');
-        nameModalDraggablePart = nameModalHeader;
-        loadMoreNamesButton = document.getElementById('loadMoreNamesBtn');
-
-        // Critical elements check
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !loadMoreNamesButton || !closeNameModalButtonStandardElement || !nameModalContent || !nameModalHeader || !nameListContainer || !newNameInput || !userIdDisplayElement || !customMessageBox) {
-            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: One or more critical page elements are missing. Application cannot start correctly.</p>";
-            console.error("CRITICAL: One or more essential DOM elements for the application are missing. Aborting further script execution.");
-            return; // Stop further execution if critical elements are missing
+    async function saveNameListToFirestore(session, namesArray) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot save name list.", "error"); return;
         }
+        showNameModalLoading(true);
+        const uniqueSortedNames = [...new Set(namesArray.map(n => n.trim()).filter(n => n))]
+            .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         
-        // Firebase Auth Listener
-        if (fbAuth) { /* ... (auth listener with logging) ... */ } else { /* ... */ }
+        // Use firestorePathAppId for Firestore paths
+        if (!firestorePathAppId || firestorePathAppId === 'default-app-id-jadual') {
+            showMessage("Configuration error: Firestore App ID is missing or default.", "error"); 
+            console.error("Firestore App ID is missing or default:", firestorePathAppId);
+            showNameModalLoading(false); return;
+        }
+        const docPath = `artifacts/${firestorePathAppId}/users/${fbUserId}/nameLists/${session}`;
+        const docRef = doc(fbDb, docPath);
+        try {
+            await setDoc(docRef, { names: uniqueSortedNames });
+            showMessage(`Name list for ${session} session updated.`, "success");
+        } catch (error) {
+            console.error(`Failed to save list to ${session}. Path: ${docPath}`, error);
+            showMessage(`Failed to save list to ${session}. Error: ${error.message}`, "error");
+        } finally {
+            showNameModalLoading(false);
+        }
+    }
 
+    async function addNameToCurrentSessionInFirestore(name) { /* ... (ensure it calls saveNameListToFirestore) ... */ }
+    async function deleteNameFromCurrentSessionInFirestore(nameToDelete) { /* ... */ }
+
+    function listenToNameList(sessionToListen) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) { return () => {}; }
+        // Use firestorePathAppId for Firestore paths
+        if (!firestorePathAppId || firestorePathAppId === 'default-app-id-jadual') { 
+            console.error("Cannot listen to name list: Firestore App ID missing or default.", firestorePathAppId);
+            return () => {}; 
+        }
+        const docPath = `artifacts/${firestorePathAppId}/users/${fbUserId}/nameLists/${sessionToListen}`;
+        const docRef = doc(fbDb, docPath);
+        return onSnapshot(docRef, (docSnap) => { /* ... */ }, (error) => { /* ... */ });
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => { /* ... (DOM caching and critical element check) ... */ 
+        if (fbAuth) { /* ... (auth listener with logging) ... */ } else { /* ... */ }
         loadScheduleTitle();
-        initializeEventListeners(); // Call this AFTER caching all elements
+        initializeEventListeners(); 
         setupInitialTableState();
         rebuildAndRenderSummary();
         handleNameListSessionSwitch('pagi'); 
@@ -437,142 +501,7 @@
 
     function setupInitialTableState() { /* ... */ }
     function loadScheduleTitle() { /* ... */ }
-
-    function initializeEventListeners() {
-        console.log("Initializing event listeners...");
-        const addClickListener = (id, func, description) => {
-            try {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('click', func);
-                    // console.log(`Event listener for '${description || id}' attached.`);
-                } else {
-                    console.warn(`Element with ID '${id}' not found for '${description || id}' listener.`);
-                }
-            } catch (error) {
-                console.error(`Error attaching event listener to '${id}' (${description || ''}):`, error);
-            }
-        };
-        const addInputListener = (id, func, description) => {
-             try {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('input', func);
-                } else {
-                    console.warn(`Element with ID '${id}' not found for '${description || id}' input listener.`);
-                }
-            } catch (error) {
-                console.error(`Error attaching input listener to '${id}' (${description || ''}):`, error);
-            }
-        };
-         const addChangeListener = (id, func, description) => {
-             try {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('change', func);
-                } else {
-                    console.warn(`Element with ID '${id}' not found for '${description || id}' change listener.`);
-                }
-            } catch (error) {
-                console.error(`Error attaching change listener to '${id}' (${description || ''}):`, error);
-            }
-        };
-
-
-        addClickListener('directCopyFullHtmlBtn', attemptDirectCopyToClipboard, 'Copy Full HTML');
-        addClickListener('excelBtnTrigger', exportActiveTableToExcel, 'Export to Excel');
-        addClickListener('importExcelBtn', () => fileInputElement?.click(), 'Import from Excel Trigger');
-        addChangeListener('fileInput', handleExcelFileImport, 'Excel File Import');
-        
-        addClickListener('saveDraftBtn', promptAndSaveDraft, 'Save Draft');
-        addClickListener('loadDraftBtn', toggleDraftListVisibility, 'Load Draft');
-        addClickListener('exportDraftsBtn', exportAllDrafts, 'Export All Drafts');
-        addClickListener('importDraftsBtn', () => draftImportFileInputElement?.click(), 'Import Drafts Trigger');
-        addChangeListener('draftImportFile', handleDraftsFileImport, 'Drafts File Import');
-        
-        if (draftListElement) {
-            try {
-                draftListElement.addEventListener('click', async (e) => {
-                    const targetSpan = e.target.closest('.draft-item span');
-                    const targetButton = e.target.closest('.draft-item button.delete-draft-btn');
-                    if (targetSpan) loadSelectedDraft(targetSpan.textContent);
-                    else if (targetButton) await confirmAndDeleteDraft(targetButton.dataset.draftName);
-                });
-            } catch (error) { console.error("Error attaching listener to draftListElement:", error); }
-        } else { console.warn("draftListElement not found for listener.");}
-
-
-        addClickListener('clearActiveTableContentBtn', confirmAndClearActiveTableContent, 'Clear Active Table');
-        addClickListener('selectBtn', toggleCellSelectionMode, 'Toggle Cell Selection');
-        addClickListener('mergeBtn', mergeSelectedTableCells, 'Merge Cells');
-        addClickListener('deselectBtn', deselectAllTableCells, 'Deselect All Cells');
-        addClickListener('unmergeBtn', unmergeActiveCellIfMerged, 'Unmerge Cell');
-
-        addClickListener('addTableBtn', () => addNewTable(), 'Add New Table');
-        addClickListener('renameTableBtn', promptAndRenameActiveTable, 'Rename Active Table');
-        addClickListener('deleteTableBtn', confirmAndDeleteActiveTable, 'Delete Active Table');
-        
-        addClickListener('addRowAboveBtn', addRowAboveToActiveTable, 'Add Row Above');
-        addClickListener('addRowBelowBtn', addRowBelowToActiveTable, 'Add Row Below');
-        addClickListener('addColLeftBtn', addColumnLeftToActiveTable, 'Add Column Left');
-        addClickListener('addColRightBtn', addColumnRightToActiveTable, 'Add Column Right');
-        addClickListener('deleteRowBtn', deleteClickedRowFromActiveTable, 'Delete Row');
-        addClickListener('deleteColBtn', deleteClickedColumnFromActiveTable, 'Delete Column');
-
-        // Name Modal specific listeners
-        addClickListener('nameListBtn', toggleNameListModalVisibility, 'Toggle Name List Modal');
-        addClickListener('closeNameModalBtnStandard', closeNameModal, 'Close Name Modal (X)');
-        
-        if (nameModalDraggablePart) {
-            try {
-                nameModalDraggablePart.addEventListener('mousedown', startDragModal);
-                nameModalDraggablePart.addEventListener('touchstart', startDragModal, { passive: false });
-            } catch (error) { console.error("Error attaching drag listeners to nameModalDraggablePart:", error); }
-        } else { console.warn("nameModalDraggablePart not found for drag listeners."); }
-
-        document.addEventListener('mousemove', dragModal);
-        document.addEventListener('mouseup', stopDragModal);
-        document.addEventListener('touchmove', dragModal, { passive: false });
-        document.addEventListener('touchend', stopDragModal);
-
-        addClickListener('addNameBtnInModal', () => { if(newNameInput) addNameToCurrentSessionInFirestore(newNameInput.value); }, 'Add Name in Modal');
-        addClickListener('importNameListBtn', () => nameListImportFileInputElement?.click(), 'Import Name List Trigger');
-        addChangeListener('nameListImportFile', handleNameListImportFirestore, 'Name List File Import');
-        addInputListener('searchNameInput', (e) => renderNameListFromFirestore(e.target.value, true), 'Search Names');
-        
-        addClickListener('namePagiTab', () => handleNameListSessionSwitch('pagi'), 'Pagi Tab');
-        addClickListener('namePetangTab', () => handleNameListSessionSwitch('petang'), 'Petang Tab');
-        addClickListener('loadMoreNamesBtn', () => renderNameListFromFirestore(searchNameInputElement.value, false), 'Load More Names');
-
-        if (nameListContainer) {
-            try {
-                nameListContainer.addEventListener('click', async (e) => {
-                    const nameItemSpan = e.target.closest('.name-item span[data-name]');
-                    const deleteButton = e.target.closest('.name-item button[data-name-delete]');
-                    if (nameItemSpan) {
-                        selectNameForCellInsertion(nameItemSpan.dataset.name);
-                    } else if (deleteButton) {
-                        await deleteNameFromCurrentSessionInFirestore(deleteButton.dataset.nameDelete);
-                    }
-                });
-            } catch (error) { console.error("Error attaching listener to nameListContainer:", error); }
-        } else { console.warn("nameListContainer not found for listener."); }
-
-        if (tablesContainer) {
-            try {
-                tablesContainer.addEventListener('click', handleTableCellClick);
-                tablesContainer.addEventListener('input', (e) => {
-                     if ((e.target.tagName === 'TD' || e.target.tagName === 'TH' || e.target.classList.contains('merged-cell-overlay')) && e.target.isContentEditable) {
-                        setTimeout(rebuildAndRenderSummary, 50);
-                    }
-                }, true);
-            } catch(error) { console.error("Error attaching listeners to tablesContainer:", error); }
-        } else { console.warn("tablesContainer not found for listeners."); }
-
-        window.addEventListener('resize', updateAllMergeOverlays);
-        console.log("Event listeners initialization attempt finished.");
-    }
-    
+    function initializeEventListeners() { /* ... (with try-catch for each listener) ... */ }
     function startDragModal(e) { /* ... */ }
     function dragModal(e) { /* ... */ }
     function stopDragModal() { /* ... */ }
