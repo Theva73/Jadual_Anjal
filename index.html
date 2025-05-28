@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Weekly Schedule with Firestore Names & Drafts</title>
+    <title>Weekly Schedule with Firestore Names</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
@@ -170,7 +170,7 @@
             pointer-events: none;
         }
         .modal-content {
-            background-color: #fff; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; 
+            background-color: #fff; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; /* Increased width for sessions */
             border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; pointer-events: auto;
         }
         .modal-content.dragging { transform: none; }
@@ -184,21 +184,21 @@
             text-shadow: 0 1px 0 #fff; opacity: .5; background: transparent; border: 0; cursor: pointer;
         }
         .modal-close-btn:hover { opacity: .75; }
-        .name-item, .draft-item-firestore { /* Combined for similar styling */
+        .name-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 8px 5px; border-bottom: 1px solid #eee; break-inside: avoid-column; page-break-inside: avoid;
         }
-        .name-item:last-child, .draft-item-firestore:last-child { border-bottom: none; }
-        .name-item span, .draft-item-firestore span { flex-grow: 1; cursor: pointer; color: #007bff; }
-        .name-item span:hover, .draft-item-firestore span:hover { text-decoration: underline; }
-        .name-item button, .draft-item-firestore button { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.9em; }
-        
+        .name-item:last-child { border-bottom: none; }
+        .name-item span { flex-grow: 1; cursor: pointer; color: #007bff; }
+        .name-item span:hover { text-decoration: underline; }
+        .name-item button { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.9em; }
         .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
-        
-        #draftListContainer { /* Changed ID from draftList to avoid confusion with localStorage one if it were still there */
-             border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 5px; 
-             background-color: #fff; max-height: 300px; overflow-y: auto;
-        }
+        #draftList { border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 5px; background-color: #fff; }
+        .draft-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #eee; }
+        .draft-item:last-child { border-bottom: none; }
+        .draft-item span { cursor: pointer; color: #007bff; }
+        .draft-item span:hover { text-decoration: underline; }
+        .draft-item button { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.9em; }
         #newNameInput, #searchNameInput {
             padding: 8px; margin-right: 5px; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1;
             width: calc(100% - 100px);
@@ -227,11 +227,11 @@
             box-sizing: border-box; z-index: 5;
         }
         .subsumed-cell { visibility: hidden; }
-        #loadingIndicatorModal, #loadingIndicatorDraftList { /* Added draft list loader */
+        #loadingIndicatorModal {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.8);
             display: flex; align-items: center; justify-content: center;
-            z-index: 10; 
+            z-index: 10; /* Ensure it's above other modal content */
         }
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
@@ -260,10 +260,10 @@
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
     <div class="bar">
-        <button id="saveDraftBtn" title="Save all current tables and their state as a named draft to Firestore">💠 Save All as Draft (Firestore)</button>
-        <button id="loadDraftBtn" title="Show list of saved drafts from Firestore to load">📂 Load Draft (Firestore)</button>
-        <button id="exportDraftsBtn" title="Export all saved drafts from Firestore to a JSON file">📤 Export All Drafts (Firestore)</button>
-        <button id="importDraftsBtn" title="Import drafts from a JSON file to Firestore">📥 Import Drafts File (Firestore)</button>
+        <button id="saveDraftBtn" title="Save all current tables and their state as a named draft">💠 Save All as Draft</button>
+        <button id="loadDraftBtn" title="Show list of saved drafts to load">📂 Load Draft</button>
+        <button id="exportDraftsBtn" title="Export all saved drafts to a JSON file">📤 Export All Drafts</button>
+        <button id="importDraftsBtn" title="Import drafts from a JSON file">📥 Import Drafts File</button>
         <input type="file" id="draftImportFile" accept=".json" style="display:none;">
         <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
     </div>
@@ -280,8 +280,7 @@
         <button id="nameListBtn" title="Open a dialog to manage a list of names for quick insertion">👥 Manage Names (Firestore)</button>
     </div>
 
-    <div id="draftListContainer" style="display:none; position:relative;"> <div id="loadingIndicatorDraftList" style="display:none;"><div class="spinner"></div></div>
-        </div>
+    <div id="draftList" style="display:none;"></div>
     <div class="bar table-tabs" id="tableTabs"></div>
     <div id="tablesContainer">
         <table id="tbl_1" class="active" data-table-name="Table 1">
@@ -347,14 +346,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     // Add SDKs for Firebase products that you want to use
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, deleteDoc, serverTimestamp, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added collection, getDocs, deleteDoc, serverTimestamp, query, orderBy, getDoc
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
+    // THIS IS WHERE YOUR CONFIGURATION IS INJECTED
     const userProvidedFirebaseConfig = {
       apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.firebasestorage.app",
+      storageBucket: "jadual-3f0aa.firebasestorage.app", // Corrected from firebasestorage.app
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
@@ -376,11 +376,11 @@
         fbDb = getFirestore(fbApp);
     } catch (e) {
         console.error("Error initializing Firebase:", e);
-        showMessage("Critical Error: Firebase initialization failed. Core features will not work.", "error", 10000);
+        showMessage("Critical Error: Firebase initialization failed. Name list features will not work.", "error", 10000);
     }
 
     // --- Global State and Configuration ---
-    // const DRAFTS_KEY = 'jadual_drafts_v3'; // REPLACED BY FIRESTORE FOR DRAFTS
+    const DRAFTS_KEY = 'jadual_drafts_v3';
     const SCHEDULE_TITLE_KEY = 'jadual_title_v3';
     let activeTableId = 'tbl_1';
     let tableCount = 1;
@@ -398,304 +398,170 @@
     let modalDragOffsetX, modalDragOffsetY;
 
     // DOM Element Cache
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListContainerElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, loadingIndicatorDraftListElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement;
 
     // --- Utility Functions (Existing) ---
-    function showMessage(message, type = 'info', duration = 3000) { /* ... existing code ... */ }
-    function customPrompt(message, defaultValue = "") { /* ... existing code ... */ }
-    function customConfirm(message) { /* ... existing code ... */ }
-    
-    // --- Firestore Name List Functions ---
-    function showNameModalLoading(isLoading) { /* ... existing code ... */ }
-    async function saveNameListToFirestore(session, namesArray) { /* ... existing code ... */ }
-    async function addNameToCurrentSessionInFirestore(name) { /* ... existing code ... */ }
-    async function deleteNameFromCurrentSessionInFirestore(nameToDelete) { /* ... existing code ... */ }
-    function listenToNameList(sessionToListen) { /* ... existing code ... */ }
-
-    // --- Firestore Draft Functions ---
-    function showDraftListLoading(isLoading) {
-        if (loadingIndicatorDraftListElement) {
-            loadingIndicatorDraftListElement.style.display = isLoading ? 'flex' : 'none';
-        }
+    function showMessage(message, type = 'info', duration = 3000) {
+        if (!customMessageBox) return;
+        customMessageBox.textContent = message;
+        customMessageBox.className = `custom-message-box ${type}`;
+        customMessageBox.style.display = 'block';
+        setTimeout(() => { if (customMessageBox) customMessageBox.style.display = 'none'; }, duration);
     }
-
-    async function saveDraftToFirestore() {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot save draft.", "error"); return;
-        }
-        if (tablesContainer.children.length === 0) {
-            showMessage('No schedule data to save.', 'error'); return;
-        }
-        
-        const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`);
-        if (!draftName || draftName.trim() === "") {
-            showMessage('Draft name cannot be empty. Save cancelled.', 'info'); return;
-        }
-
-        showDraftListLoading(true); // Use general loader or create specific one if needed
-        const allTablesData = tablesContainer.innerHTML;
-        const allTableMeta = {};
-        tablesContainer.querySelectorAll('table').forEach(table => {
-            allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
+    function customPrompt(message, defaultValue = "") {
+        return prompt(message, defaultValue);
+    }
+    function customConfirm(message) {
+        return new Promise((resolve) => {
+            const confirmModalId = 'customConfirmModal';
+            let existingModal = document.getElementById(confirmModalId);
+            if (existingModal) existingModal.remove();
+            const modal = document.createElement('div');
+            modal.id = confirmModalId;
+            modal.style.cssText = `display: flex; position: fixed; z-index: 2001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;`;
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `background-color: #fff; padding: 25px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 300px; max-width: 90%;`;
+            const messageP = document.createElement('p');
+            messageP.textContent = message;
+            messageP.style.marginBottom = '20px'; messageP.style.fontSize = '1.1em';
+            const yesButton = document.createElement('button');
+            yesButton.textContent = 'Yes';
+            yesButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #28a745; color: white; border: none; font-size: 1em;`;
+            const noButton = document.createElement('button');
+            noButton.textContent = 'No';
+            noButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #dc3545; color: white; border: none; font-size: 1em;`;
+            const closeModal = (value) => { modal.remove(); resolve(value); };
+            yesButton.onclick = () => closeModal(true);
+            noButton.onclick = () => closeModal(false);
+            modalContent.appendChild(messageP); modalContent.appendChild(yesButton); modalContent.appendChild(noButton);
+            modal.appendChild(modalContent); document.body.appendChild(modal);
         });
+    }
 
-        const draftData = {
-            html: allTablesData,
-            meta: allTableMeta,
-            activeTableId: activeTableId,
-            timestamp: serverTimestamp() // For ordering by date
-        };
-
-        const draftDocRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts", draftName.trim());
-        try {
-            await setDoc(draftDocRef, draftData);
-            showMessage(`Draft "${draftName.trim()}" saved to Firestore!`, 'success');
-            if (draftListContainerElement.style.display === 'block') { // If list is visible, refresh it
-                await renderDraftListFromFirestore();
-            }
-        } catch (error) {
-            console.error("Error saving draft to Firestore:", error);
-            showMessage(`Failed to save draft. Error: ${error.message}`, "error");
-        } finally {
-            showDraftListLoading(false);
+    // --- Firestore Name List Functions ---
+    function showNameModalLoading(isLoading) {
+        if (loadingIndicatorModalElement) {
+            loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
         }
     }
 
-    async function renderDraftListFromFirestore() {
+    async function saveNameListToFirestore(session, namesArray) {
         if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            draftListContainerElement.innerHTML = '<p>Firebase not ready. Cannot load drafts.</p>'; return;
+            showMessage("Firebase not ready. Cannot save name list.", "error");
+            return;
         }
-        showDraftListLoading(true);
-        draftListContainerElement.innerHTML = ''; // Clear previous list (keep loader if it's separate)
-        
-        const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
-        // Order by timestamp, descending (newest first)
-        const q = query(draftsCollectionRef, orderBy("timestamp", "desc"));
+        showNameModalLoading(true);
+        const uniqueSortedNames = [...new Set(namesArray)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
+        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", session);
         try {
-            const querySnapshot = await getDocs(q);
-            if (querySnapshot.empty) {
-                draftListContainerElement.innerHTML = '<p>No drafts saved in Firestore yet.</p>';
-            } else {
-                querySnapshot.forEach((docSnap) => {
-                    const draftName = docSnap.id;
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'draft-item-firestore'; // Use new class for styling if needed
-                    itemDiv.innerHTML = `<span data-draft-name="${draftName}" title="Load draft: ${draftName}">${draftName}</span><button data-draft-delete="${draftName}" title="Delete draft '${draftName}' from Firestore">Delete</button>`;
-                    draftListContainerElement.appendChild(itemDiv);
-                });
-            }
+            await setDoc(docRef, { names: uniqueSortedNames });
+            showMessage(`Name list uploaded to ${session} session.`, "success");
         } catch (error) {
-            console.error("Error fetching drafts from Firestore:", error);
-            draftListContainerElement.innerHTML = '<p>Error loading drafts. Check console.</p>';
-            showMessage(`Failed to load drafts. Error: ${error.message}`, "error");
+            console.error(`Error saving list to ${session}:`, error);
+            showMessage(`Failed to save list to ${session}. Error: ${error.message}`, "error");
         } finally {
-            showDraftListLoading(false);
+            showNameModalLoading(false);
         }
     }
 
-    async function loadSelectedDraftFromFirestore(draftName) {
+    async function addNameToCurrentSessionInFirestore(name) {
         if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot load draft.", "error"); return;
+            showMessage("Firebase not ready. Cannot add name.", "error");
+            return;
         }
-        showDraftListLoading(true);
-        const draftDocRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts", draftName);
+        if (!name || name.trim() === "") {
+            showMessage("Name cannot be empty.", "info");
+            return;
+        }
+        showNameModalLoading(true);
+        const sessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+        if (sessionNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
+            showMessage(`Name "${name}" already exists in ${currentNameListSession} session.`, "info");
+            showNameModalLoading(false);
+            return;
+        }
+
+        const updatedNames = [...sessionNames, name].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
         try {
-            const docSnap = await getDoc(draftDocRef);
-            if (docSnap.exists()) {
-                const draftData = docSnap.data();
-                tablesContainer.innerHTML = draftData.html;
-                const tableMeta = draftData.meta || {};
-                tableTabs.innerHTML = '';
+            await setDoc(docRef, { names: updatedNames });
+            if(newNameInput) newNameInput.value = ''; newNameInput.focus();
+        } catch (error) {
+            console.error(`Error adding name to ${currentNameListSession}:`, error);
+            showMessage(`Failed to add name. Error: ${error.message}`, "error");
+        } finally {
+            showNameModalLoading(false);
+        }
+    }
+
+    async function deleteNameFromCurrentSessionInFirestore(nameToDelete) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot delete name.", "error");
+            return;
+        }
+        if (await customConfirm(`Delete "${nameToDelete}" from ${currentNameListSession} session? This also removes it from all schedule tables.`)) {
+            showNameModalLoading(true);
+            const currentNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+            const updatedNames = currentNames.filter(name => name !== nameToDelete);
+
+            const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
+            try {
+                await setDoc(docRef, { names: updatedNames });
                 tablesContainer.querySelectorAll('table').forEach(table => {
-                    const id = table.id;
-                    const metaInfo = tableMeta[id] || {};
-                    const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
-                    table.dataset.tableName = name;
-                    addTabButton(id, name);
-                    table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
-                });
-                activeTableId = draftData.activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1';
-
-                if (document.getElementById(activeTableId)) {
-                    switchTable(activeTableId);
-                } else if (tablesContainer.querySelector('table')) {
-                    switchTable(tablesContainer.querySelector('table').id);
-                } else {
-                    addNewTable(true); // Should ideally not happen if draft was valid
-                }
-                showMessage(`Draft "${draftName}" loaded from Firestore!`, 'success');
-                draftListContainerElement.style.display = 'none';
-                rebuildAndRenderSummary();
-                updateAllMergeOverlays();
-            } else {
-                showMessage(`Draft "${draftName}" not found in Firestore.`, 'error');
-            }
-        } catch (error) {
-            console.error("Error loading draft from Firestore:", error);
-            showMessage(`Failed to load draft. Error: ${error.message}`, "error");
-        } finally {
-            showDraftListLoading(false);
-        }
-    }
-
-    async function deleteDraftFromFirestore(draftName) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot delete draft.", "error"); return;
-        }
-        if (await customConfirm(`Are you sure you want to delete draft "${draftName}" from Firestore? This action cannot be undone.`)) {
-            showDraftListLoading(true);
-            const draftDocRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts", draftName);
-            try {
-                await deleteDoc(draftDocRef);
-                showMessage(`Draft "${draftName}" deleted from Firestore.`, 'success');
-                await renderDraftListFromFirestore(); // Refresh the list
-            } catch (error) {
-                console.error("Error deleting draft from Firestore:", error);
-                showMessage(`Failed to delete draft. Error: ${error.message}`, "error");
-            } finally {
-                showDraftListLoading(false);
-            }
-        }
-    }
-    
-    async function exportAllDraftsFromFirestore() {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot export drafts.", "error"); return;
-        }
-        showDraftListLoading(true); // Or a general page loader
-        const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
-        const draftsToExport = {};
-        try {
-            const querySnapshot = await getDocs(draftsCollectionRef);
-            if (querySnapshot.empty) {
-                showMessage('No drafts in Firestore to export.', 'info');
-                return;
-            }
-            querySnapshot.forEach((docSnap) => {
-                draftsToExport[docSnap.id] = docSnap.data(); // Store data by draft name (doc ID)
-            });
-
-            const draftsJson = JSON.stringify(draftsToExport, (key, value) => {
-                // Convert Firestore Timestamps to ISO strings for JSON compatibility
-                if (value && typeof value.toDate === 'function') {
-                    return value.toDate().toISOString();
-                }
-                return value;
-            }, 2); // Pretty print JSON
-
-            const blob = new Blob([draftsJson], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'firestore_schedule_drafts.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showMessage('All drafts from Firestore exported successfully!', 'success');
-
-        } catch (error) {
-            console.error("Error exporting drafts from Firestore:", error);
-            showMessage(`Failed to export drafts. Error: ${error.message}`, "error");
-        } finally {
-            showDraftListLoading(false);
-        }
-    }
-
-    async function importDraftsToFirestore(event) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot import drafts.", "error"); return;
-        }
-        const file = event.target.files[0];
-        if (!file) { showMessage('No file selected for import.', 'info'); return; }
-        if (file.type !== 'application/json') {
-            showMessage('Invalid file type. Please select a .json file.', 'error');
-            event.target.value = ''; return;
-        }
-        showDraftListLoading(true); // Or general loader
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const importedDraftsText = e.target.result;
-                const importedDraftsData = JSON.parse(importedDraftsText);
-
-                if (typeof importedDraftsData !== 'object' || importedDraftsData === null) {
-                    showMessage('Invalid draft file format.', 'error'); return;
-                }
-
-                let importedCount = 0; let overwrittenCount = 0; let skippedCount = 0;
-                const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
-
-                for (const draftName in importedDraftsData) {
-                    if (Object.prototype.hasOwnProperty.call(importedDraftsData, draftName)) {
-                        const draftData = importedDraftsData[draftName];
-                        // Basic validation of draft data structure
-                        if (draftData && typeof draftData.html === 'string' && typeof draftData.meta === 'object' && typeof draftData.activeTableId === 'string') {
-                            
-                            const draftDocRef = doc(draftsCollectionRef, draftName);
-                            const docSnap = await getDoc(draftDocRef);
-
-                            let dataToSave = { ...draftData };
-                            // If timestamp was stringified, try to convert back or use serverTimestamp
-                            if (typeof dataToSave.timestamp === 'string') {
-                                // Attempt to parse, otherwise fallback to serverTimestamp
-                                const parsedDate = new Date(dataToSave.timestamp);
-                                if (!isNaN(parsedDate)) {
-                                     // Firestore expects its own Timestamp objects, not JS Dates directly for setDoc
-                                     // For simplicity, we'll let serverTimestamp handle new/overwritten ones.
-                                     // If preserving exact imported timestamp is critical, convert JS Date to Firestore Timestamp.
-                                     // For now, let's prioritize serverTimestamp on new save.
-                                     dataToSave.timestamp = serverTimestamp();
-                                } else {
-                                    dataToSave.timestamp = serverTimestamp();
-                                }
-                            } else {
-                                dataToSave.timestamp = serverTimestamp(); // Ensure timestamp field exists
-                            }
-
-
-                            if (docSnap.exists()) {
-                                if (await customConfirm(`Draft "${draftName}" already exists in Firestore. Overwrite?`)) {
-                                    await setDoc(draftDocRef, dataToSave);
-                                    overwrittenCount++;
-                                } else {
-                                    skippedCount++;
-                                }
-                            } else {
-                                await setDoc(draftDocRef, dataToSave);
-                                importedCount++;
-                            }
-                        } else {
-                            console.warn(`Skipping invalid draft data for "${draftName}" during import.`);
-                            skippedCount++;
+                    table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
+                        if (cell.textContent.trim() === nameToDelete) {
+                            cell.textContent = '';
                         }
-                    }
-                }
-                showMessage(`Firestore drafts import: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
-                if (draftListContainerElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0) {
-                    await renderDraftListFromFirestore(); // Refresh list
-                }
+                    });
+                });
+                rebuildAndRenderSummary(); 
+                if (selectedNameFromList === nameToDelete) clearNameSelection();
+
             } catch (error) {
-                console.error("Error importing drafts to Firestore:", error);
-                showMessage(`Error processing draft file for Firestore. Error: ${error.message}`, 'error', 5000);
+                console.error(`Error deleting name from ${currentNameListSession}:`, error);
+                showMessage(`Failed to delete name. Error: ${error.message}`, "error");
             } finally {
-                event.target.value = ''; // Reset file input
-                showDraftListLoading(false);
+                showNameModalLoading(false);
             }
-        };
-        reader.onerror = () => {
-            showMessage('Failed to read the draft file.', 'error');
-            event.target.value = '';
-            showDraftListLoading(false);
-        };
-        reader.readAsText(file);
+        }
+    }
+
+    function listenToNameList(sessionToListen) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            console.warn(`Firestore not ready for session ${sessionToListen}, listener not attached.`);
+            return () => {}; 
+        }
+        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", sessionToListen);
+        return onSnapshot(docRef, (docSnap) => {
+            showNameModalLoading(true);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (sessionToListen === 'pagi') {
+                    namesPagi = data.names || [];
+                } else {
+                    namesPetang = data.names || [];
+                }
+            } else { 
+                if (sessionToListen === 'pagi') namesPagi = [];
+                else namesPetang = [];
+                console.log(`No names document found for ${sessionToListen}, initialized empty list.`);
+            }
+            if (sessionToListen === currentNameListSession) { 
+                renderNameListFromFirestore(searchNameInputElement ? searchNameInputElement.value : '');
+            }
+            rebuildAndRenderSummary(); 
+            showNameModalLoading(false);
+        }, (error) => {
+            console.error(`Error listening to ${sessionToListen} names:`, error);
+            showMessage(`Error fetching ${sessionToListen} names. Check console.`, "error");
+            showNameModalLoading(false);
+        });
     }
 
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Cache DOM Elements
         scheduleTitleElement = document.getElementById('scheduleTitle');
         tablesContainer = document.getElementById('tablesContainer');
         tableTabs = document.getElementById('tableTabs');
@@ -704,7 +570,7 @@
         nameModalHeader = document.getElementById('nameModalHeader');
         nameListContainer = document.getElementById('nameList');
         newNameInput = document.getElementById('newNameInput');
-        draftListContainerElement = document.getElementById('draftListContainer'); // Updated ID
+        draftListElement = document.getElementById('draftList');
         summaryTableElement = document.getElementById('summaryTable');
         customMessageBox = document.getElementById('customMessageBox');
         fileInputElement = document.getElementById('fileInput');
@@ -718,10 +584,9 @@
         namePetangTabElement = document.getElementById('namePetangTab');
         loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
         nameModalTitleElement = document.getElementById('nameModalTitle');
-        loadingIndicatorDraftListElement = document.getElementById('loadingIndicatorDraftList');
 
 
-        if (!tablesContainer || !tableTabs || !nameModal || !nameModalContent || !nameModalHeader || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement || !nameListImportFileInputElement || !searchNameInputElement || !draftImportFileInputElement || !userIdDisplayElement || !namePagiTabElement || !namePetangTabElement || !loadingIndicatorModalElement || !nameModalTitleElement || !draftListContainerElement || !loadingIndicatorDraftListElement) {
+        if (!tablesContainer || !tableTabs || !nameModal || !nameModalContent || !nameModalHeader || !summaryTableElement || !customMessageBox || !scheduleTitleElement || !fileInputElement || !directCopyFullHtmlButtonElement || !closeNameModalButtonStandardElement || !nameListImportFileInputElement || !searchNameInputElement || !draftImportFileInputElement || !userIdDisplayElement || !namePagiTabElement || !namePetangTabElement || !loadingIndicatorModalElement || !nameModalTitleElement) {
             console.error("Critical DOM elements missing. Application might not function correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements. Please ensure the HTML structure is correct.</p>";
             return;
@@ -744,10 +609,6 @@
                     if (nameModal.style.display === 'flex') {
                         renderNameListFromFirestore(searchNameInputElement.value);
                     }
-                    // If draft list is already visible on load (e.g. due to user action before full load)
-                    if (draftListContainerElement.style.display === 'block') {
-                        await renderDraftListFromFirestore();
-                    }
 
                 } else {
                     fbIsAuthReady = false;
@@ -762,7 +623,7 @@
                         }
                     } catch (error) {
                         console.error("Error during Firebase sign-in:", error);
-                        showMessage("Firebase Authentication failed. Core features may not work.", "error", 5000);
+                        showMessage("Firebase Authentication failed. Name list features may not work.", "error", 5000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
                     }
                 }
@@ -779,8 +640,38 @@
         handleNameListSessionSwitch('pagi'); 
     });
 
-    function setupInitialTableState() { /* ... existing code ... */ }
-    function loadScheduleTitle() { /* ... existing code ... */ }
+    function setupInitialTableState() {
+        const existingTables = tablesContainer.querySelectorAll('table');
+        if (existingTables.length > 0) {
+            tableTabs.innerHTML = '';
+            existingTables.forEach((table, index) => {
+                const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`;
+                table.id = tableId;
+                const tableName = table.dataset.tableName || `Table ${index + 1}`;
+                table.dataset.tableName = tableName;
+                addTabButton(tableId, tableName);
+                if (index === 0) activeTableId = tableId;
+            });
+        } else {
+            addNewTable(true);
+        }
+
+        if (activeTableId && document.getElementById(activeTableId)) {
+            switchTable(activeTableId);
+        } else if (tablesContainer.querySelector('table')) {
+            switchTable(tablesContainer.querySelector('table').id);
+        }
+    }
+    function loadScheduleTitle() {
+        const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
+        if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
+        if (scheduleTitleElement) {
+            scheduleTitleElement.addEventListener('blur', () => {
+                localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent);
+                showMessage('Schedule title saved!', 'success');
+            });
+        }
+    }
     function initializeEventListeners() {
         directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
@@ -793,21 +684,11 @@
         document.getElementById('excelBtnTrigger').addEventListener('click', exportActiveTableToExcel);
         document.getElementById('importExcelBtn').addEventListener('click', () => fileInputElement.click());
         fileInputElement.addEventListener('change', handleExcelFileImport);
-        
-        // Draft buttons now point to Firestore functions
-        document.getElementById('saveDraftBtn').addEventListener('click', saveDraftToFirestore);
-        document.getElementById('loadDraftBtn').addEventListener('click', async () => { // Modified for Firestore
-            const isVisible = draftListContainerElement.style.display === 'block';
-            draftListContainerElement.style.display = isVisible ? 'none' : 'block';
-            if (!isVisible) {
-                await renderDraftListFromFirestore();
-            }
-        });
-        document.getElementById('exportDraftsBtn').addEventListener('click', exportAllDraftsFromFirestore);
+        document.getElementById('saveDraftBtn').addEventListener('click', promptAndSaveDraft);
+        document.getElementById('loadDraftBtn').addEventListener('click', toggleDraftListVisibility);
+        document.getElementById('exportDraftsBtn').addEventListener('click', exportAllDrafts);
         document.getElementById('importDraftsBtn').addEventListener('click', () => draftImportFileInputElement.click());
-        draftImportFileInputElement.addEventListener('change', importDraftsToFirestore);
-
-
+        draftImportFileInputElement.addEventListener('change', handleDraftsFileImport);
         document.getElementById('clearActiveTableContentBtn').addEventListener('click', confirmAndClearActiveTableContent);
         document.getElementById('selectBtn').addEventListener('click', toggleCellSelectionMode);
         document.getElementById('mergeBtn').addEventListener('click', mergeSelectedTableCells);
@@ -828,16 +709,21 @@
         namePagiTabElement.addEventListener('click', () => handleNameListSessionSwitch('pagi'));
         namePetangTabElement.addEventListener('click', () => handleNameListSessionSwitch('petang'));
 
-        draftListContainerElement.addEventListener('click', async (e) => { // Event listener for Firestore draft list
-            const targetSpan = e.target.closest('.draft-item-firestore span[data-draft-name]');
-            const targetButton = e.target.closest('.draft-item-firestore button[data-draft-delete]');
-            if (targetSpan) {
-                await loadSelectedDraftFromFirestore(targetSpan.dataset.draftName);
-            } else if (targetButton) {
-                await deleteDraftFromFirestore(targetButton.dataset.draftDelete);
+        draftListElement.addEventListener('click', async (e) => {
+            const targetSpan = e.target.closest('.draft-item span');
+            const targetButton = e.target.closest('.draft-item button');
+            if (targetSpan) loadSelectedDraft(targetSpan.textContent);
+            else if (targetButton) await confirmAndDeleteDraft(targetButton.parentElement.querySelector('span').textContent);
+        });
+        nameListContainer.addEventListener('click', async (e) => {
+            const nameItemSpan = e.target.closest('.name-item span[data-name]');
+            const deleteButton = e.target.closest('.name-item button[data-name-delete]');
+            if (nameItemSpan) {
+                selectNameForCellInsertion(nameItemSpan.dataset.name);
+            } else if (deleteButton) {
+                await deleteNameFromCurrentSessionInFirestore(deleteButton.dataset.nameDelete);
             }
         });
-        nameListContainer.addEventListener('click', async (e) => { /* ... existing code ... */ });
 
         document.getElementById('addRowAboveBtn').addEventListener('click', addRowAboveToActiveTable);
         document.getElementById('addRowBelowBtn').addEventListener('click', addRowBelowToActiveTable);
@@ -847,79 +733,625 @@
         document.getElementById('deleteColBtn').addEventListener('click', deleteClickedColumnFromActiveTable);
 
         tablesContainer.addEventListener('click', handleTableCellClick);
-        tablesContainer.addEventListener('blur', (e) => { /* ... existing code ... */ }, true);
-        tablesContainer.addEventListener('input', (e) => { /* ... existing code ... */ });
+        tablesContainer.addEventListener('blur', (e) => {
+            if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                setTimeout(rebuildAndRenderSummary, 0);
+            }
+        }, true);
+        tablesContainer.addEventListener('input', (e) => {
+            if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
+                setTimeout(rebuildAndRenderSummary, 300);
+            }
+        });
         window.addEventListener('resize', updateAllMergeOverlays);
     }
 
-    // --- Draggable Modal Functionality (Existing) ---
-    function startDragModal(e) { /* ... existing code ... */ }
-    function dragModal(e) { /* ... existing code ... */ }
-    function stopDragModal() { /* ... existing code ... */ }
+    function startDragModal(e) {
+        if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; }
+        isDraggingModal = true; nameModalContent.classList.add('dragging');
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const rect = nameModalContent.getBoundingClientRect();
+        nameModalContent.style.position = 'fixed'; nameModalContent.style.left = `${rect.left}px`;
+        nameModalContent.style.top = `${rect.top}px`; nameModalContent.style.transform = 'none';
+        modalDragOffsetX = clientX - nameModalContent.offsetLeft; modalDragOffsetY = clientY - nameModalContent.offsetTop;
+        if (e.type === 'touchstart') e.preventDefault();
+    }
+    function dragModal(e) {
+        if (!isDraggingModal) return;
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        let newLeft = clientX - modalDragOffsetX; let newTop = clientY - modalDragOffsetY;
+        const modalRect = nameModalContent.getBoundingClientRect(); const viewportWidth = window.innerWidth; const viewportHeight = window.innerHeight;
+        if (newLeft < 0) newLeft = 0; if (newTop < 0) newTop = 0;
+        if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
+        if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
+        nameModalContent.style.left = `${newLeft}px`; nameModalContent.style.top = `${newTop}px`;
+        if (e.type === 'touchmove') e.preventDefault();
+    }
+    function stopDragModal() { if (isDraggingModal) { isDraggingModal = false; nameModalContent.classList.remove('dragging'); } }
 
-    // --- Direct Copy Full HTML Functionality (Existing) ---
-    async function attemptDirectCopyToClipboard() { /* ... existing code ... */ }
+    async function attemptDirectCopyToClipboard() {
+        const fullHtml = document.documentElement.outerHTML;
+        try {
+            await navigator.clipboard.writeText(fullHtml);
+            showMessage('Full HTML copied to clipboard!', 'success');
+        } catch (err) {
+            console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
+            const textarea = document.createElement('textarea');
+            textarea.value = fullHtml; textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
+            document.body.appendChild(textarea); textarea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) showMessage('Full HTML copied! (using fallback method)', 'success');
+                else showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
+            } catch (execErr) {
+                console.error('execCommand copy failed: ', execErr);
+                showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
+            }
+            document.body.removeChild(textarea);
+        }
+    }
 
-    // --- Draft Management (MODIFIED FOR FIRESTORE) ---
-    // promptAndSaveDraft -> saveDraftToFirestore
-    // toggleDraftListVisibility -> Modified in initializeEventListeners to call renderDraftListFromFirestore
-    // renderDraftList -> renderDraftListFromFirestore
-    // loadSelectedDraft -> loadSelectedDraftFromFirestore
-    // confirmAndDeleteDraft -> deleteDraftFromFirestore
-    // exportAllDrafts -> exportAllDraftsFromFirestore
-    // handleDraftsFileImport -> importDraftsToFirestore
-    
-    async function confirmAndClearActiveTableContent() { /* ... existing code ... */ }
-    
-    // --- Table Management (Existing, Unchanged) ---
-    function addTabButton(id, label) { /* ... existing code ... */ }
-    function switchTable(id) { /* ... existing code ... */ }
-    function addNewTable(isInitial = false) { /* ... existing code ... */ }
-    async function promptAndRenameActiveTable() { /* ... existing code ... */ }
-    async function confirmAndDeleteActiveTable() { /* ... existing code ... */ }
+    function promptAndSaveDraft() {
+        if (tablesContainer.children.length === 0) { showMessage('No schedule data to save.', 'error'); return; }
+        const allTablesData = tablesContainer.innerHTML; const allTableMeta = {};
+        tablesContainer.querySelectorAll('table').forEach(table => { allTableMeta[table.id] = { name: table.dataset.tableName || table.id }; });
+        const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`);
+        if (draftName) {
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+            drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId };
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+            showMessage(`Draft "${draftName}" saved!`, 'success');
+            if (draftListElement.style.display === 'block') renderDraftList();
+        }
+    }
+    function toggleDraftListVisibility() {
+        const isVisible = draftListElement.style.display === 'block';
+        draftListElement.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) renderDraftList();
+    }
+    function renderDraftList() {
+        draftListElement.innerHTML = ''; const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+        if (Object.keys(drafts).length === 0) { draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return; }
+        for (const name in drafts) {
+            const itemDiv = document.createElement('div'); itemDiv.className = 'draft-item';
+            itemDiv.innerHTML = `<span>${name}</span><button title="Delete draft '${name}'">Delete</button>`;
+            draftListElement.appendChild(itemDiv);
+        }
+    }
+    function loadSelectedDraft(draftName) {
+        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+        if (drafts[draftName]) {
+            tablesContainer.innerHTML = drafts[draftName].html; const tableMeta = drafts[draftName].meta || {};
+            tableTabs.innerHTML = '';
+            tablesContainer.querySelectorAll('table').forEach(table => {
+                const id = table.id; const metaInfo = tableMeta[id] || {};
+                const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
+                table.dataset.tableName = name; addTabButton(id, name);
+                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
+            });
+            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
+            if (document.getElementById(activeTableId)) { switchTable(activeTableId); }
+            else if (tablesContainer.querySelector('table')) { switchTable(tablesContainer.querySelector('table').id); }
+            else { addNewTable(true); }
+            showMessage(`Draft "${draftName}" loaded!`, 'success'); draftListElement.style.display = 'none';
+            rebuildAndRenderSummary(); updateAllMergeOverlays(); 
+        } else { showMessage(`Draft "${draftName}" not found.`, 'error'); }
+    }
+    async function confirmAndDeleteDraft(draftName) {
+        if (await customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
+            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}'); delete drafts[draftName];
+            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+            showMessage(`Saved draft "${draftName}" deleted.`, 'success'); renderDraftList();
+        }
+    }
+    async function confirmAndClearActiveTableContent() {
+        const activeTableElement = document.getElementById(activeTableId);
+        if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return; }
+        const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
+        if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
+            activeTableElement.querySelectorAll('.merged-cell-container').forEach(containerCell => {
+                const mergeId = containerCell.dataset.mergeId;
+                if(mergeId){
+                    const cellsInGroup = activeTableElement.querySelectorAll(`[data-merge-id="${mergeId}"]`);
+                     cellsInGroup.forEach(c => {
+                        c.removeAttribute('data-merge-id'); c.classList.remove('merged-cell-container', 'subsumed-cell');
+                        const overlay = c.querySelector('.merged-cell-overlay');
+                        if (overlay) c.textContent = overlay.textContent; else c.innerHTML = '';
+                    });
+                }
+            });
+            activeTableElement.querySelectorAll('thead th, tbody td, tbody th').forEach(cell => {
+                if (cell.tagName === 'TH' && cell.parentElement.tagName === 'THEAD' && cell.cellIndex === 0) {}
+                else { cell.innerHTML = ''; }
+                cell.classList.remove('selected');
+            });
+            selectedCells = []; rebuildAndRenderSummary(); updateAllMergeOverlays();
+            showMessage(`Content of "${tableName}" cleared.`, 'success');
+        }
+    }
+    function exportAllDrafts() {
+        const drafts = localStorage.getItem(DRAFTS_KEY);
+        if (!drafts || drafts === '{}') { showMessage('No drafts to export.', 'info'); return; }
+        try {
+            const blob = new Blob([drafts], { type: 'application/json' }); const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'all_schedule_drafts.json';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            showMessage('All drafts exported successfully!', 'success');
+        } catch (error) { console.error("Error exporting drafts:", error); showMessage('Failed to export drafts.', 'error'); }
+    }
+    async function handleDraftsFileImport(event) {
+        const file = event.target.files[0]; if (!file) { showMessage('No file selected for import.', 'info'); return; }
+        if (file.type !== 'application/json') { showMessage('Invalid file type. Please select a .json file.', 'error'); event.target.value = ''; return; }
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importedDraftsText = e.target.result; const importedDraftsData = JSON.parse(importedDraftsText);
+                if (typeof importedDraftsData !== 'object' || importedDraftsData === null) { showMessage('Invalid draft file format.', 'error'); return; }
+                let localDrafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
+                let importedCount = 0, overwrittenCount = 0, skippedCount = 0;
+                for (const draftName in importedDraftsData) {
+                    if (Object.prototype.hasOwnProperty.call(importedDraftsData, draftName)) {
+                        const draftData = importedDraftsData[draftName];
+                        if (draftData && typeof draftData.html === 'string' && typeof draftData.meta === 'object' && typeof draftData.active === 'string') {
+                            if (localDrafts[draftName]) {
+                                if (await customConfirm(`Draft "${draftName}" already exists. Overwrite?`)) { localDrafts[draftName] = draftData; overwrittenCount++; }
+                                else { skippedCount++; }
+                            } else { localDrafts[draftName] = draftData; importedCount++; }
+                        } else { console.warn(`Skipping invalid draft data for "${draftName}" during import.`); skippedCount++; }
+                    }
+                }
+                localStorage.setItem(DRAFTS_KEY, JSON.stringify(localDrafts));
+                showMessage(`Drafts import complete: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
+                if (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0) { renderDraftList(); }
+            } catch (error) { console.error("Error importing drafts:", error); showMessage('Error processing draft file. Ensure it is a valid JSON export from this tool.', 'error', 5000); }
+            finally { event.target.value = ''; }
+        };
+        reader.onerror = () => { showMessage('Failed to read the draft file.', 'error'); event.target.value = ''; };
+        reader.readAsText(file);
+    }
 
-    // --- Row/Column Operations (Existing, Unchanged) ---
-    function addRowToTable(tableBody, rowIndex, numCols) { /* ... existing code ... */ }
-    function addRowAboveToActiveTable() { /* ... existing code ... */ }
-    function addRowBelowToActiveTable() { /* ... existing code ... */ }
-    function addColumnToTable(table, colIndex) { /* ... existing code ... */ }
-    function addColumnLeftToActiveTable() { /* ... existing code ... */ }
-    function addColumnRightToActiveTable() { /* ... existing code ... */ }
-    async function deleteClickedRowFromActiveTable() { /* ... existing code ... */ }
-    async function deleteClickedColumnFromActiveTable() { /* ... existing code ... */ }
+    function addTabButton(id, label) {
+        const button = document.createElement('button'); button.textContent = label; button.dataset.tableId = id;
+        button.title = `Switch to table: ${label}`; button.onclick = () => switchTable(id);
+        tableTabs.appendChild(button); return button;
+    }
+    function switchTable(id) {
+        const targetTable = document.getElementById(id);
+        if (!targetTable) {
+            const firstTableInDOM = tablesContainer.querySelector('table');
+            if (firstTableInDOM) { id = firstTableInDOM.id; }
+            else { showMessage('Cannot switch: Target table not found and no other tables exist.', 'error'); if (tablesContainer.children.length === 0) addNewTable(true); return; }
+        }
+        activeTableId = id; tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
+        tableTabs.querySelectorAll('button').forEach(b => { b.classList.toggle('active', b.dataset.tableId === id); });
+        deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+    function addNewTable(isInitial = false) {
+        tableCount++; const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
+        const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
+        if (!label && !isInitial) return;
+        const newTable = document.createElement('table'); const newTableId = `tbl_${Date.now()}_${tableCount}`;
+        newTable.id = newTableId; newTable.dataset.tableName = label || defaultTableName;
+        const thead = newTable.createTHead(); const headerRow = thead.insertRow();
+        const defaultHeaders = ['Class/Time', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00'];
+        defaultHeaders.forEach(headerText => { const th = document.createElement('th'); th.contentEditable = 'true'; th.textContent = headerText; headerRow.appendChild(th); });
+        const tbody = newTable.createTBody();
+        for (let r = 0; r < 2; r++) {
+            const dataRow = tbody.insertRow();
+            for (let c = 0; c < headerRow.cells.length; c++) {
+                const td = dataRow.insertCell(); td.contentEditable = 'true';
+                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`;
+            }
+        }
+        tablesContainer.appendChild(newTable); addTabButton(newTableId, label || defaultTableName); switchTable(newTableId);
+        if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
+    }
+    async function promptAndRenameActiveTable() {
+        const currentTab = tableTabs.querySelector('button.active');
+        if (!currentTab) { showMessage('No active table to rename. Please select a table.', 'error'); return; }
+        let tableIdToRename = currentTab.dataset.tableId;
+        if (!tableIdToRename) {
+            const onclickAttr = currentTab.getAttribute('onclick'); const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
+            if (match && match[1]) tableIdToRename = match[1]; else { showMessage('Could not identify table ID for renaming.', 'error'); return; }
+        }
+        const tableElement = document.getElementById(tableIdToRename);
+        if (!tableElement) { showMessage(`Error: Table element for ID ${tableIdToRename} not found.`, 'error'); return; }
+        const oldName = tableElement.dataset.tableName || currentTab.textContent; const newName = customPrompt('Enter new table name:', oldName);
+        if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
+            const trimmedNewName = newName.trim(); currentTab.textContent = trimmedNewName;
+            currentTab.title = `Switch to table: ${trimmedNewName}`; tableElement.dataset.tableName = trimmedNewName;
+            showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
+        } else if (newName && newName.trim() === oldName) { showMessage('New name is the same as the old name. No changes made.', 'info'); }
+        else if (newName === null) { showMessage('Rename cancelled.', 'info'); }
+        else { showMessage('Invalid new name. Please enter a valid name.', 'error'); }
+    }
+    async function confirmAndDeleteActiveTable() {
+        if (tablesContainer.children.length <= 1) { showMessage('Cannot delete the last table.', 'error'); return; }
+        const activeTab = tableTabs.querySelector('button.active'); const tableIdToDelete = activeTab ? activeTab.dataset.tableId : null;
+        const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
+        const tableName = tableElement ? tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
+        if (await customConfirm(`Delete table "${tableName}"? This action cannot be undone.`)) {
+            if (tableElement) tableElement.remove(); else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
+            activeTab?.remove(); const firstRemainingTab = tableTabs.querySelector('button');
+            if (firstRemainingTab) {
+                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1];
+                switchTable(nextActiveId);
+            } else { activeTableId = null; addNewTable(true); }
+            showMessage(`Table "${tableName}" deleted.`, 'success');
+        }
+    }
 
-    // --- Cell Selection, Merging, Unmerging (Existing, Unchanged) ---
-    function toggleCellSelectionMode() { /* ... existing code ... */ }
-    function handleTableCellClick(event) { /* ... existing code ... */ }
-    function deselectAllTableCells() { /* ... existing code ... */ }
-    function mergeSelectedTableCells() { /* ... existing code ... */ }
-    function unmergeActiveCellIfMerged() { /* ... existing code ... */ }
-    function updateAllMergeOverlays() { /* ... existing code ... */ }
+    function addRowToTable(tableBody, rowIndex, numCols) { const row = tableBody.insertRow(rowIndex); for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true'; } }
+    function addRowAboveToActiveTable() {
+        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
+        const numCols = table.rows[0].cells.length; let insertAtIndex = 0;
+        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) { insertAtIndex = lastClickedCell.parentElement.rowIndex; }
+        addRowToTable(table.tBodies[0], insertAtIndex, numCols); rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+    function addRowBelowToActiveTable() {
+        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
+        const numCols = table.rows[0].cells.length; let insertAtIndex = -1;
+        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) { insertAtIndex = lastClickedCell.parentElement.rowIndex + 1; }
+        addRowToTable(table.tBodies[0], insertAtIndex, numCols); rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+    function addColumnToTable(table, colIndex) { for (const row of table.rows) { const isHeaderRow = row.parentElement.tagName === 'THEAD'; const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex); cell.contentEditable = 'true'; if (isHeaderRow) { cell.textContent = "New Header"; if(!isHeaderRow && colIndex != -1) row.insertBefore(cell, row.cells[colIndex]); else row.appendChild(cell);} } }
+    function addColumnLeftToActiveTable() {
+        const table = document.getElementById(activeTableId); if (!table) return;
+        let insertAtIndex = 0; if (lastClickedCell && lastClickedCell.cellIndex >= 0) { insertAtIndex = lastClickedCell.cellIndex; }
+        addColumnToTable(table, insertAtIndex); rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+    function addColumnRightToActiveTable() {
+        const table = document.getElementById(activeTableId); if (!table) return;
+        let insertAtIndex = -1; if (lastClickedCell && lastClickedCell.cellIndex >= 0) { insertAtIndex = lastClickedCell.cellIndex + 1; }
+        addColumnToTable(table, insertAtIndex); rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+    async function deleteClickedRowFromActiveTable() {
+        if (!lastClickedCell) { showMessage('Please click a cell in the row you want to delete.', 'info'); return; }
+        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0]) { showMessage('No active table or table body found.', 'error'); return; }
+        const rowToDelete = lastClickedCell.closest('tr');
+        if (!rowToDelete || !rowToDelete.parentElement || rowToDelete.parentElement.tagName !== 'TBODY') { showMessage('Cannot delete header row or invalid selection. Click a cell in a data row.', 'error'); return; }
+        if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete the last data row.', 'error'); return; }
+        if (await customConfirm('Are you sure you want to delete this row?')) {
+            rowToDelete.remove(); lastClickedCell = null; deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Row deleted.', 'success');
+        }
+    }
+    async function deleteClickedColumnFromActiveTable() {
+        if (!lastClickedCell) { showMessage('Please click a cell in the column you want to delete.', 'info'); return; }
+        const table = document.getElementById(activeTableId); if (!table) { showMessage('No active table found.', 'error'); return; }
+        if (table.rows[0] && table.rows[0].cells.length <= 1) { showMessage('Cannot delete the last column.', 'error'); return; }
+        const colIndexToDelete = lastClickedCell.cellIndex;
+        if (await customConfirm('Are you sure you want to delete this column?')) {
+            for (const row of table.rows) { if (row.cells[colIndexToDelete]) { row.cells[colIndexToDelete].remove(); } }
+            lastClickedCell = null; deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Column deleted.', 'success');
+        }
+    }
 
-    // --- Name List Management (Modal) - Firestore (Existing) ---
-    function handleNameListSessionSwitch(session) { /* ... existing code ... */ }
-    function highlightSelectedNameInList(nameToHighlight) { /* ... existing code ... */ }
-    function clearNameSelection() { /* ... existing code ... */ }
-    function closeNameModal() { /* ... existing code ... */ }
-    function toggleNameListModalVisibility() { /* ... existing code ... */ }
-    function renderNameListFromFirestore(filterText = '') { /* ... existing code ... */ }
-    function selectNameForCellInsertion(name) { /* ... existing code ... */ }
-    function handleNameListImportFirestore(event) { /* ... existing code ... */ }
+    function toggleCellSelectionMode() {
+        selectionMode = !selectionMode; const btn = document.getElementById('selectBtn');
+        btn.classList.toggle('active', selectionMode); btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
+        if (!selectionMode) deselectAllTableCells();
+    }
+    function handleTableCellClick(event) {
+        const cell = event.target.closest('td, th'); if (!cell || !cell.closest(`#${activeTableId}`)) return;
+        lastClickedCell = cell;
+        if (selectedNameFromList) {
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
+                const overlay = cell.querySelector('.merged-cell-overlay');
+                if (overlay) { overlay.textContent = selectedNameFromList; } else { cell.textContent = selectedNameFromList; }
+                rebuildAndRenderSummary(); showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
+                clearNameSelection();
+            } else { showMessage('Click an editable data cell (or row header in body) to insert name.', 'info'); }
+            return;
+        }
+        if (selectionMode) {
+            if (cell.classList.contains('subsumed-cell') || (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
+                showMessage('Cannot select subsumed cells or mix different merge groups.', 'warning'); return;
+            }
+            cell.classList.toggle('selected');
+            if (cell.classList.contains('selected')) { selectedCells.push(cell); } else { selectedCells = selectedCells.filter(c => c !== cell); }
+        }
+    }
+    function deselectAllTableCells() { selectedCells.forEach(c => c.classList.remove('selected')); selectedCells = []; }
+    function mergeSelectedTableCells() {
+        if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error'); return; }
+        if (selectedCells.some(cell => cell.dataset.mergeId)) { showMessage('Cannot merge cells that are already part of another merge. Unmerge them first.', 'warning'); return; }
+        let primaryCell = selectedCells[0]; let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top; let minColGUI = primaryCell.getBoundingClientRect().left;
+        selectedCells.forEach(cell => {
+            const cellRowRect = cell.parentElement.getBoundingClientRect(); const cellRect = cell.getBoundingClientRect();
+            if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) { primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left; }
+        });
+        let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
+        selectedCells.forEach(cell => { const rect = cell.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
+        const totalWidth = maxRight - minLeft; const totalHeight = maxBottom - minTop;
+        const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const overlay = document.createElement('div'); overlay.className = 'merged-cell-overlay'; overlay.textContent = primaryCell.textContent;
+        overlay.contentEditable = 'true'; overlay.style.setProperty('--merged-width', `${totalWidth}px`); overlay.style.setProperty('--merged-height', `${totalHeight}px`);
+        overlay.addEventListener('blur', () => { primaryCell.textContent = overlay.textContent; rebuildAndRenderSummary(); });
+        primaryCell.innerHTML = ''; primaryCell.appendChild(overlay); primaryCell.classList.add('merged-cell-container'); primaryCell.setAttribute('data-merge-id', mergeId);
+        selectedCells.forEach(cell => { if (cell !== primaryCell) { cell.textContent = ''; cell.classList.add('subsumed-cell'); cell.setAttribute('data-merge-id', mergeId); } });
+        deselectAllTableCells(); if (selectionMode) toggleCellSelectionMode(); showMessage('Cells visually merged.', 'success');
+    }
+    function unmergeActiveCellIfMerged() {
+        const cell = lastClickedCell; if (!cell) { showMessage('Please click on a merged cell to unmerge it.', 'info'); return; }
+        const containerCell = cell.closest('[data-merge-id]'); if (!containerCell) { showMessage('The clicked cell is not part of a visual merge.', 'error'); return; }
+        const mergeId = containerCell.dataset.mergeId; const table = containerCell.closest('table'); if (!table) return;
+        const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`); let originalText = '';
+        const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
+        if (primaryCellInGroup) { const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay'); if (overlay) originalText = overlay.textContent; else originalText = primaryCellInGroup.textContent; }
+        cellsInGroup.forEach(c => {
+            c.removeAttribute('data-merge-id'); c.classList.remove('merged-cell-container', 'subsumed-cell');
+            const overlayChild = c.querySelector('.merged-cell-overlay'); if (overlayChild) overlayChild.remove(); c.innerHTML = '';
+        });
+        if (primaryCellInGroup) { primaryCellInGroup.textContent = originalText; } else if (cellsInGroup.length > 0) { cellsInGroup[0].textContent = originalText; }
+        rebuildAndRenderSummary(); showMessage('Cells unmerged.', 'success');
+    }
+    function updateAllMergeOverlays() {
+        const activeTable = document.getElementById(activeTableId); if (!activeTable) return;
+        const mergedContainers = activeTable.querySelectorAll('.merged-cell-container');
+        mergedContainers.forEach(containerCell => {
+            const mergeId = containerCell.dataset.mergeId; if (!mergeId) return;
+            const overlay = containerCell.querySelector('.merged-cell-overlay'); if (!overlay) return;
+            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`)); if (cellsInGroup.length === 0) return;
+            let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
+            cellsInGroup.forEach(cellInvolvedInMerge => { const rect = cellInvolvedInMerge.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
+            if (minLeft === Infinity) return;
+            const newWidth = maxRight - minLeft; const newHeight = maxBottom - minTop;
+            overlay.style.setProperty('--merged-width', `${newWidth}px`); overlay.style.setProperty('--merged-height', `${newHeight}px`);
+        });
+    }
 
-    // --- Excel Export/Import (Existing, Unchanged) ---
-    function handleExcelFileImport(event) { /* ... existing code ... */ }
-    function exportActiveTableToExcel() { /* ... existing code ... */ }
+    function handleNameListSessionSwitch(session) {
+        currentNameListSession = session;
+        namePagiTabElement.classList.toggle('active', session === 'pagi');
+        namePetangTabElement.classList.toggle('active', session === 'petang');
+        if(nameModalTitleElement) nameModalTitleElement.textContent = `Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
+        if(searchNameInputElement) searchNameInputElement.value = ''; 
+        renderNameListFromFirestore();
+    }
 
-    // --- Summary Table Logic (Existing, Unchanged by draft storage method) ---
-    function rebuildAndRenderSummary() { /* ... existing code ... */ }
-    function parseTimeToMinutes(timeStr) { /* ... existing code ... */ }
-    function buildSummaryTableSkeleton(allAvailableNames) { /* ... existing code ... */ }
-    function updateSummaryTableData(allAvailableNames) { /* ... existing code ... */ }
+    function highlightSelectedNameInList(nameToHighlight) {
+        if (!nameListContainer) return;
+        nameListContainer.querySelectorAll('.name-item span').forEach(span => {
+            span.classList.toggle('highlighted', span.dataset.name === nameToHighlight);
+        });
+    }
+    function clearNameSelection() {
+        selectedNameFromList = null;
+        if (nameListContainer) {
+            nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => {
+                span.classList.remove('highlighted');
+            });
+        }
+    }
 
-    // Ensure existing utility functions are complete in the actual script
-    // For brevity, their full code is not repeated here if unchanged.
-    // Make sure showMessage, customPrompt, customConfirm are fully present.
+    function closeNameModal() {
+        if (nameModal) nameModal.style.display = 'none';
+        clearNameSelection();
+        if(searchNameInputElement) searchNameInputElement.value = '';
+    }
+    function toggleNameListModalVisibility() {
+        if (!nameModal || !nameModalContent || !newNameInput) return;
+        const isDisplayed = nameModal.style.display === 'flex';
+        if (isDisplayed) {
+            closeNameModal();
+        } else {
+            nameModalContent.style.position = 'relative'; nameModalContent.style.left = 'auto';
+            nameModalContent.style.top = 'auto'; nameModalContent.style.transform = 'none';
+            nameModal.style.display = 'flex';
+            if(searchNameInputElement) searchNameInputElement.value = '';
+            handleNameListSessionSwitch(currentNameListSession); 
+            if(newNameInput) newNameInput.focus();
+            clearNameSelection();
+        }
+    }
 
+    function renderNameListFromFirestore(filterText = '') {
+        if (!nameListContainer || !fbIsAuthReady) {
+            if(nameListContainer) nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names or Firebase not ready...</p>';
+            return;
+        }
+        nameListContainer.innerHTML = ''; 
+        const namesToRender = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+        const normalizedFilterText = filterText.toLowerCase().trim();
+        const filteredNames = namesToRender.filter(name => name.toLowerCase().includes(normalizedFilterText));
+
+        if (filteredNames.length === 0) {
+            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ? 'No names match your search.' : `No names in ${currentNameListSession} session. Add some!`}</p>`;
+            return;
+        }
+        filteredNames.forEach(name => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'name-item';
+            itemDiv.innerHTML = `<span data-name="${name}" title="Click to select '${name}' for insertion">${name}</span><button data-name-delete="${name}" title="Delete name '${name}' from ${currentNameListSession} list">Delete</button>`;
+            nameListContainer.appendChild(itemDiv);
+        });
+    }
+
+    function selectNameForCellInsertion(name) { 
+        selectedNameFromList = name;
+        highlightSelectedNameInList(name);
+        showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
+    }
+
+    function handleNameListImportFirestore(event) { 
+        const file = event.target.files[0];
+        if (!file) { showMessage('No file selected for import.', 'info'); return; }
+        if (file.type !== 'text/plain') {
+            showMessage('Invalid file type. Please select a .txt file.', 'error');
+            event.target.value = ''; return;
+        }
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const content = e.target.result;
+                const importedNames = content.split(/\r?\n/)
+                                          .map(name => name.trim())
+                                          .filter(name => name !== '');
+                if (importedNames.length === 0) {
+                    showMessage('No names found in the selected file.', 'info'); return;
+                }
+                const currentSessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+                const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
+                
+                await saveNameListToFirestore(currentNameListSession, combinedNames);
+                
+            } catch (error) {
+                console.error("Error importing name list to Firestore:", error);
+                showMessage('Error processing the name list file for Firestore.', 'error');
+            } finally {
+                event.target.value = ''; 
+            }
+        };
+        reader.onerror = () => {
+            showMessage('Failed to read the name list file.', 'error');
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function handleExcelFileImport(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName];
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false });
+                tableCount++; const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
+                const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
+                const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
+                const importedTableElement = tempDiv.querySelector('table');
+                if (importedTableElement) {
+                    importedTableElement.id = newTableId; importedTableElement.dataset.tableName = importedTableName;
+                    importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
+                    tablesContainer.appendChild(importedTableElement); addTabButton(newTableId, importedTableName);
+                    switchTable(newTableId); showMessage('Excel data imported into a new table!', 'success');
+                } else { showMessage('Could not parse table from Excel file.', 'error'); }
+            } catch (error) { console.error("Excel import error:", error); showMessage('Error processing Excel file. Ensure it is a valid .xlsx or .xls file.', 'error'); }
+            finally { event.target.value = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    function exportActiveTableToExcel() {
+        const tableToExport = document.getElementById(activeTableId); if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
+        const overlaysData = [];
+        tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
+            const parentCell = overlay.parentElement;
+            overlaysData.push({parent: parentCell, overlayHTML: overlay.outerHTML, originalParentHTML: parentCell.innerHTML, text: overlay.textContent});
+            parentCell.textContent = overlay.textContent;
+        });
+        const tableName = tableToExport.dataset.tableName || activeTableId;
+        const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
+        XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        overlaysData.forEach(data => {
+            data.parent.innerHTML = data.originalParentHTML;
+            const newOverlay = data.parent.querySelector('.merged-cell-overlay');
+            if (newOverlay) { newOverlay.textContent = data.text; newOverlay.addEventListener('blur', () => { data.parent.textContent = newOverlay.textContent; rebuildAndRenderSummary(); }); }
+        });
+        if(overlaysData.length > 0) updateAllMergeOverlays();
+        showMessage(`Table "${tableName}" exported.`, 'success');
+    }
+
+    function rebuildAndRenderSummary() {
+        const allFirestoreNames = [...new Set([...namesPagi, ...namesPetang])];
+        buildSummaryTableSkeleton(allFirestoreNames); 
+        updateSummaryTableData(allFirestoreNames);   
+    }
+    function parseTimeToMinutes(timeStr) {
+        if (typeof timeStr !== 'string') return Infinity;
+        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
+        if (match) { return parseInt(match[1], 10) * 60 + parseInt(match[2], 10); }
+        return Infinity;
+    }
+    function buildSummaryTableSkeleton(allAvailableNames) { 
+        if (!summaryTableElement) { console.error("Summary table element not found."); return; }
+        summaryTableElement.innerHTML = '';
+        const tempRawHeadersFromSchedules = [];
+        tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+            if (scheduleTable.tHead && scheduleTable.tHead.rows.length > 0) {
+                for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) {
+                    const th = scheduleTable.tHead.rows[0].cells[hIdx];
+                    const headerText = th.textContent.trim(); if (headerText) { tempRawHeadersFromSchedules.push(headerText); }
+                }
+            }
+        });
+        let laulisahRuleRequiresSpecialSlot = false; const specialNamesForRule = ["LAU", "LISAH"];
+        const targetSlotForSpecialNamesRule = "10.15-10.30"; const sourceSlotToShiftRule = "10.30-12.00";
+        for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
+            if (laulisahRuleRequiresSpecialSlot) break;
+            if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
+            const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
+                if (laulisahRuleRequiresSpecialSlot) return;
+                for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
+                     const scheduleCell = scheduleDataRow.cells[cellIdx]; let entryInScheduleCell = scheduleCell.textContent.trim();
+                     const overlay = scheduleCell.querySelector('.merged-cell-overlay'); if (overlay) entryInScheduleCell = overlay.textContent.trim();
+                     if (specialNamesForRule.includes(entryInScheduleCell)) {
+                        const headerText = currentScheduleTableHeaders[cellIdx];
+                        if (headerText) {
+                            const normalizedHeader = headerText.replace(/\s/g, "").replace(/:/g,".");
+                            const normalizedSourceSlot = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
+                            if (normalizedHeader === normalizedSourceSlot) { laulisahRuleRequiresSpecialSlot = true; return; }
+                        }
+                     }
+                }
+            });
+        }
+        const uniqueHeaderMap = new Map(); tempRawHeadersFromSchedules.forEach(h => { const norm = h.replace(/\s/g, "").replace(/:/g,"."); if (!uniqueHeaderMap.has(norm)) { uniqueHeaderMap.set(norm, h); } });
+        if (laulisahRuleRequiresSpecialSlot) { const normalizedTarget = targetSlotForSpecialNamesRule.replace(/\s/g, "").replace(/:/g,"."); if (!uniqueHeaderMap.has(normalizedTarget)) { uniqueHeaderMap.set(normalizedTarget, targetSlotForSpecialNamesRule); } }
+        let sortedOriginalUniqueHeaders = Array.from(uniqueHeaderMap.values());
+        sortedOriginalUniqueHeaders.sort((a, b) => { const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b); if (timeA !== Infinity && timeB !== Infinity) { return timeA - timeB; } else if (timeA !== Infinity) { return -1; } else if (timeB !== Infinity) { return 1; } return a.localeCompare(b); });
+        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedOriginalUniqueHeaders];
+        const thead = summaryTableElement.createTHead(); const headerRowForSummary = thead.insertRow();
+        finalSummaryColumnHeaders.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRowForSummary.appendChild(th); });
+        const tbody = summaryTableElement.createTBody();
+        const sortedSummaryRowHeaders = allAvailableNames.sort((a, b) => a.localeCompare(b)); 
+        if (sortedSummaryRowHeaders.length === 0) {
+            const tr = tbody.insertRow(); const td = tr.insertCell(); td.textContent = "No names available to display in summary.";
+            td.colSpan = finalSummaryColumnHeaders.length > 0 ? finalSummaryColumnHeaders.length : 1; td.style.textAlign = 'center'; td.style.fontStyle = 'italic';
+        } else {
+            sortedSummaryRowHeaders.forEach(name => { const tr = tbody.insertRow(); tr.insertCell().textContent = name; for (let i = 1; i < finalSummaryColumnHeaders.length; i++) { tr.insertCell().textContent = ''; } });
+        }
+    }
+    function updateSummaryTableData(allAvailableNames) { 
+        if (!summaryTableElement || !summaryTableElement.tBodies || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) { return; }
+        const summaryBody = summaryTableElement.tBodies[0]; if (!summaryBody || summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1) ) { return; }
+        const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
+        const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
+        Array.from(summaryBody.rows).forEach(summaryRow => { if (summaryRow.cells.length > 1) { Array.from(summaryRow.cells).slice(1).forEach(cell => { cell.textContent = ''; cell.classList.remove('highlight-conflict'); }); } });
+        tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+            if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) { return; }
+            const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+            Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
+                const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim(); if (!classIdentifier) return;
+                for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
+                    const scheduleCell = scheduleDataRow.cells[cellIdx]; let entryInScheduleCell = scheduleCell.textContent.trim();
+                    const overlay = scheduleCell.querySelector('.merged-cell-overlay'); if (overlay) entryInScheduleCell = overlay.textContent.trim();
+                    if (entryInScheduleCell && allAvailableNames.includes(entryInScheduleCell)) {
+                        let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx]; if (!scheduleColumnHeaderForThisCell) continue;
+                        let summaryColumnToUse = scheduleColumnHeaderForThisCell; const specialNamesForRule = ["LAU", "LISAH"];
+                        const targetSlotForSpecialNamesRule = "10.15-10.30"; const sourceSlotToShiftRule = "10.30-12.00";
+                        const normalizedScheduleColHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
+                        const normalizedSourceSlotRule = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
+                        if (specialNamesForRule.includes(entryInScheduleCell) && normalizedScheduleColHeader === normalizedSourceSlotRule) { summaryColumnToUse = targetSlotForSpecialNamesRule; }
+                        const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
+                        if (targetSummaryRow && targetSummaryRow.cells.length > 1) {
+                            const normalizedSummaryColToUseLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
+                            const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.findIndex(h => h === normalizedSummaryColToUseLookup);
+                            if (targetSummaryColumnCellIndex > 0) {
+                                const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
+                                let existingClasses = summaryCellToUpdate.textContent.trim() ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim()) : [];
+                                if (!existingClasses.includes(classIdentifier)) { existingClasses.push(classIdentifier); summaryCellToUpdate.textContent = existingClasses.join(', '); }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+        Array.from(summaryBody.rows).forEach(summaryRow => { if (summaryRow.cells.length > 1) { Array.from(summaryRow.cells).forEach((cell, cellIndex) => { if (cellIndex > 0) { const cellText = cell.textContent.trim(); if (cellText.includes(',')) { cell.classList.add('highlight-conflict'); } } }); } });
+    }
 </script>
 </body>
 </html>
