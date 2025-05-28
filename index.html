@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Weekly Schedule with Firestore Names</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" async></script>
     <style>
         body {
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
@@ -355,64 +355,57 @@
       apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.appspot.com",
+      storageBucket: "jadual-3f0aa.appspot.com", // Standard config format
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
-    // console.log("userProvidedFirebaseConfig defined:", JSON.stringify(userProvidedFirebaseConfig));
+    // console.log("1. userProvidedFirebaseConfig defined.");
 
     // --- Determine the finalFirebaseConfig to use ---
-    let finalFirebaseConfig; // This will hold the config object for initializeApp
+    let finalFirebaseConfigForInit; 
 
     if (typeof __firebase_config !== 'undefined' && __firebase_config && __firebase_config.trim() !== "") {
         try {
             const parsedGlobalConfig = JSON.parse(__firebase_config);
-            // Validate essential keys from parsed global config
             if (parsedGlobalConfig && typeof parsedGlobalConfig === 'object' && parsedGlobalConfig.apiKey && parsedGlobalConfig.appId) {
-                finalFirebaseConfig = parsedGlobalConfig;
-                console.log("Using dynamically provided __firebase_config.");
+                finalFirebaseConfigForInit = parsedGlobalConfig;
+                // console.log("2. Using dynamically provided __firebase_config for initialization.");
             } else {
-                console.warn("Provided __firebase_config is invalid or missing essential keys. Using fallback userProvidedFirebaseConfig.");
-                finalFirebaseConfig = userProvidedFirebaseConfig;
+                // console.warn("2. Provided __firebase_config is invalid. Using fallback for initialization.");
+                finalFirebaseConfigForInit = userProvidedFirebaseConfig;
             }
         } catch (e) {
-            console.error("Error parsing __firebase_config. Using fallback userProvidedFirebaseConfig.", e);
-            finalFirebaseConfig = userProvidedFirebaseConfig;
+            // console.error("2. Error parsing __firebase_config. Using fallback for initialization.", e);
+            finalFirebaseConfigForInit = userProvidedFirebaseConfig;
         }
     } else {
-        console.log("__firebase_config is not defined or empty. Using userProvidedFirebaseConfig.");
-        finalFirebaseConfig = userProvidedFirebaseConfig;
+        // console.log("2. __firebase_config is not defined. Using userProvidedFirebaseConfig for initialization.");
+        finalFirebaseConfigForInit = userProvidedFirebaseConfig;
     }
-    // console.log("Final firebaseConfig for initializeApp:", JSON.stringify(finalFirebaseConfig));
+    // console.log("3. finalFirebaseConfigForInit for initializeApp:", JSON.stringify(finalFirebaseConfigForInit).substring(0,100) + "...");
 
-
-    // --- Define firestorePathAppId using the finalFirebaseConfig ---
-    // This ID is used for constructing Firestore paths.
-    // It prioritizes the environment-provided __app_id if available,
-    // otherwise falls back to the appId from the Firebase config (either global or fallback).
-    const firestorePathAppId = typeof __app_id !== 'undefined' && __app_id.trim() !== ""
+    const firestorePathAppId = (typeof __app_id !== 'undefined' && __app_id.trim() !== "")
         ? __app_id
-        : (finalFirebaseConfig.appId || 'default-app-id-jadual'); // Fallback if finalFirebaseConfig.appId is also missing
-    console.log(`Using App ID for Firestore paths: ${firestorePathAppId}`);
+        : (finalFirebaseConfigForInit.appId || 'default-app-id-jadual');
+    // console.log(`4. Using App ID for Firestore paths: ${firestorePathAppId}`);
 
-
-    // --- Initialize Firebase App ---
     let fbApp, fbAuth, fbDb;
     try {
-        // Ensure finalFirebaseConfig is valid before trying to initialize
-        if (!finalFirebaseConfig || !finalFirebaseConfig.apiKey || !finalFirebaseConfig.appId) {
-            throw new Error("Firebase configuration is invalid or missing essential keys (apiKey, appId). Cannot initialize Firebase.");
+        if (!finalFirebaseConfigForInit || !finalFirebaseConfigForInit.apiKey || !finalFirebaseConfigForInit.appId) {
+            console.error("CRITICAL: finalFirebaseConfigForInit is invalid or missing essential keys before initializeApp.", finalFirebaseConfigForInit); // Log the object
+            throw new Error("Firebase configuration is invalid. Cannot initialize Firebase.");
         }
-
+        // console.log("5. Attempting to initialize Firebase with config.");
         if (!getApps().length) {
-            fbApp = initializeApp(finalFirebaseConfig);
-            console.log("Firebase App initialized successfully.");
+            fbApp = initializeApp(finalFirebaseConfigForInit);
+            console.log("Firebase App initialized successfully via initializeApp().");
         } else {
-            fbApp = getApp();
-            console.log("Firebase App already initialized. Using existing instance.");
+            fbApp = getApp(); 
+            console.log("Firebase App already initialized. Using existing instance via getApp().");
         }
         fbAuth = getAuth(fbApp);
         fbDb = getFirestore(fbApp);
+        // console.log("6. Firebase Auth and Firestore services obtained.");
     } catch (e) {
         console.error("CRITICAL Error initializing Firebase services:", e);
         const userIdDisplayInitError = document.getElementById('userIdDisplay');
@@ -447,51 +440,96 @@
     function customPrompt(message, defaultValue = "") { /* ... */ }
     function customConfirm(message) { /* ... */ }
     function showNameModalLoading(isLoading) { /* ... */ }
-    
-    async function saveNameListToFirestore(session, namesArray) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot save name list.", "error"); return;
-        }
-        showNameModalLoading(true);
-        const uniqueSortedNames = [...new Set(namesArray.map(n => n.trim()).filter(n => n))]
-            .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-        
-        // Use firestorePathAppId for Firestore paths
-        if (!firestorePathAppId || firestorePathAppId === 'default-app-id-jadual') {
-            showMessage("Configuration error: Firestore App ID is missing or default.", "error"); 
-            console.error("Firestore App ID is missing or default:", firestorePathAppId);
-            showNameModalLoading(false); return;
-        }
-        const docPath = `artifacts/${firestorePathAppId}/users/${fbUserId}/nameLists/${session}`;
-        const docRef = doc(fbDb, docPath);
-        try {
-            await setDoc(docRef, { names: uniqueSortedNames });
-            showMessage(`Name list for ${session} session updated.`, "success");
-        } catch (error) {
-            console.error(`Failed to save list to ${session}. Path: ${docPath}`, error);
-            showMessage(`Failed to save list to ${session}. Error: ${error.message}`, "error");
-        } finally {
-            showNameModalLoading(false);
-        }
-    }
-
-    async function addNameToCurrentSessionInFirestore(name) { /* ... (ensure it calls saveNameListToFirestore) ... */ }
+    async function saveNameListToFirestore(session, namesArray) { /* ... (uses firestorePathAppId) ... */ }
+    async function addNameToCurrentSessionInFirestore(name) { /* ... */ }
     async function deleteNameFromCurrentSessionInFirestore(nameToDelete) { /* ... */ }
-
-    function listenToNameList(sessionToListen) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) { return () => {}; }
-        // Use firestorePathAppId for Firestore paths
-        if (!firestorePathAppId || firestorePathAppId === 'default-app-id-jadual') { 
-            console.error("Cannot listen to name list: Firestore App ID missing or default.", firestorePathAppId);
-            return () => {}; 
-        }
-        const docPath = `artifacts/${firestorePathAppId}/users/${fbUserId}/nameLists/${sessionToListen}`;
-        const docRef = doc(fbDb, docPath);
-        return onSnapshot(docRef, (docSnap) => { /* ... */ }, (error) => { /* ... */ });
-    }
+    function listenToNameList(sessionToListen) { /* ... (uses firestorePathAppId) ... */ }
     
-    document.addEventListener('DOMContentLoaded', () => { /* ... (DOM caching and critical element check) ... */ 
-        if (fbAuth) { /* ... (auth listener with logging) ... */ } else { /* ... */ }
+    document.addEventListener('DOMContentLoaded', () => {
+        // Cache DOM elements
+        scheduleTitleElement = document.getElementById('scheduleTitle');
+        tablesContainer = document.getElementById('tablesContainer');
+        tableTabs = document.getElementById('tableTabs');
+        nameModal = document.getElementById('nameModal');
+        nameModalContent = document.getElementById('nameModalContent');
+        nameModalHeader = document.getElementById('nameModalHeader');
+        nameListContainer = document.getElementById('nameList');
+        newNameInput = document.getElementById('newNameInput');
+        draftListElement = document.getElementById('draftList');
+        summaryTableElement = document.getElementById('summaryTable');
+        customMessageBox = document.getElementById('customMessageBox');
+        fileInputElement = document.getElementById('fileInput');
+        directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn');
+        closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard');
+        nameListImportFileInputElement = document.getElementById('nameListImportFile');
+        searchNameInputElement = document.getElementById('searchNameInput');
+        draftImportFileInputElement = document.getElementById('draftImportFile');
+        userIdDisplayElement = document.getElementById('userIdDisplay');
+        namePagiTabElement = document.getElementById('namePagiTab');
+        namePetangTabElement = document.getElementById('namePetangTab');
+        loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
+        nameModalTitleElement = document.getElementById('nameModalTitle');
+        nameModalDraggablePart = nameModalHeader;
+        loadMoreNamesButton = document.getElementById('loadMoreNamesBtn');
+
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !loadMoreNamesButton || !closeNameModalButtonStandardElement || !nameModalContent || !nameModalHeader || !nameListContainer || !newNameInput || !userIdDisplayElement || !customMessageBox) {
+            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: One or more critical page elements are missing. Application cannot start correctly.</p>";
+            console.error("CRITICAL: One or more essential DOM elements for the application are missing. Aborting further script execution.");
+            return; 
+        }
+        
+        // Firebase Auth Listener
+        if (fbAuth) { 
+            // console.log("Firebase Auth service found. Setting up onAuthStateChanged listener.");
+            onAuthStateChanged(fbAuth, async (user) => {
+                // console.log("onAuthStateChanged triggered. User:", user);
+                if (user) {
+                    fbUserId = user.uid;
+                    fbIsAuthReady = true;
+                    if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
+                    // console.log(`User authenticated. UID: ${fbUserId}. fbIsAuthReady: ${fbIsAuthReady}`);
+                    
+                    if (unsubscribePagi) unsubscribePagi();
+                    if (unsubscribePetang) unsubscribePetang();
+                    unsubscribePagi = listenToNameList('pagi');
+                    unsubscribePetang = listenToNameList('petang');
+                    // console.log("Subscribed to name list listeners.");
+
+                    if (nameModal.style.display === 'flex' && searchNameInputElement) {
+                        renderNameListFromFirestore(searchNameInputElement.value, true);
+                    }
+                } else {
+                    fbIsAuthReady = false;
+                    fbUserId = null;
+                    if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
+                    // console.log("No user found or user signed out. Attempting sign-in.");
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            // console.log("Attempting signInWithCustomToken with token:", __initial_auth_token.substring(0, 20) + "...");
+                            await signInWithCustomToken(fbAuth, __initial_auth_token);
+                            // console.log("signInWithCustomToken successful.");
+                        } else {
+                            // console.log("No custom token. Attempting signInAnonymously.");
+                            await signInAnonymously(fbAuth);
+                            // console.log("signInAnonymously successful.");
+                        }
+                    } catch (error) {
+                        console.error("Firebase Sign-in failed:", error);
+                        showMessage(`Firebase Sign-in failed: ${error.message}`, "error", 7000);
+                        if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
+                    }
+                }
+            }, (error) => { 
+                console.error("Error in onAuthStateChanged listener:", error);
+                if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Listener Error`;
+                showMessage("Authentication listener error. Some features may not work.", "error", 7000);
+            });
+        } else { 
+             if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Auth Service Error!";
+             console.error("Firebase Auth service (fbAuth) is not initialized! This usually means Firebase app init failed.");
+             showMessage("Critical Error: Firebase Auth service not available. App cannot function correctly.", "error", 10000);
+        }
+
         loadScheduleTitle();
         initializeEventListeners(); 
         setupInitialTableState();
