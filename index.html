@@ -73,6 +73,7 @@
             text-align: center;
             min-width: 100px; /* Minimum width for cells, helps with layout */
             box-sizing: border-box;
+            position: relative; /* For positioning autocomplete suggestions */
         }
         table th {
             background-color: #f8f9fa; /* Lighter header background */
@@ -372,6 +373,30 @@
             opacity: 0;
         }
 
+        /* Styles for inline autocomplete suggestions */
+        #autocompleteSuggestions {
+            display: none; /* Hidden by default */
+            position: absolute;
+            border: 1px solid #ccc;
+            background-color: white;
+            z-index: 1001; /* Must be above table cells */
+            max-height: 150px;
+            overflow-y: auto;
+            min-width: 120px; /* Or set dynamically */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            border-radius: 4px;
+        }
+        .suggestion-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        .suggestion-item:hover, .suggestion-item.active-suggestion {
+            background-color: #e9ecef; /* Light grey hover */
+            color: #0056b3;
+        }
+
     </style>
 </head>
 <body>
@@ -484,36 +509,20 @@
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
-    // This configuration is taken directly from your "SDK config.txt"
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
+      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4", 
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.firebasestorage.app", // Corrected from your previous version which had .appspot.com
+      storageBucket: "jadual-3f0aa.appspot.com", 
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
-    console.log("Checking for injected Firebase config...");
-    // Use Canvas-provided config if available, otherwise fallback to userProvidedFirebaseConfig
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedFirebaseConfig;
-    if (typeof __firebase_config !== 'undefined') {
-        console.log("Using injected Firebase config:", firebaseConfig);
-    } else {
-        console.log("Using user-provided Firebase config (from SDK config.txt):", userProvidedFirebaseConfig);
-    }
-
-    console.log("Checking for injected App ID...");
-    // Use Canvas-provided appId if available, otherwise fallback to appId from firebaseConfig
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-app-id');
-     if (typeof __app_id !== 'undefined') {
-        console.log("Using injected App ID:", appId);
-    } else {
-        console.warn("Using App ID from Firebase config or default:", appId);
-        if (appId === 'default-app-id' || !firebaseConfig.appId) {
-            console.error("CRITICAL: App ID is missing or default. Firestore operations might fail or use incorrect paths.");
-        }
-    }
+    
+    if (typeof __firebase_config === 'undefined') console.log("Using user-provided Firebase config.");
+    if (typeof __app_id === 'undefined') console.warn("Using App ID from Firebase config or default.");
 
 
     // --- Initialize Firebase ---
@@ -524,16 +533,13 @@
     let unsubscribePetang = null;
 
     try {
-        console.log("Initializing Firebase app with config:", firebaseConfig);
         fbApp = initializeApp(firebaseConfig);
-        console.log("Firebase app initialized successfully.");
         fbAuth = getAuth(fbApp);
-        console.log("Firebase Auth service obtained.");
         fbDb = getFirestore(fbApp);
-        console.log("Firebase Firestore service obtained.");
+        console.log("Firebase services initialized.");
     } catch (e) {
         console.error("CRITICAL Error initializing Firebase services:", e);
-        showMessage("Critical Error: Firebase initialization failed. Name list features will not work. Check console for details.", "error", 10000);
+        showMessage("Critical Error: Firebase initialization failed. Name list features will not work.", "error", 10000);
         const userIdDisplayInitError = document.getElementById('userIdDisplay');
         if (userIdDisplayInitError) userIdDisplayInitError.textContent = "User ID: Firebase Init Error!";
     }
@@ -546,14 +552,19 @@
     let selectionMode = false;
     let selectedCells = [];
     let lastClickedCell = null;
-    let selectedNameFromList = null;
+    let selectedNameFromList = null; // For modal-based selection
 
-    let currentNameListSession = 'pagi';
+    let currentNameListSession = 'pagi'; // Default session for names
     let namesPagi = [];
     let namesPetang = [];
 
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
+
+    // Variables for inline autocomplete
+    let autocompleteSuggestionsDiv = null;
+    let activeCellForAutocomplete = null;
+    let currentAutocompleteIndex = -1; // -1 means no suggestion is actively highlighted
 
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement;
 
@@ -616,13 +627,12 @@
     async function saveNameListToFirestore(session, namesArray) {
         if (!fbDb || !fbUserId || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot save name list.", "error");
-            console.warn("saveNameListToFirestore: Firebase not ready. fbDb:", fbDb, "fbUserId:", fbUserId, "fbIsAuthReady:", fbIsAuthReady);
             return;
         }
         showNameModalLoading(true);
-        const uniqueSortedNames = [...new Set(namesArray)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        const uniqueSortedNames = [...new Set(namesArray.map(n => String(n||'').trim()).filter(n => n))]
+                                .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         if (!appId || appId === 'default-app-id') {
-            console.error("saveNameListToFirestore: Invalid appId. Cannot construct Firestore path.");
             showMessage("Configuration error: App ID is missing. Cannot save name list.", "error");
             showNameModalLoading(false);
             return;
@@ -642,28 +652,26 @@
     async function addNameToCurrentSessionInFirestore(name) {
         if (!fbDb || !fbUserId || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot add name.", "error");
-            console.warn("addNameToCurrentSessionInFirestore: Firebase not ready. fbDb:", fbDb, "fbUserId:", fbUserId, "fbIsAuthReady:", fbIsAuthReady);
             return;
         }
-        const trimmedName = name.trim();
+        const trimmedName = String(name || '').trim();
         if (!trimmedName) {
             showMessage("Name cannot be empty.", "info");
             return;
         }
         showNameModalLoading(true);
         const sessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
-        if (sessionNames.map(n => n.toLowerCase()).includes(trimmedName.toLowerCase())) {
+        if (sessionNames.map(n => String(n || '').toLowerCase()).includes(trimmedName.toLowerCase())) {
             showMessage(`Name "${trimmedName}" already exists in ${currentNameListSession} session.`, "info");
             showNameModalLoading(false);
             return;
         }
         if (!appId || appId === 'default-app-id') {
-            console.error("addNameToCurrentSessionInFirestore: Invalid appId. Cannot construct Firestore path.");
             showMessage("Configuration error: App ID is missing. Cannot add name.", "error");
             showNameModalLoading(false);
             return;
         }
-        const updatedNames = [...sessionNames, trimmedName].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        const updatedNames = [...sessionNames, trimmedName].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
         const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
         try {
             await setDoc(docRef, { names: updatedNames });
@@ -682,31 +690,30 @@
     async function deleteNameFromCurrentSessionInFirestore(nameToDelete) {
         if (!fbDb || !fbUserId || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot delete name.", "error");
-            console.warn("deleteNameFromCurrentSessionInFirestore: Firebase not ready. fbDb:", fbDb, "fbUserId:", fbUserId, "fbIsAuthReady:", fbIsAuthReady);
             return;
         }
-        if (await customConfirm(`Delete "${nameToDelete}" from ${currentNameListSession} session? This also removes it from all schedule tables.`)) {
+        const nameToDeleteStr = String(nameToDelete || '');
+        if (await customConfirm(`Delete "${nameToDeleteStr}" from ${currentNameListSession} session? This also removes it from all schedule tables.`)) {
             showNameModalLoading(true);
             if (!appId || appId === 'default-app-id') {
-                console.error("deleteNameFromCurrentSessionInFirestore: Invalid appId. Cannot construct Firestore path.");
                 showMessage("Configuration error: App ID is missing. Cannot delete name.", "error");
                 showNameModalLoading(false);
                 return;
             }
             const currentNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
-            const updatedNames = currentNames.filter(name => name !== nameToDelete);
+            const updatedNames = currentNames.filter(name => String(name || '') !== nameToDeleteStr);
             const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
             try {
                 await setDoc(docRef, { names: updatedNames });
                 tablesContainer.querySelectorAll('table').forEach(table => {
                     table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
-                        if (cell.textContent.trim() === nameToDelete) {
+                        if (cell.textContent.trim() === nameToDeleteStr) {
                             cell.textContent = '';
                         }
                     });
                 });
                 rebuildAndRenderSummary();
-                if (selectedNameFromList === nameToDelete) clearNameSelection();
+                if (selectedNameFromList === nameToDeleteStr) clearNameSelection();
             } catch (error) {
                 console.error(`Error deleting name from ${currentNameListSession}:`, error);
                 showMessage(`Failed to delete name. Error: ${error.message}`, "error");
@@ -718,42 +725,130 @@
 
     function listenToNameList(sessionToListen) {
         if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            console.warn(`listenToNameList (${sessionToListen}): Firestore not ready, listener not attached. fbDb:`, fbDb, "fbUserId:", fbUserId, "fbIsAuthReady:", fbIsAuthReady);
+            console.warn(`listenToNameList (${sessionToListen}): Firestore not ready.`);
             return () => {};
         }
         if (!appId || appId === 'default-app-id') {
-            console.error(`listenToNameList (${sessionToListen}): Invalid appId. Cannot construct Firestore path.`);
+            console.error(`listenToNameList (${sessionToListen}): Invalid appId.`);
             return () => {};
         }
-        console.log(`Attaching Firestore listener for session: ${sessionToListen}, userId: ${fbUserId}, appId: ${appId}`);
         const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", sessionToListen);
         return onSnapshot(docRef, (docSnap) => {
             showNameModalLoading(true);
-            console.log(`Firestore snapshot received for ${sessionToListen}. Exists: ${docSnap.exists()}`);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                console.log(`Data for ${sessionToListen}:`, data);
-                if (sessionToListen === 'pagi') {
-                    namesPagi = data.names || [];
-                } else {
-                    namesPetang = data.names || [];
-                }
+                const namesFromDb = data.names || [];
+                const sanitizedNames = namesFromDb.map(name => String(name || '').trim()).filter(name => name.length > 0);
+                if (sessionToListen === 'pagi') namesPagi = sanitizedNames;
+                else namesPetang = sanitizedNames;
             } else {
                 if (sessionToListen === 'pagi') namesPagi = [];
                 else namesPetang = [];
-                console.log(`No names document found for ${sessionToListen}, initialized empty list.`);
             }
-            if (sessionToListen === currentNameListSession && nameModal.style.display === 'flex') {
+            if (sessionToListen === currentNameListSession && nameModal && nameModal.style.display === 'flex') {
                 renderNameListFromFirestore(searchNameInputElement ? searchNameInputElement.value : '');
             }
-            rebuildAndRenderSummary();
+            rebuildAndRenderSummary(); // Update summary if names change
             showNameModalLoading(false);
         }, (error) => {
             console.error(`Error listening to ${sessionToListen} names:`, error);
-            showMessage(`Error fetching ${sessionToListen} names. Check console.`, "error");
+            showMessage(`Error fetching ${sessionToListen} names.`, "error");
             showNameModalLoading(false);
         });
     }
+
+    // --- Inline Autocomplete Functions ---
+    function showCellAutocompleteSuggestions(cell, inputText) {
+        if (!autocompleteSuggestionsDiv) return;
+
+        const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+        const normalizedInput = String(inputText || '').toLowerCase().trim();
+        
+        if (!normalizedInput) {
+            hideCellAutocompleteSuggestions();
+            return;
+        }
+
+        const filteredSuggestions = namesForAutocomplete.filter(name => {
+            const nameStr = String(name || '').toLowerCase().trim();
+            return nameStr.startsWith(normalizedInput) && nameStr !== normalizedInput;
+        });
+
+        if (filteredSuggestions.length > 0) {
+            activeCellForAutocomplete = cell;
+            autocompleteSuggestionsDiv.innerHTML = ''; // Clear previous
+            filteredSuggestions.slice(0, 10).forEach(suggestion => { // Limit to 10 suggestions
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.textContent = suggestion;
+                item.addEventListener('mousedown', (e) => { // Mousedown to select before blur
+                    e.preventDefault(); // Prevent cell from losing focus immediately
+                    selectCellAutocompleteSuggestion(suggestion);
+                });
+                autocompleteSuggestionsDiv.appendChild(item);
+            });
+
+            const cellRect = cell.getBoundingClientRect();
+            autocompleteSuggestionsDiv.style.left = `${cellRect.left + window.scrollX}px`;
+            autocompleteSuggestionsDiv.style.top = `${cellRect.bottom + window.scrollY}px`;
+            autocompleteSuggestionsDiv.style.minWidth = `${cellRect.width}px`;
+            autocompleteSuggestionsDiv.style.display = 'block';
+            currentAutocompleteIndex = -1; // Reset keyboard selection index
+        } else {
+            hideCellAutocompleteSuggestions();
+        }
+    }
+
+    function hideCellAutocompleteSuggestions() {
+        if (autocompleteSuggestionsDiv) {
+            autocompleteSuggestionsDiv.style.display = 'none';
+        }
+        activeCellForAutocomplete = null;
+        currentAutocompleteIndex = -1;
+    }
+
+    function selectCellAutocompleteSuggestion(suggestionText) {
+        if (activeCellForAutocomplete) {
+            const targetCell = activeCellForAutocomplete; // Store before hiding clears it
+            
+            // If the cell is part of a merge, update the overlay
+            const overlay = targetCell.querySelector('.merged-cell-overlay');
+            if (overlay) {
+                overlay.textContent = suggestionText;
+            } else {
+                targetCell.textContent = suggestionText;
+            }
+            
+            hideCellAutocompleteSuggestions();
+            rebuildAndRenderSummary();
+
+            // Set cursor to end of cell content
+            targetCell.focus(); // Re-focus the cell
+            const range = document.createRange();
+            const sel = window.getSelection();
+            if (targetCell.childNodes.length > 0) {
+                 // If cell has content (text node), collapse to its end
+                range.selectNodeContents(overlay ? overlay : targetCell); // Select contents of overlay or cell
+                range.collapse(false); // false to collapse to the end
+            } else {
+                // If cell is empty (e.g. after clearing), just place cursor
+                range.setStart(targetCell, 0);
+                range.collapse(true);
+            }
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+        }
+    }
+    
+    function updateCellSuggestionHighlight() {
+        if (!autocompleteSuggestionsDiv || autocompleteSuggestionsDiv.style.display === 'none') return;
+        const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
+        items.forEach((item, index) => {
+            item.classList.toggle('active-suggestion', index === currentAutocompleteIndex);
+        });
+    }
+
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -780,54 +875,50 @@
         loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
         nameModalTitleElement = document.getElementById('nameModalTitle');
 
+        // Create and append autocomplete suggestions div
+        autocompleteSuggestionsDiv = document.createElement('div');
+        autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
+        document.body.appendChild(autocompleteSuggestionsDiv);
+
+
         if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement) {
-            console.error("CRITICAL DOM elements missing. Application might not function correctly.");
-            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em; padding:20px;'>Error: Application failed to initialize due to missing page elements.</p>";
+            console.error("CRITICAL DOM elements missing.");
+            document.body.innerHTML = "<p style='color:red; text-align:center;'>Error: App failed to init (missing elements).</p>";
             return;
         }
 
         if (fbAuth) {
-            console.log("Setting up Firebase Auth State Listener...");
             onAuthStateChanged(fbAuth, async (user) => {
                 if (user) {
                     fbUserId = user.uid;
                     fbIsAuthReady = true;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
-                    console.log("Firebase User is signed in. UID:", fbUserId);
                     if (unsubscribePagi) unsubscribePagi();
                     if (unsubscribePetang) unsubscribePetang();
-                    console.log("Attempting to attach Firestore listeners for Pagi and Petang names.");
                     unsubscribePagi = listenToNameList('pagi');
                     unsubscribePetang = listenToNameList('petang');
-                    if (nameModal.style.display === 'flex' && searchNameInputElement) {
+                    if (nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
                         renderNameListFromFirestore(searchNameInputElement.value);
                     }
                 } else {
-                    fbIsAuthReady = false;
-                    fbUserId = null;
+                    fbIsAuthReady = false; fbUserId = null;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
-                    console.log("Firebase User is signed out or auth not yet complete. Attempting sign-in...");
                     try {
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            console.log("Attempting sign-in with custom token:", __initial_auth_token ? "Token present" : "Token NOT present");
                             await signInWithCustomToken(fbAuth, __initial_auth_token);
-                            console.log("Successfully signed in with custom token.");
                         } else {
-                            console.log("No custom token. Attempting anonymous sign-in...");
                             await signInAnonymously(fbAuth);
-                            console.log("Successfully signed in anonymously.");
                         }
                     } catch (error) {
                         console.error("Error during Firebase sign-in:", error);
-                        showMessage(`Firebase Authentication failed. Name list features may not work. Error: ${error.message}`, "error", 7000);
+                        showMessage(`Firebase Auth failed. Name lists may not work.`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
                     }
                 }
             });
         } else {
-             console.error("Firebase Auth service (fbAuth) is not initialized. Authentication cannot proceed.");
              if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Auth Not Initialized";
-             showMessage("Critical Error: Firebase Auth service could not be initialized. Check Firebase setup.", "error", 10000);
+             showMessage("Critical Error: Firebase Auth service could not be initialized.", "error", 10000);
         }
 
         loadScheduleTitle();
@@ -929,18 +1020,100 @@
         });
         if(tablesContainer) {
             tablesContainer.addEventListener('click', handleTableCellClick);
-            tablesContainer.addEventListener('blur', (e) => { 
-                if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                    setTimeout(rebuildAndRenderSummary, 0); 
-                }
-            }, true); 
-            tablesContainer.addEventListener('input', (e) => { 
-                 if ((e.target.tagName === 'TD' || e.target.tagName === 'TH') && e.target.isContentEditable) {
-                    setTimeout(rebuildAndRenderSummary, 300); 
+            
+            tablesContainer.addEventListener('input', (e) => {
+                const cell = e.target;
+                if ((cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) && cell.isContentEditable) {
+                    // Handle inline autocomplete
+                    const text = cell.textContent;
+                    // Do not show autocomplete for the first column (Class/Time)
+                    if (cell.cellIndex > 0 || cell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class') {
+                         showCellAutocompleteSuggestions(cell, text);
+                    } else {
+                        hideCellAutocompleteSuggestions();
+                    }
+                    // Debounced summary update
+                    setTimeout(rebuildAndRenderSummary, 300);
+                } else if (cell.classList.contains('merged-cell-overlay')) {
+                    // Handle input in merged cell overlay
+                    const text = cell.textContent;
+                    const parentCell = cell.parentElement;
+                     if (parentCell && (parentCell.cellIndex > 0 || parentCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
+                        showCellAutocompleteSuggestions(parentCell, text); // Show suggestions relative to parent cell
+                    } else {
+                        hideCellAutocompleteSuggestions();
+                    }
+                    setTimeout(rebuildAndRenderSummary, 300);
                 }
             });
+
+            tablesContainer.addEventListener('blur', (e) => { 
+                const cell = e.target;
+                if ((cell.tagName === 'TD' || cell.tagName === 'TH' || cell.classList.contains('merged-cell-overlay')) && cell.isContentEditable !== false) { // contentEditable can be inherited
+                    setTimeout(rebuildAndRenderSummary, 0);
+                    // Hide autocomplete if focus moves out and not onto a suggestion
+                    setTimeout(() => {
+                        if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' &&
+                            !autocompleteSuggestionsDiv.contains(document.activeElement) &&
+                            activeCellForAutocomplete !== document.activeElement && // Check if focus is still on the cell itself
+                            (activeCellForAutocomplete && activeCellForAutocomplete.querySelector('.merged-cell-overlay') !== document.activeElement) // or its overlay
+                           ) {
+                           hideCellAutocompleteSuggestions();
+                        }
+                    }, 150); // Delay to allow click on suggestion
+                }
+            }, true); 
         }
-        window.addEventListener('resize', updateAllMergeOverlays); 
+        window.addEventListener('resize', () => {
+            updateAllMergeOverlays();
+            hideCellAutocompleteSuggestions(); // Hide on resize
+        }); 
+
+        // Global keydown for autocomplete navigation
+        document.addEventListener('keydown', (e) => {
+            if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && activeCellForAutocomplete) {
+                const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
+                if (items.length === 0 && e.key !== 'Escape') return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    currentAutocompleteIndex = (currentAutocompleteIndex + 1) % items.length;
+                    updateCellSuggestionHighlight();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    currentAutocompleteIndex = (currentAutocompleteIndex - 1 + items.length) % items.length;
+                    updateCellSuggestionHighlight();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (currentAutocompleteIndex >= 0 && currentAutocompleteIndex < items.length) {
+                        selectCellAutocompleteSuggestion(items[currentAutocompleteIndex].textContent);
+                    } else {
+                        // If no suggestion is highlighted but box is open, just hide it
+                        hideCellAutocompleteSuggestions();
+                         // Allow default Enter behavior (e.g., new line if cell supports it, or just confirm input)
+                        if(activeCellForAutocomplete) activeCellForAutocomplete.blur(); // Trigger blur to save, etc.
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    hideCellAutocompleteSuggestions();
+                } else if (e.key === 'Tab') {
+                    hideCellAutocompleteSuggestions(); // Hide on Tab out, default Tab behavior will occur
+                }
+            }
+        });
+
+        // Global click listener to hide autocomplete
+        document.addEventListener('click', (event) => {
+            if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block') {
+                const isClickInsideCell = activeCellForAutocomplete && activeCellForAutocomplete.contains(event.target);
+                const isClickInsideOverlay = activeCellForAutocomplete && activeCellForAutocomplete.querySelector('.merged-cell-overlay')?.contains(event.target);
+                const isClickInsideSuggestions = autocompleteSuggestionsDiv.contains(event.target);
+                
+                if (!isClickInsideCell && !isClickInsideSuggestions && !isClickInsideOverlay) {
+                    hideCellAutocompleteSuggestions();
+                }
+            }
+        });
     }
 
     function startDragModal(e) {
@@ -990,29 +1163,21 @@
             await navigator.clipboard.writeText(fullHtml);
             showMessage('Full HTML copied to clipboard!', 'success');
         } catch (err) {
-            console.warn('navigator.clipboard.writeText failed, trying execCommand: ', err);
             const textarea = document.createElement('textarea');
             textarea.value = fullHtml;
-            textarea.style.position = 'fixed'; 
-            textarea.style.left = '-9999px';
+            textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
             document.body.appendChild(textarea);
             textarea.select();
             try {
-                const successful = document.execCommand('copy');
-                if (successful) showMessage('Full HTML copied! (using fallback method)', 'success');
-                else showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
-            } catch (execErr) {
-                console.error('execCommand copy failed: ', execErr);
-                showMessage('Direct copy failed. Please try copying manually.', 'error', 5000);
-            }
+                document.execCommand('copy') ? showMessage('Full HTML copied! (fallback)', 'success') : showMessage('Direct copy failed.', 'error', 5000);
+            } catch (execErr) { showMessage('Direct copy failed.', 'error', 5000); }
             document.body.removeChild(textarea);
         }
     }
 
     function promptAndSaveDraft() {
         if (!tablesContainer || tablesContainer.children.length === 0) {
-            showMessage('No schedule data to save.', 'error');
-            return;
+            showMessage('No schedule data to save.', 'error'); return;
         }
         const allTablesData = tablesContainer.innerHTML;
         const allTableMeta = {};
@@ -1041,8 +1206,7 @@
         draftListElement.innerHTML = ''; 
         const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
         if (Object.keys(drafts).length === 0) {
-            draftListElement.innerHTML = '<p>No drafts saved yet.</p>';
-            return;
+            draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return;
         }
         for (const name in drafts) {
             const itemDiv = document.createElement('div');
@@ -1065,7 +1229,7 @@
                 const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
                 table.dataset.tableName = name;
                 addTabButton(id, name);
-                table.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
+                table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
             });
             activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
             if (document.getElementById(activeTableId)) {
@@ -1132,17 +1296,11 @@
             const blob = new Blob([drafts], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = 'all_schedule_drafts.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            a.href = url; a.download = 'all_schedule_drafts.json';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
             showMessage('All drafts exported successfully!', 'success');
-        } catch (error) {
-            console.error("Error exporting drafts:", error);
-            showMessage('Failed to export drafts.', 'error');
-        }
+        } catch (error) { showMessage('Failed to export drafts.', 'error'); }
     }
 
     async function handleDraftsFileImport(event) {
@@ -1150,14 +1308,12 @@
         if (!file) { showMessage('No file selected for import.', 'info'); return; }
         if (file.type !== 'application/json') {
             showMessage('Invalid file type. Please select a .json file.', 'error');
-            event.target.value = ''; 
-            return;
+            event.target.value = ''; return;
         }
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                const importedDraftsText = e.target.result;
-                const importedDraftsData = JSON.parse(importedDraftsText);
+                const importedDraftsData = JSON.parse(e.target.result);
                 if (typeof importedDraftsData !== 'object' || importedDraftsData === null) {
                     showMessage('Invalid draft file format.', 'error'); return;
                 }
@@ -1169,44 +1325,26 @@
                         if (draftData && typeof draftData.html === 'string' && typeof draftData.meta === 'object' && typeof draftData.active === 'string') {
                             if (localDrafts[draftName]) { 
                                 if (await customConfirm(`Draft "${draftName}" already exists. Overwrite?`)) {
-                                    localDrafts[draftName] = draftData;
-                                    overwrittenCount++;
-                                } else {
-                                    skippedCount++;
-                                }
-                            } else { 
-                                localDrafts[draftName] = draftData;
-                                importedCount++;
-                            }
-                        } else {
-                            console.warn(`Skipping invalid draft data for "${draftName}" during import.`);
-                            skippedCount++;
-                        }
+                                    localDrafts[draftName] = draftData; overwrittenCount++;
+                                } else { skippedCount++; }
+                            } else { localDrafts[draftName] = draftData; importedCount++; }
+                        } else { skippedCount++; }
                     }
                 }
                 localStorage.setItem(DRAFTS_KEY, JSON.stringify(localDrafts));
-                showMessage(`Drafts import complete: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
-                if (draftListElement && (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0)) {
-                    renderDraftList(); 
-                }
-            } catch (error) {
-                console.error("Error importing drafts:", error);
-                showMessage('Error processing draft file. Ensure it is a valid JSON export from this tool.', 'error', 5000);
-            }
+                showMessage(`Drafts import: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
+                if (draftListElement && (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0)) renderDraftList(); 
+            } catch (error) { showMessage('Error processing draft file.', 'error', 5000); }
             finally { event.target.value = ''; } 
         };
-        reader.onerror = () => {
-            showMessage('Failed to read the draft file.', 'error');
-            event.target.value = ''; 
-        };
+        reader.onerror = () => { showMessage('Failed to read the draft file.', 'error'); event.target.value = ''; };
         reader.readAsText(file);
     }
 
     function addTabButton(id, label) {
         if (!tableTabs) return null;
         const button = document.createElement('button');
-        button.textContent = label;
-        button.dataset.tableId = id;
+        button.textContent = label; button.dataset.tableId = id;
         button.title = `Switch to table: ${label}`;
         button.onclick = () => switchTable(id);
         tableTabs.appendChild(button);
@@ -1217,10 +1355,8 @@
         const targetTable = document.getElementById(id);
         if (!targetTable && tablesContainer) { 
             const firstTableInDOM = tablesContainer.querySelector('table');
-            if (firstTableInDOM) {
-                id = firstTableInDOM.id; 
-            } else { 
-                showMessage('Cannot switch: Target table not found and no other tables exist.', 'error');
+            if (firstTableInDOM) id = firstTableInDOM.id; 
+            else { 
                 if (tablesContainer && tablesContainer.children.length === 0) addNewTable(true); 
                 return;
             }
@@ -1231,6 +1367,7 @@
         deselectAllTableCells(); 
         rebuildAndRenderSummary();
         updateAllMergeOverlays();
+        hideCellAutocompleteSuggestions(); // Hide suggestions when switching tables
     }
 
     function addNewTable(isInitial = false) {
@@ -1240,85 +1377,71 @@
         const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
         if (!label && !isInitial) return; 
         const newTable = document.createElement('table');
-        const newTableId = `tbl_${Date.now()}_${tableCount}`; 
-        newTable.id = newTableId;
+        newTable.id = `tbl_${Date.now()}_${tableCount}`; 
         newTable.dataset.tableName = label || defaultTableName;
         const thead = newTable.createTHead();
         const headerRow = thead.insertRow();
         const defaultHeaders = ['Class/Time', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00'];
         defaultHeaders.forEach(headerText => {
             const th = document.createElement('th');
-            th.contentEditable = 'true';
-            th.textContent = headerText;
+            th.contentEditable = 'true'; th.textContent = headerText;
             headerRow.appendChild(th);
         });
         const tbody = newTable.createTBody();
         for (let r = 0; r < 2; r++) {
             const dataRow = tbody.insertRow();
             for (let c = 0; c < headerRow.cells.length; c++) {
-                const td = dataRow.insertCell();
-                td.contentEditable = 'true';
+                const td = dataRow.insertCell(); td.contentEditable = 'true';
                 if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`; 
             }
         }
         tablesContainer.appendChild(newTable);
-        addTabButton(newTableId, label || defaultTableName);
-        switchTable(newTableId); 
+        addTabButton(newTable.id, label || defaultTableName);
+        switchTable(newTable.id); 
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
     }
 
     async function promptAndRenameActiveTable() {
         if (!tableTabs) return;
         const currentTab = tableTabs.querySelector('button.active');
-        if (!currentTab) { showMessage('No active table to rename. Please select a table.', 'error'); return; }
+        if (!currentTab) { showMessage('No active table to rename.', 'error'); return; }
         let tableIdToRename = currentTab.dataset.tableId;
         if (!tableIdToRename) {
-            const onclickAttr = currentTab.getAttribute('onclick');
-            const match = onclickAttr ? onclickAttr.match(/'(tbl_.*?)'/) : null;
+            const match = currentTab.getAttribute('onclick')?.match(/'(tbl_.*?)'/);
             if (match && match[1]) tableIdToRename = match[1];
             else { showMessage('Could not identify table ID for renaming.', 'error'); return; }
         }
         const tableElement = document.getElementById(tableIdToRename);
-        if (!tableElement) { showMessage(`Error: Table element for ID ${tableIdToRename} not found.`, 'error'); return; }
+        if (!tableElement) { showMessage(`Table element for ID ${tableIdToRename} not found.`, 'error'); return; }
         const oldName = tableElement.dataset.tableName || currentTab.textContent;
         const newName = customPrompt('Enter new table name:', oldName);
-        if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
+        if (newName && newName.trim() && newName.trim() !== oldName) {
             const trimmedNewName = newName.trim();
-            currentTab.textContent = trimmedNewName;
-            currentTab.title = `Switch to table: ${trimmedNewName}`; 
+            currentTab.textContent = trimmedNewName; currentTab.title = `Switch to table: ${trimmedNewName}`; 
             tableElement.dataset.tableName = trimmedNewName;
             showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
-        } else if (newName && newName.trim() === oldName) {
-            showMessage('New name is the same as the old name. No changes made.', 'info');
-        } else if (newName === null) { 
-            showMessage('Rename cancelled.', 'info');
-        } else { 
-            showMessage('Invalid new name. Please enter a valid name.', 'error');
-        }
+        } else if (newName && newName.trim() === oldName) showMessage('Name unchanged.', 'info');
+        else if (newName === null) showMessage('Rename cancelled.', 'info');
+        else showMessage('Invalid new name.', 'error');
     }
 
     async function confirmAndDeleteActiveTable() {
         if (!tablesContainer || !tableTabs || tablesContainer.children.length <= 1) {
-            showMessage('Cannot delete the last table.', 'error');
-            return;
+            showMessage('Cannot delete the last table.', 'error'); return;
         }
         const activeTab = tableTabs.querySelector('button.active');
-        const tableIdToDelete = activeTab ? activeTab.dataset.tableId : null;
+        const tableIdToDelete = activeTab?.dataset.tableId;
         const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
-        const tableName = tableElement ? tableElement.dataset.tableName : (activeTab ? activeTab.textContent : 'the active table');
-        if (await customConfirm(`Delete table "${tableName}"? This action cannot be undone.`)) {
+        const tableName = tableElement?.dataset.tableName || activeTab?.textContent || 'the active table';
+        if (await customConfirm(`Delete table "${tableName}"? This cannot be undone.`)) {
             if (tableElement) tableElement.remove();
             else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
             activeTab?.remove(); 
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) { 
-                const nextActiveId = firstRemainingTab.dataset.tableId ||
-                                     firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; 
+                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; 
                 switchTable(nextActiveId);
-            } else { 
-                activeTableId = null;
-                addNewTable(true); 
-            }
+            } else { activeTableId = null; addNewTable(true); }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
     }
@@ -1326,35 +1449,25 @@
     function addRowToTable(tableBody, rowIndex, numCols) {
         const row = tableBody.insertRow(rowIndex); 
         for (let i = 0; i < numCols; i++) {
-            const cell = row.insertCell();
-            cell.contentEditable = 'true';
+            const cell = row.insertCell(); cell.contentEditable = 'true';
         }
     }
-
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return; 
         const numCols = table.rows[0].cells.length; 
-        let insertAtIndex = 0; 
-        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) {
-            insertAtIndex = lastClickedCell.parentElement.rowIndex; 
-        }
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex : 0; 
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-
     function addRowBelowToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const numCols = table.rows[0].cells.length;
-        let insertAtIndex = -1; 
-        if (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) {
-            insertAtIndex = lastClickedCell.parentElement.rowIndex + 1; 
-        }
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex + 1 : -1; 
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-
     function addColumnToTable(table, colIndex) { 
         for (const row of table.rows) {
             const isHeaderRow = row.parentElement.tagName === 'THEAD';
@@ -1362,70 +1475,52 @@
             cell.contentEditable = 'true';
             if (isHeaderRow) {
                 cell.textContent = "New Header";
-                if(!isHeaderRow && colIndex !== -1 && row.cells[colIndex]) { 
-                } else if (isHeaderRow && colIndex !== -1 && row.cells[colIndex]) {
-                     row.insertBefore(cell, row.cells[colIndex]);
-                } else if (isHeaderRow) { 
-                     row.appendChild(cell);
-                }
+                if (colIndex !== -1 && row.cells[colIndex]) row.insertBefore(cell, row.cells[colIndex]);
+                else row.appendChild(cell);
             }
         }
     }
-
     function addColumnLeftToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table) return;
-        let insertAtIndex = 0; 
-        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
-            insertAtIndex = lastClickedCell.cellIndex;
-        }
+        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex : 0;
         addColumnToTable(table, insertAtIndex);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-
     function addColumnRightToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table) return;
-        let insertAtIndex = -1; 
-        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
-            insertAtIndex = lastClickedCell.cellIndex + 1;
-        }
+        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex + 1 : -1;
         addColumnToTable(table, insertAtIndex);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-
     async function deleteClickedRowFromActiveTable() {
-        if (!lastClickedCell) { showMessage('Please click a cell in the row you want to delete.', 'info'); return; }
+        if (!lastClickedCell) { showMessage('Click a cell in the row to delete.', 'info'); return; }
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0]) { showMessage('No active table or table body found.', 'error'); return; }
+        if (!table || !table.tBodies[0]) { showMessage('No active table body.', 'error'); return; }
         const rowToDelete = lastClickedCell.closest('tr');
-        if (!rowToDelete || !rowToDelete.parentElement || rowToDelete.parentElement.tagName !== 'TBODY') {
-            showMessage('Cannot delete header row or invalid selection. Click a cell in a data row.', 'error'); return;
+        if (!rowToDelete || rowToDelete.parentElement.tagName !== 'TBODY') {
+            showMessage('Cannot delete header. Click a data row cell.', 'error'); return;
         }
         if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete the last data row.', 'error'); return; }
-        if (await customConfirm('Are you sure you want to delete this row?')) {
-            rowToDelete.remove();
-            lastClickedCell = null; 
+        if (await customConfirm('Delete this row?')) {
+            rowToDelete.remove(); lastClickedCell = null; 
             deselectAllTableCells(); 
             rebuildAndRenderSummary(); updateAllMergeOverlays();
             showMessage('Row deleted.', 'success');
         }
     }
-
     async function deleteClickedColumnFromActiveTable() {
-        if (!lastClickedCell) { showMessage('Please click a cell in the column you want to delete.', 'info'); return; }
+        if (!lastClickedCell) { showMessage('Click a cell in the column to delete.', 'info'); return; }
         const table = document.getElementById(activeTableId);
-        if (!table) { showMessage('No active table found.', 'error'); return; }
+        if (!table) { showMessage('No active table.', 'error'); return; }
         if (table.rows[0] && table.rows[0].cells.length <= 1) { showMessage('Cannot delete the last column.', 'error'); return; }
         const colIndexToDelete = lastClickedCell.cellIndex;
-        if (await customConfirm('Are you sure you want to delete this column?')) {
+        if (await customConfirm('Delete this column?')) {
             for (const row of table.rows) {
-                if (row.cells[colIndexToDelete]) {
-                    row.cells[colIndexToDelete].remove();
-                }
+                if (row.cells[colIndexToDelete]) row.cells[colIndexToDelete].remove();
             }
-            lastClickedCell = null; 
-            deselectAllTableCells();
+            lastClickedCell = null; deselectAllTableCells();
             rebuildAndRenderSummary(); updateAllMergeOverlays();
             showMessage('Column deleted.', 'success');
         }
@@ -1439,40 +1534,39 @@
             btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
         }
         if (!selectionMode) deselectAllTableCells(); 
+        hideCellAutocompleteSuggestions(); // Hide autocomplete when toggling selection
     }
 
     function handleTableCellClick(event) {
         const cell = event.target.closest('td, th');
         if (!cell || !cell.closest(`#${activeTableId}`)) return; 
         lastClickedCell = cell; 
-        if (selectedNameFromList) { 
+        // If autocomplete is visible and click is outside suggestions, hide it
+        if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
+            hideCellAutocompleteSuggestions();
+        }
+
+        if (selectedNameFromList) { // From modal
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
                 const overlay = cell.querySelector('.merged-cell-overlay');
-                if (overlay) { 
-                    overlay.textContent = selectedNameFromList;
-                } else {
-                    cell.textContent = selectedNameFromList;
-                }
+                if (overlay) overlay.textContent = selectedNameFromList;
+                else cell.textContent = selectedNameFromList;
                 rebuildAndRenderSummary(); 
-                showMessage(`Inserted "${selectedNameFromList}". Select another name or close list.`, 'success', 2500);
-                clearNameSelection(); 
+                showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500);
+                clearNameSelection(); // Clear modal selection
             } else {
-                showMessage('Click an editable data cell (or row header in body) to insert name.', 'info');
+                showMessage('Click an editable data cell to insert name.', 'info');
             }
             return; 
         }
         if (selectionMode) { 
             if (cell.classList.contains('subsumed-cell') ||
                 (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
-                showMessage('Cannot select subsumed cells or mix different merge groups.', 'warning');
-                return;
+                showMessage('Cannot select subsumed cells or mix merge groups.', 'warning'); return;
             }
             cell.classList.toggle('selected');
-            if (cell.classList.contains('selected')) {
-                selectedCells.push(cell);
-            } else {
-                selectedCells = selectedCells.filter(c => c !== cell);
-            }
+            if (cell.classList.contains('selected')) selectedCells.push(cell);
+            else selectedCells = selectedCells.filter(c => c !== cell);
         }
     }
 
@@ -1484,8 +1578,7 @@
     function mergeSelectedTableCells() {
         if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error'); return; }
         if (selectedCells.some(cell => cell.dataset.mergeId)) {
-            showMessage('Cannot merge cells that are already part of another merge. Unmerge them first.', 'warning');
-            return;
+            showMessage('Cannot merge already merged cells. Unmerge first.', 'warning'); return;
         }
         let primaryCell = selectedCells[0];
         let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top;
@@ -1494,21 +1587,16 @@
             const cellRowRect = cell.parentElement.getBoundingClientRect();
             const cellRect = cell.getBoundingClientRect();
             if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) {
-                primaryCell = cell;
-                minRowGUI = cellRowRect.top;
-                minColGUI = cellRect.left;
+                primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left;
             }
         });
         let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
         selectedCells.forEach(cell => {
             const rect = cell.getBoundingClientRect();
-            minLeft = Math.min(minLeft, rect.left);
-            maxRight = Math.max(maxRight, rect.right);
-            minTop = Math.min(minTop, rect.top);
-            maxBottom = Math.max(maxBottom, rect.bottom);
+            minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right);
+            minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom);
         });
-        const totalWidth = maxRight - minLeft;
-        const totalHeight = maxBottom - minTop;
+        const totalWidth = maxRight - minLeft; const totalHeight = maxBottom - minTop;
         const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const overlay = document.createElement('div');
         overlay.className = 'merged-cell-overlay';
@@ -1516,17 +1604,23 @@
         overlay.contentEditable = 'true'; 
         overlay.style.setProperty('--merged-width', `${totalWidth}px`);
         overlay.style.setProperty('--merged-height', `${totalHeight}px`);
-        overlay.addEventListener('blur', () => { 
-            rebuildAndRenderSummary();
+        overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); });
+        overlay.addEventListener('input', (e) => { // Propagate input for autocomplete
+            const text = e.target.textContent;
+            if (primaryCell && (primaryCell.cellIndex > 0 || primaryCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
+                 showCellAutocompleteSuggestions(primaryCell, text);
+            } else {
+                 hideCellAutocompleteSuggestions();
+            }
         });
-        primaryCell.innerHTML = ''; 
-        primaryCell.appendChild(overlay);
+
+
+        primaryCell.innerHTML = ''; primaryCell.appendChild(overlay);
         primaryCell.classList.add('merged-cell-container');
         primaryCell.setAttribute('data-merge-id', mergeId);
         selectedCells.forEach(cell => {
             if (cell !== primaryCell) {
-                cell.textContent = ''; 
-                cell.classList.add('subsumed-cell');
+                cell.textContent = ''; cell.classList.add('subsumed-cell');
                 cell.setAttribute('data-merge-id', mergeId);
             }
         });
@@ -1537,9 +1631,9 @@
 
     function unmergeActiveCellIfMerged() {
         const cell = lastClickedCell; 
-        if (!cell) { showMessage('Please click on a merged cell to unmerge it.', 'info'); return; }
+        if (!cell) { showMessage('Click a merged cell to unmerge.', 'info'); return; }
         const containerCell = cell.closest('[data-merge-id]'); 
-        if (!containerCell) { showMessage('The clicked cell is not part of a visual merge.', 'error'); return; }
+        if (!containerCell) { showMessage('Clicked cell is not merged.', 'error'); return; }
         const mergeId = containerCell.dataset.mergeId;
         const table = containerCell.closest('table');
         if (!table) return;
@@ -1558,11 +1652,8 @@
             if (overlayChild) overlayChild.remove(); 
             c.innerHTML = ''; 
         });
-        if (primaryCellInGroup) {
-            primaryCellInGroup.textContent = originalText;
-        } else if (cellsInGroup.length > 0) { 
-            cellsInGroup[0].textContent = originalText;
-        }
+        if (primaryCellInGroup) primaryCellInGroup.textContent = originalText;
+        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText;
         rebuildAndRenderSummary();
         showMessage('Cells unmerged.', 'success');
     }
@@ -1572,25 +1663,19 @@
         if (!activeTable) return;
         const mergedContainers = activeTable.querySelectorAll('.merged-cell-container');
         mergedContainers.forEach(containerCell => {
-            const mergeId = containerCell.dataset.mergeId;
-            if (!mergeId) return;
-            const overlay = containerCell.querySelector('.merged-cell-overlay');
-            if (!overlay) return;
+            const mergeId = containerCell.dataset.mergeId; if (!mergeId) return;
+            const overlay = containerCell.querySelector('.merged-cell-overlay'); if (!overlay) return;
             const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`));
             if (cellsInGroup.length === 0) return;
             let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
-            cellsInGroup.forEach(cellInvolvedInMerge => {
-                const rect = cellInvolvedInMerge.getBoundingClientRect();
-                minLeft = Math.min(minLeft, rect.left);
-                maxRight = Math.max(maxRight, rect.right);
-                minTop = Math.min(minTop, rect.top);
-                maxBottom = Math.max(maxBottom, rect.bottom);
+            cellsInGroup.forEach(cellInvolved => {
+                const rect = cellInvolved.getBoundingClientRect();
+                minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right);
+                minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom);
             });
             if (minLeft === Infinity) return; 
-            const newWidth = maxRight - minLeft;
-            const newHeight = maxBottom - minTop;
-            overlay.style.setProperty('--merged-width', `${newWidth}px`);
-            overlay.style.setProperty('--merged-height', `${newHeight}px`);
+            overlay.style.setProperty('--merged-width', `${maxRight - minLeft}px`);
+            overlay.style.setProperty('--merged-height', `${maxBottom - minTop}px`);
         });
     }
 
@@ -1601,16 +1686,18 @@
         if(nameModalTitleElement) nameModalTitleElement.textContent = `Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
         if(searchNameInputElement) searchNameInputElement.value = ''; 
         renderNameListFromFirestore(); 
+        hideCellAutocompleteSuggestions(); // Hide if session changes
     }
 
-    function highlightSelectedNameInList(nameToHighlight) {
+    function highlightSelectedNameInList(nameToHighlight) { // For modal
         if (!nameListContainer) return;
+        const nameToHighlightStr = String(nameToHighlight || '');
         nameListContainer.querySelectorAll('.name-item span').forEach(span => {
-            span.classList.toggle('highlighted', span.dataset.name === nameToHighlight);
+            span.classList.toggle('highlighted', String(span.dataset.name || '') === nameToHighlightStr);
         });
     }
 
-    function clearNameSelection() {
+    function clearNameSelection() { // For modal
         selectedNameFromList = null;
         if (nameListContainer) {
             nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => {
@@ -1628,12 +1715,10 @@
     function toggleNameListModalVisibility() {
         if (!nameModal || !nameModalContent || !newNameInput) return;
         const isDisplayed = nameModal.style.display === 'flex';
-        if (isDisplayed) {
-            closeNameModal();
-        } else {
+        if (isDisplayed) closeNameModal();
+        else {
             nameModalContent.style.position = 'relative'; 
-            nameModalContent.style.left = 'auto';
-            nameModalContent.style.top = 'auto';
+            nameModalContent.style.left = 'auto'; nameModalContent.style.top = 'auto';
             nameModalContent.style.transform = 'none'; 
             nameModal.style.display = 'flex';
             if(searchNameInputElement) searchNameInputElement.value = ''; 
@@ -1641,70 +1726,59 @@
             if(newNameInput) newNameInput.focus();
             clearNameSelection();
         }
+        hideCellAutocompleteSuggestions(); // Hide any cell autocomplete
     }
 
-    function renderNameListFromFirestore(filterText = '') {
+    function renderNameListFromFirestore(filterText = '') { // For Modal
         if (!nameListContainer) return;
         if (!fbIsAuthReady) {
-            nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names or Firebase not ready...</p>';
-            return;
+            nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names...</p>'; return;
         }
         nameListContainer.innerHTML = ''; 
         const namesToRender = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
-        const normalizedFilterText = filterText.toLowerCase().trim();
-        const filteredNames = namesToRender.filter(name => name.toLowerCase().includes(normalizedFilterText));
+        const normalizedFilterText = String(filterText || '').toLowerCase().trim();
+        if (!Array.isArray(namesToRender)) {
+            nameListContainer.innerHTML = '<p style="text-align:center; color:red;">Error: Name list data invalid.</p>'; return;
+        }
+        const filteredNames = namesToRender.filter(name => String(name || '').toLowerCase().trim().includes(normalizedFilterText));
         if (filteredNames.length === 0) {
-            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ?
-            'No names match your search.' : `No names in ${currentNameListSession} session. Add some!`}</p>`;
-            return;
+            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ? 'No names match.' : `No names in ${currentNameListSession} session.`}</p>`; return;
         }
         filteredNames.forEach(name => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'name-item';
-            itemDiv.innerHTML = `<span data-name="${name}" title="Click to select '${name}' for insertion">${name}</span><button data-name-delete="${name}" title="Delete name '${name}' from ${currentNameListSession} list">Delete</button>`;
+            const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
+            const nameStr = String(name || '');
+            const safeNameAttr = nameStr.replace(/"/g, '&quot;');
+            itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}'">Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
         highlightSelectedNameInList(selectedNameFromList); 
     }
 
-    function selectNameForCellInsertion(name) {
-        selectedNameFromList = name;
-        highlightSelectedNameInList(name); 
-        showMessage(`Selected "${name}". Click a cell to insert.`, 'info', 4000);
+    function selectNameForCellInsertion(name) { // For Modal selection
+        selectedNameFromList = String(name || '');
+        highlightSelectedNameInList(selectedNameFromList); 
+        showMessage(`Selected "${selectedNameFromList}". Click a cell to insert.`, 'info', 4000);
     }
 
     function handleNameListImportFirestore(event) {
         const file = event.target.files[0];
-        if (!file) { showMessage('No file selected for import.', 'info'); return; }
+        if (!file) { showMessage('No file selected.', 'info'); return; }
         if (file.type !== 'text/plain') {
-            showMessage('Invalid file type. Please select a .txt file.', 'error');
+            showMessage('Invalid file type (.txt only).', 'error');
             event.target.value = ''; return;
         }
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                const content = e.target.result;
-                const importedNames = content.split(/\r?\n/) 
-                                          .map(name => name.trim())
-                                          .filter(name => name !== ''); 
-                if (importedNames.length === 0) {
-                    showMessage('No names found in the selected file.', 'info');
-                    return;
-                }
-                const currentSessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+                const importedNames = e.target.result.split(/\r?\n/).map(n => String(n||'').trim()).filter(n => n);
+                if (importedNames.length === 0) { showMessage('No names in file.', 'info'); return; }
+                const currentSessionNames = (currentNameListSession === 'pagi' ? namesPagi : namesPetang).map(n => String(n||'').trim());
                 const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
                 await saveNameListToFirestore(currentNameListSession, combinedNames);
-            } catch (error) {
-                console.error("Error importing name list to Firestore:", error);
-                showMessage('Error processing the name list file for Firestore.', 'error');
-            } finally {
-                event.target.value = ''; 
-            }
+            } catch (error) { showMessage('Error processing name list file.', 'error'); }
+            finally { event.target.value = ''; }
         };
-        reader.onerror = () => {
-            showMessage('Failed to read the name list file.', 'error');
-            event.target.value = '';
-        };
+        reader.onerror = () => { showMessage('Failed to read name list file.', 'error'); event.target.value = ''; };
         reader.readAsText(file);
     }
 
@@ -1721,24 +1795,18 @@
                 tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
                 const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = htmlTableString;
+                const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
                 const importedTableElement = tempDiv.querySelector('table');
                 if (importedTableElement) {
                     importedTableElement.id = newTableId;
                     importedTableElement.dataset.tableName = importedTableName;
-                    importedTableElement.querySelectorAll('td, th').forEach(cell => cell.contentEditable = 'true');
+                    importedTableElement.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
                     addTabButton(newTableId, importedTableName);
                     switchTable(newTableId); 
-                    showMessage('Excel data imported into a new table!', 'success');
-                } else {
-                    showMessage('Could not parse table from Excel file.', 'error');
-                }
-            } catch (error) {
-                console.error("Excel import error:", error);
-                showMessage('Error processing Excel file. Ensure it is a valid .xlsx or .xls file.', 'error');
-            }
+                    showMessage('Excel data imported!', 'success');
+                } else showMessage('Could not parse table from Excel.', 'error');
+            } catch (error) { showMessage('Error processing Excel file.', 'error'); }
             finally { event.target.value = ''; } 
         };
         reader.readAsArrayBuffer(file);
@@ -1747,25 +1815,27 @@
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
         if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
-        const overlaysData = [];
+        const overlaysData = []; // Temporarily replace overlays with their text for export
         tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
             const parentCell = overlay.parentElement;
-            overlaysData.push({
-                parent: parentCell,
-                originalParentHTML: parentCell.innerHTML, 
-                text: overlay.textContent 
-            });
+            overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML });
             parentCell.textContent = overlay.textContent; 
         });
         const tableName = tableToExport.dataset.tableName || activeTableId;
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
-        overlaysData.forEach(data => {
-            data.parent.innerHTML = data.originalParentHTML; 
+        overlaysData.forEach(data => { // Restore overlays
+            data.parent.innerHTML = data.originalHTML; 
             const newOverlay = data.parent.querySelector('.merged-cell-overlay');
             if (newOverlay) {
-                 newOverlay.addEventListener('blur', () => {
-                    rebuildAndRenderSummary();
+                newOverlay.addEventListener('blur', () => rebuildAndRenderSummary());
+                newOverlay.addEventListener('input', (e) => {
+                    const text = e.target.textContent;
+                    if (data.parent && (data.parent.cellIndex > 0 || data.parent.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
+                        showCellAutocompleteSuggestions(data.parent, text);
+                    } else {
+                        hideCellAutocompleteSuggestions();
+                    }
                 });
             }
         });
@@ -1780,23 +1850,17 @@
                 if (!scheduleTable.tBodies[0]) return; 
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
+                        // Skip first column (class/time identifier) for name gathering
+                        if (cellIndex === 0 && cell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() === 'class') return;
+
                         const overlay = cell.querySelector('.merged-cell-overlay');
-                        if (overlay) { 
-                            const nameFromOverlay = overlay.textContent.trim();
-                            if (nameFromOverlay) {
-                                scheduledNames.add(nameFromOverlay);
-                            }
-                        } else if (cellIndex > 0 && cell.tagName === 'TD') { 
-                            const nameFromTd = cell.textContent.trim();
-                            if (nameFromTd) {
-                                scheduledNames.add(nameFromTd);
-                            }
-                        }
+                        const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
+                        if (nameFromCell) scheduledNames.add(nameFromCell);
                     });
                 });
             });
         }
-        const allSummaryNames = [...scheduledNames].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        const allSummaryNames = [...scheduledNames].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
         buildSummaryTableSkeleton(allSummaryNames);
         updateSummaryTableData(allSummaryNames);
     }
@@ -1804,25 +1868,20 @@
     function parseTimeToMinutes(timeStr) {
         if (typeof timeStr !== 'string') return Infinity; 
         const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
-        if (match) {
-            return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
-        }
+        if (match) return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
         return Infinity; 
     }
 
     function buildSummaryTableSkeleton(allAvailableNames) { 
-        if (!summaryTableElement) { console.error("Summary table element not found."); return; }
+        if (!summaryTableElement) return; 
         summaryTableElement.innerHTML = ''; 
         const tempRawHeadersFromSchedules = new Set(); 
         if (tablesContainer) {
             tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
                 if (scheduleTable.tHead && scheduleTable.tHead.rows.length > 0) {
-                    for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) {
-                        const th = scheduleTable.tHead.rows[0].cells[hIdx];
-                        const headerText = th.textContent.trim();
-                        if (headerText) { 
-                            tempRawHeadersFromSchedules.add(headerText);
-                        }
+                    for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) { // Start from 1 to skip class/time
+                        const headerText = String(scheduleTable.tHead.rows[0].cells[hIdx].textContent || '').trim();
+                        if (headerText) tempRawHeadersFromSchedules.add(headerText);
                     }
                 }
             });
@@ -1835,100 +1894,76 @@
             for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
                 if (laulisahRuleRequiresSpecialSlot) break; 
                 if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
-                const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+                const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
                 Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
                     if (laulisahRuleRequiresSpecialSlot) return;
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                          const scheduleCell = scheduleDataRow.cells[cellIdx];
-                         let entryInScheduleCell = scheduleCell.textContent.trim();
-                         const overlay = scheduleCell.querySelector('.merged-cell-overlay');
-                         if (overlay) entryInScheduleCell = overlay.textContent.trim();
+                         let entryInScheduleCell = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
                          if (specialNamesForRule.includes(entryInScheduleCell)) {
                             const headerText = currentScheduleTableHeaders[cellIdx];
-                            if (headerText) {
-                               const normalizedHeader = headerText.replace(/\s/g, "").replace(/:/g,".");
-                                const normalizedSourceSlot = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
-                                if (normalizedHeader === normalizedSourceSlot) {
-                                    laulisahRuleRequiresSpecialSlot = true;
-                                    return; 
-                                }
+                            if (headerText && headerText.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
+                                laulisahRuleRequiresSpecialSlot = true; return; 
                             }
                          }
                     }
                 });
             }
         }
-        if (laulisahRuleRequiresSpecialSlot) {
-            tempRawHeadersFromSchedules.add(targetSlotForSpecialNamesRule);
-        }
-        let sortedOriginalUniqueHeaders = Array.from(tempRawHeadersFromSchedules);
-        sortedOriginalUniqueHeaders.sort((a, b) => {
-            const timeA = parseTimeToMinutes(a);
-            const timeB = parseTimeToMinutes(b);
+        if (laulisahRuleRequiresSpecialSlot) tempRawHeadersFromSchedules.add(targetSlotForSpecialNamesRule);
+        
+        let sortedOriginalUniqueHeaders = Array.from(tempRawHeadersFromSchedules).sort((a, b) => {
+            const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b);
             if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
-            if (timeA !== Infinity) return -1; 
-            if (timeB !== Infinity) return 1;  
-            return a.localeCompare(b); 
+            if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  
+            return String(a).localeCompare(String(b));
         });
         const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedOriginalUniqueHeaders];
         const thead = summaryTableElement.createTHead();
         const headerRowForSummary = thead.insertRow();
         finalSummaryColumnHeaders.forEach(headerText => {
-            const th = document.createElement('th');
-            th.textContent = headerText;
+            const th = document.createElement('th'); th.textContent = headerText;
             headerRowForSummary.appendChild(th);
         });
         const tbody = summaryTableElement.createTBody();
         if (allAvailableNames.length === 0) { 
-            const tr = tbody.insertRow();
-            const td = tr.insertCell();
-            td.textContent = "No names have been scheduled yet.";
-            td.colSpan = finalSummaryColumnHeaders.length > 0 ? finalSummaryColumnHeaders.length : 1;
-            td.style.textAlign = 'center';
-            td.style.fontStyle = 'italic';
+            const tr = tbody.insertRow(); const td = tr.insertCell();
+            td.textContent = "No names scheduled yet.";
+            td.colSpan = finalSummaryColumnHeaders.length || 1;
+            td.style.textAlign = 'center'; td.style.fontStyle = 'italic';
         } else {
             allAvailableNames.forEach(name => {
                 const tr = tbody.insertRow();
-                tr.insertCell().textContent = name; 
-                for (let i = 1; i < finalSummaryColumnHeaders.length; i++) {
-                    tr.insertCell().textContent = '';
-                }
+                tr.insertCell().textContent = String(name || '');
+                for (let i = 1; i < finalSummaryColumnHeaders.length; i++) tr.insertCell().textContent = '';
             });
         }
     }
 
     function updateSummaryTableData(allAvailableNames) { 
-        if (!summaryTableElement || !summaryTableElement.tBodies || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) {
-            return; 
-        }
+        if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) return; 
         const summaryBody = summaryTableElement.tBodies[0];
-        if (!summaryBody || (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1))) {
-            return;
-        }
-        const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => th.textContent.trim());
+        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) return;
+        
+        const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
-        Array.from(summaryBody.rows).forEach(summaryRow => {
-            if (summaryRow.cells.length > 1) { 
-                Array.from(summaryRow.cells).slice(1).forEach(cell => {
-                    cell.textContent = '';
-                    cell.classList.remove('highlight-conflict'); 
-                });
-            }
+        
+        Array.from(summaryBody.rows).forEach(summaryRow => { // Clear previous data
+            if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).slice(1).forEach(cell => {
+                cell.textContent = ''; cell.classList.remove('highlight-conflict'); 
+            });
         });
+
         if (tablesContainer) {
             tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-                if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) {
-                    return; 
-                }
-                const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => th.textContent.trim());
+                if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) return; 
+                const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
                 Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
-                    const classIdentifier = scheduleDataRow.cells[0]?.textContent.trim(); 
+                    const classIdentifier = String(scheduleDataRow.cells[0]?.textContent||'').trim();
                     if (!classIdentifier) return; 
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                         const scheduleCell = scheduleDataRow.cells[cellIdx];
-                        let entryInScheduleCell = scheduleCell.textContent.trim(); 
-                        const overlay = scheduleCell.querySelector('.merged-cell-overlay');
-                        if (overlay) entryInScheduleCell = overlay.textContent.trim(); 
+                        let entryInScheduleCell = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
                         if (entryInScheduleCell) { 
                             let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx];
                             if (!scheduleColumnHeaderForThisCell) continue; 
@@ -1936,21 +1971,18 @@
                             const specialNamesForRule = ["LAU", "LISAH"];
                             const targetSlotForSpecialNamesRule = "10.15-10.30";
                             const sourceSlotToShiftRule = "10.30-12.00";
-                            const normalizedScheduleColHeader = scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".");
-                            const normalizedSourceSlotRule = sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".");
-                            if (specialNamesForRule.includes(entryInScheduleCell) && normalizedScheduleColHeader === normalizedSourceSlotRule) {
+                            if (specialNamesForRule.includes(entryInScheduleCell) && scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
                                 summaryColumnToUse = targetSlotForSpecialNamesRule;
                             }
-                            const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === entryInScheduleCell);
-                            if (targetSummaryRow && targetSummaryRow.cells.length > 1) {
-                                const normalizedSummaryColToUseLookup = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
-                                const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.indexOf(normalizedSummaryColToUseLookup);
+                            const targetSummaryRow = Array.from(summaryBody.rows).find(sr => String(sr.cells[0]?.textContent||'') === entryInScheduleCell);
+                            if (targetSummaryRow?.cells.length > 1) {
+                                const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.indexOf(summaryColumnToUse.replace(/\s/g, "").replace(/:/g,"."));
                                 if (targetSummaryColumnCellIndex > 0) { 
                                     const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
                                     let existingClasses = summaryCellToUpdate.textContent.trim() ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim()) : [];
                                     if (!existingClasses.includes(classIdentifier)) {
                                         existingClasses.push(classIdentifier);
-                                        summaryCellToUpdate.textContent = existingClasses.sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' })).join(', ');
+                                        summaryCellToUpdate.textContent = existingClasses.sort((a,b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' })).join(', ');
                                     }
                                 }
                             }
@@ -1959,17 +1991,10 @@
                 });
             });
         }
-        Array.from(summaryBody.rows).forEach(summaryRow => {
-            if (summaryRow.cells.length > 1) {
-                Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
-                    if (cellIndex > 0) { 
-                        const cellText = cell.textContent.trim();
-                        if (cellText.includes(',')) { 
-                            cell.classList.add('highlight-conflict');
-                        }
-                    }
-                });
-            }
+        Array.from(summaryBody.rows).forEach(summaryRow => { // Highlight conflicts
+            if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
+                if (cellIndex > 0 && cell.textContent.includes(',')) cell.classList.add('highlight-conflict');
+            });
         });
     }
 
@@ -1977,357 +2002,80 @@
 </body>
 </html>
 
-<!-- Mobile-friendly styles -->
 <style>
 /* Mobile-friendly responsive styles */
 @media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-    
-    .main-container {
-        padding: 15px;
-        border-radius: 8px;
-    }
-    
-    .bar {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .bar button {
-        margin: 5px;
-        min-height: 44px; /* Better touch targets */
-        font-size: 14px;
-    }
-    
-    table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-    
-    th, td {
-        min-width: 80px;
-        padding: 8px;
-    }
-    
-    /* Modal improvements for mobile */
-    .modal-content {
-        width: 95%;
-        max-width: 95%;
-        margin: 10px auto;
-        max-height: 90vh;
-    }
-    
-    /* Name list grid layout for mobile */
-    #nameList {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 8px;
-        padding: 5px;
-    }
-    
-    #nameList div {
-        background-color: #f8f9fa;
-        border-radius: 6px;
-        padding: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: all 0.2s;
-    }
-    
-    #nameList div:hover {
-        background-color: #e9ecef;
-        transform: translateY(-2px);
-    }
-    
-    #nameList div span {
-        flex-grow: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        padding: 4px;
-    }
-    
-    #nameList div button {
-        background-color: #ff4d4f;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        width: 28px;
-        height: 28px;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        padding: 0;
-        margin-left: 5px;
-    }
-    
-    /* Improve input fields on mobile */
-    input[type="text"], input:not([type]) {
-        padding: 10px;
-        font-size: 16px; /* Prevents iOS zoom on focus */
-    }
-    
-    /* Better scrolling on mobile */
-    #tablesContainer {
-        -webkit-overflow-scrolling: touch;
-    }
+    body { padding: 10px; }
+    .main-container { padding: 15px; border-radius: 8px; }
+    .bar { flex-wrap: wrap; justify-content: center; }
+    .bar button { margin: 5px; min-height: 44px; font-size: 14px; }
+    table { display: block; overflow-x: auto; white-space: nowrap; }
+    th, td { min-width: 80px; padding: 8px; }
+    .modal-content { width: 95%; max-width: 95%; margin: 10px auto; max-height: 90vh; }
+    #nameList { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; padding: 5px; }
+    #nameList .name-item { background-color: #f8f9fa; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.2s; }
+    #nameList .name-item:hover { background-color: #e9ecef; transform: translateY(-2px); }
+    #nameList .name-item span { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #nameList .name-item button { background-color: #ff4d4f; color: white; border: none; border-radius: 4px; width: 28px; height: 28px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; margin-left: 5px; }
+    input[type="text"], input:not([type]) { padding: 10px; font-size: 16px; }
+    #tablesContainer { -webkit-overflow-scrolling: touch; }
 }
-
-/* Animation for name items */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-#nameList div {
-    animation: fadeIn 0.3s ease-out;
-    animation-fill-mode: both;
-}
-
-#nameList div:nth-child(1) { animation-delay: 0.05s; }
-#nameList div:nth-child(2) { animation-delay: 0.1s; }
-#nameList div:nth-child(3) { animation-delay: 0.15s; }
-#nameList div:nth-child(4) { animation-delay: 0.2s; }
-#nameList div:nth-child(5) { animation-delay: 0.25s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+#nameList .name-item { animation: fadeIn 0.3s ease-out both; }
+#nameList .name-item:nth-child(1) { animation-delay: 0.05s; }
+#nameList .name-item:nth-child(2) { animation-delay: 0.1s; }
+#nameList .name-item:nth-child(3) { animation-delay: 0.15s; }
 </style>
 
 <script>
-// Mobile-friendly enhancements - Added without modifying original functionality
+// Mobile-friendly enhancements (separate script block)
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for the original script to initialize
     setTimeout(function() {
-        // Enhance the name list rendering for mobile
-        const originalRenderNameList = window.renderNameListFromFirestore;
-        if (typeof originalRenderNameList === 'function') {
+        if (typeof window.renderNameListFromFirestore === 'function') {
+            const originalRenderNameList = window.renderNameListFromFirestore;
             window.renderNameListFromFirestore = function(filterText = '') {
-                // Call the original function first
-                originalRenderNameList(filterText);
-                
-                // Then enhance the rendered list for mobile
+                originalRenderNameList(filterText); // Call original
                 const nameList = document.getElementById('nameList');
                 if (nameList) {
-                    // Add touch-friendly classes and attributes
-                    const nameItems = nameList.querySelectorAll('div');
-                    nameItems.forEach(function(item, index) {
-                        // Add animation delay based on position
+                    nameList.querySelectorAll('.name-item').forEach((item, index) => {
                         item.style.animationDelay = `${0.05 + (index * 0.02)}s`;
-                        
-                        // Make delete buttons more touch-friendly
                         const deleteBtn = item.querySelector('button');
-                        if (deleteBtn) {
-                            deleteBtn.title = `Delete ${item.querySelector('span').textContent}`;
-                        }
-                        
-                        // Make name spans more touch-friendly
                         const nameSpan = item.querySelector('span');
-                        if (nameSpan) {
-                            nameSpan.style.padding = '8px';
-                            nameSpan.title = `Click to select '${nameSpan.textContent}' for insertion`;
-                        }
+                        if (deleteBtn && nameSpan) deleteBtn.title = `Delete ${nameSpan.textContent}`;
+                        if (nameSpan) nameSpan.title = `Click to select '${nameSpan.textContent}' for insertion`;
                     });
                 }
             };
         }
-        
-        // Make the modal more responsive
-        const nameModal = document.getElementById('nameModal');
         const nameModalContent = document.getElementById('nameModalContent');
-        if (nameModal && nameModalContent) {
-            // Adjust modal position for better mobile viewing
-            if (window.innerWidth < 768) {
-                nameModalContent.style.margin = '10px auto';
-                nameModalContent.style.width = '95%';
-                nameModalContent.style.maxWidth = '95%';
-                nameModalContent.style.maxHeight = '90vh';
-            }
-            
-            // Add resize handler
-            window.addEventListener('resize', function() {
+        if (nameModalContent) {
+            function adjustModalForMobile() {
                 if (window.innerWidth < 768) {
-                    nameModalContent.style.margin = '10px auto';
-                    nameModalContent.style.width = '95%';
-                    nameModalContent.style.maxWidth = '95%';
-                    nameModalContent.style.maxHeight = '90vh';
+                    nameModalContent.style.margin = '10px auto'; nameModalContent.style.width = '95%';
+                    nameModalContent.style.maxWidth = '95%'; nameModalContent.style.maxHeight = '90vh';
                 } else {
-                    nameModalContent.style.margin = '50px auto';
-                    nameModalContent.style.width = '80%';
-                    nameModalContent.style.maxWidth = '600px';
-                    nameModalContent.style.maxHeight = '80vh';
+                    nameModalContent.style.margin = ''; nameModalContent.style.width = '';
+                    nameModalContent.style.maxWidth = ''; nameModalContent.style.maxHeight = '';
                 }
-            });
-        }
-        
-        // Enhance search input for mobile
-        const searchNameInput = document.getElementById('searchNameInput');
-        if (searchNameInput) {
-            searchNameInput.style.fontSize = '16px'; // Prevents iOS zoom on focus
-            searchNameInput.style.padding = '10px';
-        }
-        
-        // Enhance new name input for mobile
-        const newNameInput = document.getElementById('newNameInput');
-        if (newNameInput) {
-            newNameInput.style.fontSize = '16px'; // Prevents iOS zoom on focus
-            newNameInput.style.padding = '10px';
-        }
-        
-        // Make buttons more touch-friendly
-        document.querySelectorAll('.bar button, .modal button').forEach(function(button) {
-            if (window.innerWidth < 768) {
-                button.style.minHeight = '44px';
-                button.style.padding = '10px 15px';
             }
-        });
-    }, 1000); // Wait for 1 second to ensure original script has initialized
+            adjustModalForMobile(); window.addEventListener('resize', adjustModalForMobile);
+        }
+    }, 1000);
 });
 
-// Enhanced Firestore connection with offline support
+// Firestore offline persistence (conceptual, simplified)
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for Firebase to be initialized
     setTimeout(function() {
-        // Enable offline persistence for Firestore if Firebase is available
-        if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
-            try {
-                firebase.firestore().enablePersistence({synchronizeTabs: true})
-                    .then(() => {
-                        console.log("Offline persistence enabled successfully");
-                        if (typeof showMessage === 'function') {
-                            showMessage("Offline mode enabled. Changes will sync when online.", "info", 3000);
-                        }
-                    })
-                    .catch((err) => {
-                        if (err.code == 'failed-precondition') {
-                            console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
-                        } else if (err.code == 'unimplemented') {
-                            console.warn("The current browser does not support offline persistence.");
-                        } else {
-                            console.error("Error enabling offline persistence:", err);
-                        }
-                    });
-            } catch (e) {
-                console.error("Error setting up offline persistence:", e);
+        // fbDb should be initialized by the main script
+        // For full v9 modular SDK, persistence is enabled differently.
+        // This is illustrative.
+        function handleNetworkStatusChange() {
+            if (typeof showMessage === 'function') {
+                showMessage(navigator.onLine ? "You're back online!" : "You're offline. Features might be limited.", "info", 2500);
             }
         }
-        
-        // Add network status monitoring for better error handling
         window.addEventListener('online', handleNetworkStatusChange);
         window.addEventListener('offline', handleNetworkStatusChange);
-        
-        function handleNetworkStatusChange(event) {
-            const isOnline = navigator.onLine;
-            console.log(`Network status changed: ${isOnline ? 'online' : 'offline'}`);
-            
-            if (isOnline) {
-                if (typeof showMessage === 'function') {
-                    showMessage("You're back online! Syncing pending changes...", "info");
-                }
-                if (typeof processPendingOperations === 'function') {
-                    processPendingOperations();
-                }
-            } else {
-                if (typeof showMessage === 'function') {
-                    showMessage("You're offline. Changes will be saved when connection is restored.", "info");
-                }
-            }
-        }
-        
-        // Process any pending operations when back online
-        window.processPendingOperations = function() {
-            if (typeof fbDb === 'undefined' || !fbDb || 
-                typeof fbUserId === 'undefined' || !fbUserId || 
-                typeof fbIsAuthReady === 'undefined' || !fbIsAuthReady) {
-                return;
-            }
-            
-            const pendingOps = JSON.parse(localStorage.getItem('pendingNameOperations') || '[]');
-            if (pendingOps.length === 0) return;
-            
-            if (typeof showNameModalLoading === 'function') {
-                showNameModalLoading(true);
-            }
-            
-            const successfulOps = [];
-            
-            for (const op of pendingOps) {
-                try {
-                    if (op.type === 'addName') {
-                        const currentNames = op.session === 'pagi' ? namesPagi : namesPetang;
-                        if (!currentNames.includes(op.name)) {
-                            const updatedNames = [...currentNames, op.name].sort((a, b) => 
-                                a.localeCompare(b, undefined, { sensitivity: 'base' }));
-                            
-                            const docRef = firebase.firestore().doc(`artifacts/${appId}/users/${fbUserId}/nameLists/${op.session}`);
-                            docRef.set({ names: updatedNames });
-                        }
-                        successfulOps.push(op);
-                    } else if (op.type === 'deleteName') {
-                        const currentNames = op.session === 'pagi' ? namesPagi : namesPetang;
-                        const updatedNames = currentNames.filter(name => name !== op.name);
-                        
-                        const docRef = firebase.firestore().doc(`artifacts/${appId}/users/${fbUserId}/nameLists/${op.session}`);
-                        docRef.set({ names: updatedNames });
-                        successfulOps.push(op);
-                    }
-                } catch (error) {
-                    console.error(`Error processing pending operation:`, error, op);
-                }
-            }
-            
-            // Remove successful operations from pending list
-            const remainingOps = pendingOps.filter(op => !successfulOps.includes(op));
-            localStorage.setItem('pendingNameOperations', JSON.stringify(remainingOps));
-            
-            if (typeof showNameModalLoading === 'function') {
-                showNameModalLoading(false);
-            }
-            
-            if (successfulOps.length > 0 && typeof showMessage === 'function') {
-                showMessage(`Synced ${successfulOps.length} pending changes.`, "success");
-            }
-            
-            if (remainingOps.length > 0 && typeof showMessage === 'function') {
-                showMessage(`${remainingOps.length} changes still pending. Will retry later.`, "info");
-            }
-        };
-        
-        // Enhanced error handling for Firestore operations
-        window.handleFirestoreError = function(error, operation) {
-            console.error(`Firestore error during ${operation}:`, error);
-            
-            if (!navigator.onLine) {
-                return {
-                    success: false,
-                    offline: true,
-                    message: "You're offline. Changes will sync when connection is restored."
-                };
-            }
-            
-            if (error.code === 'permission-denied') {
-                return {
-                    success: false,
-                    message: "Permission denied. You may not have access to this data."
-                };
-            }
-            
-            if (error.code === 'unavailable') {
-                return {
-                    success: false,
-                    message: "Service temporarily unavailable. Please try again later."
-                };
-            }
-            
-            return {
-                success: false,
-                message: `Operation failed: ${error.message}`
-            };
-        };
-    }, 2000); // Wait for 2 seconds to ensure Firebase is initialized
+    }, 2500);
 });
 </script>
