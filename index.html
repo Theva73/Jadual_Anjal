@@ -447,28 +447,7 @@
         <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
     </div>
 
-    <div id="nameModal" class="modal">
-        <div class="modal-content" id="nameModalContent">
-            <div class="modal-header" id="nameModalHeader">
-                <h3 id="nameModalTitle">Name List Manager</h3>
-                <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
-            </div>
-            <div class="name-session-tabs">
-                <button id="namePagiTab" data-session="pagi" class="active">Pagi (Morning)</button>
-                <button id="namePetangTab" data-session="petang">Petang (Afternoon)</button>
-            </div>
-             <div class="input-group">
-                <input id="newNameInput" placeholder="Add new name to current session">
-                <button id="addNameBtnInModal" title="Add the name to the list">Add</button>
-            </div>
-            <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current session">📂 Import Names (.txt) to Session</button>
-            <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
-            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current session..." title="Filter the list of names">
-            <div id="nameList">
-                </div>
-            <div id="loadingIndicatorModal" style="display:none;"><div class="spinner"></div></div>
-        </div>
-    </div>
+
 
     <h3 style="margin-top:32px">Teacher/Subject Attendance Summary</h3>
     <table id="summaryTable">
@@ -1976,3 +1955,693 @@
 </script>
 </body>
 </html>
+
+    <!-- New Name List Side Panel -->
+    <div id="nameSidePanel" class="name-side-panel">
+        <div class="name-panel-header">
+            <h3 id="namePanelTitle">Name List Manager</h3>
+            <button type="button" class="name-panel-close-btn" id="closeNamePanelBtn" title="Close name manager">&times;</button>
+        </div>
+        <div class="name-panel-body">
+            <div class="name-session-tabs">
+                <button id="namePagiTab" data-session="pagi" class="active">Pagi</button>
+                <button id="namePetangTab" data-session="petang">Petang</button>
+            </div>
+            <div class="name-panel-search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchNameInput" placeholder="Search names..." title="Filter the list of names">
+            </div>
+            <div id="nameListContainer" class="name-list-container">
+                <!-- Name list items will be populated here by JS -->
+                <div id="nameList" class="name-grid"></div>
+            </div>
+            <div class="name-panel-actions">
+                <div class="input-group add-name-group">
+                    <input id="newNameInput" placeholder="Add new name...">
+                    <button id="addNameBtn" title="Add name to current session list" class="add-name-btn">Add</button>
+                </div>
+                <button id="importNameListBtn" class="import-btn" title="Import names from a .txt file (one name per line) to current session">
+                    📂 Import Names (.txt)
+                </button>
+                <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
+            </div>
+        </div>
+        <div id="loadingIndicatorPanel" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <div class="loading-text">Processing...</div>
+        </div>
+    </div>
+    <!-- End New Name List Side Panel -->
+
+
+
+<style>
+/* New Mobile-Friendly Name List Styles */
+.name-side-panel {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 90%;
+    max-width: 400px;
+    height: 100%;
+    background-color: #ffffff;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    z-index: 1000;
+    transition: right 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.name-side-panel.active {
+    right: 0;
+}
+
+.name-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #0056b3, #007bff);
+    color: white;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.name-panel-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 1.3rem;
+}
+
+.name-panel-close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 5px;
+    line-height: 1;
+}
+
+.name-panel-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    overflow: hidden;
+}
+
+.name-session-tabs {
+    display: flex;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.name-session-tabs button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background-color: #f0f2f5;
+    color: #555;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-radius: 0;
+}
+
+.name-session-tabs button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.name-panel-search-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 1rem;
+}
+
+#searchNameInput {
+    width: 100%;
+    padding: 12px 12px 12px 35px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.name-list-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 10px;
+}
+
+.name-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    padding: 5px;
+}
+
+.name-item {
+    background-color: white;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+}
+
+.name-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.name-item span {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #333;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.name-item span.highlighted {
+    background-color: #e7f3ff;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #0056b3;
+}
+
+.name-item button {
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    padding: 0;
+    margin-left: 5px;
+}
+
+.name-item button:hover {
+    background-color: #ff7875;
+}
+
+.name-panel-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.add-name-group {
+    display: flex;
+    margin-bottom: 0;
+}
+
+#newNameInput {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px 0 0 8px;
+    font-size: 1rem;
+}
+
+.add-name-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    padding: 0 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-name-btn:hover {
+    background-color: #218838;
+}
+
+.import-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-align: center;
+}
+
+.import-btn:hover {
+    background-color: #5a6268;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #007bff;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+.loading-text {
+    color: #333;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .name-side-panel {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .name-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+
+/* Overlay for when panel is open */
+.panel-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.panel-overlay.active {
+    display: block;
+}
+
+/* Animation for name items */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.name-item {
+    animation: fadeIn 0.3s ease-out;
+    animation-fill-mode: both;
+}
+
+.name-item:nth-child(1) { animation-delay: 0.05s; }
+.name-item:nth-child(2) { animation-delay: 0.1s; }
+.name-item:nth-child(3) { animation-delay: 0.15s; }
+.name-item:nth-child(4) { animation-delay: 0.2s; }
+.name-item:nth-child(5) { animation-delay: 0.25s; }
+/* Continue for more items if needed */
+
+/* Make buttons more touch-friendly */
+button {
+    min-height: 44px; /* Minimum touch target size */
+}
+
+/* Empty state styling */
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Improve scrollbar styling */
+.name-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.name-list-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.name-list-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.name-list-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+</style>
+
+<script>
+// Add this to the existing JavaScript code, replacing the old modal functions
+
+// Add panel overlay to the body
+document.addEventListener('DOMContentLoaded', function() {
+    const overlayDiv = document.createElement('div');
+    overlayDiv.className = 'panel-overlay';
+    overlayDiv.id = 'panelOverlay';
+    document.body.appendChild(overlayDiv);
+    
+    // Update references to modal elements
+    nameModal = document.getElementById('nameSidePanel');
+    nameModalContent = document.querySelector('.name-panel-body');
+    nameModalHeader = document.querySelector('.name-panel-header');
+    nameListContainer = document.getElementById('nameListContainer');
+    loadingIndicatorModalElement = document.getElementById('loadingIndicatorPanel');
+    
+    // Update event listeners
+    document.getElementById('closeNamePanelBtn').addEventListener('click', closeNameModal);
+    document.getElementById('panelOverlay').addEventListener('click', closeNameModal);
+    document.getElementById('namePagiTab').addEventListener('click', () => handleNameListSessionSwitch('pagi'));
+    document.getElementById('namePetangTab').addEventListener('click', () => handleNameListSessionSwitch('petang'));
+    document.getElementById('addNameBtn').addEventListener('click', () => {
+        const name = document.getElementById('newNameInput').value.trim();
+        if (name) addNameToCurrentSessionInFirestore(name);
+    });
+    document.getElementById('newNameInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const name = document.getElementById('newNameInput').value.trim();
+            if (name) addNameToCurrentSessionInFirestore(name);
+        }
+    });
+    document.getElementById('searchNameInput').addEventListener('input', (e) => {
+        renderNameListFromFirestore(e.target.value);
+    });
+});
+
+// Replace the old toggleNameListModalVisibility function
+function toggleNameListModalVisibility() {
+    if (!nameModal) return;
+    
+    const isDisplayed = nameModal.classList.contains('active');
+    if (isDisplayed) {
+        closeNameModal();
+    } else {
+        nameModal.classList.add('active');
+        document.getElementById('panelOverlay').classList.add('active');
+        if (document.getElementById('searchNameInput')) document.getElementById('searchNameInput').value = '';
+        handleNameListSessionSwitch(currentNameListSession);
+        if (document.getElementById('newNameInput')) document.getElementById('newNameInput').focus();
+        clearNameSelection();
+    }
+}
+
+// Replace the old closeNameModal function
+function closeNameModal() {
+    if (nameModal) {
+        nameModal.classList.remove('active');
+        document.getElementById('panelOverlay').classList.remove('active');
+    }
+    clearNameSelection();
+    if (document.getElementById('searchNameInput')) document.getElementById('searchNameInput').value = '';
+}
+
+// Update the renderNameListFromFirestore function
+function renderNameListFromFirestore(filterText = '') {
+    const nameListElement = document.getElementById('nameList');
+    if (!nameListElement) return;
+    
+    if (!fbIsAuthReady) {
+        nameListElement.innerHTML = '<div class="empty-state">Loading names or Firebase not ready...</div>';
+        return;
+    }
+    
+    nameListElement.innerHTML = '';
+    const namesToRender = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+    const normalizedFilterText = filterText.toLowerCase().trim();
+    const filteredNames = namesToRender.filter(name => name.toLowerCase().includes(normalizedFilterText));
+    
+    if (filteredNames.length === 0) {
+        nameListElement.innerHTML = `<div class="empty-state">${normalizedFilterText ?
+            'No names match your search.' : `No names in ${currentNameListSession} session. Add some!`}</div>`;
+        return;
+    }
+    
+    filteredNames.forEach(name => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'name-item';
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = name;
+        nameSpan.dataset.name = name;
+        nameSpan.title = `Click to select '${name}' for insertion`;
+        nameSpan.addEventListener('click', () => selectNameForCellInsertion(name));
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '×';
+        deleteBtn.dataset.nameDelete = name;
+        deleteBtn.title = `Delete name '${name}' from ${currentNameListSession} list`;
+        deleteBtn.addEventListener('click', () => deleteNameFromCurrentSessionInFirestore(name));
+        
+        itemDiv.appendChild(nameSpan);
+        itemDiv.appendChild(deleteBtn);
+        nameListElement.appendChild(itemDiv);
+    });
+    
+    highlightSelectedNameInList(selectedNameFromList);
+}
+
+// Update the showNameModalLoading function
+function showNameModalLoading(isLoading) {
+    if (loadingIndicatorModalElement) {
+        loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
+    }
+}
+
+// Update the handleNameListSessionSwitch function
+function handleNameListSessionSwitch(session) {
+    currentNameListSession = session;
+    
+    const pagiTab = document.getElementById('namePagiTab');
+    const petangTab = document.getElementById('namePetangTab');
+    
+    if (pagiTab) pagiTab.classList.toggle('active', session === 'pagi');
+    if (petangTab) petangTab.classList.toggle('active', session === 'petang');
+    
+    const nameModalTitle = document.querySelector('.name-panel-header h3');
+    if (nameModalTitle) nameModalTitle.textContent = `Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
+    
+    if (document.getElementById('searchNameInput')) document.getElementById('searchNameInput').value = '';
+    renderNameListFromFirestore();
+}
+
+// Enhanced Firestore functions for offline support and batch operations
+
+// Add offline persistence for Firestore
+document.addEventListener('DOMContentLoaded', function() {
+    if (fbDb) {
+        try {
+            enableIndexedDbPersistence(fbDb)
+                .then(() => {
+                    console.log("Offline persistence enabled successfully");
+                    showMessage("Offline mode enabled. Changes will sync when online.", "info");
+                })
+                .catch((err) => {
+                    if (err.code == 'failed-precondition') {
+                        console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+                    } else if (err.code == 'unimplemented') {
+                        console.warn("The current browser does not support offline persistence.");
+                    } else {
+                        console.error("Error enabling offline persistence:", err);
+                    }
+                });
+        } catch (e) {
+            console.error("Error setting up offline persistence:", e);
+        }
+    }
+});
+
+// Add batch operations for name list
+async function batchAddNamesToFirestore(session, namesArray) {
+    if (!fbDb || !fbUserId || !fbIsAuthReady) {
+        showMessage("Firebase not ready. Cannot perform batch operation.", "error");
+        return;
+    }
+    
+    showNameModalLoading(true);
+    
+    try {
+        // Get current names first
+        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", session);
+        const docSnap = await getDoc(docRef);
+        
+        let currentNames = [];
+        if (docSnap.exists()) {
+            currentNames = docSnap.data().names || [];
+        }
+        
+        // Combine with new names and remove duplicates
+        const uniqueSortedNames = [...new Set([...currentNames, ...namesArray])].sort((a, b) => 
+            a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        
+        // Update with batch
+        await setDoc(docRef, { names: uniqueSortedNames });
+        
+        showMessage(`${namesArray.length} names added to ${session} session.`, "success");
+    } catch (error) {
+        console.error(`Error in batch operation for ${session}:`, error);
+        
+        // Implement retry mechanism
+        if (navigator.onLine === false) {
+            showMessage("You're offline. Changes will be saved when connection is restored.", "info", 5000);
+            
+            // Store operation for later retry
+            const pendingOps = JSON.parse(localStorage.getItem('pendingNameOperations') || '[]');
+            pendingOps.push({
+                type: 'batchAdd',
+                session: session,
+                names: namesArray,
+                timestamp: Date.now()
+            });
+            localStorage.setItem('pendingNameOperations', JSON.stringify(pendingOps));
+        } else {
+            showMessage(`Failed to save names. Error: ${error.message}`, "error");
+        }
+    } finally {
+        showNameModalLoading(false);
+    }
+}
+
+// Network status monitoring for better error handling
+window.addEventListener('online', handleNetworkStatusChange);
+window.addEventListener('offline', handleNetworkStatusChange);
+
+function handleNetworkStatusChange(event) {
+    const isOnline = navigator.onLine;
+    console.log(`Network status changed: ${isOnline ? 'online' : 'offline'}`);
+    
+    if (isOnline) {
+        showMessage("You're back online! Syncing pending changes...", "info");
+        processPendingOperations();
+    } else {
+        showMessage("You're offline. Changes will be saved when connection is restored.", "info");
+    }
+}
+
+// Process any pending operations when back online
+async function processPendingOperations() {
+    if (!fbDb || !fbUserId || !fbIsAuthReady) return;
+    
+    const pendingOps = JSON.parse(localStorage.getItem('pendingNameOperations') || '[]');
+    if (pendingOps.length === 0) return;
+    
+    showNameModalLoading(true);
+    
+    const successfulOps = [];
+    
+    for (const op of pendingOps) {
+        try {
+            if (op.type === 'batchAdd') {
+                await batchAddNamesToFirestore(op.session, op.names);
+                successfulOps.push(op);
+            } else if (op.type === 'addName') {
+                const currentNames = op.session === 'pagi' ? namesPagi : namesPetang;
+                if (!currentNames.includes(op.name)) {
+                    const updatedNames = [...currentNames, op.name].sort((a, b) => 
+                        a.localeCompare(b, undefined, { sensitivity: 'base' }));
+                    
+                    const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", op.session);
+                    await setDoc(docRef, { names: updatedNames });
+                }
+                successfulOps.push(op);
+            } else if (op.type === 'deleteName') {
+                const currentNames = op.session === 'pagi' ? namesPagi : namesPetang;
+                const updatedNames = currentNames.filter(name => name !== op.name);
+                
+                const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", op.session);
+                await setDoc(docRef, { names: updatedNames });
+                successfulOps.push(op);
+            }
+        } catch (error) {
+            console.error(`Error processing pending operation:`, error, op);
+        }
+    }
+    
+    // Remove successful operations from pending list
+    const remainingOps = pendingOps.filter(op => !successfulOps.includes(op));
+    localStorage.setItem('pendingNameOperations', JSON.stringify(remainingOps));
+    
+    showNameModalLoading(false);
+    
+    if (successfulOps.length > 0) {
+        showMessage(`Synced ${successfulOps.length} pending changes.`, "success");
+    }
+    
+    if (remainingOps.length > 0) {
+        showMessage(`${remainingOps.length} changes still pending. Will retry later.`, "info");
+    }
+}
+
+// Enhanced error handling for Firestore operations
+function handleFirestoreError(error, operation) {
+    console.error(`Firestore error during ${operation}:`, error);
+    
+    if (!navigator.onLine) {
+        return {
+            success: false,
+            offline: true,
+            message: "You're offline. Changes will sync when connection is restored."
+        };
+    }
+    
+    if (error.code === 'permission-denied') {
+        return {
+            success: false,
+            message: "Permission denied. You may not have access to this data."
+        };
+    }
+    
+    if (error.code === 'unavailable') {
+        return {
+            success: false,
+            message: "Service temporarily unavailable. Please try again later."
+        };
+    }
+    
+    return {
+        success: false,
+        message: `Operation failed: ${error.message}`
+    };
+}
+</script>
