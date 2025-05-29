@@ -2018,15 +2018,20 @@
     function rebuildAndRenderSummary() {
         const scheduledNames = new Set(); 
         if (tablesContainer) {
-            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => { // Iterate over ALL tables
                 if (!scheduleTable.tBodies[0]) return; 
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        if (cellIndex === 0 && cell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() === 'class') return;
-
-                        const overlay = cell.querySelector('.merged-cell-overlay');
-                        const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
-                        if (nameFromCell) scheduledNames.add(nameFromCell);
+                        // Only collect names from cells that are NOT in the first column (cellIndex > 0).
+                        // The first column (cellIndex === 0) is assumed to contain class identifiers
+                        // and should not be added to the list of teacher/subject names for the summary.
+                        if (cellIndex > 0) {
+                            const overlay = cell.querySelector('.merged-cell-overlay');
+                            const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
+                            if (nameFromCell) { // Ensure the cell is not empty
+                                scheduledNames.add(nameFromCell);
+                            }
+                        }
                     });
                 });
             });
