@@ -52,9 +52,9 @@
             background-color: #fff;
             table-layout: auto; /* Let browser determine column widths, good for varying content */
         }
-        #tablesContainer {
+        #tablesContainer, #summaryTableContainer {
             overflow-x: auto; /* Allows horizontal scrolling for tables on small screens */
-            position: relative; /* For potential absolute positioned children if any */
+            position: relative;
             width: 100%;
         }
         #tablesContainer > table {
@@ -64,7 +64,6 @@
             display: table; /* Show the active table */
         }
         #summaryTable {
-            display: table; /* Summary table is always visible below others */
             margin-top: 25px;
         }
         th, td {
@@ -141,8 +140,8 @@
         /* Specific button styling */
         #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;}
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
-        #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #007bff;} /* Renamed from saveDraftBtn */
-        #loadSharedScheduleBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;} /* Renamed from loadDraftBtn */
+        #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #007bff;}
+        #loadSharedScheduleBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
         #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
         #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
         #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
@@ -153,8 +152,8 @@
         #deleteTableBtn { background-color: #dc3545; color: white; border-color: #dc3545;}
         #nameListBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
         #deselectBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
-        #exportSharedSchedulesBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;} /* Renamed from exportDraftsBtn */
-        #importSharedSchedulesBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;} /* Renamed from importDraftsBtn */
+        #exportSharedSchedulesBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;}
+        #importSharedSchedulesBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;}
 
         .table-tabs {
             margin-bottom: 15px;
@@ -218,33 +217,33 @@
         .modal {
             display: none; /* Hidden by default */
             position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: hidden; /* Prevent scrolling of background when modal is open */
+            overflow: hidden; 
             background-color: rgba(0,0,0,0.5);
             align-items: center; justify-content: center;
-            pointer-events: none; /* Allow clicks to pass through overlay to content */
+            pointer-events: none;
         }
         .modal-content {
             background-color: #fff;
-            padding: 25px; border: 1px solid #ccc; width: 90%; max-width: 650px; /* Responsive width */
+            padding: 25px; border: 1px solid #ccc; width: 90%; max-width: 650px;
             border-radius: 10px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.3); position: relative;
-            pointer-events: auto; /* Modal content should be interactive */
-            max-height: 90vh; /* Max height to prevent overflow on small screens */
-            overflow-y: auto; /* Allow scrolling within modal if content is too tall */
+            pointer-events: auto;
+            max-height: 90vh; 
+            overflow-y: auto; 
             box-sizing: border-box;
         }
-        .modal-content.dragging { transform: none; /* Disable transform while dragging for smoother movement */ }
+        .modal-content.dragging { transform: none; }
         .modal-header {
             padding-bottom: 15px;
             border-bottom: 1px solid #e9ecef; margin-bottom: 20px;
             font-size: 1.3em; color: #333; display: flex; justify-content: space-between; align-items: center;
-            cursor: move; user-select: none; /* Prevent text selection while dragging header */
+            cursor: move; user-select: none;
         }
         .modal-close-btn {
             font-size: 1.8rem;
             font-weight: bold; line-height: 1; color: #555;
             text-shadow: none; opacity: .7; background: transparent; border: 0; cursor: pointer;
-            padding: 0 5px; /* Add some padding for easier touch */
+            padding: 0 5px;
             transition: color 0.2s;
         }
         .modal-close-btn:hover { opacity: 1; color: #dc3545; }
@@ -264,18 +263,18 @@
         .name-item button:hover { background-color: #c82333; }
         .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
 
-        #sharedScheduleListContainer { /* Renamed from draftListContainer */
+        #sharedScheduleListContainer {
             border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px;
             background-color: #f8f9fa;
-            max-height: 300px; /* Added max-height */
-            overflow-y: auto; /* Added overflow-y */
+            max-height: 300px;
+            overflow-y: auto;
         }
-        .shared-schedule-item { display: flex; justify-content: space-between; align-items: center; /* Renamed from draft-item */
+        .shared-schedule-item { display: flex; justify-content: space-between; align-items: center;
             padding: 10px 8px; border-bottom: 1px solid #e9ecef; }
         .shared-schedule-item:last-child { border-bottom: none; }
         .shared-schedule-item span { cursor: pointer; color: #007bff; flex-grow: 1; margin-right: 10px; }
         .shared-schedule-item span:hover { text-decoration: underline; }
-        .shared-schedule-item .schedule-date { font-size: 0.8em; color: #6c757d; margin-right: 10px; white-space: nowrap;} /* Renamed from draft-date */
+        .shared-schedule-item .schedule-date { font-size: 0.8em; color: #6c757d; margin-right: 10px; white-space: nowrap;}
         .shared-schedule-item button { background-color: #dc3545; color: white; border: none; border-radius: 5px;
             padding: 6px 12px; font-size: 0.9em; flex-shrink: 0; }
 
@@ -283,19 +282,19 @@
         #newNameInput, #searchNameInput {
             padding: 10px;
             margin-right: 8px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1;
-            width: calc(100% - 120px); /* Adjusted for button width and margin */
+            width: calc(100% - 120px); 
             box-sizing: border-box;
         }
          #searchNameInput {
             margin-bottom: 15px;
-            width: 100%; /* Full width for search */
+            width: 100%; 
             box-sizing: border-box;
-            margin-right: 0; /* No right margin needed if full width */
+            margin-right: 0;
          }
         .input-group {
             display: flex;
             margin-bottom: 15px;
-            width: 100%; /* Ensure input group takes full width */
+            width: 100%;
         }
         .input-group button, #importNameListBtn {
             background-color: #28a745;
@@ -306,18 +305,17 @@
         .input-group button:hover, #importNameListBtn:hover { background-color: #218838; }
         #importNameListBtn {
             margin-top: 10px;
-            width: 100%; /* Full width button */
+            width: 100%;
         }
         #nameList {
             margin-top:15px;
-            max-height:250px; /* Reduced from 300px to better fit modal */
+            max-height:250px; 
             overflow-y:auto;
         }
-        /* Responsive columns for name list */
-        @media (min-width: 480px) { /* Apply two columns on screens wider than 480px */
+        @media (min-width: 480px) {
             #nameList {
                 column-count: 2;
-                column-gap: 20px; /* Slightly reduced gap */
+                column-gap: 20px;
             }
         }
 
@@ -328,9 +326,9 @@
             background-color: #333; color: white; padding: 15px 25px; border-radius: 8px;
             z-index: 2000;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25); font-size: 1.05em;
-            text-align: center; /* Center text in message box */
-            width: 90%; /* Responsive width */
-            max-width: 400px; /* Max width for message box */
+            text-align: center; 
+            width: 90%; 
+            max-width: 400px;
         }
         .custom-message-box.success { background-color: #28a745; }
         .custom-message-box.error { background-color: #dc3545; }
@@ -347,7 +345,7 @@
         }
         .subsumed-cell { visibility: hidden; }
 
-        #loadingIndicatorModal, #generalLoadingIndicator { /* Combined styles */
+        #loadingIndicatorModal, #generalLoadingIndicator {
             position: absolute; 
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.85);
@@ -355,16 +353,16 @@
             z-index: 10; 
             border-radius: 10px; 
         }
-        #generalLoadingIndicator { /* Specific for general use */
-            position: fixed; /* Cover whole screen */
-            z-index: 3000; /* Above everything */
-            border-radius: 0; /* No radius for full screen */
+        #generalLoadingIndicator {
+            position: fixed; 
+            z-index: 3000; 
+            border-radius: 0; 
         }
         .spinner {
             border: 5px solid rgba(0, 0, 0, 0.1);
             width: 40px; height: 40px;
             border-radius: 50%;
-            border-left-color: #007bff; /* Spinner color */
+            border-left-color: #007bff; 
             animation: spin 1s ease infinite;
         }
         @keyframes spin {
@@ -372,7 +370,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Ensure hidden file inputs don't take up space */
         input[type="file"][style*="display:none"],
         input[type="file"][style*="display: none"] {
             position: absolute;
@@ -382,16 +379,15 @@
             opacity: 0;
         }
 
-        /* Styles for inline autocomplete suggestions */
         #autocompleteSuggestions {
-            display: none; /* Hidden by default */
+            display: none; 
             position: absolute;
             border: 1px solid #ccc;
             background-color: white;
-            z-index: 1001; /* Must be above table cells */
+            z-index: 1001; 
             max-height: 150px;
             overflow-y: auto;
-            min-width: 120px; /* Or set dynamically */
+            min-width: 120px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.15);
             border-radius: 4px;
         }
@@ -402,7 +398,7 @@
             white-space: nowrap;
         }
         .suggestion-item:hover, .suggestion-item.active-suggestion {
-            background-color: #e9ecef; /* Light grey hover */
+            background-color: #e9ecef; 
             color: #0056b3;
         }
 
@@ -410,7 +406,8 @@
 </head>
 <body>
 <div class="main-container">
-    <h2 contenteditable="true" id="scheduleTitle">Shared Weekly Schedule</h2> <div id="userIdDisplay">User ID: Loading...</div>
+    <h2 contenteditable="true" id="scheduleTitle">Shared Weekly Schedule</h2>
+    <div id="userIdDisplay">User ID: Loading...</div>
 
     <div class="bar">
         <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
@@ -421,7 +418,12 @@
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
     <div class="bar">
-        <button id="saveSharedScheduleBtn" title="Save current schedule to the shared Cloud space">💠 Save Shared Schedule</button> <button id="loadSharedScheduleBtn" title="Show list of shared schedules from Cloud to load">☁️ Load Shared Schedule</button> <button id="exportSharedSchedulesBtn" title="Export all shared schedules from Cloud to a JSON file">📤 Export All Shared Schedules</button> <button id="importSharedSchedulesBtn" title="Import schedules from a JSON file to the shared Cloud space">📥 Import Shared Schedules</button> <input type="file" id="sharedScheduleImportFile" accept=".json" style="display:none;"> <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
+        <button id="saveSharedScheduleBtn" title="Save current schedule to the shared Cloud space">💠 Save Shared Schedule</button>
+        <button id="loadSharedScheduleBtn" title="Show list of shared schedules from Cloud to load">☁️ Load Shared Schedule</button>
+        <button id="exportSharedSchedulesBtn" title="Export all shared schedules from Cloud to a JSON file">📤 Export All Shared Schedules</button>
+        <button id="importSharedSchedulesBtn" title="Import schedules from a JSON file to the shared Cloud space">📥 Import Shared Schedules</button>
+        <input type="file" id="sharedScheduleImportFile" accept=".json" style="display:none;">
+        <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
     </div>
     <div class="bar">
         <button id="selectBtn" title="Toggle cell selection mode on/off">✨ Select Cells</button>
@@ -433,9 +435,11 @@
         <button id="addTableBtn" title="Add a new, empty table/sheet">➕ Add New Table</button>
         <button id="renameTableBtn" title="Rename the currently active table/sheet">📝 Rename Active Table</button>
         <button id="deleteTableBtn" title="Delete the currently active table/sheet">❌ Delete Active Table</button>
-        <button id="nameListBtn" title="Open a dialog to manage the shared list of names (Firestore)">👥 Manage Shared Names</button> </div>
+        <button id="nameListBtn" title="Open a dialog to manage the shared list of names (Firestore)">👥 Manage Shared Names</button>
+    </div>
 
-    <div id="sharedScheduleListContainer" style="display:none;"></div> <div class="bar table-tabs" id="tableTabs"></div>
+    <div id="sharedScheduleListContainer" style="display:none;"></div>
+    <div class="bar table-tabs" id="tableTabs"></div>
     <div id="tablesContainer">
         <table id="tbl_1" class="active" data-table-name="Table 1">
             <thead>
@@ -476,24 +480,29 @@
     <div id="nameModal" class="modal">
         <div class="modal-content" id="nameModalContent">
             <div class="modal-header" id="nameModalHeader">
-                <h3 id="nameModalTitle">Shared Name List Manager</h3> <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
+                <h3 id="nameModalTitle">Shared Name List Manager</h3>
+                <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
             </div>
             <div class="name-session-tabs">
                 <button id="namePagiTab" data-session="pagi" class="active">Pagi (Morning)</button>
                 <button id="namePetangTab" data-session="petang">Petang (Afternoon)</button>
             </div>
              <div class="input-group">
-                <input id="newNameInput" placeholder="Add new name to current shared session"> <button id="addNameBtnInModal" title="Add the name to the shared list">Add</button> </div>
-            <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current shared session">📂 Import Names (.txt) to Shared Session</button> <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
-            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current shared session..." title="Filter the list of names"> <div id="nameList">
-                </div>
+                <input id="newNameInput" placeholder="Add new name to current shared session">
+                <button id="addNameBtnInModal" title="Add the name to the shared list">Add</button>
+             </div>
+            <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current shared session">📂 Import Names (.txt) to Shared Session</button>
+            <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
+            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current shared session..." title="Filter the list of names">
+            <div id="nameList"></div>
             <div id="loadingIndicatorModal" style="display:none;"><div class="spinner"></div></div>
         </div>
     </div>
 
     <h3 style="margin-top:32px">Teacher/Subject Attendance Summary</h3>
-    <table id="summaryTable">
-        </table>
+    <div id="summaryTableContainer">
+        <table id="summaryTable"></table>
+    </div>
     <div id="customMessageBox" class="custom-message-box"></div>
     <div id="generalLoadingIndicator" style="display:none;"><div class="spinner"></div></div>
 </div>
@@ -503,40 +512,59 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     // Add SDKs for Firebase products that you want to use
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added 'where'
+    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
-    const userProvidedFirebaseConfig = { // This is a fallback if __firebase_config is not injected by the platform
+    // This is the configuration from your original file.
+    // If __firebase_config is NOT injected by the platform you are using, THIS config will be used.
+    // Ensure these details are correct for your Firebase project "jadual-3f0aa".
+    const userProvidedFirebaseConfig = {
       apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.firebasestorage.app",
+      storageBucket: "jadual-3f0aa.appspot.com", // Corrected from .firebasestorage.app if it was a typo
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedFirebaseConfig;
-    const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app'); // Ensure a unique appId for shared data
-    
-    if (typeof __firebase_config === 'undefined') {
-        console.warn("Using user-provided Firebase config. Ensure it's correctly set up if this is unexpected (e.g., not running locally).");
+    let firebaseConfig;
+    let usingInjectedConfig = false;
+    if (typeof __firebase_config !== 'undefined' && __firebase_config !== null && __firebase_config.trim() !== '') {
+        try {
+            firebaseConfig = JSON.parse(__firebase_config);
+            usingInjectedConfig = true;
+            console.log("Using injected Firebase config (__firebase_config).");
+        } catch (e) {
+            console.error("Error parsing injected __firebase_config. Falling back to userProvidedFirebaseConfig. Error:", e);
+            firebaseConfig = userProvidedFirebaseConfig;
+        }
+    } else {
+        firebaseConfig = userProvidedFirebaseConfig;
+        console.warn("Firebase Auth: __firebase_config is not defined or empty. Using userProvidedFirebaseConfig from the script. Ensure this is intended and the config is correct for your project 'jadual-3f0aa'.");
+        // Check if the fallback is still using generic placeholders (it shouldn't be if you've set it above)
+        if (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID") {
+            console.error("Firebase Auth: CRITICAL - The userProvidedFirebaseConfig contains placeholder values. Firebase will NOT work. Please update the firebaseConfig object in the script with your actual Firebase project details if not running in an environment that injects __firebase_config.");
+        }
     }
+    
+    const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app');
+    
     if (typeof __app_id === 'undefined') {
-        console.warn("Using App ID from Firebase config or a default value. This appId scopes your shared data in Firestore.");
+        console.warn("Firebase Auth: __app_id is not defined. Using App ID from Firebase config or a default value. This appId scopes your shared data in Firestore.");
     }
 
     // --- Initialize Firebase ---
     let fbApp, fbAuth, fbDb;
-    let fbUserId = null; // Still useful for knowing who is logged in, even if data is shared
+    let fbUserId = null;
     let fbIsAuthReady = false;
-    let unsubscribePagiShared = null; // Renamed for clarity
-    let unsubscribePetangShared = null; // Renamed for clarity
+    let unsubscribePagiShared = null;
+    let unsubscribePetangShared = null;
 
     try {
         fbApp = initializeApp(firebaseConfig);
         fbAuth = getAuth(fbApp);
         fbDb = getFirestore(fbApp);
-        console.log("Firebase services initialized for Shared Scheduler.");
+        console.log("Firebase services initialized for Shared Scheduler with Project ID:", firebaseConfig.projectId);
     } catch (e) {
         console.error("CRITICAL Error initializing Firebase services:", e);
         showMessage("Critical Error: Firebase initialization failed. Cloud features will not work.", "error", 10000);
@@ -545,7 +573,7 @@
     }
 
     // --- Global State and Configuration ---
-    const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`; // Make local storage key specific to appId
+    const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
     let activeTableId = 'tbl_1';
     let tableCount = 1;
     let selectionMode = false;
@@ -554,8 +582,8 @@
     let selectedNameFromList = null; 
 
     let currentNameListSession = 'pagi'; 
-    let namesPagiShared = []; // Renamed for clarity
-    let namesPetangShared = []; // Renamed for clarity
+    let namesPagiShared = [];
+    let namesPetangShared = [];
 
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
@@ -564,7 +592,7 @@
     let activeCellForAutocomplete = null;
     let currentAutocompleteIndex = -1; 
 
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement;
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -629,19 +657,18 @@
     }
 
     async function saveSharedNameListToFirestore(session, namesArray) {
-        if (!fbDb || !fbIsAuthReady) { // fbUserId not strictly needed for saving to public path
+        if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot save shared name list.", "error");
             return;
         }
         showNameModalLoading(true);
         const uniqueSortedNames = [...new Set(namesArray.map(n => String(n||'').trim()).filter(n => n))]
                                 .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-        if (!appId || appId === 'default-shared-scheduler-app') { // Check against default to encourage unique appID
+        if (!appId || appId === 'default-shared-scheduler-app') {
             showMessage("Configuration error: App ID is missing or default. Cannot save shared name list.", "error");
             showNameModalLoading(false);
             return;
         }
-        // MODIFIED PATH: Using public path for shared name lists
         const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", session);
         try {
             await setDoc(docRef, { names: uniqueSortedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
@@ -677,7 +704,6 @@
             return;
         }
         const updatedNames = [...sessionNames, trimmedName].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
-        // MODIFIED PATH: Using public path
         const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", currentNameListSession);
         try {
             await setDoc(docRef, { names: updatedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
@@ -708,7 +734,6 @@
             }
             const currentNames = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
             const updatedNames = currentNames.filter(name => String(name || '') !== nameToDeleteStr);
-            // MODIFIED PATH: Using public path
             const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", currentNameListSession);
             try {
                 await setDoc(docRef, { names: updatedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
@@ -739,7 +764,6 @@
             console.error(`listenToSharedNameList (${sessionToListen}): Invalid appId.`);
             return () => {};
         }
-        // MODIFIED PATH: Using public path
         const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", sessionToListen);
         return onSnapshot(docRef, (docSnap) => {
             showNameModalLoading(true);
@@ -755,7 +779,7 @@
                  console.log(`No shared name list found for ${sessionToListen} under appId ${appId}. A new one will be created on save.`);
             }
             if (sessionToListen === currentNameListSession && nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
-                renderNameListFromFirestore(searchNameInputElement.value); // Will use shared names
+                renderNameListFromFirestore(searchNameInputElement.value);
             }
             rebuildAndRenderSummary(); 
             showNameModalLoading(false);
@@ -767,7 +791,7 @@
     }
 
     // --- Firestore Shared Schedule Functions ---
-    async function saveSharedScheduleToFirestore() { // Renamed from saveDraftToFirestore
+    async function saveSharedScheduleToFirestore() {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot save shared schedule.", "error"); return;
         }
@@ -786,7 +810,7 @@
             allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
         });
 
-        const scheduleData = { // Renamed from draftData
+        const scheduleData = {
             name: scheduleName.trim(),
             html: allTablesData,
             meta: allTableMeta,
@@ -796,12 +820,11 @@
         };
 
         try {
-            // MODIFIED PATH: Using public path for shared schedules
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
             await addDoc(sharedSchedulesCollectionRef, scheduleData);
             showMessage(`Shared schedule "${scheduleName.trim()}" saved to Cloud!`, 'success');
             if (sharedScheduleListContainerElement && sharedScheduleListContainerElement.style.display === 'block') {
-                await loadAndRenderSharedSchedulesFromFirestore(); // Refresh list
+                await loadAndRenderSharedSchedulesFromFirestore();
             }
         } catch (error) {
             console.error("Error saving shared schedule to Firestore:", error);
@@ -811,7 +834,7 @@
         }
     }
 
-    async function loadAndRenderSharedSchedulesFromFirestore() { // Renamed from loadAndRenderDraftsFromFirestore
+    async function loadAndRenderSharedSchedulesFromFirestore() {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot load shared schedules.", "error");
             if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.innerHTML = '<p>Connect to Firebase to see shared schedules.</p>';
@@ -822,17 +845,16 @@
         showGeneralLoading(true);
         sharedScheduleListContainerElement.innerHTML = '<p>Loading shared schedules from Cloud...</p>';
         try {
-            // MODIFIED PATH: Using public path
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
             const q = query(sharedSchedulesCollectionRef, orderBy("createdAt", "desc")); 
             const querySnapshot = await getDocs(q);
             
-            const schedules = []; // Renamed from drafts
+            const schedules = [];
             querySnapshot.forEach((docSnap) => {
                 schedules.push({ id: docSnap.id, ...docSnap.data() });
             });
 
-            renderSharedScheduleList(schedules); // Renamed from renderDraftList
+            renderSharedScheduleList(schedules);
             sharedScheduleListContainerElement.style.display = 'block';
         } catch (error) {
             console.error("Error loading shared schedules from Firestore:", error);
@@ -843,24 +865,27 @@
         }
     }
     
-    function renderSharedScheduleList(schedulesArray) { // Renamed from renderDraftList
+    function renderSharedScheduleList(schedulesArray) {
         if (!sharedScheduleListContainerElement) return;
         sharedScheduleListContainerElement.innerHTML = ''; 
         if (!schedulesArray || schedulesArray.length === 0) {
             sharedScheduleListContainerElement.innerHTML = '<p>No shared schedules saved to Cloud yet.</p>'; return;
         }
-        schedulesArray.forEach(schedule => { // Renamed from draft
+        schedulesArray.forEach(schedule => {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'shared-schedule-item'; // Renamed class
+            itemDiv.className = 'shared-schedule-item';
             const scheduleDate = schedule.createdAt && schedule.createdAt.toDate ? schedule.createdAt.toDate().toLocaleString() : 'N/A';
             const updatedByText = schedule.lastUpdatedBy ? ` (by ${schedule.lastUpdatedBy.substring(0,8)}...)` : '';
             itemDiv.innerHTML = `
-                <span data-schedule-id="${schedule.id}" title="Load shared schedule: ${schedule.name}">${schedule.name}${updatedByText}</span> <span class="schedule-date">${scheduleDate}</span> <button data-schedule-id="${schedule.id}" title="Delete shared schedule '${schedule.name}' from Cloud">Delete</button> `;
+                <span data-schedule-id="${schedule.id}" title="Load shared schedule: ${schedule.name}">${schedule.name}${updatedByText}</span>
+                <span class="schedule-date">${scheduleDate}</span>
+                <button data-schedule-id="${schedule.id}" title="Delete shared schedule '${schedule.name}' from Cloud">Delete</button>
+            `;
             sharedScheduleListContainerElement.appendChild(itemDiv);
         });
     }
 
-    async function loadSelectedSharedScheduleFromFirestore(scheduleDocId) { // Renamed from loadSelectedDraftFromFirestore
+    async function loadSelectedSharedScheduleFromFirestore(scheduleDocId) {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot load shared schedule.", "error"); return;
         }
@@ -868,12 +893,11 @@
 
         showGeneralLoading(true);
         try {
-            // MODIFIED PATH: Using public path
             const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
-                const scheduleData = docSnap.data(); // Renamed from draftData
+                const scheduleData = docSnap.data();
                 tablesContainer.innerHTML = scheduleData.html;
                 const tableMeta = scheduleData.meta || {};
                 tableTabs.innerHTML = ''; 
@@ -909,18 +933,17 @@
         }
     }
 
-    async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) { // Renamed
+    async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot delete shared schedule.", "error"); return;
         }
         if (await customConfirm(`Are you sure you want to delete shared schedule "${scheduleName}" from Cloud? This cannot be undone and affects all users.`)) {
             showGeneralLoading(true);
             try {
-                // MODIFIED PATH: Using public path
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
                 await deleteDoc(docRef);
                 showMessage(`Shared schedule "${scheduleName}" deleted from Cloud.`, 'success');
-                await loadAndRenderSharedSchedulesFromFirestore(); // Refresh the list
+                await loadAndRenderSharedSchedulesFromFirestore();
             } catch (error) {
                 console.error("Error deleting shared schedule from Firestore:", error);
                 showMessage(`Failed to delete shared schedule. Error: ${error.message}`, "error");
@@ -930,13 +953,12 @@
         }
     }
 
-    async function exportAllSharedSchedulesFromFirestore() { // Renamed
+    async function exportAllSharedSchedulesFromFirestore() {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot export shared schedules.", "error"); return;
         }
         showGeneralLoading(true);
         try {
-            // MODIFIED PATH: Using public path
             const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
             const q = query(schedulesCollectionRef, orderBy("createdAt", "desc"));
             const querySnapshot = await getDocs(q);
@@ -974,7 +996,7 @@
         }
     }
 
-    async function handleSharedSchedulesImport(event) { // Renamed
+    async function handleSharedSchedulesImport(event) {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot import shared schedules.", "error"); return;
         }
@@ -995,10 +1017,9 @@
                 }
 
                 let importedCount = 0, skippedCount = 0;
-                // MODIFIED PATH: Using public path
                 const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
 
-                for (const schedule of importedSchedulesData) { // Renamed from draft
+                for (const schedule of importedSchedulesData) {
                     if (schedule && typeof schedule.name === 'string' && typeof schedule.html === 'string' && typeof schedule.meta === 'object' && typeof schedule.activeTableId === 'string') {
                         const q = query(schedulesCollectionRef, where("name", "==", schedule.name));
                         const existingSnapshot = await getDocs(q);
@@ -1020,7 +1041,7 @@
                             meta: schedule.meta,
                             activeTableId: schedule.activeTableId,
                             createdAt: serverTimestamp(), 
-                            lastUpdatedBy: fbUserId || "anonymous" // Mark who imported it
+                            lastUpdatedBy: fbUserId || "anonymous"
                         });
                         importedCount++;
                     } else {
@@ -1053,8 +1074,6 @@
     // --- Inline Autocomplete Functions ---
     function showCellAutocompleteSuggestions(cell, inputText) {
         if (!autocompleteSuggestionsDiv) return;
-
-        // Uses shared name lists now
         const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         const normalizedInput = String(inputText || '').toLowerCase().trim();
         
@@ -1104,17 +1123,14 @@
     function selectCellAutocompleteSuggestion(suggestionText) {
         if (activeCellForAutocomplete) {
             const targetCell = activeCellForAutocomplete; 
-            
             const overlay = targetCell.querySelector('.merged-cell-overlay');
             if (overlay) {
                 overlay.textContent = suggestionText;
             } else {
                 targetCell.textContent = suggestionText;
             }
-            
             hideCellAutocompleteSuggestions();
             rebuildAndRenderSummary();
-
             targetCell.focus(); 
             const range = document.createRange();
             const sel = window.getSelection();
@@ -1149,15 +1165,16 @@
         nameModalHeader = document.getElementById('nameModalHeader');
         nameListContainer = document.getElementById('nameList');
         newNameInput = document.getElementById('newNameInput');
-        sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); // Renamed ID
+        sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer');
         summaryTableElement = document.getElementById('summaryTable');
+        summaryTableContainerElement = document.getElementById('summaryTableContainer');
         customMessageBox = document.getElementById('customMessageBox');
         fileInputElement = document.getElementById('fileInput');
         directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn');
         closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard');
         nameListImportFileInputElement = document.getElementById('nameListImportFile');
         searchNameInputElement = document.getElementById('searchNameInput');
-        sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); // Renamed ID
+        sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile');
         userIdDisplayElement = document.getElementById('userIdDisplay');
         namePagiTabElement = document.getElementById('namePagiTab');
         namePetangTabElement = document.getElementById('namePetangTab');
@@ -1165,44 +1182,53 @@
         nameModalTitleElement = document.getElementById('nameModalTitle');
         generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator');
 
-
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
 
-
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement) {
-            console.error("CRITICAL DOM elements missing.");
-            document.body.innerHTML = "<p style='color:red; text-align:center;'>Error: App failed to init (missing elements).</p>";
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement) {
+            console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
+            document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
             return;
         }
 
         if (fbAuth) {
+            console.log("Firebase Auth: Setting up onAuthStateChanged listener.");
             onAuthStateChanged(fbAuth, async (user) => {
                 if (user) {
-                    fbUserId = user.uid; // Keep track of the current user
+                    console.log("Firebase Auth: User is authenticated. UID:", user.uid);
+                    fbUserId = user.uid;
                     fbIsAuthReady = true;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
-                    // Unsubscribe from old listeners if they exist
+                    else console.warn("userIdDisplayElement not found in DOM.");
+
                     if (unsubscribePagiShared) unsubscribePagiShared();
                     if (unsubscribePetangShared) unsubscribePetangShared();
-                    // Subscribe to shared name lists
+                    
+                    console.log("Firebase Auth: Subscribing to shared name lists.");
                     unsubscribePagiShared = listenToSharedNameList('pagi');
                     unsubscribePetangShared = listenToSharedNameList('petang');
+
                     if (nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
-                        renderNameListFromFirestore(searchNameInputElement.value); // Will use shared names
+                        renderNameListFromFirestore(searchNameInputElement.value);
                     }
                 } else {
+                    console.log("Firebase Auth: No user is currently signed in. Attempting to sign in.");
                     fbIsAuthReady = false; fbUserId = null;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
+                    else console.warn("userIdDisplayElement not found in DOM.");
                     try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && __initial_auth_token.trim() !== '') {
+                            console.log("Firebase Auth: Attempting sign-in with custom token.");
                             await signInWithCustomToken(fbAuth, __initial_auth_token);
+                            console.log("Firebase Auth: Sign-in with custom token successful (onAuthStateChanged will re-trigger).");
                         } else {
+                            console.log("Firebase Auth: Attempting anonymous sign-in.");
                             await signInAnonymously(fbAuth);
+                            console.log("Firebase Auth: Anonymous sign-in successful (onAuthStateChanged will re-trigger).");
                         }
                     } catch (error) {
-                        console.error("Error during Firebase sign-in:", error);
+                        console.error("Firebase Auth: Error during sign-in:", error);
                         showMessage(`Firebase Auth failed. Cloud features may not work. Error: ${error.message}`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
                     }
@@ -1210,40 +1236,56 @@
             });
         } else {
              if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Auth Not Initialized";
-             showMessage("Critical Error: Firebase Auth service could not be initialized.", "error", 10000);
+             else console.warn("userIdDisplayElement not found in DOM.");
+             console.error("Firebase Auth: fbAuth object is not available. Firebase Auth service could not be initialized.");
+             showMessage("Critical Error: Firebase Auth service could not be initialized. Check Firebase setup.", "error", 10000);
         }
 
         loadScheduleTitleFromLocalStorage(); 
         initializeEventListeners();
-        setupInitialTableState();
-        rebuildAndRenderSummary();
-        handleNameListSessionSwitch('pagi'); // Initialize with Pagi shared list
+        setupInitialTableState(); // This sets activeTableId and ensures the active table is displayed
+        rebuildAndRenderSummary(); // This should now work with a valid activeTableId and its headers
+        handleNameListSessionSwitch('pagi');
     });
 
     function setupInitialTableState() {
         const existingTables = tablesContainer.querySelectorAll('table');
         if (existingTables.length > 0) {
-            tableTabs.innerHTML = '';
+            tableTabs.innerHTML = ''; // Clear any pre-existing tabs
             existingTables.forEach((table, index) => {
                 const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`;
                 table.id = tableId;
                 const tableName = table.dataset.tableName || `Table ${index + 1}`;
                 table.dataset.tableName = tableName;
                 addTabButton(tableId, tableName);
-                if (index === 0) activeTableId = tableId;
+                if (index === 0) {
+                    activeTableId = tableId; // Set the first table as active
+                }
+                table.classList.remove('active'); // Ensure no tables have 'active' class initially
             });
         } else {
-            addNewTable(true); 
+            console.log("No initial tables found in HTML. Adding a new default table.");
+            addNewTable(true); // This will set activeTableId
         }
+        
+        // Ensure the activeTableId corresponds to an existing table and switch to it
         if (activeTableId && document.getElementById(activeTableId)) {
+            console.log(`Initial active table ID set to: ${activeTableId}`);
             switchTable(activeTableId);
         } else if (tablesContainer.querySelector('table')) {
-            switchTable(tablesContainer.querySelector('table').id);
+            // Fallback if activeTableId is somehow invalid but tables exist
+            const firstTable = tablesContainer.querySelector('table');
+            activeTableId = firstTable.id;
+            console.warn(`Initial activeTableId was invalid or table not found. Falling back to first table in DOM: ${activeTableId}`);
+            switchTable(activeTableId);
+        } else {
+            // This case should ideally be handled by addNewTable(true) if no tables exist
+            console.error("SetupInitialTableState: No tables available and addNewTable did not create one. Summary might be empty.");
         }
     }
 
     function loadScheduleTitleFromLocalStorage() { 
-        const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY); // Uses appId specific key
+        const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
         if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
         if (scheduleTitleElement) {
             scheduleTitleElement.addEventListener('blur', () => { 
@@ -1254,6 +1296,7 @@
     }
 
     function initializeEventListeners() {
+        // ... (event listeners remain the same as previous version) ...
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) {
@@ -1268,7 +1311,6 @@
         document.getElementById('importExcelBtn')?.addEventListener('click', () => fileInputElement?.click());
         if(fileInputElement) fileInputElement.addEventListener('change', handleExcelFileImport);
         
-        // Shared Schedule buttons
         document.getElementById('saveSharedScheduleBtn')?.addEventListener('click', saveSharedScheduleToFirestore);
         document.getElementById('loadSharedScheduleBtn')?.addEventListener('click', loadAndRenderSharedSchedulesFromFirestore);
         document.getElementById('exportSharedSchedulesBtn')?.addEventListener('click', exportAllSharedSchedulesFromFirestore);
@@ -1276,13 +1318,13 @@
         if(sharedScheduleImportFileInputElement) sharedScheduleImportFileInputElement.addEventListener('change', handleSharedSchedulesImport);
         
         if(sharedScheduleListContainerElement) sharedScheduleListContainerElement.addEventListener('click', async (e) => {
-            const targetSpan = e.target.closest('.shared-schedule-item span[data-schedule-id]'); // Updated class and data attribute
-            const targetButton = e.target.closest('.shared-schedule-item button[data-schedule-id]'); // Updated class and data attribute
+            const targetSpan = e.target.closest('.shared-schedule-item span[data-schedule-id]');
+            const targetButton = e.target.closest('.shared-schedule-item button[data-schedule-id]');
             if (targetSpan) {
                 loadSelectedSharedScheduleFromFirestore(targetSpan.dataset.scheduleId);
             } else if (targetButton) {
                 const scheduleId = targetButton.dataset.scheduleId;
-                const scheduleName = targetButton.parentElement.querySelector('span[data-schedule-id]').textContent.split(' (by')[0]; // Get name before updater info
+                const scheduleName = targetButton.parentElement.querySelector('span[data-schedule-id]').textContent.split(' (by')[0];
                 await confirmAndDeleteSharedScheduleFromFirestore(scheduleId, scheduleName);
             }
         });
@@ -1303,11 +1345,11 @@
         document.getElementById('deleteColBtn')?.addEventListener('click', deleteClickedColumnFromActiveTable);
         document.getElementById('nameListBtn')?.addEventListener('click', toggleNameListModalVisibility);
         document.getElementById('addNameBtnInModal')?.addEventListener('click', () => {
-            if(newNameInput) addNameToSharedSessionInFirestore(newNameInput.value); // Uses shared function
+            if(newNameInput) addNameToSharedSessionInFirestore(newNameInput.value);
         });
         document.getElementById('importNameListBtn')?.addEventListener('click', () => nameListImportFileInputElement?.click());
-        if(nameListImportFileInputElement) nameListImportFileInputElement.addEventListener('change', handleNameListImportFirestore); // Uses shared function
-        if(searchNameInputElement) searchNameInputElement.addEventListener('input', (e) => renderNameListFromFirestore(e.target.value)); // Uses shared names
+        if(nameListImportFileInputElement) nameListImportFileInputElement.addEventListener('change', handleNameListImportFirestore);
+        if(searchNameInputElement) searchNameInputElement.addEventListener('input', (e) => renderNameListFromFirestore(e.target.value));
         if(namePagiTabElement) namePagiTabElement.addEventListener('click', () => handleNameListSessionSwitch('pagi'));
         if(namePetangTabElement) namePetangTabElement.addEventListener('click', () => handleNameListSessionSwitch('petang'));
         if(nameListContainer) nameListContainer.addEventListener('click', async (e) => {
@@ -1316,18 +1358,17 @@
             if (nameItemSpan) {
                 selectNameForCellInsertion(nameItemSpan.dataset.name);
             } else if (deleteButton) {
-                await deleteNameFromSharedSessionInFirestore(deleteButton.dataset.nameDelete); // Uses shared function
+                await deleteNameFromSharedSessionInFirestore(deleteButton.dataset.nameDelete);
             }
         });
         if(tablesContainer) {
             tablesContainer.addEventListener('click', handleTableCellClick);
-            
             tablesContainer.addEventListener('input', (e) => {
                 const cell = e.target;
                 if ((cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) && cell.isContentEditable) {
                     const text = cell.textContent;
                     if (cell.cellIndex > 0 || cell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class') {
-                         showCellAutocompleteSuggestions(cell, text); // Uses shared names
+                         showCellAutocompleteSuggestions(cell, text);
                     } else {
                         hideCellAutocompleteSuggestions();
                     }
@@ -1336,14 +1377,13 @@
                     const text = cell.textContent;
                     const parentCell = cell.parentElement;
                      if (parentCell && (parentCell.cellIndex > 0 || parentCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
-                        showCellAutocompleteSuggestions(parentCell, text); // Uses shared names
+                        showCellAutocompleteSuggestions(parentCell, text);
                     } else {
                          hideCellAutocompleteSuggestions();
                     }
                     setTimeout(rebuildAndRenderSummary, 300);
                 }
             });
-
             tablesContainer.addEventListener('blur', (e) => { 
                 const cell = e.target;
                 if ((cell.tagName === 'TD' || cell.tagName === 'TH' || cell.classList.contains('merged-cell-overlay')) && cell.isContentEditable !== false) { 
@@ -1364,7 +1404,6 @@
             updateAllMergeOverlays();
             hideCellAutocompleteSuggestions(); 
         }); 
-
         document.addEventListener('keydown', (e) => {
             if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && activeCellForAutocomplete) {
                 const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
@@ -1394,13 +1433,11 @@
                 }
             }
         });
-
         document.addEventListener('click', (event) => {
             if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block') {
                 const isClickInsideCell = activeCellForAutocomplete && activeCellForAutocomplete.contains(event.target);
                 const isClickInsideOverlay = activeCellForAutocomplete && activeCellForAutocomplete.querySelector('.merged-cell-overlay')?.contains(event.target);
                 const isClickInsideSuggestions = autocompleteSuggestionsDiv.contains(event.target);
-                
                 if (!isClickInsideCell && !isClickInsideSuggestions && !isClickInsideOverlay) {
                     hideCellAutocompleteSuggestions();
                 }
@@ -1514,10 +1551,14 @@
             const firstTableInDOM = tablesContainer.querySelector('table');
             if (firstTableInDOM) id = firstTableInDOM.id; 
             else { 
-                if (tablesContainer && tablesContainer.children.length === 0) addNewTable(true); 
-                return;
+                if (tablesContainer && tablesContainer.children.length === 0) {
+                    console.log("SwitchTable: No tables exist, adding a new one.");
+                    addNewTable(true); 
+                }
+                return; // Exit if no table can be switched to
             }
         }
+        console.log(`Switching to table: ${id}`);
         activeTableId = id;
         if(tablesContainer) tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
         if(tableTabs) tableTabs.querySelectorAll('button').forEach(b => { b.classList.toggle('active', b.dataset.tableId === id); });
@@ -1532,7 +1573,10 @@
         tableCount++; 
         const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
         const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
-        if (!label && !isInitial) return; 
+        if (!label && !isInitial) {
+            showMessage('Table creation cancelled.', 'info');
+            return;
+        }
         const newTable = document.createElement('table');
         newTable.id = `tbl_${Date.now()}_${tableCount}`; 
         newTable.dataset.tableName = label || defaultTableName;
@@ -1545,7 +1589,7 @@
             headerRow.appendChild(th);
         });
         const tbody = newTable.createTBody();
-        for (let r = 0; r < 2; r++) {
+        for (let r = 0; r < 2; r++) { // Add a couple of sample rows
             const dataRow = tbody.insertRow();
             for (let c = 0; c < headerRow.cells.length; c++) {
                 const td = dataRow.insertCell(); td.contentEditable = 'true';
@@ -1554,8 +1598,9 @@
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTable.id, label || defaultTableName);
-        switchTable(newTable.id); 
+        switchTable(newTable.id); // This will also call rebuildAndRenderSummary
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
+        else console.log(`Initial table "${label || defaultTableName}" created with ID ${newTable.id}.`);
     }
 
     async function promptAndRenameActiveTable() {
@@ -1598,7 +1643,11 @@
             if (firstRemainingTab) { 
                 const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; 
                 switchTable(nextActiveId);
-            } else { activeTableId = null; addNewTable(true); }
+            } else { 
+                activeTableId = null; 
+                console.log("Last table deleted. Adding a new default table.");
+                addNewTable(true); 
+            }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
     }
@@ -1770,7 +1819,6 @@
             }
         });
 
-
         primaryCell.innerHTML = ''; primaryCell.appendChild(overlay);
         primaryCell.classList.add('merged-cell-container');
         primaryCell.setAttribute('data-merge-id', mergeId);
@@ -1839,9 +1887,9 @@
         currentNameListSession = session;
         if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi');
         if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang');
-        if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`; // Title updated
+        if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
         if(searchNameInputElement) searchNameInputElement.value = ''; 
-        renderNameListFromFirestore(); // Uses shared names
+        renderNameListFromFirestore();
         hideCellAutocompleteSuggestions(); 
     }
 
@@ -1888,24 +1936,23 @@
     function renderNameListFromFirestore(filterText = '') { 
         if (!nameListContainer) return;
         if (!fbIsAuthReady) {
-            nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading shared names...</p>'; return; // Message updated
+            nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading shared names...</p>'; return;
         }
         nameListContainer.innerHTML = ''; 
-        // Uses shared name lists
         const namesToRender = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         const normalizedFilterText = String(filterText || '').toLowerCase().trim();
         if (!Array.isArray(namesToRender)) {
-            nameListContainer.innerHTML = '<p style="text-align:center; color:red;">Error: Shared name list data invalid.</p>'; return; // Message updated
+            nameListContainer.innerHTML = '<p style="text-align:center; color:red;">Error: Shared name list data invalid.</p>'; return;
         }
         const filteredNames = namesToRender.filter(name => String(name || '').toLowerCase().trim().includes(normalizedFilterText));
         if (filteredNames.length === 0) {
-            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ? 'No names match.' : `No names in shared ${currentNameListSession} session.`}</p>`; return; // Message updated
+            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ? 'No names match.' : `No names in shared ${currentNameListSession} session.`}</p>`; return;
         }
         filteredNames.forEach(name => {
             const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
             const nameStr = String(name || '');
             const safeNameAttr = nameStr.replace(/"/g, '&quot;');
-            itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}' from shared list">Delete</button>`; // Title updated
+            itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}' from shared list">Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
         highlightSelectedNameInList(selectedNameFromList); 
@@ -1917,7 +1964,7 @@
         showMessage(`Selected "${selectedNameFromList}". Click a cell to insert.`, 'info', 4000);
     }
 
-    function handleNameListImportFirestore(event) { // Now imports to shared list
+    function handleNameListImportFirestore(event) {
         const file = event.target.files[0];
         if (!file) { showMessage('No file selected.', 'info'); return; }
         if (file.type !== 'text/plain') {
@@ -1929,10 +1976,9 @@
             try {
                 const importedNames = e.target.result.split(/\r?\n/).map(n => String(n||'').trim()).filter(n => n);
                 if (importedNames.length === 0) { showMessage('No names in file.', 'info'); return; }
-                // Uses shared name lists
                 const currentSessionNames = (currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared).map(n => String(n||'').trim());
                 const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
-                await saveSharedNameListToFirestore(currentNameListSession, combinedNames); // Saves to shared list
+                await saveSharedNameListToFirestore(currentNameListSession, combinedNames);
             } catch (error) { showMessage('Error processing name list file.', 'error'); }
             finally { event.target.value = ''; }
         };
@@ -2002,13 +2048,14 @@
     }
 
     function rebuildAndRenderSummary() {
+        console.log("Rebuilding and rendering summary...");
         const scheduledNames = new Set(); 
         if (tablesContainer) {
             tablesContainer.querySelectorAll('table').forEach(scheduleTable => { 
                 if (!scheduleTable.tBodies[0]) return; 
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        if (cellIndex > 0) {
+                        if (cellIndex > 0) { 
                             const overlay = cell.querySelector('.merged-cell-overlay');
                             const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
                             if (nameFromCell) { 
@@ -2020,6 +2067,7 @@
             });
         }
         const allSummaryNames = [...scheduledNames].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
+        console.log("Summary Names:", allSummaryNames);
         buildSummaryTableSkeleton(allSummaryNames);
         updateSummaryTableData(allSummaryNames);
     }
@@ -2032,23 +2080,34 @@
     }
 
     function buildSummaryTableSkeleton(allAvailableNames) { 
-        if (!summaryTableElement) return; 
-        summaryTableElement.innerHTML = ''; 
-        const tempRawHeadersFromSchedules = new Set(); 
-        if (tablesContainer) {
-            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-                if (scheduleTable.tHead && scheduleTable.tHead.rows.length > 0) {
-                    for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) { 
-                        const headerText = String(scheduleTable.tHead.rows[0].cells[hIdx].textContent || '').trim();
-                        if (headerText) tempRawHeadersFromSchedules.add(headerText);
-                    }
-                }
-            });
+        if (!summaryTableElement) {
+            console.error("Summary table element not found. Cannot build skeleton.");
+            return;
         }
+        summaryTableElement.innerHTML = ''; 
+        
+        let activeTableHeaders = [];
+        const activeTableElement = document.getElementById(activeTableId);
+        console.log(`Active Table for Summary: ID='${activeTableId}', Element found: ${!!activeTableElement}`);
+
+        if (activeTableElement && activeTableElement.tHead && activeTableElement.tHead.rows.length > 0) {
+            for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) { 
+                const headerText = String(activeTableElement.tHead.rows[0].cells[hIdx].textContent || '').trim();
+                if (headerText) activeTableHeaders.push(headerText);
+            }
+        } else if (activeTableElement) {
+            console.warn("Active table for summary found, but has no headers or tHead rows.");
+        } else {
+            console.warn("Active table for summary NOT found. Summary headers will be limited.");
+        }
+        console.log("Summary Headers from Active Table:", activeTableHeaders);
+
+
         let laulisahRuleRequiresSpecialSlot = false;
         const specialNamesForRule = ["LAU", "LISAH"];
         const targetSlotForSpecialNamesRule = "10.15-10.30";
         const sourceSlotToShiftRule = "10.30-12.00";
+
         if (tablesContainer) {
             for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
                 if (laulisahRuleRequiresSpecialSlot) break; 
@@ -2069,15 +2128,23 @@
                 });
             }
         }
-        if (laulisahRuleRequiresSpecialSlot) tempRawHeadersFromSchedules.add(targetSlotForSpecialNamesRule);
+        if (laulisahRuleRequiresSpecialSlot) console.log("LAU/LISAH rule requires special slot:", targetSlotForSpecialNamesRule);
+
+
+        let combinedHeaders = new Set(activeTableHeaders);
+        if (laulisahRuleRequiresSpecialSlot) {
+            combinedHeaders.add(targetSlotForSpecialNamesRule);
+        }
         
-        let sortedOriginalUniqueHeaders = Array.from(tempRawHeadersFromSchedules).sort((a, b) => {
+        let sortedUniqueHeaders = Array.from(combinedHeaders).sort((a, b) => {
             const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b);
             if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
             if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  
             return String(a).localeCompare(String(b));
         });
-        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedOriginalUniqueHeaders];
+        console.log("Final Sorted Unique Headers for Summary:", sortedUniqueHeaders);
+
+        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedUniqueHeaders];
         const thead = summaryTableElement.createTHead();
         const headerRowForSummary = thead.insertRow();
         finalSummaryColumnHeaders.forEach(headerText => {
@@ -2085,7 +2152,13 @@
             headerRowForSummary.appendChild(th);
         });
         const tbody = summaryTableElement.createTBody();
-        if (allAvailableNames.length === 0) { 
+        
+        if (allAvailableNames.length === 0 && sortedUniqueHeaders.length === 0) {
+            const tr = tbody.insertRow(); const td = tr.insertCell();
+            td.textContent = "No names scheduled and no time slots defined in active table.";
+            td.colSpan = finalSummaryColumnHeaders.length || 1; 
+            td.style.textAlign = 'center'; td.style.fontStyle = 'italic';
+        } else if (allAvailableNames.length === 0) {
             const tr = tbody.insertRow(); const td = tr.insertCell();
             td.textContent = "No names scheduled yet.";
             td.colSpan = finalSummaryColumnHeaders.length || 1;
@@ -2097,12 +2170,19 @@
                 for (let i = 1; i < finalSummaryColumnHeaders.length; i++) tr.insertCell().textContent = '';
             });
         }
+        console.log("Summary table skeleton built.");
     }
 
     function updateSummaryTableData(allAvailableNames) { 
-        if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) return; 
+        if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) {
+            console.warn("Cannot update summary table data: table body or header not found.");
+            return;
+        }
         const summaryBody = summaryTableElement.tBodies[0];
-        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) return;
+        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) {
+            console.log("No rows in summary table to update (or only placeholder row).");
+            return;
+        }
         
         const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
@@ -2155,6 +2235,7 @@
                 if (cellIndex > 0 && cell.textContent.includes(',')) cell.classList.add('highlight-conflict');
             });
         });
+        console.log("Summary table data updated.");
     }
 
 </script>
