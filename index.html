@@ -553,7 +553,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     // Add SDKs for Firebase products that you want to use
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added limit
 
     // --- Firebase Configuration ---
     const userProvidedFirebaseConfig = {
@@ -626,6 +626,11 @@
     let autocompleteSuggestionsDiv = null;
     let activeCellForAutocomplete = null;
     let currentAutocompleteIndex = -1; 
+
+    // NEW: For auto-save and default load
+    let currentWorkingScheduleDocId = null; 
+    let autoSaveIntervalId = null;
+    const AUTO_SAVE_INTERVAL = 60000; // 60 seconds
 
     // DOM Element Cache
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement;
@@ -780,12 +785,10 @@
                         let mainContent = parts[0];
                         const remarkContent = parts.length > 1 ? ` // ${parts.slice(1).join(' // ')}` : '';
 
-                        // Filter out the deleted name and any '*' words associated with it if it's a multi-word main content
                         const wordsInMain = mainContent.split(/\s+/);
                         const newWordsInMain = wordsInMain.filter(word => {
                             if (word.startsWith('*') && mainContent.includes(nameToDeleteStr)) {
-                                // If a '*' word is part of a phrase containing the deleted name, remove it
-                                return !mainContent.includes(word.substring(1)); // A bit heuristic
+                                return !mainContent.includes(word.substring(1)); 
                             }
                             return word !== nameToDeleteStr;
                         });
@@ -871,13 +874,15 @@
             meta: allTableMeta,
             activeTableId: activeTableId,
             createdAt: serverTimestamp(),
+            lastUpdatedAt: serverTimestamp(), // Also set lastUpdatedAt on creation
             lastUpdatedBy: fbUserId || "anonymous"
         };
 
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            await addDoc(sharedSchedulesCollectionRef, scheduleData);
-            showMessage(`Shared schedule "${scheduleName.trim()}" saved to Cloud!`, 'success');
+            const newDocRef = await addDoc(sharedSchedulesCollectionRef, scheduleData);
+            currentWorkingScheduleDocId = newDocRef.id; // NEW: Set as current working draft
+            showMessage(`Shared schedule "${scheduleName.trim()}" saved to Cloud! (ID: ${currentWorkingScheduleDocId})`, 'success');
             if (sharedScheduleListContainerElement && sharedScheduleListContainerElement.style.display === 'block') {
                 await loadAndRenderSharedSchedulesFromFirestore();
             }
@@ -888,6 +893,58 @@
             showGeneralLoading(false);
         }
     }
+    
+    // NEW: Auto-save function
+    async function autoSaveCurrentSchedule() {
+        if (!fbDb || !fbIsAuthReady || !currentWorkingScheduleDocId) {
+            if (currentWorkingScheduleDocId) { // Only log if it was expected to save
+                 console.log("Auto-save skipped: Firebase not ready or no active shared schedule document ID.");
+            }
+            return;
+        }
+        if (!tablesContainer || tablesContainer.children.length === 0) {
+            console.log('Auto-save skipped: No schedule data to save.');
+            return;
+        }
+
+        console.log(`Attempting auto-save for document ID: ${currentWorkingScheduleDocId}`);
+        // No general loading indicator for auto-save to be less intrusive
+        
+        const allTablesData = tablesContainer.innerHTML;
+        const allTableMeta = {};
+        tablesContainer.querySelectorAll('table').forEach(table => {
+            allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
+        });
+
+        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
+        try {
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) {
+                console.warn(`Auto-save: Document ${currentWorkingScheduleDocId} not found. Clearing active schedule ID.`);
+                currentWorkingScheduleDocId = null; // Stop trying to save to a non-existent doc
+                return;
+            }
+            const existingData = docSnap.data();
+
+            const scheduleDataForUpdate = {
+                name: existingData.name, // Keep original name
+                html: allTablesData,
+                meta: allTableMeta,
+                activeTableId: activeTableId,
+                createdAt: existingData.createdAt, // IMPORTANT: Preserve original creation timestamp
+                lastUpdatedAt: serverTimestamp(), 
+                lastUpdatedBy: fbUserId || "anonymous",
+                // autoSavedAt: serverTimestamp() // Optional: specific field for auto-save time
+            };
+            
+            await setDoc(docRef, scheduleDataForUpdate);
+            showMessage(`Auto-saved to "${existingData.name}"`, 'success', 2000); // Shorter message for auto-save
+        } catch (error) {
+            console.error(`Error auto-saving schedule ID ${currentWorkingScheduleDocId}:`, error);
+            showMessage(`Auto-save failed. Error: ${error.message}`, "error", 3000);
+        }
+    }
+
 
     async function loadAndRenderSharedSchedulesFromFirestore() {
         if (!fbDb || !fbIsAuthReady) {
@@ -901,7 +958,8 @@
         sharedScheduleListContainerElement.innerHTML = '<p>Loading shared schedules from Cloud...</p>';
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            const q = query(sharedSchedulesCollectionRef, orderBy("createdAt", "desc")); 
+            // Order by lastUpdatedAt to show most recently worked on, then by createdAt for tie-breaking or if lastUpdatedAt is missing
+            const q = query(sharedSchedulesCollectionRef, orderBy("lastUpdatedAt", "desc"), orderBy("createdAt", "desc")); 
             const querySnapshot = await getDocs(q);
             
             const schedules = [];
@@ -929,22 +987,29 @@
         schedulesArray.forEach(schedule => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'shared-schedule-item';
-            const scheduleDate = schedule.createdAt && schedule.createdAt.toDate ? schedule.createdAt.toDate().toLocaleString() : 'N/A';
+            
+            let dateToShow = 'N/A';
+            if (schedule.lastUpdatedAt && schedule.lastUpdatedAt.toDate) {
+                dateToShow = `Updated: ${schedule.lastUpdatedAt.toDate().toLocaleString()}`;
+            } else if (schedule.createdAt && schedule.createdAt.toDate) {
+                dateToShow = `Created: ${schedule.createdAt.toDate().toLocaleString()}`;
+            }
+
             const updatedByText = schedule.lastUpdatedBy ? ` (by ${schedule.lastUpdatedBy.substring(0,8)}...)` : '';
             itemDiv.innerHTML = `
                 <span data-schedule-id="${schedule.id}" title="Load shared schedule: ${schedule.name}">${schedule.name}${updatedByText}</span>
-                <span class="schedule-date">${scheduleDate}</span>
+                <span class="schedule-date">${dateToShow}</span>
                 <button data-schedule-id="${schedule.id}" title="Delete shared schedule '${schedule.name}' from Cloud">Delete</button>
             `;
             sharedScheduleListContainerElement.appendChild(itemDiv);
         });
     }
 
-    async function loadSelectedSharedScheduleFromFirestore(scheduleDocId) {
+    async function loadSelectedSharedScheduleFromFirestore(scheduleDocId, isDefaultLoad = false) {
         if (!fbDb || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot load shared schedule.", "error"); return;
+            showMessage("Firebase not ready. Cannot load shared schedule.", "error"); return false;
         }
-        if (!tablesContainer || !tableTabs) return;
+        if (!tablesContainer || !tableTabs) return false;
 
         showGeneralLoading(true);
         try {
@@ -973,20 +1038,65 @@
                 } else {
                     addNewTable(true); 
                 }
-                showMessage(`Shared schedule "${scheduleData.name}" loaded from Cloud!`, 'success');
+                currentWorkingScheduleDocId = scheduleDocId; // NEW: Set as current working draft
+                if (!isDefaultLoad) { // Don't show message if it's the automatic default load
+                    showMessage(`Shared schedule "${scheduleData.name}" loaded from Cloud!`, 'success');
+                } else {
+                     console.log(`Default schedule "${scheduleData.name}" loaded.`);
+                }
                 if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.style.display = 'none';
                 rebuildAndRenderSummary();
                 updateAllMergeOverlays(); 
+                return true;
             } else {
-                showMessage(`Shared schedule with ID "${scheduleDocId}" not found in Cloud.`, "error");
+                if (!isDefaultLoad) showMessage(`Shared schedule with ID "${scheduleDocId}" not found in Cloud.`, "error");
+                else console.log(`Default schedule ID "${scheduleDocId}" not found.`)
+                currentWorkingScheduleDocId = null; // Clear if not found
+                return false;
             }
         } catch (error) {
             console.error("Error loading selected shared schedule from Firestore:", error);
-            showMessage(`Failed to load shared schedule. Error: ${error.message}`, "error");
+            if (!isDefaultLoad) showMessage(`Failed to load shared schedule. Error: ${error.message}`, "error");
+            currentWorkingScheduleDocId = null; // Clear on error
+            return false;
         } finally {
             showGeneralLoading(false);
         }
     }
+    
+    // NEW: Function to load the latest shared schedule by createdAt
+    async function loadLatestSharedScheduleAsDefault() {
+        if (!fbDb || !fbIsAuthReady) {
+            console.log("loadLatestSharedScheduleAsDefault: Firebase not ready.");
+            return false;
+        }
+        showGeneralLoading(true);
+        console.log("Attempting to load the latest shared schedule as default...");
+        try {
+            const schedulesRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
+            // Order by lastUpdatedAt first to get the most recently *worked on*. Fallback to createdAt.
+            const q = query(schedulesRef, orderBy("lastUpdatedAt", "desc"), orderBy("createdAt", "desc"), limit(1));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const latestScheduleDoc = querySnapshot.docs[0];
+                console.log(`Latest schedule found: ID = ${latestScheduleDoc.id}, Name = ${latestScheduleDoc.data().name}`);
+                return await loadSelectedSharedScheduleFromFirestore(latestScheduleDoc.id, true); // true for isDefaultLoad
+            } else {
+                console.log("No shared schedules found in Firestore to load as default.");
+                currentWorkingScheduleDocId = null;
+                return false;
+            }
+        } catch (error) {
+            console.error("Error loading latest shared schedule:", error);
+            showMessage("Could not load the latest schedule automatically.", "error");
+            currentWorkingScheduleDocId = null;
+            return false;
+        } finally {
+            showGeneralLoading(false);
+        }
+    }
+
 
     async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) {
         if (!fbDb || !fbIsAuthReady) {
@@ -997,8 +1107,12 @@
             try {
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
                 await deleteDoc(docRef);
+                if (currentWorkingScheduleDocId === scheduleDocId) { // NEW: Clear if deleting current
+                    currentWorkingScheduleDocId = null;
+                    console.log("Deleted schedule was the current working draft. Cleared currentWorkingScheduleDocId.");
+                }
                 showMessage(`Shared schedule "${scheduleName}" deleted from Cloud.`, 'success');
-                await loadAndRenderSharedSchedulesFromFirestore();
+                await loadAndRenderSharedSchedulesFromFirestore(); // Refresh list
             } catch (error) {
                 console.error("Error deleting shared schedule from Firestore:", error);
                 showMessage(`Failed to delete shared schedule. Error: ${error.message}`, "error");
@@ -1027,6 +1141,7 @@
                     meta: data.meta,
                     activeTableId: data.activeTableId,
                     createdAt: data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toISOString() : null,
+                    lastUpdatedAt: data.lastUpdatedAt && data.lastUpdatedAt.toDate ? data.lastUpdatedAt.toDate().toISOString() : null,
                     lastUpdatedBy: data.lastUpdatedBy || null
                 });
             });
@@ -1095,8 +1210,9 @@
                             html: schedule.html,
                             meta: schedule.meta,
                             activeTableId: schedule.activeTableId,
-                            createdAt: serverTimestamp(), 
-                            lastUpdatedBy: fbUserId || "anonymous"
+                            createdAt: schedule.createdAt ? new Date(schedule.createdAt) : serverTimestamp(), // Try to preserve original createdAt
+                            lastUpdatedAt: schedule.lastUpdatedAt ? new Date(schedule.lastUpdatedAt) : serverTimestamp(),
+                            lastUpdatedBy: schedule.lastUpdatedBy || fbUserId || "anonymous"
                         });
                         importedCount++;
                     } else {
@@ -1131,9 +1247,9 @@
         if (!autocompleteSuggestionsDiv) return;
         const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         
-        let textForMatchingInput = String(inputText || '').split(' // ')[0]; // Get part before " // "
-        const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*')); // Filter out '*' words
-        const textForMatching = wordsForMatching.join(' ').toLowerCase().trim(); // Use this for matching
+        let textForMatchingInput = String(inputText || '').split(' // ')[0]; 
+        const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*')); 
+        const textForMatching = wordsForMatching.join(' ').toLowerCase().trim(); 
                 
         if (!textForMatching) {
             hideCellAutocompleteSuggestions();
@@ -1186,7 +1302,6 @@
             const currentFullText = overlay ? overlay.textContent : targetCell.textContent;
             const remarkPart = currentFullText.includes(' // ') ? currentFullText.substring(currentFullText.indexOf(' // ')) : '';
             
-            // Preserve '*' words that were originally before the ' // ' part if any
             const contentBeforeRemark = currentFullText.split(' // ')[0];
             const starWordsBeforeRemark = contentBeforeRemark.split(/\s+/).filter(word => word.startsWith('*')).join(' ');
 
@@ -1287,6 +1402,21 @@
                     if (nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
                         renderNameListFromFirestore(searchNameInputElement.value);
                     }
+                    
+                    // NEW: Load latest schedule or setup initial state
+                    const loadedDefault = await loadLatestSharedScheduleAsDefault();
+                    if (!loadedDefault) {
+                        console.log("No default schedule loaded, setting up initial table state.");
+                        setupInitialTableState(); // Fallback to original setup if no default loaded
+                    }
+                    rebuildAndRenderSummary(); // Ensure summary is built after potential load
+
+                    // NEW: Start auto-save interval
+                    if (autoSaveIntervalId) clearInterval(autoSaveIntervalId); // Clear existing if any
+                    autoSaveIntervalId = setInterval(autoSaveCurrentSchedule, AUTO_SAVE_INTERVAL);
+                    console.log(`Auto-save interval started (every ${AUTO_SAVE_INTERVAL/1000}s).`);
+
+
                 } else {
                     console.log("Firebase Auth: No user is currently signed in. Attempting to sign in.");
                     fbIsAuthReady = false; fbUserId = null;
@@ -1306,6 +1436,9 @@
                         console.error("Firebase Auth: Error during sign-in:", error);
                         showMessage(`Firebase Auth failed. Cloud features may not work. Error: ${error.message}`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
+                        // If auth fails, still set up a basic table
+                        setupInitialTableState();
+                        rebuildAndRenderSummary();
                     }
                 }
             });
@@ -1314,47 +1447,68 @@
              else console.warn("userIdDisplayElement not found in DOM.");
              console.error("Firebase Auth: fbAuth object is not available. Firebase Auth service could not be initialized.");
              showMessage("Critical Error: Firebase Auth service could not be initialized. Check Firebase setup.", "error", 10000);
+             // Setup basic table even if Firebase auth init fails
+             setupInitialTableState();
+             rebuildAndRenderSummary();
         }
 
         loadScheduleTitleFromLocalStorage(); 
         initializeEventListeners();
-        setupInitialTableState(); 
-        rebuildAndRenderSummary(); 
+        // setupInitialTableState(); // Moved to be called after attempting to load default or if auth fails
+        // rebuildAndRenderSummary(); // Also moved
         handleNameListSessionSwitch('pagi');
     });
 
     function setupInitialTableState() {
+        // This function is now primarily a fallback if no default schedule is loaded.
+        // It ensures there's at least one table.
         const existingTables = tablesContainer.querySelectorAll('table');
-        if (existingTables.length > 0) {
-            tableTabs.innerHTML = ''; 
-            existingTables.forEach((table, index) => {
+        if (existingTables.length > 0 && tableTabs.children.length > 0) {
+            // If tables and tabs already exist (e.g., from a loaded schedule), do nothing further here.
+            // The active table should have been set by the loading function.
+            if (!document.getElementById(activeTableId) && tablesContainer.querySelector('table')) {
+                 switchTable(tablesContainer.querySelector('table').id); // Ensure some table is active
+            } else if (document.getElementById(activeTableId)) {
+                switchTable(activeTableId); // Re-affirm active table
+            }
+            console.log("setupInitialTableState: Tables exist, state likely set by load function.");
+            return;
+        }
+
+        // If no tables loaded by default, create one.
+        console.log("setupInitialTableState: No tables loaded or exist, creating a new default table.");
+        tableTabs.innerHTML = ''; // Clear any potential old tabs
+        tablesContainer.innerHTML = ''; // Clear any potential old tables
+        currentWorkingScheduleDocId = null; // No working document if starting fresh
+        
+        // Check if the initial HTML structure for tbl_1 exists, if not, create a fully new one.
+        let initialTable = document.getElementById('tbl_1');
+        if (!initialTable) { // If the default tbl_1 from HTML is gone (e.g. after clear all)
+            addNewTable(true); // This will create a new table and set it as active
+        } else { // If tbl_1 from initial HTML is still there but wasn't made active by a load
+            tableTabs.innerHTML = ''; // Clear tabs
+            const allTablesInDOM = tablesContainer.querySelectorAll('table');
+            allTablesInDOM.forEach((table, index) => {
                 const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`;
                 table.id = tableId;
                 const tableName = table.dataset.tableName || `Table ${index + 1}`;
                 table.dataset.tableName = tableName;
                 addTabButton(tableId, tableName);
-                if (index === 0) {
-                    activeTableId = tableId; 
+                table.classList.remove('active');
+                if (index === 0) { // Make the first one active by default
+                    activeTableId = tableId;
                 }
-                table.classList.remove('active'); 
             });
-        } else {
-            console.log("No initial tables found in HTML. Adding a new default table.");
-            addNewTable(true); 
-        }
-        
-        if (activeTableId && document.getElementById(activeTableId)) {
-            console.log(`Initial active table ID set to: ${activeTableId}`);
-            switchTable(activeTableId);
-        } else if (tablesContainer.querySelector('table')) {
-            const firstTable = tablesContainer.querySelector('table');
-            activeTableId = firstTable.id;
-            console.warn(`Initial activeTableId was invalid or table not found. Falling back to first table in DOM: ${activeTableId}`);
-            switchTable(activeTableId);
-        } else {
-            console.error("SetupInitialTableState: No tables available and addNewTable did not create one. Summary might be empty.");
+             if (activeTableId && document.getElementById(activeTableId)) {
+                switchTable(activeTableId);
+            } else if (tablesContainer.querySelector('table')) {
+                switchTable(tablesContainer.querySelector('table').id);
+            } else {
+                addNewTable(true); // Absolute fallback
+            }
         }
     }
+
 
     function loadScheduleTitleFromLocalStorage() { 
         const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
@@ -1443,7 +1597,7 @@
                     } else {
                         hideCellAutocompleteSuggestions();
                     }
-                    setTimeout(rebuildAndRenderSummary, 300); // Debounce slightly
+                    setTimeout(rebuildAndRenderSummary, 300); 
                 } else if (cell.classList.contains('merged-cell-overlay')) {
                     const text = cell.textContent;
                     const parentCell = cell.parentElement;
@@ -1452,7 +1606,7 @@
                     } else {
                          hideCellAutocompleteSuggestions();
                     }
-                    setTimeout(rebuildAndRenderSummary, 300); // Debounce slightly
+                    setTimeout(rebuildAndRenderSummary, 300); 
                 }
             });
             tablesContainer.addEventListener('blur', (e) => { 
@@ -1500,7 +1654,6 @@
                     e.preventDefault();
                     hideCellAutocompleteSuggestions();
                 } else if (e.key === 'Tab') {
-                    // Allow tab to naturally move focus, which should trigger blur and hide suggestions
                     hideCellAutocompleteSuggestions(); 
                 }
             }
@@ -1524,11 +1677,10 @@
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         const rect = nameModalContent.getBoundingClientRect();
-        // Make sure modal is positioned fixed for dragging
         nameModalContent.style.position = 'fixed';
         nameModalContent.style.left = `${rect.left}px`;
         nameModalContent.style.top = `${rect.top}px`;
-        nameModalContent.style.transform = 'none'; // Remove transform if any
+        nameModalContent.style.transform = 'none'; 
         modalDragOffsetX = clientX - nameModalContent.offsetLeft;
         modalDragOffsetY = clientY - nameModalContent.offsetTop;
         if (e.type === 'touchstart') e.preventDefault(); 
@@ -1540,8 +1692,7 @@
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         let newLeft = clientX - modalDragOffsetX;
         let newTop = clientY - modalDragOffsetY;
-        // Boundary checks
-        const modalRect = nameModalContent.getBoundingClientRect(); // Use current rect for width/height
+        const modalRect = nameModalContent.getBoundingClientRect(); 
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         if (newLeft < 0) newLeft = 0;
@@ -1557,7 +1708,6 @@
         if (isDraggingModal && nameModalContent) {
             isDraggingModal = false;
             nameModalContent.classList.remove('dragging');
-            // No need to revert position to relative here if it's meant to stay where dragged
         }
     }
 
@@ -1589,7 +1739,6 @@
         if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return; }
         const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
         if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved shared schedules.`)) {
-            // Unmerge all cells in the active table first
             activeTableElement.querySelectorAll('.merged-cell-container').forEach(containerCell => {
                 const mergeId = containerCell.dataset.mergeId;
                 if(mergeId){
@@ -1598,21 +1747,22 @@
                         c.removeAttribute('data-merge-id');
                         c.classList.remove('merged-cell-container', 'subsumed-cell');
                         const overlay = c.querySelector('.merged-cell-overlay');
-                        if (overlay) c.textContent = overlay.textContent; // Keep text in primary cell
-                        else c.innerHTML = ''; // Clear others
-                        const overlayChild = c.querySelector('.merged-cell-overlay'); // Remove overlay if it exists
+                        if (overlay) c.textContent = overlay.textContent; 
+                        else c.innerHTML = ''; 
+                        const overlayChild = c.querySelector('.merged-cell-overlay'); 
                         if(overlayChild) overlayChild.remove();
                     });
                 }
             });
-            // Clear content from all data cells (tbody td and tbody th)
             activeTableElement.querySelectorAll('tbody td, tbody th').forEach(cell => {
-                cell.innerHTML = ''; // Clears content
-                cell.classList.remove('selected'); // Deselect if selected
+                cell.innerHTML = ''; 
+                cell.classList.remove('selected'); 
             });
-            selectedCells = []; // Clear selection array
+            selectedCells = []; 
+            // currentWorkingScheduleDocId = null; // NEW: Clearing content might mean it's a new "unsaved" state
+            // Decided against clearing currentWorkingScheduleDocId here, as user might want to save the cleared state.
             rebuildAndRenderSummary();
-            updateAllMergeOverlays(); // Ensure overlays are correct after unmerging
+            updateAllMergeOverlays(); 
             showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
     }
@@ -1638,7 +1788,7 @@
                 if (tablesContainer && tablesContainer.children.length === 0) {
                     console.log("SwitchTable: No tables exist, adding a new one.");
                     addNewTable(true); 
-                    return; // addNewTable will call switchTable again
+                    return; 
                 }
                 console.error(`SwitchTable: Target table ${id} not found and no fallback available.`);
                 return; 
@@ -1679,7 +1829,7 @@
             headerRow.appendChild(th);
         });
         const tbody = newTable.createTBody();
-        for (let r = 0; r < 2; r++) { // Add a couple of sample rows
+        for (let r = 0; r < 2; r++) { 
             const dataRow = tbody.insertRow();
             for (let c = 0; c < headerRow.cells.length; c++) {
                 const td = dataRow.insertCell(); td.contentEditable = 'true';
@@ -1689,8 +1839,14 @@
         tablesContainer.appendChild(newTable);
         addTabButton(newTable.id, label || defaultTableName);
         switchTable(newTable.id); 
-        if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
-        else console.log(`Initial table "${label || defaultTableName}" created with ID ${newTable.id}.`);
+        if (!isInitial) {
+            showMessage(`Table "${label || defaultTableName}" added.`, 'success');
+            // currentWorkingScheduleDocId = null; // NEW: Adding a new table means it's a new unsaved state relative to any loaded doc
+            // Decided against clearing currentWorkingScheduleDocId here. Auto-save will continue on the loaded doc.
+            // If user wants this new table structure saved, they should use "Save Shared Schedule".
+        } else {
+            console.log(`Initial table "${label || defaultTableName}" created with ID ${newTable.id}.`);
+        }
     }
 
     async function promptAndRenameActiveTable() {
@@ -1698,7 +1854,6 @@
         const currentTab = tableTabs.querySelector('button.active');
         if (!currentTab) { showMessage('No active table to rename.', 'error'); return; }
         let tableIdToRename = currentTab.dataset.tableId;
-        // Fallback if dataset.tableId is somehow missing (older structures might rely on onclick)
         if (!tableIdToRename) {
             const match = currentTab.getAttribute('onclick')?.match(/'(tbl_.*?)'/);
             if (match && match[1]) tableIdToRename = match[1];
@@ -1730,35 +1885,35 @@
 
         if (await customConfirm(`Delete table "${tableName}"? This cannot be undone.`)) {
             if (tableElement) tableElement.remove();
-            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove(); // Fallback
+            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove(); 
             activeTab?.remove(); 
             
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) { 
-                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; // Fallback for older structures
+                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; 
                 switchTable(nextActiveId);
             } else { 
-                // This case means all tables were deleted, which shouldn't happen due to the <=1 check,
-                // but as a safeguard, create a new one.
                 activeTableId = null; 
+                // currentWorkingScheduleDocId = null; // NEW: If all tables are gone, it's a new state.
+                // This case should be rare due to the <=1 check.
                 console.log("Last table deleted. Adding a new default table.");
-                addNewTable(true); // This will also call switchTable
+                addNewTable(true); 
             }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
     }
 
     function addRowToTable(tableBody, rowIndex, numCols) {
-        const row = tableBody.insertRow(rowIndex); // rowIndex can be -1 to append
+        const row = tableBody.insertRow(rowIndex); 
         for (let i = 0; i < numCols; i++) {
             const cell = row.insertCell(); cell.contentEditable = 'true';
         }
     }
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0] || table.rows.length === 0) return; // Need at least header row
-        const numCols = table.rows[0].cells.length; // Get numCols from header or first row
-        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex : 0; // Default to top of tbody
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return; 
+        const numCols = table.rows[0].cells.length; 
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex : 0; 
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
@@ -1766,20 +1921,19 @@
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const numCols = table.rows[0].cells.length;
-        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex + 1 : -1; // -1 appends to tbody
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex + 1 : -1; 
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    function addColumnToTable(table, colIndex) { // colIndex can be -1 to append
+    function addColumnToTable(table, colIndex) { 
         for (const row of table.rows) {
             const isHeaderRow = row.parentElement.tagName === 'THEAD';
             const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex);
             cell.contentEditable = 'true';
             if (isHeaderRow) {
                 cell.textContent = "New Header";
-                // If it's a header and not appending, insertBefore is needed for TH
                 if (colIndex !== -1 && row.cells[colIndex]) row.insertBefore(cell, row.cells[colIndex]);
-                else if (isHeaderRow) row.appendChild(cell); // For TH append
+                else if (isHeaderRow) row.appendChild(cell); 
             }
         }
     }
@@ -1793,7 +1947,7 @@
     function addColumnRightToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table) return;
-        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex + 1 : -1; // -1 appends
+        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex + 1 : -1; 
         addColumnToTable(table, insertAtIndex);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
@@ -1844,18 +1998,16 @@
         const cell = event.target.closest('td, th');
         if (!cell || !cell.closest(`#${activeTableId}`)) return; 
         lastClickedCell = cell; 
-        // Hide autocomplete if clicking outside suggestions or a different cell
         if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && 
             !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
             hideCellAutocompleteSuggestions();
         }
 
         if (selectedNameFromList) { 
-            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { // Ensure it's a data cell
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
                 const overlay = cell.querySelector('.merged-cell-overlay');
                 const currentCellText = overlay ? overlay.textContent : cell.textContent;
                 
-                // Preserve remarks (//) and star words (*)
                 const remarkPart = currentCellText.includes(' // ') ? currentCellText.substring(currentCellText.indexOf(' // ')) : '';
                 const contentBeforeRemark = currentCellText.split(' // ')[0];
                 const starWords = contentBeforeRemark.split(/\s+/).filter(w => w.startsWith('*')).join(' ');
@@ -1878,7 +2030,6 @@
             return; 
         }
         if (selectionMode) { 
-            // Prevent selection of subsumed cells or mixing merge groups
             if (cell.classList.contains('subsumed-cell') ||
                 (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
                 showMessage('Cannot select subsumed cells or mix merge groups.', 'warning'); return;
@@ -1896,11 +2047,9 @@
 
     function mergeSelectedTableCells() {
         if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error'); return; }
-        // Check if any selected cell is already part of a merge group (either container or subsumed)
         if (selectedCells.some(cell => cell.dataset.mergeId)) {
             showMessage('Cannot merge already merged cells. Unmerge first.', 'warning'); return;
         }
-        // Determine primary cell (top-leftmost)
         let primaryCell = selectedCells[0];
         let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top;
         let minColGUI = primaryCell.getBoundingClientRect().left;
@@ -1911,7 +2060,6 @@
                 primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left;
             }
         });
-        // Calculate total dimensions
         let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
         selectedCells.forEach(cell => {
             const rect = cell.getBoundingClientRect();
@@ -1922,12 +2070,12 @@
         const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const overlay = document.createElement('div');
         overlay.className = 'merged-cell-overlay';
-        overlay.textContent = primaryCell.textContent; // Take content from primary cell
+        overlay.textContent = primaryCell.textContent; 
         overlay.contentEditable = 'true'; 
         overlay.style.setProperty('--merged-width', `${totalWidth}px`);
         overlay.style.setProperty('--merged-height', `${totalHeight}px`);
-        overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); }); // Update summary on blur
-        overlay.addEventListener('input', (e) => { // Handle input for autocomplete
+        overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); }); 
+        overlay.addEventListener('input', (e) => { 
             const text = e.target.textContent;
             if (primaryCell && (primaryCell.cellIndex > 0 || primaryCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
                  showCellAutocompleteSuggestions(primaryCell, text);
@@ -1941,43 +2089,41 @@
         primaryCell.setAttribute('data-merge-id', mergeId);
         selectedCells.forEach(cell => {
             if (cell !== primaryCell) {
-                cell.textContent = ''; // Clear content of subsumed cells
+                cell.textContent = ''; 
                 cell.classList.add('subsumed-cell');
                 cell.setAttribute('data-merge-id', mergeId);
             }
         });
         deselectAllTableCells();
-        if (selectionMode) toggleCellSelectionMode(); // Exit selection mode after merge
+        if (selectionMode) toggleCellSelectionMode(); 
         showMessage('Cells visually merged.', 'success');
     }
 
     function unmergeActiveCellIfMerged() {
-        const cell = lastClickedCell; // Use the last clicked cell
+        const cell = lastClickedCell; 
         if (!cell) { showMessage('Click a merged cell to unmerge.', 'info'); return; }
-        const containerCell = cell.closest('[data-merge-id]'); // Find the merge container
+        const containerCell = cell.closest('[data-merge-id]'); 
         if (!containerCell) { showMessage('Clicked cell is not merged.', 'error'); return; }
         const mergeId = containerCell.dataset.mergeId;
         const table = containerCell.closest('table');
         if (!table) return;
         const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`);
         let originalText = '';
-        // Find the primary cell (the one with the overlay) to get its text
         const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
         if (primaryCellInGroup) {
             const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay');
             if (overlay) originalText = overlay.textContent;
-            else originalText = primaryCellInGroup.textContent; // Fallback if overlay somehow missing
+            else originalText = primaryCellInGroup.textContent; 
         }
         cellsInGroup.forEach(c => {
             c.removeAttribute('data-merge-id');
             c.classList.remove('merged-cell-container', 'subsumed-cell');
             const overlayChild = c.querySelector('.merged-cell-overlay');
-            if (overlayChild) overlayChild.remove(); // Remove the overlay div
-            c.innerHTML = ''; // Clear all cells first
+            if (overlayChild) overlayChild.remove(); 
+            c.innerHTML = ''; 
         });
-        // Restore text to the primary cell (or the first cell if primary not clearly identified)
         if (primaryCellInGroup) primaryCellInGroup.textContent = originalText;
-        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText; // Fallback
+        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText; 
         rebuildAndRenderSummary();
         showMessage('Cells unmerged.', 'success');
     }
@@ -1997,7 +2143,7 @@
                 minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right);
                 minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom);
             });
-            if (minLeft === Infinity) return; // Should not happen if cellsInGroup is not empty
+            if (minLeft === Infinity) return; 
             overlay.style.setProperty('--merged-width', `${maxRight - minLeft}px`);
             overlay.style.setProperty('--merged-height', `${maxBottom - minTop}px`);
         });
@@ -2008,9 +2154,9 @@
         if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi');
         if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang');
         if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
-        if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search on session switch
+        if(searchNameInputElement) searchNameInputElement.value = ''; 
         renderNameListFromFirestore();
-        hideCellAutocompleteSuggestions(); // Clear any cell autocomplete
+        hideCellAutocompleteSuggestions(); 
     }
 
     function highlightSelectedNameInList(nameToHighlight) { 
@@ -2032,8 +2178,8 @@
 
     function closeNameModal() {
         if (nameModal) nameModal.style.display = 'none';
-        clearNameSelection(); // Clear any selected name when closing modal
-        if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search in modal
+        clearNameSelection(); 
+        if(searchNameInputElement) searchNameInputElement.value = ''; 
     }
 
     function toggleNameListModalVisibility() {
@@ -2041,17 +2187,16 @@
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) closeNameModal();
         else {
-            // Reset modal position before showing
-            nameModalContent.style.position = 'relative'; // Reset from fixed if dragged
+            nameModalContent.style.position = 'relative'; 
             nameModalContent.style.left = 'auto'; nameModalContent.style.top = 'auto';
-            nameModalContent.style.transform = 'none'; // Reset transform
+            nameModalContent.style.transform = 'none'; 
             nameModal.style.display = 'flex';
-            if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search
-            handleNameListSessionSwitch(currentNameListSession); // Ensure correct list is shown
+            if(searchNameInputElement) searchNameInputElement.value = ''; 
+            handleNameListSessionSwitch(currentNameListSession); 
             if(newNameInput) newNameInput.focus();
             clearNameSelection();
         }
-        hideCellAutocompleteSuggestions(); // Clear any cell autocomplete
+        hideCellAutocompleteSuggestions(); 
     }
 
     function renderNameListFromFirestore(filterText = '') { 
@@ -2072,16 +2217,16 @@
         filteredNames.forEach(name => {
             const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
             const nameStr = String(name || '');
-            const safeNameAttr = nameStr.replace(/"/g, '&quot;'); // Sanitize for attribute
+            const safeNameAttr = nameStr.replace(/"/g, '&quot;'); 
             itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}' from shared list">Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
-        highlightSelectedNameInList(selectedNameFromList); // Re-apply highlight if a name was selected
+        highlightSelectedNameInList(selectedNameFromList); 
     }
 
     function selectNameForCellInsertion(name) { 
         selectedNameFromList = String(name || '');
-        highlightSelectedNameInList(selectedNameFromList); // Highlight in the list
+        highlightSelectedNameInList(selectedNameFromList); 
         showMessage(`Selected "${selectedNameFromList}". Click a cell to insert.`, 'info', 4000);
     }
 
@@ -2101,7 +2246,7 @@
                 const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
                 await saveSharedNameListToFirestore(currentNameListSession, combinedNames);
             } catch (error) { showMessage('Error processing name list file.', 'error'); }
-            finally { event.target.value = ''; } // Clear file input
+            finally { event.target.value = ''; } 
         };
         reader.onerror = () => { showMessage('Failed to read name list file.', 'error'); event.target.value = ''; };
         reader.readAsText(file);
@@ -2114,9 +2259,9 @@
         reader.onload = (e) => {
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const sheetName = workbook.SheetNames[0]; // Use the first sheet
+                const sheetName = workbook.SheetNames[0]; 
                 const worksheet = workbook.Sheets[sheetName];
-                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); // raw:false to get formatted values
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); 
                 tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
                 const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
@@ -2128,11 +2273,11 @@
                     importedTableElement.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
                     addTabButton(newTableId, importedTableName);
-                    switchTable(newTableId); // Switch to the new imported table
+                    switchTable(newTableId); 
                     showMessage('Excel data imported!', 'success');
                 } else showMessage('Could not parse table from Excel.', 'error');
             } catch (error) { showMessage('Error processing Excel file.', 'error'); console.error("Excel import error:", error); }
-            finally { event.target.value = ''; } // Clear file input
+            finally { event.target.value = ''; } 
         };
         reader.readAsArrayBuffer(file);
     }
@@ -2140,20 +2285,17 @@
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
         if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
-        // Temporarily replace merged cell overlays with their text content for export
         const overlaysData = []; 
         tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
             const parentCell = overlay.parentElement;
             overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML });
-            parentCell.textContent = overlay.textContent; // Replace HTML with text
+            parentCell.textContent = overlay.textContent; 
         });
         const tableName = tableToExport.dataset.tableName || activeTableId;
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
-        // Restore original HTML for merged cells
         overlaysData.forEach(data => { 
             data.parent.innerHTML = data.originalHTML; 
-            // Re-attach event listeners if they were part of originalHTML and dynamic
             const newOverlay = data.parent.querySelector('.merged-cell-overlay');
             if (newOverlay) {
                 newOverlay.addEventListener('blur', () => rebuildAndRenderSummary());
@@ -2167,25 +2309,16 @@
                 });
             }
         });
-        if(overlaysData.length > 0) updateAllMergeOverlays(); // Ensure visual consistency
+        if(overlaysData.length > 0) updateAllMergeOverlays(); 
         showMessage(`Table "${tableName}" exported.`, 'success');
     }
 
-    /**
-     * Extracts the main content from a cell for summary, ignoring remarks after " // "
-     * and words starting with "*".
-     * @param {string} cellText The full text content of the cell.
-     * @returns {string} The processed text content for summary, trimmed.
-     */
     function getTextForSummary(cellText) {
         if (typeof cellText !== 'string') return '';
-        let textForSummary = cellText.split(' // ')[0]; // Get part before " // " remarks
-
-        // Remove words starting with '*' from the part before " // "
-        const words = textForSummary.split(/\s+/); // Split by one or more spaces
+        let textForSummary = cellText.split(' // ')[0]; 
+        const words = textForSummary.split(/\s+/); 
         const filteredWords = words.filter(word => !word.startsWith('*'));
-        
-        return filteredWords.join(' ').trim(); // Join remaining words and trim
+        return filteredWords.join(' ').trim(); 
     }
 
 
@@ -2197,10 +2330,10 @@
                 if (!scheduleTable.tBodies[0]) return; 
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        if (cellIndex > 0) { // Skip first column (class/time usually)
+                        if (cellIndex > 0) { 
                             const overlay = cell.querySelector('.merged-cell-overlay');
                             const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
-                            const actualNameForSummary = getTextForSummary(nameFromCell); // Uses updated logic
+                            const actualNameForSummary = getTextForSummary(nameFromCell); 
                             if (actualNameForSummary) { 
                                 scheduledNames.add(actualNameForSummary);
                             }
@@ -2234,7 +2367,7 @@
         console.log(`Active Table for Summary: ID='${activeTableId}', Element found: ${!!activeTableElement}`);
 
         if (activeTableElement && activeTableElement.tHead && activeTableElement.tHead.rows.length > 0) {
-            for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) { // Start from 1 to skip first header if it's 'Class/Time'
+            for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) { 
                 const headerText = String(activeTableElement.tHead.rows[0].cells[hIdx].textContent || '').trim();
                 if (headerText) activeTableHeaders.push(headerText);
             }
@@ -2245,8 +2378,6 @@
         }
         console.log("Summary Headers from Active Table:", activeTableHeaders);
 
-
-        // Special LAU/LISAH rule logic
         let laulisahRuleRequiresSpecialSlot = false;
         const specialNamesForRule = ["LAU", "LISAH"];
         const targetSlotForSpecialNamesRule = "10.15-10.30";
@@ -2254,20 +2385,20 @@
 
         if (tablesContainer) {
             for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
-                if (laulisahRuleRequiresSpecialSlot) break; // Optimization
+                if (laulisahRuleRequiresSpecialSlot) break; 
                 if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
                 const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
                 Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
-                    if (laulisahRuleRequiresSpecialSlot) return; // Optimization
+                    if (laulisahRuleRequiresSpecialSlot) return; 
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                          const scheduleCell = scheduleDataRow.cells[cellIdx];
                          let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
-                         let entryInScheduleCellForRule = getTextForSummary(entryInScheduleCellFull); // Use processed text for rule check
+                         let entryInScheduleCellForRule = getTextForSummary(entryInScheduleCellFull); 
 
                          if (specialNamesForRule.includes(entryInScheduleCellForRule)) {
                             const headerText = currentScheduleTableHeaders[cellIdx];
                             if (headerText && headerText.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
-                                laulisahRuleRequiresSpecialSlot = true; return; // Exit inner loops
+                                laulisahRuleRequiresSpecialSlot = true; return; 
                             }
                          }
                     }
@@ -2275,7 +2406,6 @@
             }
         }
         if (laulisahRuleRequiresSpecialSlot) console.log("LAU/LISAH rule requires special slot:", targetSlotForSpecialNamesRule);
-
 
         let combinedHeaders = new Set(activeTableHeaders);
         if (laulisahRuleRequiresSpecialSlot) {
@@ -2285,7 +2415,7 @@
         let sortedUniqueHeaders = Array.from(combinedHeaders).sort((a, b) => {
             const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b);
             if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
-            if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  // Non-time strings last
+            if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  
             return String(a).localeCompare(String(b));
         });
         console.log("Final Sorted Unique Headers for Summary:", sortedUniqueHeaders);
@@ -2325,7 +2455,7 @@
             return;
         }
         const summaryBody = summaryTableElement.tBodies[0];
-        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) { // Check for actual data rows
+        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) { 
             console.log("No rows in summary table to update (or only placeholder row).");
             return;
         }
@@ -2333,7 +2463,6 @@
         const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
         
-        // Clear previous summary data, keeping names
         Array.from(summaryBody.rows).forEach(summaryRow => { 
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).slice(1).forEach(cell => {
                 cell.textContent = ''; cell.classList.remove('highlight-conflict'); 
@@ -2346,18 +2475,17 @@
                 const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
                 Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
                     const classIdentifier = String(scheduleDataRow.cells[0]?.textContent||'').trim();
-                    if (!classIdentifier) return; // Skip if no class identifier
+                    if (!classIdentifier) return; 
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                         const scheduleCell = scheduleDataRow.cells[cellIdx];
                         let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
-                        let actualEntryForSummary = getTextForSummary(entryInScheduleCellFull); // Uses updated logic
+                        let actualEntryForSummary = getTextForSummary(entryInScheduleCellFull); 
 
                         if (actualEntryForSummary) { 
                             let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx];
                             if (!scheduleColumnHeaderForThisCell) continue; 
                             
                             let summaryColumnToUse = scheduleColumnHeaderForThisCell;
-                            // LAU/LISAH rule:
                             const specialNamesForRule = ["LAU", "LISAH"];
                             const targetSlotForSpecialNamesRule = "10.15-10.30";
                             const sourceSlotToShiftRule = "10.30-12.00";
@@ -2368,7 +2496,7 @@
                             const targetSummaryRow = Array.from(summaryBody.rows).find(sr => String(sr.cells[0]?.textContent||'') === actualEntryForSummary);
                             if (targetSummaryRow?.cells.length > 1) {
                                 const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.indexOf(summaryColumnToUse.replace(/\s/g, "").replace(/:/g,"."));
-                                if (targetSummaryColumnCellIndex > 0) { // Found corresponding column in summary
+                                if (targetSummaryColumnCellIndex > 0) { 
                                     const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
                                     let existingClasses = summaryCellToUpdate.textContent.trim() ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim()) : [];
                                     if (!existingClasses.includes(classIdentifier)) {
@@ -2382,7 +2510,6 @@
                 });
             });
         }
-        // Highlight conflicts after all data is populated
         Array.from(summaryBody.rows).forEach(summaryRow => { 
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
                 if (cellIndex > 0 && cell.textContent.includes(',')) cell.classList.add('highlight-conflict');
