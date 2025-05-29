@@ -518,20 +518,32 @@
     import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added more imports
 
     // --- Firebase Configuration ---
+    // This is the user-provided Firebase configuration.
+    // It will be used if __firebase_config is not available (e.g., when running locally outside the platform).
     const userProvidedFirebaseConfig = {
-      apiKey: "YOUR_API_KEY", // Replace with your actual API key if not using __firebase_config
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
+      authDomain: "jadual-3f0aa.firebaseapp.com",
+      projectId: "jadual-3f0aa",
+      storageBucket: "jadual-3f0aa.firebasestorage.app",
+      messagingSenderId: "496526436851",
+      appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
+    // Attempt to use the platform-provided Firebase config, otherwise fallback to userProvidedFirebaseConfig.
+    // The __firebase_config variable is expected to be injected by the platform.
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedFirebaseConfig;
+    // Attempt to use the platform-provided App ID, otherwise fallback to the one in firebaseConfig or a default.
+    // The __app_id variable is expected to be injected by the platform.
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-app-id');
     
-    if (typeof __firebase_config === 'undefined') console.log("Using user-provided Firebase config. Ensure it's correctly set up.");
-    if (typeof __app_id === 'undefined') console.warn("Using App ID from Firebase config or default. Ensure it's correctly set up for Firestore paths.");
+    // Log a warning if the platform-provided config is not found, indicating a local or misconfigured environment.
+    if (typeof __firebase_config === 'undefined') {
+        console.warn("Using user-provided Firebase config. Ensure it's correctly set up if this is unexpected (e.g., not running locally).");
+    }
+    // Log a warning if the platform-provided App ID is not found.
+    if (typeof __app_id === 'undefined') {
+        console.warn("Using App ID from Firebase config or a default value. Ensure it's correctly set up for Firestore paths if this is unexpected.");
+    }
 
 
     // --- Initialize Firebase ---
@@ -1207,7 +1219,7 @@
                         }
                     } catch (error) {
                         console.error("Error during Firebase sign-in:", error);
-                        showMessage(`Firebase Auth failed. Cloud features may not work.`, "error", 7000);
+                        showMessage(`Firebase Auth failed. Cloud features may not work. Error: ${error.message}`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
                     }
                 }
