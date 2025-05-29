@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Weekly Schedule with Firestore Names & Drafts</title>
+    <title>Shared Weekly Schedule with Firestore</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
@@ -141,8 +141,8 @@
         /* Specific button styling */
         #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;}
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
-        #saveDraftBtn { background-color: #007bff; color: white; border-color: #007bff;}
-        #loadDraftBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
+        #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #007bff;} /* Renamed from saveDraftBtn */
+        #loadSharedScheduleBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;} /* Renamed from loadDraftBtn */
         #clearActiveTableContentBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
         #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
         #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
@@ -153,8 +153,8 @@
         #deleteTableBtn { background-color: #dc3545; color: white; border-color: #dc3545;}
         #nameListBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
         #deselectBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
-        #exportDraftsBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;}
-        #importDraftsBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;}
+        #exportSharedSchedulesBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;} /* Renamed from exportDraftsBtn */
+        #importSharedSchedulesBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;} /* Renamed from importDraftsBtn */
 
         .table-tabs {
             margin-bottom: 15px;
@@ -264,19 +264,19 @@
         .name-item button:hover { background-color: #c82333; }
         .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
 
-        #draftListContainer { /* Changed ID from draftList to draftListContainer */
+        #sharedScheduleListContainer { /* Renamed from draftListContainer */
             border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px;
             background-color: #f8f9fa;
             max-height: 300px; /* Added max-height */
             overflow-y: auto; /* Added overflow-y */
         }
-        .draft-item { display: flex; justify-content: space-between; align-items: center;
+        .shared-schedule-item { display: flex; justify-content: space-between; align-items: center; /* Renamed from draft-item */
             padding: 10px 8px; border-bottom: 1px solid #e9ecef; }
-        .draft-item:last-child { border-bottom: none; }
-        .draft-item span { cursor: pointer; color: #007bff; flex-grow: 1; margin-right: 10px; }
-        .draft-item span:hover { text-decoration: underline; }
-        .draft-item .draft-date { font-size: 0.8em; color: #6c757d; margin-right: 10px; white-space: nowrap;}
-        .draft-item button { background-color: #dc3545; color: white; border: none; border-radius: 5px;
+        .shared-schedule-item:last-child { border-bottom: none; }
+        .shared-schedule-item span { cursor: pointer; color: #007bff; flex-grow: 1; margin-right: 10px; }
+        .shared-schedule-item span:hover { text-decoration: underline; }
+        .shared-schedule-item .schedule-date { font-size: 0.8em; color: #6c757d; margin-right: 10px; white-space: nowrap;} /* Renamed from draft-date */
+        .shared-schedule-item button { background-color: #dc3545; color: white; border: none; border-radius: 5px;
             padding: 6px 12px; font-size: 0.9em; flex-shrink: 0; }
 
 
@@ -410,8 +410,7 @@
 </head>
 <body>
 <div class="main-container">
-    <h2 contenteditable="true" id="scheduleTitle">Weekly Schedule</h2>
-    <div id="userIdDisplay">User ID: Loading...</div>
+    <h2 contenteditable="true" id="scheduleTitle">Shared Weekly Schedule</h2> <div id="userIdDisplay">User ID: Loading...</div>
 
     <div class="bar">
         <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
@@ -422,12 +421,7 @@
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
     <div class="bar">
-        <button id="saveDraftBtn" title="Save current schedule to Firebase">💠 Save Schedule to Cloud</button>
-        <button id="loadDraftBtn" title="Show list of saved drafts from Firebase to load">☁️ Load Schedule from Cloud</button>
-        <button id="exportDraftsBtn" title="Export all Firebase drafts to a JSON file">📤 Export All Cloud Drafts</button>
-        <button id="importDraftsBtn" title="Import drafts from a JSON file to Firebase">📥 Import Drafts to Cloud</button>
-        <input type="file" id="draftImportFile" accept=".json" style="display:none;">
-        <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
+        <button id="saveSharedScheduleBtn" title="Save current schedule to the shared Cloud space">💠 Save Shared Schedule</button> <button id="loadSharedScheduleBtn" title="Show list of shared schedules from Cloud to load">☁️ Load Shared Schedule</button> <button id="exportSharedSchedulesBtn" title="Export all shared schedules from Cloud to a JSON file">📤 Export All Shared Schedules</button> <button id="importSharedSchedulesBtn" title="Import schedules from a JSON file to the shared Cloud space">📥 Import Shared Schedules</button> <input type="file" id="sharedScheduleImportFile" accept=".json" style="display:none;"> <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
     </div>
     <div class="bar">
         <button id="selectBtn" title="Toggle cell selection mode on/off">✨ Select Cells</button>
@@ -439,10 +433,9 @@
         <button id="addTableBtn" title="Add a new, empty table/sheet">➕ Add New Table</button>
         <button id="renameTableBtn" title="Rename the currently active table/sheet">📝 Rename Active Table</button>
         <button id="deleteTableBtn" title="Delete the currently active table/sheet">❌ Delete Active Table</button>
-        <button id="nameListBtn" title="Open a dialog to manage a list of names for quick insertion">👥 Manage Names (Firestore)</button>
-    </div>
+        <button id="nameListBtn" title="Open a dialog to manage the shared list of names (Firestore)">👥 Manage Shared Names</button> </div>
 
-    <div id="draftListContainer" style="display:none;"></div> <div class="bar table-tabs" id="tableTabs"></div>
+    <div id="sharedScheduleListContainer" style="display:none;"></div> <div class="bar table-tabs" id="tableTabs"></div>
     <div id="tablesContainer">
         <table id="tbl_1" class="active" data-table-name="Table 1">
             <thead>
@@ -483,21 +476,16 @@
     <div id="nameModal" class="modal">
         <div class="modal-content" id="nameModalContent">
             <div class="modal-header" id="nameModalHeader">
-                <h3 id="nameModalTitle">Name List Manager</h3>
-                <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
+                <h3 id="nameModalTitle">Shared Name List Manager</h3> <button type="button" class="modal-close-btn" id="closeNameModalBtnStandard" title="Close name manager">×</button>
             </div>
             <div class="name-session-tabs">
                 <button id="namePagiTab" data-session="pagi" class="active">Pagi (Morning)</button>
                 <button id="namePetangTab" data-session="petang">Petang (Afternoon)</button>
             </div>
              <div class="input-group">
-                <input id="newNameInput" placeholder="Add new name to current session">
-                <button id="addNameBtnInModal" title="Add the name to the list">Add</button>
-            </div>
-            <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current session">📂 Import Names (.txt) to Session</button>
-            <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
-            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current session..." title="Filter the list of names">
-            <div id="nameList">
+                <input id="newNameInput" placeholder="Add new name to current shared session"> <button id="addNameBtnInModal" title="Add the name to the shared list">Add</button> </div>
+            <button id="importNameListBtn" title="Import names from a .txt file (one name per line) to current shared session">📂 Import Names (.txt) to Shared Session</button> <input type="file" id="nameListImportFile" accept=".txt" style="display:none;">
+            <input type="text" id="searchNameInput" placeholder="🔍 Search names in current shared session..." title="Filter the list of names"> <div id="nameList">
                 </div>
             <div id="loadingIndicatorModal" style="display:none;"><div class="spinner"></div></div>
         </div>
@@ -515,12 +503,10 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     // Add SDKs for Firebase products that you want to use
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added more imports
+    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added 'where'
 
     // --- Firebase Configuration ---
-    // This is the user-provided Firebase configuration.
-    // It will be used if __firebase_config is not available (e.g., when running locally outside the platform).
-    const userProvidedFirebaseConfig = {
+    const userProvidedFirebaseConfig = { // This is a fallback if __firebase_config is not injected by the platform
       apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
@@ -529,35 +515,28 @@
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
-    // Attempt to use the platform-provided Firebase config, otherwise fallback to userProvidedFirebaseConfig.
-    // The __firebase_config variable is expected to be injected by the platform.
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedFirebaseConfig;
-    // Attempt to use the platform-provided App ID, otherwise fallback to the one in firebaseConfig or a default.
-    // The __app_id variable is expected to be injected by the platform.
-    const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-app-id');
+    const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app'); // Ensure a unique appId for shared data
     
-    // Log a warning if the platform-provided config is not found, indicating a local or misconfigured environment.
     if (typeof __firebase_config === 'undefined') {
         console.warn("Using user-provided Firebase config. Ensure it's correctly set up if this is unexpected (e.g., not running locally).");
     }
-    // Log a warning if the platform-provided App ID is not found.
     if (typeof __app_id === 'undefined') {
-        console.warn("Using App ID from Firebase config or a default value. Ensure it's correctly set up for Firestore paths if this is unexpected.");
+        console.warn("Using App ID from Firebase config or a default value. This appId scopes your shared data in Firestore.");
     }
-
 
     // --- Initialize Firebase ---
     let fbApp, fbAuth, fbDb;
-    let fbUserId = null;
+    let fbUserId = null; // Still useful for knowing who is logged in, even if data is shared
     let fbIsAuthReady = false;
-    let unsubscribePagi = null;
-    let unsubscribePetang = null;
+    let unsubscribePagiShared = null; // Renamed for clarity
+    let unsubscribePetangShared = null; // Renamed for clarity
 
     try {
         fbApp = initializeApp(firebaseConfig);
         fbAuth = getAuth(fbApp);
         fbDb = getFirestore(fbApp);
-        console.log("Firebase services initialized.");
+        console.log("Firebase services initialized for Shared Scheduler.");
     } catch (e) {
         console.error("CRITICAL Error initializing Firebase services:", e);
         showMessage("Critical Error: Firebase initialization failed. Cloud features will not work.", "error", 10000);
@@ -566,7 +545,7 @@
     }
 
     // --- Global State and Configuration ---
-    const SCHEDULE_TITLE_KEY = 'jadual_title_v3'; // For localStorage title
+    const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`; // Make local storage key specific to appId
     let activeTableId = 'tbl_1';
     let tableCount = 1;
     let selectionMode = false;
@@ -575,8 +554,8 @@
     let selectedNameFromList = null; 
 
     let currentNameListSession = 'pagi'; 
-    let namesPagi = [];
-    let namesPetang = [];
+    let namesPagiShared = []; // Renamed for clarity
+    let namesPetangShared = []; // Renamed for clarity
 
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
@@ -585,7 +564,7 @@
     let activeCellForAutocomplete = null;
     let currentAutocompleteIndex = -1; 
 
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListContainerElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement;
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -642,42 +621,42 @@
         }
     }
 
-
-    // --- Firestore Name List Functions ---
+    // --- Firestore Shared Name List Functions ---
     function showNameModalLoading(isLoading) {
         if (loadingIndicatorModalElement) {
             loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
         }
     }
 
-    async function saveNameListToFirestore(session, namesArray) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot save name list.", "error");
+    async function saveSharedNameListToFirestore(session, namesArray) {
+        if (!fbDb || !fbIsAuthReady) { // fbUserId not strictly needed for saving to public path
+            showMessage("Firebase not ready. Cannot save shared name list.", "error");
             return;
         }
         showNameModalLoading(true);
         const uniqueSortedNames = [...new Set(namesArray.map(n => String(n||'').trim()).filter(n => n))]
                                 .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-        if (!appId || appId === 'default-app-id') {
-            showMessage("Configuration error: App ID is missing. Cannot save name list.", "error");
+        if (!appId || appId === 'default-shared-scheduler-app') { // Check against default to encourage unique appID
+            showMessage("Configuration error: App ID is missing or default. Cannot save shared name list.", "error");
             showNameModalLoading(false);
             return;
         }
-        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", session);
+        // MODIFIED PATH: Using public path for shared name lists
+        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", session);
         try {
-            await setDoc(docRef, { names: uniqueSortedNames });
-            showMessage(`Name list uploaded to ${session} session.`, "success");
+            await setDoc(docRef, { names: uniqueSortedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
+            showMessage(`Shared name list for ${session} session updated.`, "success");
         } catch (error) {
-            console.error(`Error saving list to ${session}:`, error);
-            showMessage(`Failed to save list to ${session}. Error: ${error.message}`, "error");
+            console.error(`Error saving shared list to ${session}:`, error);
+            showMessage(`Failed to save shared list to ${session}. Error: ${error.message}`, "error");
         } finally {
             showNameModalLoading(false);
         }
     }
 
-    async function addNameToCurrentSessionInFirestore(name) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot add name.", "error");
+    async function addNameToSharedSessionInFirestore(name) {
+        if (!fbDb || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot add name to shared list.", "error");
             return;
         }
         const trimmedName = String(name || '').trim();
@@ -686,51 +665,53 @@
             return;
         }
         showNameModalLoading(true);
-        const sessionNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+        const sessionNames = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         if (sessionNames.map(n => String(n || '').toLowerCase()).includes(trimmedName.toLowerCase())) {
-            showMessage(`Name "${trimmedName}" already exists in ${currentNameListSession} session.`, "info");
+            showMessage(`Name "${trimmedName}" already exists in shared ${currentNameListSession} session.`, "info");
             showNameModalLoading(false);
             return;
         }
-        if (!appId || appId === 'default-app-id') {
-            showMessage("Configuration error: App ID is missing. Cannot add name.", "error");
+        if (!appId || appId === 'default-shared-scheduler-app') {
+            showMessage("Configuration error: App ID is missing or default. Cannot add name.", "error");
             showNameModalLoading(false);
             return;
         }
         const updatedNames = [...sessionNames, trimmedName].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
-        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
+        // MODIFIED PATH: Using public path
+        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", currentNameListSession);
         try {
-            await setDoc(docRef, { names: updatedNames });
+            await setDoc(docRef, { names: updatedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
             if(newNameInput) {
                 newNameInput.value = '';
                 newNameInput.focus();
             }
         } catch (error) {
-            console.error(`Error adding name to ${currentNameListSession}:`, error);
-            showMessage(`Failed to add name. Error: ${error.message}`, "error");
+            console.error(`Error adding name to shared ${currentNameListSession}:`, error);
+            showMessage(`Failed to add name to shared list. Error: ${error.message}`, "error");
         } finally {
             showNameModalLoading(false);
         }
     }
 
-    async function deleteNameFromCurrentSessionInFirestore(nameToDelete) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot delete name.", "error");
+    async function deleteNameFromSharedSessionInFirestore(nameToDelete) {
+        if (!fbDb || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot delete name from shared list.", "error");
             return;
         }
         const nameToDeleteStr = String(nameToDelete || '');
-        if (await customConfirm(`Delete "${nameToDeleteStr}" from ${currentNameListSession} session? This also removes it from all schedule tables.`)) {
+        if (await customConfirm(`Delete "${nameToDeleteStr}" from shared ${currentNameListSession} session? This also removes it from all schedule tables for everyone.`)) {
             showNameModalLoading(true);
-            if (!appId || appId === 'default-app-id') {
-                showMessage("Configuration error: App ID is missing. Cannot delete name.", "error");
+            if (!appId || appId === 'default-shared-scheduler-app') {
+                showMessage("Configuration error: App ID is missing or default. Cannot delete name.", "error");
                 showNameModalLoading(false);
                 return;
             }
-            const currentNames = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+            const currentNames = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
             const updatedNames = currentNames.filter(name => String(name || '') !== nameToDeleteStr);
-            const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", currentNameListSession);
+            // MODIFIED PATH: Using public path
+            const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", currentNameListSession);
             try {
-                await setDoc(docRef, { names: updatedNames });
+                await setDoc(docRef, { names: updatedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
                 tablesContainer.querySelectorAll('table').forEach(table => {
                     table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
                         if (cell.textContent.trim() === nameToDeleteStr) {
@@ -741,59 +722,61 @@
                 rebuildAndRenderSummary();
                 if (selectedNameFromList === nameToDeleteStr) clearNameSelection();
             } catch (error) {
-                console.error(`Error deleting name from ${currentNameListSession}:`, error);
-                showMessage(`Failed to delete name. Error: ${error.message}`, "error");
+                console.error(`Error deleting name from shared ${currentNameListSession}:`, error);
+                showMessage(`Failed to delete name from shared list. Error: ${error.message}`, "error");
             } finally {
                 showNameModalLoading(false);
             }
         }
     }
 
-    function listenToNameList(sessionToListen) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            console.warn(`listenToNameList (${sessionToListen}): Firestore not ready.`);
+    function listenToSharedNameList(sessionToListen) {
+        if (!fbDb || !fbIsAuthReady) {
+            console.warn(`listenToSharedNameList (${sessionToListen}): Firestore not ready.`);
             return () => {};
         }
-        if (!appId || appId === 'default-app-id') {
-            console.error(`listenToNameList (${sessionToListen}): Invalid appId.`);
+        if (!appId || appId === 'default-shared-scheduler-app') {
+            console.error(`listenToSharedNameList (${sessionToListen}): Invalid appId.`);
             return () => {};
         }
-        const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "nameLists", sessionToListen);
+        // MODIFIED PATH: Using public path
+        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", sessionToListen);
         return onSnapshot(docRef, (docSnap) => {
             showNameModalLoading(true);
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 const namesFromDb = data.names || [];
                 const sanitizedNames = namesFromDb.map(name => String(name || '').trim()).filter(name => name.length > 0);
-                if (sessionToListen === 'pagi') namesPagi = sanitizedNames;
-                else namesPetang = sanitizedNames;
+                if (sessionToListen === 'pagi') namesPagiShared = sanitizedNames;
+                else namesPetangShared = sanitizedNames;
             } else {
-                if (sessionToListen === 'pagi') namesPagi = [];
-                else namesPetang = [];
+                if (sessionToListen === 'pagi') namesPagiShared = [];
+                else namesPetangShared = [];
+                 console.log(`No shared name list found for ${sessionToListen} under appId ${appId}. A new one will be created on save.`);
             }
             if (sessionToListen === currentNameListSession && nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
-                renderNameListFromFirestore(searchNameInputElement.value);
+                renderNameListFromFirestore(searchNameInputElement.value); // Will use shared names
             }
             rebuildAndRenderSummary(); 
             showNameModalLoading(false);
         }, (error) => {
-            console.error(`Error listening to ${sessionToListen} names:`, error);
-            showMessage(`Error fetching ${sessionToListen} names.`, "error");
+            console.error(`Error listening to shared ${sessionToListen} names:`, error);
+            showMessage(`Error fetching shared ${sessionToListen} names.`, "error");
             showNameModalLoading(false);
         });
     }
 
-    // --- Firestore Schedule Draft Functions ---
-    async function saveDraftToFirestore() {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot save draft.", "error"); return;
+    // --- Firestore Shared Schedule Functions ---
+    async function saveSharedScheduleToFirestore() { // Renamed from saveDraftToFirestore
+        if (!fbDb || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot save shared schedule.", "error"); return;
         }
         if (!tablesContainer || tablesContainer.children.length === 0) {
             showMessage('No schedule data to save.', 'error'); return;
         }
-        const draftName = customPrompt('Enter a name for this schedule draft:', `Schedule Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-        if (!draftName || draftName.trim() === "") {
-            showMessage('Draft save cancelled or name is empty.', 'info'); return;
+        const scheduleName = customPrompt('Enter a name for this shared schedule:', `Shared Schedule ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+        if (!scheduleName || scheduleName.trim() === "") {
+            showMessage('Save cancelled or name is empty.', 'info'); return;
         }
 
         showGeneralLoading(true);
@@ -803,94 +786,96 @@
             allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
         });
 
-        const draftData = {
-            name: draftName.trim(),
+        const scheduleData = { // Renamed from draftData
+            name: scheduleName.trim(),
             html: allTablesData,
             meta: allTableMeta,
             activeTableId: activeTableId,
-            createdAt: serverTimestamp() // Use server timestamp
+            createdAt: serverTimestamp(),
+            lastUpdatedBy: fbUserId || "anonymous"
         };
 
         try {
-            const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
-            await addDoc(draftsCollectionRef, draftData);
-            showMessage(`Draft "${draftName.trim()}" saved to Cloud!`, 'success');
-            if (draftListContainerElement && draftListContainerElement.style.display === 'block') {
-                await loadAndRenderDraftsFromFirestore(); // Refresh list
+            // MODIFIED PATH: Using public path for shared schedules
+            const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
+            await addDoc(sharedSchedulesCollectionRef, scheduleData);
+            showMessage(`Shared schedule "${scheduleName.trim()}" saved to Cloud!`, 'success');
+            if (sharedScheduleListContainerElement && sharedScheduleListContainerElement.style.display === 'block') {
+                await loadAndRenderSharedSchedulesFromFirestore(); // Refresh list
             }
         } catch (error) {
-            console.error("Error saving draft to Firestore:", error);
-            showMessage(`Failed to save draft. Error: ${error.message}`, "error");
+            console.error("Error saving shared schedule to Firestore:", error);
+            showMessage(`Failed to save shared schedule. Error: ${error.message}`, "error");
         } finally {
             showGeneralLoading(false);
         }
     }
 
-    async function loadAndRenderDraftsFromFirestore() {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot load drafts.", "error");
-            if (draftListContainerElement) draftListContainerElement.innerHTML = '<p>Connect to Firebase to see drafts.</p>';
+    async function loadAndRenderSharedSchedulesFromFirestore() { // Renamed from loadAndRenderDraftsFromFirestore
+        if (!fbDb || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot load shared schedules.", "error");
+            if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.innerHTML = '<p>Connect to Firebase to see shared schedules.</p>';
             return;
         }
-        if (!draftListContainerElement) return;
+        if (!sharedScheduleListContainerElement) return;
 
         showGeneralLoading(true);
-        draftListContainerElement.innerHTML = '<p>Loading drafts from Cloud...</p>';
+        sharedScheduleListContainerElement.innerHTML = '<p>Loading shared schedules from Cloud...</p>';
         try {
-            const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
-            const q = query(draftsCollectionRef, orderBy("createdAt", "desc")); // Order by most recent
+            // MODIFIED PATH: Using public path
+            const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
+            const q = query(sharedSchedulesCollectionRef, orderBy("createdAt", "desc")); 
             const querySnapshot = await getDocs(q);
             
-            const drafts = [];
+            const schedules = []; // Renamed from drafts
             querySnapshot.forEach((docSnap) => {
-                drafts.push({ id: docSnap.id, ...docSnap.data() });
+                schedules.push({ id: docSnap.id, ...docSnap.data() });
             });
 
-            renderDraftList(drafts);
-            draftListContainerElement.style.display = 'block';
+            renderSharedScheduleList(schedules); // Renamed from renderDraftList
+            sharedScheduleListContainerElement.style.display = 'block';
         } catch (error) {
-            console.error("Error loading drafts from Firestore:", error);
-            showMessage(`Failed to load drafts. Error: ${error.message}`, "error");
-            draftListContainerElement.innerHTML = '<p>Error loading drafts.</p>';
+            console.error("Error loading shared schedules from Firestore:", error);
+            showMessage(`Failed to load shared schedules. Error: ${error.message}`, "error");
+            sharedScheduleListContainerElement.innerHTML = '<p>Error loading shared schedules.</p>';
         } finally {
             showGeneralLoading(false);
         }
     }
     
-    function renderDraftList(draftsArray) { // Takes drafts from Firestore
-        if (!draftListContainerElement) return;
-        draftListContainerElement.innerHTML = ''; 
-        if (!draftsArray || draftsArray.length === 0) {
-            draftListContainerElement.innerHTML = '<p>No drafts saved to Cloud yet.</p>'; return;
+    function renderSharedScheduleList(schedulesArray) { // Renamed from renderDraftList
+        if (!sharedScheduleListContainerElement) return;
+        sharedScheduleListContainerElement.innerHTML = ''; 
+        if (!schedulesArray || schedulesArray.length === 0) {
+            sharedScheduleListContainerElement.innerHTML = '<p>No shared schedules saved to Cloud yet.</p>'; return;
         }
-        draftsArray.forEach(draft => {
+        schedulesArray.forEach(schedule => { // Renamed from draft
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'draft-item';
-            const draftDate = draft.createdAt && draft.createdAt.toDate ? draft.createdAt.toDate().toLocaleString() : 'N/A';
+            itemDiv.className = 'shared-schedule-item'; // Renamed class
+            const scheduleDate = schedule.createdAt && schedule.createdAt.toDate ? schedule.createdAt.toDate().toLocaleString() : 'N/A';
+            const updatedByText = schedule.lastUpdatedBy ? ` (by ${schedule.lastUpdatedBy.substring(0,8)}...)` : '';
             itemDiv.innerHTML = `
-                <span data-draft-id="${draft.id}" title="Load draft: ${draft.name}">${draft.name}</span>
-                <span class="draft-date">${draftDate}</span>
-                <button data-draft-id="${draft.id}" title="Delete draft '${draft.name}' from Cloud">Delete</button>
-            `;
-            draftListContainerElement.appendChild(itemDiv);
+                <span data-schedule-id="${schedule.id}" title="Load shared schedule: ${schedule.name}">${schedule.name}${updatedByText}</span> <span class="schedule-date">${scheduleDate}</span> <button data-schedule-id="${schedule.id}" title="Delete shared schedule '${schedule.name}' from Cloud">Delete</button> `;
+            sharedScheduleListContainerElement.appendChild(itemDiv);
         });
     }
 
-    async function loadSelectedDraftFromFirestore(draftDocId) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot load draft.", "error"); return;
+    async function loadSelectedSharedScheduleFromFirestore(scheduleDocId) { // Renamed from loadSelectedDraftFromFirestore
+        if (!fbDb || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot load shared schedule.", "error"); return;
         }
         if (!tablesContainer || !tableTabs) return;
 
         showGeneralLoading(true);
         try {
-            const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts", draftDocId);
+            // MODIFIED PATH: Using public path
+            const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
-                const draftData = docSnap.data();
-                tablesContainer.innerHTML = draftData.html;
-                const tableMeta = draftData.meta || {};
+                const scheduleData = docSnap.data(); // Renamed from draftData
+                tablesContainer.innerHTML = scheduleData.html;
+                const tableMeta = scheduleData.meta || {};
                 tableTabs.innerHTML = ''; 
                 tablesContainer.querySelectorAll('table').forEach(table => {
                     const id = table.id;
@@ -900,7 +885,7 @@
                     addTabButton(id, name);
                     table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                 });
-                activeTableId = draftData.activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1';
+                activeTableId = scheduleData.activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1';
                 
                 if (document.getElementById(activeTableId)) {
                     switchTable(activeTableId);
@@ -909,89 +894,89 @@
                 } else {
                     addNewTable(true); 
                 }
-                showMessage(`Draft "${draftData.name}" loaded from Cloud!`, 'success');
-                if (draftListContainerElement) draftListContainerElement.style.display = 'none';
+                showMessage(`Shared schedule "${scheduleData.name}" loaded from Cloud!`, 'success');
+                if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.style.display = 'none';
                 rebuildAndRenderSummary();
                 updateAllMergeOverlays(); 
             } else {
-                showMessage(`Draft with ID "${draftDocId}" not found in Cloud.`, "error");
+                showMessage(`Shared schedule with ID "${scheduleDocId}" not found in Cloud.`, "error");
             }
         } catch (error) {
-            console.error("Error loading selected draft from Firestore:", error);
-            showMessage(`Failed to load draft. Error: ${error.message}`, "error");
+            console.error("Error loading selected shared schedule from Firestore:", error);
+            showMessage(`Failed to load shared schedule. Error: ${error.message}`, "error");
         } finally {
             showGeneralLoading(false);
         }
     }
 
-    async function confirmAndDeleteDraftFromFirestore(draftDocId, draftName) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot delete draft.", "error"); return;
+    async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) { // Renamed
+        if (!fbDb || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot delete shared schedule.", "error"); return;
         }
-        if (await customConfirm(`Are you sure you want to delete cloud draft "${draftName}"? This cannot be undone.`)) {
+        if (await customConfirm(`Are you sure you want to delete shared schedule "${scheduleName}" from Cloud? This cannot be undone and affects all users.`)) {
             showGeneralLoading(true);
             try {
-                const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts", draftDocId);
+                // MODIFIED PATH: Using public path
+                const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
                 await deleteDoc(docRef);
-                showMessage(`Cloud draft "${draftName}" deleted.`, 'success');
-                await loadAndRenderDraftsFromFirestore(); // Refresh the list
+                showMessage(`Shared schedule "${scheduleName}" deleted from Cloud.`, 'success');
+                await loadAndRenderSharedSchedulesFromFirestore(); // Refresh the list
             } catch (error) {
-                console.error("Error deleting draft from Firestore:", error);
-                showMessage(`Failed to delete draft. Error: ${error.message}`, "error");
+                console.error("Error deleting shared schedule from Firestore:", error);
+                showMessage(`Failed to delete shared schedule. Error: ${error.message}`, "error");
             } finally {
                 showGeneralLoading(false);
             }
         }
     }
 
-    async function exportAllFirestoreDrafts() {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot export drafts.", "error"); return;
+    async function exportAllSharedSchedulesFromFirestore() { // Renamed
+        if (!fbDb || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot export shared schedules.", "error"); return;
         }
         showGeneralLoading(true);
         try {
-            const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
-            const q = query(draftsCollectionRef, orderBy("createdAt", "desc"));
+            // MODIFIED PATH: Using public path
+            const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
+            const q = query(schedulesCollectionRef, orderBy("createdAt", "desc"));
             const querySnapshot = await getDocs(q);
             
-            const draftsToExport = [];
+            const schedulesToExport = [];
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
-                // We don't export the serverTimestamp object directly, but its representation if needed.
-                // For simplicity, we'll export the core data.
-                draftsToExport.push({
+                schedulesToExport.push({
                     name: data.name,
                     html: data.html,
                     meta: data.meta,
                     activeTableId: data.activeTableId,
-                    // Firebase Timestamps are objects; convert to string for JSON if desired, or omit for re-import
-                    createdAt: data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toISOString() : null 
+                    createdAt: data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toISOString() : null,
+                    lastUpdatedBy: data.lastUpdatedBy || null
                 });
             });
 
-            if (draftsToExport.length === 0) {
-                showMessage('No drafts in Cloud to export.', 'info'); return;
+            if (schedulesToExport.length === 0) {
+                showMessage('No shared schedules in Cloud to export.', 'info'); return;
             }
 
-            const blob = new Blob([JSON.stringify(draftsToExport, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(schedulesToExport, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = `firebase_schedule_drafts_${new Date().toISOString().split('T')[0]}.json`;
+            a.href = url; a.download = `shared_schedules_${appId}_${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showMessage('All Cloud drafts exported successfully!', 'success');
+            showMessage('All shared schedules exported successfully!', 'success');
 
         } catch (error) {
-            console.error("Error exporting drafts from Firestore:", error);
-            showMessage(`Failed to export drafts. Error: ${error.message}`, "error");
+            console.error("Error exporting shared schedules from Firestore:", error);
+            showMessage(`Failed to export shared schedules. Error: ${error.message}`, "error");
         } finally {
             showGeneralLoading(false);
         }
     }
 
-    async function handleFirestoreDraftsImport(event) {
-        if (!fbDb || !fbUserId || !fbIsAuthReady) {
-            showMessage("Firebase not ready. Cannot import drafts.", "error"); return;
+    async function handleSharedSchedulesImport(event) { // Renamed
+        if (!fbDb || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot import shared schedules.", "error"); return;
         }
         const file = event.target.files[0];
         if (!file) { showMessage('No file selected for import.', 'info'); return; }
@@ -1004,52 +989,52 @@
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                const importedDraftsData = JSON.parse(e.target.result);
-                if (!Array.isArray(importedDraftsData)) {
-                    showMessage('Invalid draft file format. Expected an array of drafts.', 'error'); return;
+                const importedSchedulesData = JSON.parse(e.target.result);
+                if (!Array.isArray(importedSchedulesData)) {
+                    showMessage('Invalid schedule file format. Expected an array of schedules.', 'error'); return;
                 }
 
                 let importedCount = 0, skippedCount = 0;
-                const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
+                // MODIFIED PATH: Using public path
+                const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
 
-                for (const draft of importedDraftsData) {
-                    if (draft && typeof draft.name === 'string' && typeof draft.html === 'string' && typeof draft.meta === 'object' && typeof draft.activeTableId === 'string') {
-                        // Simple check for existing draft by name (can be made more robust)
-                        const q = query(draftsCollectionRef, where("name", "==", draft.name));
+                for (const schedule of importedSchedulesData) { // Renamed from draft
+                    if (schedule && typeof schedule.name === 'string' && typeof schedule.html === 'string' && typeof schedule.meta === 'object' && typeof schedule.activeTableId === 'string') {
+                        const q = query(schedulesCollectionRef, where("name", "==", schedule.name));
                         const existingSnapshot = await getDocs(q);
 
                         if (!existingSnapshot.empty) {
-                             if (await customConfirm(`A cloud draft named "${draft.name}" already exists. Overwrite?`)) {
-                                // For simplicity, we'll delete and add. A more robust way would be to update.
+                             if (await customConfirm(`A shared schedule named "${schedule.name}" already exists. Overwrite?`)) {
                                 for(const docToDel of existingSnapshot.docs) {
                                     await deleteDoc(docToDel.ref);
                                 }
                             } else {
                                 skippedCount++;
-                                continue; // Skip this draft
+                                continue; 
                             }
                         }
                         
-                        await addDoc(draftsCollectionRef, {
-                            name: draft.name,
-                            html: draft.html,
-                            meta: draft.meta,
-                            activeTableId: draft.activeTableId,
-                            createdAt: serverTimestamp() // New timestamp for imported draft
+                        await addDoc(schedulesCollectionRef, {
+                            name: schedule.name,
+                            html: schedule.html,
+                            meta: schedule.meta,
+                            activeTableId: schedule.activeTableId,
+                            createdAt: serverTimestamp(), 
+                            lastUpdatedBy: fbUserId || "anonymous" // Mark who imported it
                         });
                         importedCount++;
                     } else {
-                        console.warn("Skipping invalid draft object during import:", draft);
+                        console.warn("Skipping invalid schedule object during import:", schedule);
                         skippedCount++;
                     }
                 }
-                showMessage(`Drafts import to Cloud: ${importedCount} imported/overwritten, ${skippedCount} skipped.`, 'success', 5000);
-                if (draftListContainerElement && (draftListContainerElement.style.display === 'block' || importedCount > 0)) {
-                    await loadAndRenderDraftsFromFirestore(); 
+                showMessage(`Shared schedules import to Cloud: ${importedCount} imported/overwritten, ${skippedCount} skipped.`, 'success', 5000);
+                if (sharedScheduleListContainerElement && (sharedScheduleListContainerElement.style.display === 'block' || importedCount > 0)) {
+                    await loadAndRenderSharedSchedulesFromFirestore(); 
                 }
             } catch (error) { 
-                console.error("Error processing draft file for Firestore import:", error);
-                showMessage('Error processing draft file. Ensure it is a valid JSON export from this app.', 'error', 5000); 
+                console.error("Error processing shared schedule file for Firestore import:", error);
+                showMessage('Error processing schedule file. Ensure it is a valid JSON export from this app.', 'error', 5000); 
             }
             finally { 
                 event.target.value = ''; 
@@ -1057,7 +1042,7 @@
             } 
         };
         reader.onerror = () => { 
-            showMessage('Failed to read the draft file.', 'error'); 
+            showMessage('Failed to read the schedule file.', 'error'); 
             event.target.value = ''; 
             showGeneralLoading(false);
         };
@@ -1069,7 +1054,8 @@
     function showCellAutocompleteSuggestions(cell, inputText) {
         if (!autocompleteSuggestionsDiv) return;
 
-        const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+        // Uses shared name lists now
+        const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         const normalizedInput = String(inputText || '').toLowerCase().trim();
         
         if (!normalizedInput) {
@@ -1163,7 +1149,7 @@
         nameModalHeader = document.getElementById('nameModalHeader');
         nameListContainer = document.getElementById('nameList');
         newNameInput = document.getElementById('newNameInput');
-        draftListContainerElement = document.getElementById('draftListContainer'); // Updated ID
+        sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); // Renamed ID
         summaryTableElement = document.getElementById('summaryTable');
         customMessageBox = document.getElementById('customMessageBox');
         fileInputElement = document.getElementById('fileInput');
@@ -1171,7 +1157,7 @@
         closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard');
         nameListImportFileInputElement = document.getElementById('nameListImportFile');
         searchNameInputElement = document.getElementById('searchNameInput');
-        draftImportFileInputElement = document.getElementById('draftImportFile');
+        sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); // Renamed ID
         userIdDisplayElement = document.getElementById('userIdDisplay');
         namePagiTabElement = document.getElementById('namePagiTab');
         namePetangTabElement = document.getElementById('namePetangTab');
@@ -1185,7 +1171,7 @@
         document.body.appendChild(autocompleteSuggestionsDiv);
 
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !draftListContainerElement || !generalLoadingIndicatorElement) {
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement) {
             console.error("CRITICAL DOM elements missing.");
             document.body.innerHTML = "<p style='color:red; text-align:center;'>Error: App failed to init (missing elements).</p>";
             return;
@@ -1194,20 +1180,18 @@
         if (fbAuth) {
             onAuthStateChanged(fbAuth, async (user) => {
                 if (user) {
-                    fbUserId = user.uid;
+                    fbUserId = user.uid; // Keep track of the current user
                     fbIsAuthReady = true;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
-                    if (unsubscribePagi) unsubscribePagi();
-                    if (unsubscribePetang) unsubscribePetang();
-                    unsubscribePagi = listenToNameList('pagi');
-                    unsubscribePetang = listenToNameList('petang');
+                    // Unsubscribe from old listeners if they exist
+                    if (unsubscribePagiShared) unsubscribePagiShared();
+                    if (unsubscribePetangShared) unsubscribePetangShared();
+                    // Subscribe to shared name lists
+                    unsubscribePagiShared = listenToSharedNameList('pagi');
+                    unsubscribePetangShared = listenToSharedNameList('petang');
                     if (nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
-                        renderNameListFromFirestore(searchNameInputElement.value);
+                        renderNameListFromFirestore(searchNameInputElement.value); // Will use shared names
                     }
-                    // Optionally load drafts if the list was open or on initial load
-                    // if (draftListContainerElement && draftListContainerElement.style.display === 'block') {
-                    //    await loadAndRenderDraftsFromFirestore();
-                    // }
                 } else {
                     fbIsAuthReady = false; fbUserId = null;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
@@ -1229,11 +1213,11 @@
              showMessage("Critical Error: Firebase Auth service could not be initialized.", "error", 10000);
         }
 
-        loadScheduleTitleFromLocalStorage(); // Title is still local
+        loadScheduleTitleFromLocalStorage(); 
         initializeEventListeners();
         setupInitialTableState();
         rebuildAndRenderSummary();
-        handleNameListSessionSwitch('pagi');
+        handleNameListSessionSwitch('pagi'); // Initialize with Pagi shared list
     });
 
     function setupInitialTableState() {
@@ -1258,8 +1242,8 @@
         }
     }
 
-    function loadScheduleTitleFromLocalStorage() { // Renamed for clarity
-        const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
+    function loadScheduleTitleFromLocalStorage() { 
+        const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY); // Uses appId specific key
         if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
         if (scheduleTitleElement) {
             scheduleTitleElement.addEventListener('blur', () => { 
@@ -1284,22 +1268,22 @@
         document.getElementById('importExcelBtn')?.addEventListener('click', () => fileInputElement?.click());
         if(fileInputElement) fileInputElement.addEventListener('change', handleExcelFileImport);
         
-        // Draft buttons
-        document.getElementById('saveDraftBtn')?.addEventListener('click', saveDraftToFirestore);
-        document.getElementById('loadDraftBtn')?.addEventListener('click', loadAndRenderDraftsFromFirestore);
-        document.getElementById('exportDraftsBtn')?.addEventListener('click', exportAllFirestoreDrafts);
-        document.getElementById('importDraftsBtn')?.addEventListener('click', () => draftImportFileInputElement?.click());
-        if(draftImportFileInputElement) draftImportFileInputElement.addEventListener('change', handleFirestoreDraftsImport);
+        // Shared Schedule buttons
+        document.getElementById('saveSharedScheduleBtn')?.addEventListener('click', saveSharedScheduleToFirestore);
+        document.getElementById('loadSharedScheduleBtn')?.addEventListener('click', loadAndRenderSharedSchedulesFromFirestore);
+        document.getElementById('exportSharedSchedulesBtn')?.addEventListener('click', exportAllSharedSchedulesFromFirestore);
+        document.getElementById('importSharedSchedulesBtn')?.addEventListener('click', () => sharedScheduleImportFileInputElement?.click());
+        if(sharedScheduleImportFileInputElement) sharedScheduleImportFileInputElement.addEventListener('change', handleSharedSchedulesImport);
         
-        if(draftListContainerElement) draftListContainerElement.addEventListener('click', async (e) => {
-            const targetSpan = e.target.closest('.draft-item span[data-draft-id]');
-            const targetButton = e.target.closest('.draft-item button[data-draft-id]');
+        if(sharedScheduleListContainerElement) sharedScheduleListContainerElement.addEventListener('click', async (e) => {
+            const targetSpan = e.target.closest('.shared-schedule-item span[data-schedule-id]'); // Updated class and data attribute
+            const targetButton = e.target.closest('.shared-schedule-item button[data-schedule-id]'); // Updated class and data attribute
             if (targetSpan) {
-                loadSelectedDraftFromFirestore(targetSpan.dataset.draftId);
+                loadSelectedSharedScheduleFromFirestore(targetSpan.dataset.scheduleId);
             } else if (targetButton) {
-                const draftId = targetButton.dataset.draftId;
-                const draftName = targetButton.parentElement.querySelector('span[data-draft-id]').textContent;
-                await confirmAndDeleteDraftFromFirestore(draftId, draftName);
+                const scheduleId = targetButton.dataset.scheduleId;
+                const scheduleName = targetButton.parentElement.querySelector('span[data-schedule-id]').textContent.split(' (by')[0]; // Get name before updater info
+                await confirmAndDeleteSharedScheduleFromFirestore(scheduleId, scheduleName);
             }
         });
 
@@ -1319,11 +1303,11 @@
         document.getElementById('deleteColBtn')?.addEventListener('click', deleteClickedColumnFromActiveTable);
         document.getElementById('nameListBtn')?.addEventListener('click', toggleNameListModalVisibility);
         document.getElementById('addNameBtnInModal')?.addEventListener('click', () => {
-            if(newNameInput) addNameToCurrentSessionInFirestore(newNameInput.value);
+            if(newNameInput) addNameToSharedSessionInFirestore(newNameInput.value); // Uses shared function
         });
         document.getElementById('importNameListBtn')?.addEventListener('click', () => nameListImportFileInputElement?.click());
-        if(nameListImportFileInputElement) nameListImportFileInputElement.addEventListener('change', handleNameListImportFirestore);
-        if(searchNameInputElement) searchNameInputElement.addEventListener('input', (e) => renderNameListFromFirestore(e.target.value));
+        if(nameListImportFileInputElement) nameListImportFileInputElement.addEventListener('change', handleNameListImportFirestore); // Uses shared function
+        if(searchNameInputElement) searchNameInputElement.addEventListener('input', (e) => renderNameListFromFirestore(e.target.value)); // Uses shared names
         if(namePagiTabElement) namePagiTabElement.addEventListener('click', () => handleNameListSessionSwitch('pagi'));
         if(namePetangTabElement) namePetangTabElement.addEventListener('click', () => handleNameListSessionSwitch('petang'));
         if(nameListContainer) nameListContainer.addEventListener('click', async (e) => {
@@ -1332,7 +1316,7 @@
             if (nameItemSpan) {
                 selectNameForCellInsertion(nameItemSpan.dataset.name);
             } else if (deleteButton) {
-                await deleteNameFromCurrentSessionInFirestore(deleteButton.dataset.nameDelete);
+                await deleteNameFromSharedSessionInFirestore(deleteButton.dataset.nameDelete); // Uses shared function
             }
         });
         if(tablesContainer) {
@@ -1343,7 +1327,7 @@
                 if ((cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) && cell.isContentEditable) {
                     const text = cell.textContent;
                     if (cell.cellIndex > 0 || cell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class') {
-                         showCellAutocompleteSuggestions(cell, text);
+                         showCellAutocompleteSuggestions(cell, text); // Uses shared names
                     } else {
                         hideCellAutocompleteSuggestions();
                     }
@@ -1352,9 +1336,9 @@
                     const text = cell.textContent;
                     const parentCell = cell.parentElement;
                      if (parentCell && (parentCell.cellIndex > 0 || parentCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
-                        showCellAutocompleteSuggestions(parentCell, text); 
+                        showCellAutocompleteSuggestions(parentCell, text); // Uses shared names
                     } else {
-                        hideCellAutocompleteSuggestions();
+                         hideCellAutocompleteSuggestions();
                     }
                     setTimeout(rebuildAndRenderSummary, 300);
                 }
@@ -1487,7 +1471,7 @@
         const activeTableElement = document.getElementById(activeTableId);
         if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return; }
         const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
-        if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved drafts.`)) {
+        if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved shared schedules.`)) {
             activeTableElement.querySelectorAll('.merged-cell-container').forEach(containerCell => {
                 const mergeId = containerCell.dataset.mergeId;
                 if(mergeId){
@@ -1855,9 +1839,9 @@
         currentNameListSession = session;
         if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi');
         if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang');
-        if(nameModalTitleElement) nameModalTitleElement.textContent = `Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
+        if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`; // Title updated
         if(searchNameInputElement) searchNameInputElement.value = ''; 
-        renderNameListFromFirestore(); 
+        renderNameListFromFirestore(); // Uses shared names
         hideCellAutocompleteSuggestions(); 
     }
 
@@ -1904,23 +1888,24 @@
     function renderNameListFromFirestore(filterText = '') { 
         if (!nameListContainer) return;
         if (!fbIsAuthReady) {
-            nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names...</p>'; return;
+            nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading shared names...</p>'; return; // Message updated
         }
         nameListContainer.innerHTML = ''; 
-        const namesToRender = currentNameListSession === 'pagi' ? namesPagi : namesPetang;
+        // Uses shared name lists
+        const namesToRender = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         const normalizedFilterText = String(filterText || '').toLowerCase().trim();
         if (!Array.isArray(namesToRender)) {
-            nameListContainer.innerHTML = '<p style="text-align:center; color:red;">Error: Name list data invalid.</p>'; return;
+            nameListContainer.innerHTML = '<p style="text-align:center; color:red;">Error: Shared name list data invalid.</p>'; return; // Message updated
         }
         const filteredNames = namesToRender.filter(name => String(name || '').toLowerCase().trim().includes(normalizedFilterText));
         if (filteredNames.length === 0) {
-            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ? 'No names match.' : `No names in ${currentNameListSession} session.`}</p>`; return;
+            nameListContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1;">${normalizedFilterText ? 'No names match.' : `No names in shared ${currentNameListSession} session.`}</p>`; return; // Message updated
         }
         filteredNames.forEach(name => {
             const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
             const nameStr = String(name || '');
             const safeNameAttr = nameStr.replace(/"/g, '&quot;');
-            itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}'">Delete</button>`;
+            itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}' from shared list">Delete</button>`; // Title updated
             nameListContainer.appendChild(itemDiv);
         });
         highlightSelectedNameInList(selectedNameFromList); 
@@ -1932,7 +1917,7 @@
         showMessage(`Selected "${selectedNameFromList}". Click a cell to insert.`, 'info', 4000);
     }
 
-    function handleNameListImportFirestore(event) {
+    function handleNameListImportFirestore(event) { // Now imports to shared list
         const file = event.target.files[0];
         if (!file) { showMessage('No file selected.', 'info'); return; }
         if (file.type !== 'text/plain') {
@@ -1944,9 +1929,10 @@
             try {
                 const importedNames = e.target.result.split(/\r?\n/).map(n => String(n||'').trim()).filter(n => n);
                 if (importedNames.length === 0) { showMessage('No names in file.', 'info'); return; }
-                const currentSessionNames = (currentNameListSession === 'pagi' ? namesPagi : namesPetang).map(n => String(n||'').trim());
+                // Uses shared name lists
+                const currentSessionNames = (currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared).map(n => String(n||'').trim());
                 const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
-                await saveNameListToFirestore(currentNameListSession, combinedNames);
+                await saveSharedNameListToFirestore(currentNameListSession, combinedNames); // Saves to shared list
             } catch (error) { showMessage('Error processing name list file.', 'error'); }
             finally { event.target.value = ''; }
         };
@@ -2018,17 +2004,14 @@
     function rebuildAndRenderSummary() {
         const scheduledNames = new Set(); 
         if (tablesContainer) {
-            tablesContainer.querySelectorAll('table').forEach(scheduleTable => { // Iterate over ALL tables
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => { 
                 if (!scheduleTable.tBodies[0]) return; 
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        // Only collect names from cells that are NOT in the first column (cellIndex > 0).
-                        // The first column (cellIndex === 0) is assumed to contain class identifiers
-                        // and should not be added to the list of teacher/subject names for the summary.
                         if (cellIndex > 0) {
                             const overlay = cell.querySelector('.merged-cell-overlay');
                             const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
-                            if (nameFromCell) { // Ensure the cell is not empty
+                            if (nameFromCell) { 
                                 scheduledNames.add(nameFromCell);
                             }
                         }
