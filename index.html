@@ -74,12 +74,46 @@
             box-sizing: border-box;
             position: relative; /* For positioning autocomplete suggestions */
         }
+        /* Default table header styling (can be overridden) */
         table th {
-            background-color: #f8f9fa; /* Lighter header background */
-            color: #343a40; /* Darker header text */
-            font-weight: 600; /* Slightly bolder font */
-            white-space: nowrap; /* Prevent header text from wrapping */
+            background-color: #f8f9fa;
+            color: #343a40;
+            font-weight: 600;
+            white-space: nowrap;
         }
+
+        /* Styling for the first row of schedule tables (headers) */
+        #tablesContainer > table > thead > tr > th {
+            font-weight: bold;
+            background-color: lightgrey; /* User request for header row */
+            color: #343a40;
+        }
+
+        /* Styling for the first column of schedule tables */
+        #tablesContainer > table > thead > tr > th:first-child,
+        #tablesContainer > table > tbody > tr > td:first-child,
+        #tablesContainer > table > tbody > tr > th:first-child { /* In case <th> is used in tbody first col */
+            font-weight: bold;
+            background-color: aliceblue; /* User request: Lighter blue */
+            color: #1c1e21; /* Ensure good contrast on lightblue */
+        }
+
+        /* Styling for the first row (headers) of the summary table */
+        #summaryTable > thead > tr > th {
+            font-weight: bold;
+            background-color: lightgrey; /* User request for header row */
+            color: #212529;
+        }
+
+        /* Styling for the first column of the summary table */
+        #summaryTable > thead > tr > th:first-child,
+        #summaryTable > tbody > tr > td:first-child {
+            font-weight: bold;
+            background-color: aliceblue; /* User request: Lighter blue */
+            color: #1c1e21; /* Ensure good contrast on lightblue */
+        }
+
+
         td.selected, th.selected { /* Styling for selected cells */
             outline: 3px solid #007bff;
             background-color: #dbeafe; /* Adjusted selection color */
@@ -201,18 +235,25 @@
             font-weight: bold;
         }
 
-        #summaryTable th {
-            background-color: #ffc107; /* Brighter, more distinct color for summary header */
-            color: #212529;
+        #summaryTable td { /* General summary table data cells */
+            background-color: #fff9e6;
         }
-        #summaryTable td {
-            background-color: #fff9e6; /* Lighter version of header for summary data cells */
+        /* Ensure first column of summary data cells gets aliceblue */
+        #summaryTable > tbody > tr > td:first-child {
+             background-color: aliceblue !important; 
         }
+
         .highlight-conflict { /* Style for cells with conflicting entries */
             background-color: #f8d7da !important;
             font-weight: bold;
             color: #721c24 !important;
         }
+        /* Ensure conflict highlighting doesn't override first column blue, but keeps conflict text color */
+        #summaryTable > tbody > tr > td.highlight-conflict:first-child {
+            background-color: aliceblue !important;
+            color: #721c24 !important; /* Keep conflict text color */
+        }
+
 
         .modal {
             display: none; /* Hidden by default */
@@ -456,12 +497,12 @@
             <tbody>
                 <tr>
                     <td contenteditable="true">5S1</td>
-                    <td contenteditable="true"></td><td contenteditable="true">JAMES</td><td contenteditable="true"></td>
+                    <td contenteditable="true"></td><td contenteditable="true">JAMES *ReportDue // Sick leave</td><td contenteditable="true"></td>
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
                  <tr>
                     <td contenteditable="true">5S2</td>
-                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
+                    <td contenteditable="true">*SpecialAssembly</td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
             </tbody>
@@ -515,24 +556,19 @@
     import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
-    // This is the configuration from your original file.
-    // If __firebase_config is NOT injected by the platform you are using, THIS config will be used.
-    // Ensure these details are correct for your Firebase project "jadual-3f0aa".
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
+      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4", // Replace with your actual API key if not injected
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.appspot.com", // Corrected from .firebasestorage.app if it was a typo
+      storageBucket: "jadual-3f0aa.appspot.com",
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
     let firebaseConfig;
-    let usingInjectedConfig = false;
     if (typeof __firebase_config !== 'undefined' && __firebase_config !== null && __firebase_config.trim() !== '') {
         try {
             firebaseConfig = JSON.parse(__firebase_config);
-            usingInjectedConfig = true;
             console.log("Using injected Firebase config (__firebase_config).");
         } catch (e) {
             console.error("Error parsing injected __firebase_config. Falling back to userProvidedFirebaseConfig. Error:", e);
@@ -540,9 +576,8 @@
         }
     } else {
         firebaseConfig = userProvidedFirebaseConfig;
-        console.warn("Firebase Auth: __firebase_config is not defined or empty. Using userProvidedFirebaseConfig from the script. Ensure this is intended and the config is correct for your project 'jadual-3f0aa'.");
-        // Check if the fallback is still using generic placeholders (it shouldn't be if you've set it above)
-        if (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID") {
+        console.warn("Firebase Auth: __firebase_config is not defined or empty. Using userProvidedFirebaseConfig from the script.");
+        if (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID") { // Basic check for placeholder
             console.error("Firebase Auth: CRITICAL - The userProvidedFirebaseConfig contains placeholder values. Firebase will NOT work. Please update the firebaseConfig object in the script with your actual Firebase project details if not running in an environment that injects __firebase_config.");
         }
     }
@@ -592,6 +627,7 @@
     let activeCellForAutocomplete = null;
     let currentAutocompleteIndex = -1; 
 
+    // DOM Element Cache
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement;
 
     // --- Utility Functions ---
@@ -739,7 +775,26 @@
                 await setDoc(docRef, { names: updatedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
                 tablesContainer.querySelectorAll('table').forEach(table => {
                     table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
-                        if (cell.textContent.trim() === nameToDeleteStr) {
+                        const cellText = cell.textContent.trim();
+                        const parts = cellText.split(' // ');
+                        let mainContent = parts[0];
+                        const remarkContent = parts.length > 1 ? ` // ${parts.slice(1).join(' // ')}` : '';
+
+                        // Filter out the deleted name and any '*' words associated with it if it's a multi-word main content
+                        const wordsInMain = mainContent.split(/\s+/);
+                        const newWordsInMain = wordsInMain.filter(word => {
+                            if (word.startsWith('*') && mainContent.includes(nameToDeleteStr)) {
+                                // If a '*' word is part of a phrase containing the deleted name, remove it
+                                return !mainContent.includes(word.substring(1)); // A bit heuristic
+                            }
+                            return word !== nameToDeleteStr;
+                        });
+                        
+                        const newMainContent = newWordsInMain.join(' ').trim();
+
+                        if (newMainContent || remarkContent) {
+                            cell.textContent = (newMainContent + remarkContent).trim();
+                        } else {
                             cell.textContent = '';
                         }
                     });
@@ -1075,16 +1130,19 @@
     function showCellAutocompleteSuggestions(cell, inputText) {
         if (!autocompleteSuggestionsDiv) return;
         const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
-        const normalizedInput = String(inputText || '').toLowerCase().trim();
         
-        if (!normalizedInput) {
+        let textForMatchingInput = String(inputText || '').split(' // ')[0]; // Get part before " // "
+        const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*')); // Filter out '*' words
+        const textForMatching = wordsForMatching.join(' ').toLowerCase().trim(); // Use this for matching
+                
+        if (!textForMatching) {
             hideCellAutocompleteSuggestions();
             return;
         }
 
         const filteredSuggestions = namesForAutocomplete.filter(name => {
             const nameStr = String(name || '').toLowerCase().trim();
-            return nameStr.startsWith(normalizedInput) && nameStr !== normalizedInput;
+            return nameStr.startsWith(textForMatching) && nameStr !== textForMatching;
         });
 
         if (filteredSuggestions.length > 0) {
@@ -1124,21 +1182,37 @@
         if (activeCellForAutocomplete) {
             const targetCell = activeCellForAutocomplete; 
             const overlay = targetCell.querySelector('.merged-cell-overlay');
+            
+            const currentFullText = overlay ? overlay.textContent : targetCell.textContent;
+            const remarkPart = currentFullText.includes(' // ') ? currentFullText.substring(currentFullText.indexOf(' // ')) : '';
+            
+            // Preserve '*' words that were originally before the ' // ' part if any
+            const contentBeforeRemark = currentFullText.split(' // ')[0];
+            const starWordsBeforeRemark = contentBeforeRemark.split(/\s+/).filter(word => word.startsWith('*')).join(' ');
+
+            let newText = suggestionText;
+            if (starWordsBeforeRemark) {
+                newText += ' ' + starWordsBeforeRemark;
+            }
+            newText = (newText.trim() + remarkPart).trim();
+
+
             if (overlay) {
-                overlay.textContent = suggestionText;
+                overlay.textContent = newText;
             } else {
-                targetCell.textContent = suggestionText;
+                targetCell.textContent = newText;
             }
             hideCellAutocompleteSuggestions();
             rebuildAndRenderSummary();
             targetCell.focus(); 
             const range = document.createRange();
             const sel = window.getSelection();
-            if (targetCell.childNodes.length > 0) {
-                range.selectNodeContents(overlay ? overlay : targetCell); 
+            const contentNode = overlay || targetCell;
+            if (contentNode.childNodes.length > 0) {
+                range.selectNodeContents(contentNode); 
                 range.collapse(false); 
             } else {
-                range.setStart(targetCell, 0);
+                range.setStart(contentNode, 0);
                 range.collapse(true);
             }
             sel.removeAllRanges();
@@ -1157,6 +1231,7 @@
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
+        // Cache DOM elements
         scheduleTitleElement = document.getElementById('scheduleTitle');
         tablesContainer = document.getElementById('tablesContainer');
         tableTabs = document.getElementById('tableTabs');
@@ -1243,15 +1318,15 @@
 
         loadScheduleTitleFromLocalStorage(); 
         initializeEventListeners();
-        setupInitialTableState(); // This sets activeTableId and ensures the active table is displayed
-        rebuildAndRenderSummary(); // This should now work with a valid activeTableId and its headers
+        setupInitialTableState(); 
+        rebuildAndRenderSummary(); 
         handleNameListSessionSwitch('pagi');
     });
 
     function setupInitialTableState() {
         const existingTables = tablesContainer.querySelectorAll('table');
         if (existingTables.length > 0) {
-            tableTabs.innerHTML = ''; // Clear any pre-existing tabs
+            tableTabs.innerHTML = ''; 
             existingTables.forEach((table, index) => {
                 const tableId = table.id || `tbl_init_${Date.now()}_${index + 1}`;
                 table.id = tableId;
@@ -1259,27 +1334,24 @@
                 table.dataset.tableName = tableName;
                 addTabButton(tableId, tableName);
                 if (index === 0) {
-                    activeTableId = tableId; // Set the first table as active
+                    activeTableId = tableId; 
                 }
-                table.classList.remove('active'); // Ensure no tables have 'active' class initially
+                table.classList.remove('active'); 
             });
         } else {
             console.log("No initial tables found in HTML. Adding a new default table.");
-            addNewTable(true); // This will set activeTableId
+            addNewTable(true); 
         }
         
-        // Ensure the activeTableId corresponds to an existing table and switch to it
         if (activeTableId && document.getElementById(activeTableId)) {
             console.log(`Initial active table ID set to: ${activeTableId}`);
             switchTable(activeTableId);
         } else if (tablesContainer.querySelector('table')) {
-            // Fallback if activeTableId is somehow invalid but tables exist
             const firstTable = tablesContainer.querySelector('table');
             activeTableId = firstTable.id;
             console.warn(`Initial activeTableId was invalid or table not found. Falling back to first table in DOM: ${activeTableId}`);
             switchTable(activeTableId);
         } else {
-            // This case should ideally be handled by addNewTable(true) if no tables exist
             console.error("SetupInitialTableState: No tables available and addNewTable did not create one. Summary might be empty.");
         }
     }
@@ -1296,7 +1368,6 @@
     }
 
     function initializeEventListeners() {
-        // ... (event listeners remain the same as previous version) ...
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) {
@@ -1372,7 +1443,7 @@
                     } else {
                         hideCellAutocompleteSuggestions();
                     }
-                    setTimeout(rebuildAndRenderSummary, 300);
+                    setTimeout(rebuildAndRenderSummary, 300); // Debounce slightly
                 } else if (cell.classList.contains('merged-cell-overlay')) {
                     const text = cell.textContent;
                     const parentCell = cell.parentElement;
@@ -1381,7 +1452,7 @@
                     } else {
                          hideCellAutocompleteSuggestions();
                     }
-                    setTimeout(rebuildAndRenderSummary, 300);
+                    setTimeout(rebuildAndRenderSummary, 300); // Debounce slightly
                 }
             });
             tablesContainer.addEventListener('blur', (e) => { 
@@ -1429,6 +1500,7 @@
                     e.preventDefault();
                     hideCellAutocompleteSuggestions();
                 } else if (e.key === 'Tab') {
+                    // Allow tab to naturally move focus, which should trigger blur and hide suggestions
                     hideCellAutocompleteSuggestions(); 
                 }
             }
@@ -1452,10 +1524,11 @@
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         const rect = nameModalContent.getBoundingClientRect();
+        // Make sure modal is positioned fixed for dragging
         nameModalContent.style.position = 'fixed';
         nameModalContent.style.left = `${rect.left}px`;
         nameModalContent.style.top = `${rect.top}px`;
-        nameModalContent.style.transform = 'none'; 
+        nameModalContent.style.transform = 'none'; // Remove transform if any
         modalDragOffsetX = clientX - nameModalContent.offsetLeft;
         modalDragOffsetY = clientY - nameModalContent.offsetTop;
         if (e.type === 'touchstart') e.preventDefault(); 
@@ -1467,7 +1540,8 @@
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         let newLeft = clientX - modalDragOffsetX;
         let newTop = clientY - modalDragOffsetY;
-        const modalRect = nameModalContent.getBoundingClientRect(); 
+        // Boundary checks
+        const modalRect = nameModalContent.getBoundingClientRect(); // Use current rect for width/height
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         if (newLeft < 0) newLeft = 0;
@@ -1483,6 +1557,7 @@
         if (isDraggingModal && nameModalContent) {
             isDraggingModal = false;
             nameModalContent.classList.remove('dragging');
+            // No need to revert position to relative here if it's meant to stay where dragged
         }
     }
 
@@ -1492,14 +1567,19 @@
             await navigator.clipboard.writeText(fullHtml);
             showMessage('Full HTML copied to clipboard!', 'success');
         } catch (err) {
+            console.warn('Direct copy to clipboard failed, trying fallback:', err);
             const textarea = document.createElement('textarea');
             textarea.value = fullHtml;
             textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
             document.body.appendChild(textarea);
             textarea.select();
             try {
-                document.execCommand('copy') ? showMessage('Full HTML copied! (fallback)', 'success') : showMessage('Direct copy failed.', 'error', 5000);
-            } catch (execErr) { showMessage('Direct copy failed.', 'error', 5000); }
+                const success = document.execCommand('copy');
+                success ? showMessage('Full HTML copied! (fallback)', 'success') : showMessage('Direct copy using execCommand failed.', 'error', 5000);
+            } catch (execErr) {
+                console.error('execCommand copy failed:', execErr);
+                showMessage('Direct copy failed completely.', 'error', 5000);
+            }
             document.body.removeChild(textarea);
         }
     }
@@ -1509,6 +1589,7 @@
         if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return; }
         const tableName = activeTableElement.dataset.tableName || `Table ${activeTableId.split('_').pop()}`;
         if (await customConfirm(`Are you sure you want to clear all content and unmerge cells in "${tableName}"? This will not delete saved shared schedules.`)) {
+            // Unmerge all cells in the active table first
             activeTableElement.querySelectorAll('.merged-cell-container').forEach(containerCell => {
                 const mergeId = containerCell.dataset.mergeId;
                 if(mergeId){
@@ -1517,20 +1598,21 @@
                         c.removeAttribute('data-merge-id');
                         c.classList.remove('merged-cell-container', 'subsumed-cell');
                         const overlay = c.querySelector('.merged-cell-overlay');
-                        if (overlay) c.textContent = overlay.textContent; 
-                        else c.innerHTML = ''; 
-                        const overlayChild = c.querySelector('.merged-cell-overlay'); 
+                        if (overlay) c.textContent = overlay.textContent; // Keep text in primary cell
+                        else c.innerHTML = ''; // Clear others
+                        const overlayChild = c.querySelector('.merged-cell-overlay'); // Remove overlay if it exists
                         if(overlayChild) overlayChild.remove();
                     });
                 }
             });
+            // Clear content from all data cells (tbody td and tbody th)
             activeTableElement.querySelectorAll('tbody td, tbody th').forEach(cell => {
-                cell.innerHTML = ''; 
-                cell.classList.remove('selected'); 
+                cell.innerHTML = ''; // Clears content
+                cell.classList.remove('selected'); // Deselect if selected
             });
-            selectedCells = []; 
+            selectedCells = []; // Clear selection array
             rebuildAndRenderSummary();
-            updateAllMergeOverlays();
+            updateAllMergeOverlays(); // Ensure overlays are correct after unmerging
             showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
     }
@@ -1549,15 +1631,23 @@
         const targetTable = document.getElementById(id);
         if (!targetTable && tablesContainer) { 
             const firstTableInDOM = tablesContainer.querySelector('table');
-            if (firstTableInDOM) id = firstTableInDOM.id; 
-            else { 
+            if (firstTableInDOM) {
+                id = firstTableInDOM.id; 
+                console.warn(`SwitchTable: Target table ${id} not found, falling back to first table in DOM.`);
+            } else { 
                 if (tablesContainer && tablesContainer.children.length === 0) {
                     console.log("SwitchTable: No tables exist, adding a new one.");
                     addNewTable(true); 
+                    return; // addNewTable will call switchTable again
                 }
-                return; // Exit if no table can be switched to
+                console.error(`SwitchTable: Target table ${id} not found and no fallback available.`);
+                return; 
             }
+        } else if (!targetTable) {
+             console.error(`SwitchTable: Target table ${id} not found and tablesContainer is also missing.`);
+             return;
         }
+
         console.log(`Switching to table: ${id}`);
         activeTableId = id;
         if(tablesContainer) tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
@@ -1598,7 +1688,7 @@
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTable.id, label || defaultTableName);
-        switchTable(newTable.id); // This will also call rebuildAndRenderSummary
+        switchTable(newTable.id); 
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
         else console.log(`Initial table "${label || defaultTableName}" created with ID ${newTable.id}.`);
     }
@@ -1608,6 +1698,7 @@
         const currentTab = tableTabs.querySelector('button.active');
         if (!currentTab) { showMessage('No active table to rename.', 'error'); return; }
         let tableIdToRename = currentTab.dataset.tableId;
+        // Fallback if dataset.tableId is somehow missing (older structures might rely on onclick)
         if (!tableIdToRename) {
             const match = currentTab.getAttribute('onclick')?.match(/'(tbl_.*?)'/);
             if (match && match[1]) tableIdToRename = match[1];
@@ -1615,6 +1706,7 @@
         }
         const tableElement = document.getElementById(tableIdToRename);
         if (!tableElement) { showMessage(`Table element for ID ${tableIdToRename} not found.`, 'error'); return; }
+
         const oldName = tableElement.dataset.tableName || currentTab.textContent;
         const newName = customPrompt('Enter new table name:', oldName);
         if (newName && newName.trim() && newName.trim() !== oldName) {
@@ -1635,34 +1727,38 @@
         const tableIdToDelete = activeTab?.dataset.tableId;
         const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
         const tableName = tableElement?.dataset.tableName || activeTab?.textContent || 'the active table';
+
         if (await customConfirm(`Delete table "${tableName}"? This cannot be undone.`)) {
             if (tableElement) tableElement.remove();
-            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
+            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove(); // Fallback
             activeTab?.remove(); 
+            
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) { 
-                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; 
+                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; // Fallback for older structures
                 switchTable(nextActiveId);
             } else { 
+                // This case means all tables were deleted, which shouldn't happen due to the <=1 check,
+                // but as a safeguard, create a new one.
                 activeTableId = null; 
                 console.log("Last table deleted. Adding a new default table.");
-                addNewTable(true); 
+                addNewTable(true); // This will also call switchTable
             }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
     }
 
     function addRowToTable(tableBody, rowIndex, numCols) {
-        const row = tableBody.insertRow(rowIndex); 
+        const row = tableBody.insertRow(rowIndex); // rowIndex can be -1 to append
         for (let i = 0; i < numCols; i++) {
             const cell = row.insertCell(); cell.contentEditable = 'true';
         }
     }
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0] || table.rows.length === 0) return; 
-        const numCols = table.rows[0].cells.length; 
-        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex : 0; 
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return; // Need at least header row
+        const numCols = table.rows[0].cells.length; // Get numCols from header or first row
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex : 0; // Default to top of tbody
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
@@ -1670,19 +1766,20 @@
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const numCols = table.rows[0].cells.length;
-        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex + 1 : -1; 
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex + 1 : -1; // -1 appends to tbody
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    function addColumnToTable(table, colIndex) { 
+    function addColumnToTable(table, colIndex) { // colIndex can be -1 to append
         for (const row of table.rows) {
             const isHeaderRow = row.parentElement.tagName === 'THEAD';
             const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex);
             cell.contentEditable = 'true';
             if (isHeaderRow) {
                 cell.textContent = "New Header";
+                // If it's a header and not appending, insertBefore is needed for TH
                 if (colIndex !== -1 && row.cells[colIndex]) row.insertBefore(cell, row.cells[colIndex]);
-                else row.appendChild(cell);
+                else if (isHeaderRow) row.appendChild(cell); // For TH append
             }
         }
     }
@@ -1696,7 +1793,7 @@
     function addColumnRightToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table) return;
-        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex + 1 : -1;
+        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex + 1 : -1; // -1 appends
         addColumnToTable(table, insertAtIndex);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
@@ -1747,15 +1844,31 @@
         const cell = event.target.closest('td, th');
         if (!cell || !cell.closest(`#${activeTableId}`)) return; 
         lastClickedCell = cell; 
-        if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
+        // Hide autocomplete if clicking outside suggestions or a different cell
+        if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && 
+            !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
             hideCellAutocompleteSuggestions();
         }
 
         if (selectedNameFromList) { 
-            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { // Ensure it's a data cell
                 const overlay = cell.querySelector('.merged-cell-overlay');
-                if (overlay) overlay.textContent = selectedNameFromList;
-                else cell.textContent = selectedNameFromList;
+                const currentCellText = overlay ? overlay.textContent : cell.textContent;
+                
+                // Preserve remarks (//) and star words (*)
+                const remarkPart = currentCellText.includes(' // ') ? currentCellText.substring(currentCellText.indexOf(' // ')) : '';
+                const contentBeforeRemark = currentCellText.split(' // ')[0];
+                const starWords = contentBeforeRemark.split(/\s+/).filter(w => w.startsWith('*')).join(' ');
+
+                let newText = selectedNameFromList;
+                if (starWords) {
+                    newText += ' ' + starWords;
+                }
+                newText = (newText.trim() + remarkPart).trim();
+
+                if (overlay) overlay.textContent = newText;
+                else cell.textContent = newText;
+                
                 rebuildAndRenderSummary(); 
                 showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500);
                 clearNameSelection(); 
@@ -1765,6 +1878,7 @@
             return; 
         }
         if (selectionMode) { 
+            // Prevent selection of subsumed cells or mixing merge groups
             if (cell.classList.contains('subsumed-cell') ||
                 (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
                 showMessage('Cannot select subsumed cells or mix merge groups.', 'warning'); return;
@@ -1782,9 +1896,11 @@
 
     function mergeSelectedTableCells() {
         if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error'); return; }
+        // Check if any selected cell is already part of a merge group (either container or subsumed)
         if (selectedCells.some(cell => cell.dataset.mergeId)) {
             showMessage('Cannot merge already merged cells. Unmerge first.', 'warning'); return;
         }
+        // Determine primary cell (top-leftmost)
         let primaryCell = selectedCells[0];
         let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top;
         let minColGUI = primaryCell.getBoundingClientRect().left;
@@ -1795,6 +1911,7 @@
                 primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left;
             }
         });
+        // Calculate total dimensions
         let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
         selectedCells.forEach(cell => {
             const rect = cell.getBoundingClientRect();
@@ -1805,12 +1922,12 @@
         const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const overlay = document.createElement('div');
         overlay.className = 'merged-cell-overlay';
-        overlay.textContent = primaryCell.textContent; 
+        overlay.textContent = primaryCell.textContent; // Take content from primary cell
         overlay.contentEditable = 'true'; 
         overlay.style.setProperty('--merged-width', `${totalWidth}px`);
         overlay.style.setProperty('--merged-height', `${totalHeight}px`);
-        overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); });
-        overlay.addEventListener('input', (e) => { 
+        overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); }); // Update summary on blur
+        overlay.addEventListener('input', (e) => { // Handle input for autocomplete
             const text = e.target.textContent;
             if (primaryCell && (primaryCell.cellIndex > 0 || primaryCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
                  showCellAutocompleteSuggestions(primaryCell, text);
@@ -1824,40 +1941,43 @@
         primaryCell.setAttribute('data-merge-id', mergeId);
         selectedCells.forEach(cell => {
             if (cell !== primaryCell) {
-                cell.textContent = ''; cell.classList.add('subsumed-cell');
+                cell.textContent = ''; // Clear content of subsumed cells
+                cell.classList.add('subsumed-cell');
                 cell.setAttribute('data-merge-id', mergeId);
             }
         });
         deselectAllTableCells();
-        if (selectionMode) toggleCellSelectionMode(); 
+        if (selectionMode) toggleCellSelectionMode(); // Exit selection mode after merge
         showMessage('Cells visually merged.', 'success');
     }
 
     function unmergeActiveCellIfMerged() {
-        const cell = lastClickedCell; 
+        const cell = lastClickedCell; // Use the last clicked cell
         if (!cell) { showMessage('Click a merged cell to unmerge.', 'info'); return; }
-        const containerCell = cell.closest('[data-merge-id]'); 
+        const containerCell = cell.closest('[data-merge-id]'); // Find the merge container
         if (!containerCell) { showMessage('Clicked cell is not merged.', 'error'); return; }
         const mergeId = containerCell.dataset.mergeId;
         const table = containerCell.closest('table');
         if (!table) return;
         const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`);
         let originalText = '';
+        // Find the primary cell (the one with the overlay) to get its text
         const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
         if (primaryCellInGroup) {
             const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay');
             if (overlay) originalText = overlay.textContent;
-            else originalText = primaryCellInGroup.textContent; 
+            else originalText = primaryCellInGroup.textContent; // Fallback if overlay somehow missing
         }
         cellsInGroup.forEach(c => {
             c.removeAttribute('data-merge-id');
             c.classList.remove('merged-cell-container', 'subsumed-cell');
             const overlayChild = c.querySelector('.merged-cell-overlay');
-            if (overlayChild) overlayChild.remove(); 
-            c.innerHTML = ''; 
+            if (overlayChild) overlayChild.remove(); // Remove the overlay div
+            c.innerHTML = ''; // Clear all cells first
         });
+        // Restore text to the primary cell (or the first cell if primary not clearly identified)
         if (primaryCellInGroup) primaryCellInGroup.textContent = originalText;
-        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText;
+        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText; // Fallback
         rebuildAndRenderSummary();
         showMessage('Cells unmerged.', 'success');
     }
@@ -1877,7 +1997,7 @@
                 minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right);
                 minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom);
             });
-            if (minLeft === Infinity) return; 
+            if (minLeft === Infinity) return; // Should not happen if cellsInGroup is not empty
             overlay.style.setProperty('--merged-width', `${maxRight - minLeft}px`);
             overlay.style.setProperty('--merged-height', `${maxBottom - minTop}px`);
         });
@@ -1888,9 +2008,9 @@
         if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi');
         if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang');
         if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
-        if(searchNameInputElement) searchNameInputElement.value = ''; 
+        if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search on session switch
         renderNameListFromFirestore();
-        hideCellAutocompleteSuggestions(); 
+        hideCellAutocompleteSuggestions(); // Clear any cell autocomplete
     }
 
     function highlightSelectedNameInList(nameToHighlight) { 
@@ -1912,8 +2032,8 @@
 
     function closeNameModal() {
         if (nameModal) nameModal.style.display = 'none';
-        clearNameSelection(); 
-        if(searchNameInputElement) searchNameInputElement.value = ''; 
+        clearNameSelection(); // Clear any selected name when closing modal
+        if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search in modal
     }
 
     function toggleNameListModalVisibility() {
@@ -1921,16 +2041,17 @@
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) closeNameModal();
         else {
-            nameModalContent.style.position = 'relative'; 
+            // Reset modal position before showing
+            nameModalContent.style.position = 'relative'; // Reset from fixed if dragged
             nameModalContent.style.left = 'auto'; nameModalContent.style.top = 'auto';
-            nameModalContent.style.transform = 'none'; 
+            nameModalContent.style.transform = 'none'; // Reset transform
             nameModal.style.display = 'flex';
-            if(searchNameInputElement) searchNameInputElement.value = ''; 
-            handleNameListSessionSwitch(currentNameListSession); 
+            if(searchNameInputElement) searchNameInputElement.value = ''; // Clear search
+            handleNameListSessionSwitch(currentNameListSession); // Ensure correct list is shown
             if(newNameInput) newNameInput.focus();
             clearNameSelection();
         }
-        hideCellAutocompleteSuggestions(); 
+        hideCellAutocompleteSuggestions(); // Clear any cell autocomplete
     }
 
     function renderNameListFromFirestore(filterText = '') { 
@@ -1951,16 +2072,16 @@
         filteredNames.forEach(name => {
             const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
             const nameStr = String(name || '');
-            const safeNameAttr = nameStr.replace(/"/g, '&quot;');
+            const safeNameAttr = nameStr.replace(/"/g, '&quot;'); // Sanitize for attribute
             itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}' from shared list">Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
-        highlightSelectedNameInList(selectedNameFromList); 
+        highlightSelectedNameInList(selectedNameFromList); // Re-apply highlight if a name was selected
     }
 
     function selectNameForCellInsertion(name) { 
         selectedNameFromList = String(name || '');
-        highlightSelectedNameInList(selectedNameFromList); 
+        highlightSelectedNameInList(selectedNameFromList); // Highlight in the list
         showMessage(`Selected "${selectedNameFromList}". Click a cell to insert.`, 'info', 4000);
     }
 
@@ -1980,7 +2101,7 @@
                 const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
                 await saveSharedNameListToFirestore(currentNameListSession, combinedNames);
             } catch (error) { showMessage('Error processing name list file.', 'error'); }
-            finally { event.target.value = ''; }
+            finally { event.target.value = ''; } // Clear file input
         };
         reader.onerror = () => { showMessage('Failed to read name list file.', 'error'); event.target.value = ''; };
         reader.readAsText(file);
@@ -1993,9 +2114,9 @@
         reader.onload = (e) => {
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const sheetName = workbook.SheetNames[0]; 
+                const sheetName = workbook.SheetNames[0]; // Use the first sheet
                 const worksheet = workbook.Sheets[sheetName];
-                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); 
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); // raw:false to get formatted values
                 tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
                 const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
@@ -2007,11 +2128,11 @@
                     importedTableElement.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
                     addTabButton(newTableId, importedTableName);
-                    switchTable(newTableId); 
+                    switchTable(newTableId); // Switch to the new imported table
                     showMessage('Excel data imported!', 'success');
                 } else showMessage('Could not parse table from Excel.', 'error');
-            } catch (error) { showMessage('Error processing Excel file.', 'error'); }
-            finally { event.target.value = ''; } 
+            } catch (error) { showMessage('Error processing Excel file.', 'error'); console.error("Excel import error:", error); }
+            finally { event.target.value = ''; } // Clear file input
         };
         reader.readAsArrayBuffer(file);
     }
@@ -2019,17 +2140,20 @@
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
         if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
+        // Temporarily replace merged cell overlays with their text content for export
         const overlaysData = []; 
         tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
             const parentCell = overlay.parentElement;
             overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML });
-            parentCell.textContent = overlay.textContent; 
+            parentCell.textContent = overlay.textContent; // Replace HTML with text
         });
         const tableName = tableToExport.dataset.tableName || activeTableId;
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        // Restore original HTML for merged cells
         overlaysData.forEach(data => { 
             data.parent.innerHTML = data.originalHTML; 
+            // Re-attach event listeners if they were part of originalHTML and dynamic
             const newOverlay = data.parent.querySelector('.merged-cell-overlay');
             if (newOverlay) {
                 newOverlay.addEventListener('blur', () => rebuildAndRenderSummary());
@@ -2043,9 +2167,27 @@
                 });
             }
         });
-        if(overlaysData.length > 0) updateAllMergeOverlays(); 
+        if(overlaysData.length > 0) updateAllMergeOverlays(); // Ensure visual consistency
         showMessage(`Table "${tableName}" exported.`, 'success');
     }
+
+    /**
+     * Extracts the main content from a cell for summary, ignoring remarks after " // "
+     * and words starting with "*".
+     * @param {string} cellText The full text content of the cell.
+     * @returns {string} The processed text content for summary, trimmed.
+     */
+    function getTextForSummary(cellText) {
+        if (typeof cellText !== 'string') return '';
+        let textForSummary = cellText.split(' // ')[0]; // Get part before " // " remarks
+
+        // Remove words starting with '*' from the part before " // "
+        const words = textForSummary.split(/\s+/); // Split by one or more spaces
+        const filteredWords = words.filter(word => !word.startsWith('*'));
+        
+        return filteredWords.join(' ').trim(); // Join remaining words and trim
+    }
+
 
     function rebuildAndRenderSummary() {
         console.log("Rebuilding and rendering summary...");
@@ -2055,11 +2197,12 @@
                 if (!scheduleTable.tBodies[0]) return; 
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        if (cellIndex > 0) { 
+                        if (cellIndex > 0) { // Skip first column (class/time usually)
                             const overlay = cell.querySelector('.merged-cell-overlay');
                             const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
-                            if (nameFromCell) { 
-                                scheduledNames.add(nameFromCell);
+                            const actualNameForSummary = getTextForSummary(nameFromCell); // Uses updated logic
+                            if (actualNameForSummary) { 
+                                scheduledNames.add(actualNameForSummary);
                             }
                         }
                     });
@@ -2067,7 +2210,7 @@
             });
         }
         const allSummaryNames = [...scheduledNames].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
-        console.log("Summary Names:", allSummaryNames);
+        console.log("Summary Names (after remark and '*' processing):", allSummaryNames);
         buildSummaryTableSkeleton(allSummaryNames);
         updateSummaryTableData(allSummaryNames);
     }
@@ -2091,7 +2234,7 @@
         console.log(`Active Table for Summary: ID='${activeTableId}', Element found: ${!!activeTableElement}`);
 
         if (activeTableElement && activeTableElement.tHead && activeTableElement.tHead.rows.length > 0) {
-            for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) { 
+            for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) { // Start from 1 to skip first header if it's 'Class/Time'
                 const headerText = String(activeTableElement.tHead.rows[0].cells[hIdx].textContent || '').trim();
                 if (headerText) activeTableHeaders.push(headerText);
             }
@@ -2103,6 +2246,7 @@
         console.log("Summary Headers from Active Table:", activeTableHeaders);
 
 
+        // Special LAU/LISAH rule logic
         let laulisahRuleRequiresSpecialSlot = false;
         const specialNamesForRule = ["LAU", "LISAH"];
         const targetSlotForSpecialNamesRule = "10.15-10.30";
@@ -2110,18 +2254,20 @@
 
         if (tablesContainer) {
             for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
-                if (laulisahRuleRequiresSpecialSlot) break; 
+                if (laulisahRuleRequiresSpecialSlot) break; // Optimization
                 if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
                 const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
                 Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
-                    if (laulisahRuleRequiresSpecialSlot) return;
+                    if (laulisahRuleRequiresSpecialSlot) return; // Optimization
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                          const scheduleCell = scheduleDataRow.cells[cellIdx];
-                         let entryInScheduleCell = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
-                         if (specialNamesForRule.includes(entryInScheduleCell)) {
+                         let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
+                         let entryInScheduleCellForRule = getTextForSummary(entryInScheduleCellFull); // Use processed text for rule check
+
+                         if (specialNamesForRule.includes(entryInScheduleCellForRule)) {
                             const headerText = currentScheduleTableHeaders[cellIdx];
                             if (headerText && headerText.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
-                                laulisahRuleRequiresSpecialSlot = true; return; 
+                                laulisahRuleRequiresSpecialSlot = true; return; // Exit inner loops
                             }
                          }
                     }
@@ -2139,7 +2285,7 @@
         let sortedUniqueHeaders = Array.from(combinedHeaders).sort((a, b) => {
             const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b);
             if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
-            if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  
+            if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  // Non-time strings last
             return String(a).localeCompare(String(b));
         });
         console.log("Final Sorted Unique Headers for Summary:", sortedUniqueHeaders);
@@ -2179,7 +2325,7 @@
             return;
         }
         const summaryBody = summaryTableElement.tBodies[0];
-        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) {
+        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) { // Check for actual data rows
             console.log("No rows in summary table to update (or only placeholder row).");
             return;
         }
@@ -2187,6 +2333,7 @@
         const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
         
+        // Clear previous summary data, keeping names
         Array.from(summaryBody.rows).forEach(summaryRow => { 
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).slice(1).forEach(cell => {
                 cell.textContent = ''; cell.classList.remove('highlight-conflict'); 
@@ -2199,24 +2346,29 @@
                 const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
                 Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
                     const classIdentifier = String(scheduleDataRow.cells[0]?.textContent||'').trim();
-                    if (!classIdentifier) return; 
+                    if (!classIdentifier) return; // Skip if no class identifier
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                         const scheduleCell = scheduleDataRow.cells[cellIdx];
-                        let entryInScheduleCell = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
-                        if (entryInScheduleCell) { 
+                        let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
+                        let actualEntryForSummary = getTextForSummary(entryInScheduleCellFull); // Uses updated logic
+
+                        if (actualEntryForSummary) { 
                             let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx];
                             if (!scheduleColumnHeaderForThisCell) continue; 
+                            
                             let summaryColumnToUse = scheduleColumnHeaderForThisCell;
+                            // LAU/LISAH rule:
                             const specialNamesForRule = ["LAU", "LISAH"];
                             const targetSlotForSpecialNamesRule = "10.15-10.30";
                             const sourceSlotToShiftRule = "10.30-12.00";
-                            if (specialNamesForRule.includes(entryInScheduleCell) && scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
+                            if (specialNamesForRule.includes(actualEntryForSummary) && scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
                                 summaryColumnToUse = targetSlotForSpecialNamesRule;
                             }
-                            const targetSummaryRow = Array.from(summaryBody.rows).find(sr => String(sr.cells[0]?.textContent||'') === entryInScheduleCell);
+
+                            const targetSummaryRow = Array.from(summaryBody.rows).find(sr => String(sr.cells[0]?.textContent||'') === actualEntryForSummary);
                             if (targetSummaryRow?.cells.length > 1) {
                                 const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.indexOf(summaryColumnToUse.replace(/\s/g, "").replace(/:/g,"."));
-                                if (targetSummaryColumnCellIndex > 0) { 
+                                if (targetSummaryColumnCellIndex > 0) { // Found corresponding column in summary
                                     const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
                                     let existingClasses = summaryCellToUpdate.textContent.trim() ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim()) : [];
                                     if (!existingClasses.includes(classIdentifier)) {
@@ -2230,6 +2382,7 @@
                 });
             });
         }
+        // Highlight conflicts after all data is populated
         Array.from(summaryBody.rows).forEach(summaryRow => { 
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
                 if (cellIndex > 0 && cell.textContent.includes(',')) cell.classList.add('highlight-conflict');
