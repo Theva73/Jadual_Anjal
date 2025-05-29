@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Weekly Schedule with Firestore Names</title>
+    <title>Weekly Schedule with Firestore Names & Drafts</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
@@ -264,17 +264,21 @@
         .name-item button:hover { background-color: #c82333; }
         .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
 
-        #draftList {
+        #draftListContainer { /* Changed ID from draftList to draftListContainer */
             border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px;
             background-color: #f8f9fa;
+            max-height: 300px; /* Added max-height */
+            overflow-y: auto; /* Added overflow-y */
         }
         .draft-item { display: flex; justify-content: space-between; align-items: center;
             padding: 10px 8px; border-bottom: 1px solid #e9ecef; }
         .draft-item:last-child { border-bottom: none; }
-        .draft-item span { cursor: pointer; color: #007bff; }
+        .draft-item span { cursor: pointer; color: #007bff; flex-grow: 1; margin-right: 10px; }
         .draft-item span:hover { text-decoration: underline; }
+        .draft-item .draft-date { font-size: 0.8em; color: #6c757d; margin-right: 10px; white-space: nowrap;}
         .draft-item button { background-color: #dc3545; color: white; border: none; border-radius: 5px;
-            padding: 6px 12px; font-size: 0.9em; }
+            padding: 6px 12px; font-size: 0.9em; flex-shrink: 0; }
+
 
         #newNameInput, #searchNameInput {
             padding: 10px;
@@ -343,13 +347,18 @@
         }
         .subsumed-cell { visibility: hidden; }
 
-        #loadingIndicatorModal {
-            position: absolute; /* Position within its parent (modal content) */
+        #loadingIndicatorModal, #generalLoadingIndicator { /* Combined styles */
+            position: absolute; 
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.85);
             display: flex; align-items: center; justify-content: center;
-            z-index: 10; /* Ensure it's above other modal content */
-            border-radius: 10px; /* Match modal content radius */
+            z-index: 10; 
+            border-radius: 10px; 
+        }
+        #generalLoadingIndicator { /* Specific for general use */
+            position: fixed; /* Cover whole screen */
+            z-index: 3000; /* Above everything */
+            border-radius: 0; /* No radius for full screen */
         }
         .spinner {
             border: 5px solid rgba(0, 0, 0, 0.1);
@@ -413,10 +422,10 @@
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
     <div class="bar">
-        <button id="saveDraftBtn" title="Save all current tables and their state as a named draft">💠 Save All as Draft</button>
-        <button id="loadDraftBtn" title="Show list of saved drafts to load">📂 Load Draft</button>
-        <button id="exportDraftsBtn" title="Export all saved drafts to a JSON file">📤 Export All Drafts</button>
-        <button id="importDraftsBtn" title="Import drafts from a JSON file">📥 Import Drafts File</button>
+        <button id="saveDraftBtn" title="Save current schedule to Firebase">💠 Save Schedule to Cloud</button>
+        <button id="loadDraftBtn" title="Show list of saved drafts from Firebase to load">☁️ Load Schedule from Cloud</button>
+        <button id="exportDraftsBtn" title="Export all Firebase drafts to a JSON file">📤 Export All Cloud Drafts</button>
+        <button id="importDraftsBtn" title="Import drafts from a JSON file to Firebase">📥 Import Drafts to Cloud</button>
         <input type="file" id="draftImportFile" accept=".json" style="display:none;">
         <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
     </div>
@@ -433,8 +442,7 @@
         <button id="nameListBtn" title="Open a dialog to manage a list of names for quick insertion">👥 Manage Names (Firestore)</button>
     </div>
 
-    <div id="draftList" style="display:none;"></div>
-    <div class="bar table-tabs" id="tableTabs"></div>
+    <div id="draftListContainer" style="display:none;"></div> <div class="bar table-tabs" id="tableTabs"></div>
     <div id="tablesContainer">
         <table id="tbl_1" class="active" data-table-name="Table 1">
             <thead>
@@ -499,6 +507,7 @@
     <table id="summaryTable">
         </table>
     <div id="customMessageBox" class="custom-message-box"></div>
+    <div id="generalLoadingIndicator" style="display:none;"><div class="spinner"></div></div>
 </div>
 
 <script type="module">
@@ -506,23 +515,23 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     // Add SDKs for Firebase products that you want to use
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added more imports
 
     // --- Firebase Configuration ---
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4", 
-      authDomain: "jadual-3f0aa.firebaseapp.com",
-      projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.appspot.com", 
-      messagingSenderId: "496526436851",
-      appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
+      apiKey: "YOUR_API_KEY", // Replace with your actual API key if not using __firebase_config
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedFirebaseConfig;
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-app-id');
     
-    if (typeof __firebase_config === 'undefined') console.log("Using user-provided Firebase config.");
-    if (typeof __app_id === 'undefined') console.warn("Using App ID from Firebase config or default.");
+    if (typeof __firebase_config === 'undefined') console.log("Using user-provided Firebase config. Ensure it's correctly set up.");
+    if (typeof __app_id === 'undefined') console.warn("Using App ID from Firebase config or default. Ensure it's correctly set up for Firestore paths.");
 
 
     // --- Initialize Firebase ---
@@ -539,34 +548,32 @@
         console.log("Firebase services initialized.");
     } catch (e) {
         console.error("CRITICAL Error initializing Firebase services:", e);
-        showMessage("Critical Error: Firebase initialization failed. Name list features will not work.", "error", 10000);
+        showMessage("Critical Error: Firebase initialization failed. Cloud features will not work.", "error", 10000);
         const userIdDisplayInitError = document.getElementById('userIdDisplay');
         if (userIdDisplayInitError) userIdDisplayInitError.textContent = "User ID: Firebase Init Error!";
     }
 
     // --- Global State and Configuration ---
-    const DRAFTS_KEY = 'jadual_drafts_v3';
-    const SCHEDULE_TITLE_KEY = 'jadual_title_v3';
+    const SCHEDULE_TITLE_KEY = 'jadual_title_v3'; // For localStorage title
     let activeTableId = 'tbl_1';
     let tableCount = 1;
     let selectionMode = false;
     let selectedCells = [];
     let lastClickedCell = null;
-    let selectedNameFromList = null; // For modal-based selection
+    let selectedNameFromList = null; 
 
-    let currentNameListSession = 'pagi'; // Default session for names
+    let currentNameListSession = 'pagi'; 
     let namesPagi = [];
     let namesPetang = [];
 
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
 
-    // Variables for inline autocomplete
     let autocompleteSuggestionsDiv = null;
     let activeCellForAutocomplete = null;
-    let currentAutocompleteIndex = -1; // -1 means no suggestion is actively highlighted
+    let currentAutocompleteIndex = -1; 
 
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, draftListContainerElement, summaryTableElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, draftImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement;
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -616,6 +623,13 @@
             document.body.appendChild(modal);
         });
     }
+
+    function showGeneralLoading(isLoading) {
+        if (generalLoadingIndicatorElement) {
+            generalLoadingIndicatorElement.style.display = isLoading ? 'flex' : 'none';
+        }
+    }
+
 
     // --- Firestore Name List Functions ---
     function showNameModalLoading(isLoading) {
@@ -745,10 +759,10 @@
                 if (sessionToListen === 'pagi') namesPagi = [];
                 else namesPetang = [];
             }
-            if (sessionToListen === currentNameListSession && nameModal && nameModal.style.display === 'flex') {
-                renderNameListFromFirestore(searchNameInputElement ? searchNameInputElement.value : '');
+            if (sessionToListen === currentNameListSession && nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
+                renderNameListFromFirestore(searchNameInputElement.value);
             }
-            rebuildAndRenderSummary(); // Update summary if names change
+            rebuildAndRenderSummary(); 
             showNameModalLoading(false);
         }, (error) => {
             console.error(`Error listening to ${sessionToListen} names:`, error);
@@ -756,6 +770,288 @@
             showNameModalLoading(false);
         });
     }
+
+    // --- Firestore Schedule Draft Functions ---
+    async function saveDraftToFirestore() {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot save draft.", "error"); return;
+        }
+        if (!tablesContainer || tablesContainer.children.length === 0) {
+            showMessage('No schedule data to save.', 'error'); return;
+        }
+        const draftName = customPrompt('Enter a name for this schedule draft:', `Schedule Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+        if (!draftName || draftName.trim() === "") {
+            showMessage('Draft save cancelled or name is empty.', 'info'); return;
+        }
+
+        showGeneralLoading(true);
+        const allTablesData = tablesContainer.innerHTML;
+        const allTableMeta = {};
+        tablesContainer.querySelectorAll('table').forEach(table => {
+            allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
+        });
+
+        const draftData = {
+            name: draftName.trim(),
+            html: allTablesData,
+            meta: allTableMeta,
+            activeTableId: activeTableId,
+            createdAt: serverTimestamp() // Use server timestamp
+        };
+
+        try {
+            const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
+            await addDoc(draftsCollectionRef, draftData);
+            showMessage(`Draft "${draftName.trim()}" saved to Cloud!`, 'success');
+            if (draftListContainerElement && draftListContainerElement.style.display === 'block') {
+                await loadAndRenderDraftsFromFirestore(); // Refresh list
+            }
+        } catch (error) {
+            console.error("Error saving draft to Firestore:", error);
+            showMessage(`Failed to save draft. Error: ${error.message}`, "error");
+        } finally {
+            showGeneralLoading(false);
+        }
+    }
+
+    async function loadAndRenderDraftsFromFirestore() {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot load drafts.", "error");
+            if (draftListContainerElement) draftListContainerElement.innerHTML = '<p>Connect to Firebase to see drafts.</p>';
+            return;
+        }
+        if (!draftListContainerElement) return;
+
+        showGeneralLoading(true);
+        draftListContainerElement.innerHTML = '<p>Loading drafts from Cloud...</p>';
+        try {
+            const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
+            const q = query(draftsCollectionRef, orderBy("createdAt", "desc")); // Order by most recent
+            const querySnapshot = await getDocs(q);
+            
+            const drafts = [];
+            querySnapshot.forEach((docSnap) => {
+                drafts.push({ id: docSnap.id, ...docSnap.data() });
+            });
+
+            renderDraftList(drafts);
+            draftListContainerElement.style.display = 'block';
+        } catch (error) {
+            console.error("Error loading drafts from Firestore:", error);
+            showMessage(`Failed to load drafts. Error: ${error.message}`, "error");
+            draftListContainerElement.innerHTML = '<p>Error loading drafts.</p>';
+        } finally {
+            showGeneralLoading(false);
+        }
+    }
+    
+    function renderDraftList(draftsArray) { // Takes drafts from Firestore
+        if (!draftListContainerElement) return;
+        draftListContainerElement.innerHTML = ''; 
+        if (!draftsArray || draftsArray.length === 0) {
+            draftListContainerElement.innerHTML = '<p>No drafts saved to Cloud yet.</p>'; return;
+        }
+        draftsArray.forEach(draft => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'draft-item';
+            const draftDate = draft.createdAt && draft.createdAt.toDate ? draft.createdAt.toDate().toLocaleString() : 'N/A';
+            itemDiv.innerHTML = `
+                <span data-draft-id="${draft.id}" title="Load draft: ${draft.name}">${draft.name}</span>
+                <span class="draft-date">${draftDate}</span>
+                <button data-draft-id="${draft.id}" title="Delete draft '${draft.name}' from Cloud">Delete</button>
+            `;
+            draftListContainerElement.appendChild(itemDiv);
+        });
+    }
+
+    async function loadSelectedDraftFromFirestore(draftDocId) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot load draft.", "error"); return;
+        }
+        if (!tablesContainer || !tableTabs) return;
+
+        showGeneralLoading(true);
+        try {
+            const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts", draftDocId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const draftData = docSnap.data();
+                tablesContainer.innerHTML = draftData.html;
+                const tableMeta = draftData.meta || {};
+                tableTabs.innerHTML = ''; 
+                tablesContainer.querySelectorAll('table').forEach(table => {
+                    const id = table.id;
+                    const metaInfo = tableMeta[id] || {};
+                    const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
+                    table.dataset.tableName = name;
+                    addTabButton(id, name);
+                    table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
+                });
+                activeTableId = draftData.activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1';
+                
+                if (document.getElementById(activeTableId)) {
+                    switchTable(activeTableId);
+                } else if (tablesContainer.querySelector('table')) {
+                    switchTable(tablesContainer.querySelector('table').id);
+                } else {
+                    addNewTable(true); 
+                }
+                showMessage(`Draft "${draftData.name}" loaded from Cloud!`, 'success');
+                if (draftListContainerElement) draftListContainerElement.style.display = 'none';
+                rebuildAndRenderSummary();
+                updateAllMergeOverlays(); 
+            } else {
+                showMessage(`Draft with ID "${draftDocId}" not found in Cloud.`, "error");
+            }
+        } catch (error) {
+            console.error("Error loading selected draft from Firestore:", error);
+            showMessage(`Failed to load draft. Error: ${error.message}`, "error");
+        } finally {
+            showGeneralLoading(false);
+        }
+    }
+
+    async function confirmAndDeleteDraftFromFirestore(draftDocId, draftName) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot delete draft.", "error"); return;
+        }
+        if (await customConfirm(`Are you sure you want to delete cloud draft "${draftName}"? This cannot be undone.`)) {
+            showGeneralLoading(true);
+            try {
+                const docRef = doc(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts", draftDocId);
+                await deleteDoc(docRef);
+                showMessage(`Cloud draft "${draftName}" deleted.`, 'success');
+                await loadAndRenderDraftsFromFirestore(); // Refresh the list
+            } catch (error) {
+                console.error("Error deleting draft from Firestore:", error);
+                showMessage(`Failed to delete draft. Error: ${error.message}`, "error");
+            } finally {
+                showGeneralLoading(false);
+            }
+        }
+    }
+
+    async function exportAllFirestoreDrafts() {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot export drafts.", "error"); return;
+        }
+        showGeneralLoading(true);
+        try {
+            const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
+            const q = query(draftsCollectionRef, orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+            
+            const draftsToExport = [];
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                // We don't export the serverTimestamp object directly, but its representation if needed.
+                // For simplicity, we'll export the core data.
+                draftsToExport.push({
+                    name: data.name,
+                    html: data.html,
+                    meta: data.meta,
+                    activeTableId: data.activeTableId,
+                    // Firebase Timestamps are objects; convert to string for JSON if desired, or omit for re-import
+                    createdAt: data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toISOString() : null 
+                });
+            });
+
+            if (draftsToExport.length === 0) {
+                showMessage('No drafts in Cloud to export.', 'info'); return;
+            }
+
+            const blob = new Blob([JSON.stringify(draftsToExport, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `firebase_schedule_drafts_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage('All Cloud drafts exported successfully!', 'success');
+
+        } catch (error) {
+            console.error("Error exporting drafts from Firestore:", error);
+            showMessage(`Failed to export drafts. Error: ${error.message}`, "error");
+        } finally {
+            showGeneralLoading(false);
+        }
+    }
+
+    async function handleFirestoreDraftsImport(event) {
+        if (!fbDb || !fbUserId || !fbIsAuthReady) {
+            showMessage("Firebase not ready. Cannot import drafts.", "error"); return;
+        }
+        const file = event.target.files[0];
+        if (!file) { showMessage('No file selected for import.', 'info'); return; }
+        if (file.type !== 'application/json') {
+            showMessage('Invalid file type. Please select a .json file exported from this app.', 'error');
+            event.target.value = ''; return;
+        }
+        
+        showGeneralLoading(true);
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importedDraftsData = JSON.parse(e.target.result);
+                if (!Array.isArray(importedDraftsData)) {
+                    showMessage('Invalid draft file format. Expected an array of drafts.', 'error'); return;
+                }
+
+                let importedCount = 0, skippedCount = 0;
+                const draftsCollectionRef = collection(fbDb, "artifacts", appId, "users", fbUserId, "scheduleDrafts");
+
+                for (const draft of importedDraftsData) {
+                    if (draft && typeof draft.name === 'string' && typeof draft.html === 'string' && typeof draft.meta === 'object' && typeof draft.activeTableId === 'string') {
+                        // Simple check for existing draft by name (can be made more robust)
+                        const q = query(draftsCollectionRef, where("name", "==", draft.name));
+                        const existingSnapshot = await getDocs(q);
+
+                        if (!existingSnapshot.empty) {
+                             if (await customConfirm(`A cloud draft named "${draft.name}" already exists. Overwrite?`)) {
+                                // For simplicity, we'll delete and add. A more robust way would be to update.
+                                for(const docToDel of existingSnapshot.docs) {
+                                    await deleteDoc(docToDel.ref);
+                                }
+                            } else {
+                                skippedCount++;
+                                continue; // Skip this draft
+                            }
+                        }
+                        
+                        await addDoc(draftsCollectionRef, {
+                            name: draft.name,
+                            html: draft.html,
+                            meta: draft.meta,
+                            activeTableId: draft.activeTableId,
+                            createdAt: serverTimestamp() // New timestamp for imported draft
+                        });
+                        importedCount++;
+                    } else {
+                        console.warn("Skipping invalid draft object during import:", draft);
+                        skippedCount++;
+                    }
+                }
+                showMessage(`Drafts import to Cloud: ${importedCount} imported/overwritten, ${skippedCount} skipped.`, 'success', 5000);
+                if (draftListContainerElement && (draftListContainerElement.style.display === 'block' || importedCount > 0)) {
+                    await loadAndRenderDraftsFromFirestore(); 
+                }
+            } catch (error) { 
+                console.error("Error processing draft file for Firestore import:", error);
+                showMessage('Error processing draft file. Ensure it is a valid JSON export from this app.', 'error', 5000); 
+            }
+            finally { 
+                event.target.value = ''; 
+                showGeneralLoading(false);
+            } 
+        };
+        reader.onerror = () => { 
+            showMessage('Failed to read the draft file.', 'error'); 
+            event.target.value = ''; 
+            showGeneralLoading(false);
+        };
+        reader.readAsText(file);
+    }
+
 
     // --- Inline Autocomplete Functions ---
     function showCellAutocompleteSuggestions(cell, inputText) {
@@ -776,13 +1072,13 @@
 
         if (filteredSuggestions.length > 0) {
             activeCellForAutocomplete = cell;
-            autocompleteSuggestionsDiv.innerHTML = ''; // Clear previous
-            filteredSuggestions.slice(0, 10).forEach(suggestion => { // Limit to 10 suggestions
+            autocompleteSuggestionsDiv.innerHTML = ''; 
+            filteredSuggestions.slice(0, 10).forEach(suggestion => { 
                 const item = document.createElement('div');
                 item.className = 'suggestion-item';
                 item.textContent = suggestion;
-                item.addEventListener('mousedown', (e) => { // Mousedown to select before blur
-                    e.preventDefault(); // Prevent cell from losing focus immediately
+                item.addEventListener('mousedown', (e) => { 
+                    e.preventDefault(); 
                     selectCellAutocompleteSuggestion(suggestion);
                 });
                 autocompleteSuggestionsDiv.appendChild(item);
@@ -793,7 +1089,7 @@
             autocompleteSuggestionsDiv.style.top = `${cellRect.bottom + window.scrollY}px`;
             autocompleteSuggestionsDiv.style.minWidth = `${cellRect.width}px`;
             autocompleteSuggestionsDiv.style.display = 'block';
-            currentAutocompleteIndex = -1; // Reset keyboard selection index
+            currentAutocompleteIndex = -1; 
         } else {
             hideCellAutocompleteSuggestions();
         }
@@ -809,9 +1105,8 @@
 
     function selectCellAutocompleteSuggestion(suggestionText) {
         if (activeCellForAutocomplete) {
-            const targetCell = activeCellForAutocomplete; // Store before hiding clears it
+            const targetCell = activeCellForAutocomplete; 
             
-            // If the cell is part of a merge, update the overlay
             const overlay = targetCell.querySelector('.merged-cell-overlay');
             if (overlay) {
                 overlay.textContent = suggestionText;
@@ -822,22 +1117,18 @@
             hideCellAutocompleteSuggestions();
             rebuildAndRenderSummary();
 
-            // Set cursor to end of cell content
-            targetCell.focus(); // Re-focus the cell
+            targetCell.focus(); 
             const range = document.createRange();
             const sel = window.getSelection();
             if (targetCell.childNodes.length > 0) {
-                 // If cell has content (text node), collapse to its end
-                range.selectNodeContents(overlay ? overlay : targetCell); // Select contents of overlay or cell
-                range.collapse(false); // false to collapse to the end
+                range.selectNodeContents(overlay ? overlay : targetCell); 
+                range.collapse(false); 
             } else {
-                // If cell is empty (e.g. after clearing), just place cursor
                 range.setStart(targetCell, 0);
                 range.collapse(true);
             }
             sel.removeAllRanges();
             sel.addRange(range);
-
         }
     }
     
@@ -860,7 +1151,7 @@
         nameModalHeader = document.getElementById('nameModalHeader');
         nameListContainer = document.getElementById('nameList');
         newNameInput = document.getElementById('newNameInput');
-        draftListElement = document.getElementById('draftList');
+        draftListContainerElement = document.getElementById('draftListContainer'); // Updated ID
         summaryTableElement = document.getElementById('summaryTable');
         customMessageBox = document.getElementById('customMessageBox');
         fileInputElement = document.getElementById('fileInput');
@@ -874,14 +1165,15 @@
         namePetangTabElement = document.getElementById('namePetangTab');
         loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
         nameModalTitleElement = document.getElementById('nameModalTitle');
+        generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator');
 
-        // Create and append autocomplete suggestions div
+
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
 
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement) {
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !draftListContainerElement || !generalLoadingIndicatorElement) {
             console.error("CRITICAL DOM elements missing.");
             document.body.innerHTML = "<p style='color:red; text-align:center;'>Error: App failed to init (missing elements).</p>";
             return;
@@ -900,6 +1192,10 @@
                     if (nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
                         renderNameListFromFirestore(searchNameInputElement.value);
                     }
+                    // Optionally load drafts if the list was open or on initial load
+                    // if (draftListContainerElement && draftListContainerElement.style.display === 'block') {
+                    //    await loadAndRenderDraftsFromFirestore();
+                    // }
                 } else {
                     fbIsAuthReady = false; fbUserId = null;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
@@ -911,7 +1207,7 @@
                         }
                     } catch (error) {
                         console.error("Error during Firebase sign-in:", error);
-                        showMessage(`Firebase Auth failed. Name lists may not work.`, "error", 7000);
+                        showMessage(`Firebase Auth failed. Cloud features may not work.`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
                     }
                 }
@@ -921,7 +1217,7 @@
              showMessage("Critical Error: Firebase Auth service could not be initialized.", "error", 10000);
         }
 
-        loadScheduleTitle();
+        loadScheduleTitleFromLocalStorage(); // Title is still local
         initializeEventListeners();
         setupInitialTableState();
         rebuildAndRenderSummary();
@@ -950,13 +1246,13 @@
         }
     }
 
-    function loadScheduleTitle() {
+    function loadScheduleTitleFromLocalStorage() { // Renamed for clarity
         const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
         if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
         if (scheduleTitleElement) {
             scheduleTitleElement.addEventListener('blur', () => { 
                 localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent);
-                showMessage('Schedule title saved!', 'success');
+                showMessage('Schedule title saved (locally)!', 'success');
             });
         }
     }
@@ -975,17 +1271,26 @@
         document.getElementById('excelBtnTrigger')?.addEventListener('click', exportActiveTableToExcel);
         document.getElementById('importExcelBtn')?.addEventListener('click', () => fileInputElement?.click());
         if(fileInputElement) fileInputElement.addEventListener('change', handleExcelFileImport);
-        document.getElementById('saveDraftBtn')?.addEventListener('click', promptAndSaveDraft);
-        document.getElementById('loadDraftBtn')?.addEventListener('click', toggleDraftListVisibility);
-        document.getElementById('exportDraftsBtn')?.addEventListener('click', exportAllDrafts);
+        
+        // Draft buttons
+        document.getElementById('saveDraftBtn')?.addEventListener('click', saveDraftToFirestore);
+        document.getElementById('loadDraftBtn')?.addEventListener('click', loadAndRenderDraftsFromFirestore);
+        document.getElementById('exportDraftsBtn')?.addEventListener('click', exportAllFirestoreDrafts);
         document.getElementById('importDraftsBtn')?.addEventListener('click', () => draftImportFileInputElement?.click());
-        if(draftImportFileInputElement) draftImportFileInputElement.addEventListener('change', handleDraftsFileImport);
-        if(draftListElement) draftListElement.addEventListener('click', async (e) => {
-            const targetSpan = e.target.closest('.draft-item span');
-            const targetButton = e.target.closest('.draft-item button');
-            if (targetSpan) loadSelectedDraft(targetSpan.textContent);
-            else if (targetButton) await confirmAndDeleteDraft(targetButton.parentElement.querySelector('span').textContent);
+        if(draftImportFileInputElement) draftImportFileInputElement.addEventListener('change', handleFirestoreDraftsImport);
+        
+        if(draftListContainerElement) draftListContainerElement.addEventListener('click', async (e) => {
+            const targetSpan = e.target.closest('.draft-item span[data-draft-id]');
+            const targetButton = e.target.closest('.draft-item button[data-draft-id]');
+            if (targetSpan) {
+                loadSelectedDraftFromFirestore(targetSpan.dataset.draftId);
+            } else if (targetButton) {
+                const draftId = targetButton.dataset.draftId;
+                const draftName = targetButton.parentElement.querySelector('span[data-draft-id]').textContent;
+                await confirmAndDeleteDraftFromFirestore(draftId, draftName);
+            }
         });
+
         document.getElementById('clearActiveTableContentBtn')?.addEventListener('click', confirmAndClearActiveTableContent);
         document.getElementById('selectBtn')?.addEventListener('click', toggleCellSelectionMode);
         document.getElementById('mergeBtn')?.addEventListener('click', mergeSelectedTableCells);
@@ -1024,22 +1329,18 @@
             tablesContainer.addEventListener('input', (e) => {
                 const cell = e.target;
                 if ((cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) && cell.isContentEditable) {
-                    // Handle inline autocomplete
                     const text = cell.textContent;
-                    // Do not show autocomplete for the first column (Class/Time)
                     if (cell.cellIndex > 0 || cell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class') {
                          showCellAutocompleteSuggestions(cell, text);
                     } else {
                         hideCellAutocompleteSuggestions();
                     }
-                    // Debounced summary update
                     setTimeout(rebuildAndRenderSummary, 300);
                 } else if (cell.classList.contains('merged-cell-overlay')) {
-                    // Handle input in merged cell overlay
                     const text = cell.textContent;
                     const parentCell = cell.parentElement;
                      if (parentCell && (parentCell.cellIndex > 0 || parentCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
-                        showCellAutocompleteSuggestions(parentCell, text); // Show suggestions relative to parent cell
+                        showCellAutocompleteSuggestions(parentCell, text); 
                     } else {
                         hideCellAutocompleteSuggestions();
                     }
@@ -1049,27 +1350,25 @@
 
             tablesContainer.addEventListener('blur', (e) => { 
                 const cell = e.target;
-                if ((cell.tagName === 'TD' || cell.tagName === 'TH' || cell.classList.contains('merged-cell-overlay')) && cell.isContentEditable !== false) { // contentEditable can be inherited
+                if ((cell.tagName === 'TD' || cell.tagName === 'TH' || cell.classList.contains('merged-cell-overlay')) && cell.isContentEditable !== false) { 
                     setTimeout(rebuildAndRenderSummary, 0);
-                    // Hide autocomplete if focus moves out and not onto a suggestion
                     setTimeout(() => {
                         if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' &&
                             !autocompleteSuggestionsDiv.contains(document.activeElement) &&
-                            activeCellForAutocomplete !== document.activeElement && // Check if focus is still on the cell itself
-                            (activeCellForAutocomplete && activeCellForAutocomplete.querySelector('.merged-cell-overlay') !== document.activeElement) // or its overlay
+                            activeCellForAutocomplete !== document.activeElement && 
+                            (activeCellForAutocomplete && activeCellForAutocomplete.querySelector('.merged-cell-overlay') !== document.activeElement) 
                            ) {
                            hideCellAutocompleteSuggestions();
                         }
-                    }, 150); // Delay to allow click on suggestion
+                    }, 150); 
                 }
             }, true); 
         }
         window.addEventListener('resize', () => {
             updateAllMergeOverlays();
-            hideCellAutocompleteSuggestions(); // Hide on resize
+            hideCellAutocompleteSuggestions(); 
         }); 
 
-        // Global keydown for autocomplete navigation
         document.addEventListener('keydown', (e) => {
             if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && activeCellForAutocomplete) {
                 const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
@@ -1088,21 +1387,18 @@
                     if (currentAutocompleteIndex >= 0 && currentAutocompleteIndex < items.length) {
                         selectCellAutocompleteSuggestion(items[currentAutocompleteIndex].textContent);
                     } else {
-                        // If no suggestion is highlighted but box is open, just hide it
                         hideCellAutocompleteSuggestions();
-                         // Allow default Enter behavior (e.g., new line if cell supports it, or just confirm input)
-                        if(activeCellForAutocomplete) activeCellForAutocomplete.blur(); // Trigger blur to save, etc.
+                        if(activeCellForAutocomplete) activeCellForAutocomplete.blur(); 
                     }
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
                     hideCellAutocompleteSuggestions();
                 } else if (e.key === 'Tab') {
-                    hideCellAutocompleteSuggestions(); // Hide on Tab out, default Tab behavior will occur
+                    hideCellAutocompleteSuggestions(); 
                 }
             }
         });
 
-        // Global click listener to hide autocomplete
         document.addEventListener('click', (event) => {
             if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block') {
                 const isClickInsideCell = activeCellForAutocomplete && activeCellForAutocomplete.contains(event.target);
@@ -1175,89 +1471,6 @@
         }
     }
 
-    function promptAndSaveDraft() {
-        if (!tablesContainer || tablesContainer.children.length === 0) {
-            showMessage('No schedule data to save.', 'error'); return;
-        }
-        const allTablesData = tablesContainer.innerHTML;
-        const allTableMeta = {};
-        tablesContainer.querySelectorAll('table').forEach(table => {
-            allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
-        });
-        const draftName = customPrompt('Enter draft name:', `Draft ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`);
-        if (draftName) {
-            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-            drafts[draftName] = { html: allTablesData, meta: allTableMeta, active: activeTableId };
-            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-            showMessage(`Draft "${draftName}" saved!`, 'success');
-            if (draftListElement && draftListElement.style.display === 'block') renderDraftList();
-        }
-    }
-
-    function toggleDraftListVisibility() {
-        if (!draftListElement) return;
-        const isVisible = draftListElement.style.display === 'block';
-        draftListElement.style.display = isVisible ? 'none' : 'block';
-        if (!isVisible) renderDraftList();
-    }
-
-    function renderDraftList() {
-        if (!draftListElement) return;
-        draftListElement.innerHTML = ''; 
-        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-        if (Object.keys(drafts).length === 0) {
-            draftListElement.innerHTML = '<p>No drafts saved yet.</p>'; return;
-        }
-        for (const name in drafts) {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'draft-item';
-            itemDiv.innerHTML = `<span>${name}</span><button title="Delete draft '${name}'">Delete</button>`;
-            draftListElement.appendChild(itemDiv);
-        }
-    }
-
-    function loadSelectedDraft(draftName) {
-        if (!tablesContainer || !tableTabs) return;
-        const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-        if (drafts[draftName]) {
-            tablesContainer.innerHTML = drafts[draftName].html;
-            const tableMeta = drafts[draftName].meta || {};
-            tableTabs.innerHTML = ''; 
-            tablesContainer.querySelectorAll('table').forEach(table => {
-                const id = table.id;
-                const metaInfo = tableMeta[id] || {};
-                const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
-                table.dataset.tableName = name;
-                addTabButton(id, name);
-                table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
-            });
-            activeTableId = drafts[draftName].active || tablesContainer.querySelector('table')?.id || 'tbl_1';
-            if (document.getElementById(activeTableId)) {
-                switchTable(activeTableId);
-            } else if (tablesContainer.querySelector('table')) {
-                switchTable(tablesContainer.querySelector('table').id);
-            } else {
-                addNewTable(true); 
-            }
-            showMessage(`Draft "${draftName}" loaded!`, 'success');
-            if (draftListElement) draftListElement.style.display = 'none';
-            rebuildAndRenderSummary();
-            updateAllMergeOverlays(); 
-        } else {
-            showMessage(`Draft "${draftName}" not found.`, 'error');
-        }
-    }
-
-    async function confirmAndDeleteDraft(draftName) {
-        if (await customConfirm(`Are you sure you want to delete saved draft "${draftName}"?`)) {
-            const drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-            delete drafts[draftName];
-            localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-            showMessage(`Saved draft "${draftName}" deleted.`, 'success');
-            renderDraftList(); 
-        }
-    }
-
     async function confirmAndClearActiveTableContent() {
         const activeTableElement = document.getElementById(activeTableId);
         if (!activeTableElement) { showMessage('No active table to clear.', 'error'); return; }
@@ -1289,58 +1502,6 @@
         }
     }
 
-    function exportAllDrafts() {
-        const drafts = localStorage.getItem(DRAFTS_KEY);
-        if (!drafts || drafts === '{}') { showMessage('No drafts to export.', 'info'); return; }
-        try {
-            const blob = new Blob([drafts], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'all_schedule_drafts.json';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showMessage('All drafts exported successfully!', 'success');
-        } catch (error) { showMessage('Failed to export drafts.', 'error'); }
-    }
-
-    async function handleDraftsFileImport(event) {
-        const file = event.target.files[0];
-        if (!file) { showMessage('No file selected for import.', 'info'); return; }
-        if (file.type !== 'application/json') {
-            showMessage('Invalid file type. Please select a .json file.', 'error');
-            event.target.value = ''; return;
-        }
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const importedDraftsData = JSON.parse(e.target.result);
-                if (typeof importedDraftsData !== 'object' || importedDraftsData === null) {
-                    showMessage('Invalid draft file format.', 'error'); return;
-                }
-                let localDrafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}');
-                let importedCount = 0, overwrittenCount = 0, skippedCount = 0;
-                for (const draftName in importedDraftsData) {
-                    if (Object.prototype.hasOwnProperty.call(importedDraftsData, draftName)) {
-                        const draftData = importedDraftsData[draftName];
-                        if (draftData && typeof draftData.html === 'string' && typeof draftData.meta === 'object' && typeof draftData.active === 'string') {
-                            if (localDrafts[draftName]) { 
-                                if (await customConfirm(`Draft "${draftName}" already exists. Overwrite?`)) {
-                                    localDrafts[draftName] = draftData; overwrittenCount++;
-                                } else { skippedCount++; }
-                            } else { localDrafts[draftName] = draftData; importedCount++; }
-                        } else { skippedCount++; }
-                    }
-                }
-                localStorage.setItem(DRAFTS_KEY, JSON.stringify(localDrafts));
-                showMessage(`Drafts import: ${importedCount} new, ${overwrittenCount} overwritten, ${skippedCount} skipped.`, 'success', 5000);
-                if (draftListElement && (draftListElement.style.display === 'block' || importedCount > 0 || overwrittenCount > 0)) renderDraftList(); 
-            } catch (error) { showMessage('Error processing draft file.', 'error', 5000); }
-            finally { event.target.value = ''; } 
-        };
-        reader.onerror = () => { showMessage('Failed to read the draft file.', 'error'); event.target.value = ''; };
-        reader.readAsText(file);
-    }
-
     function addTabButton(id, label) {
         if (!tableTabs) return null;
         const button = document.createElement('button');
@@ -1367,7 +1528,7 @@
         deselectAllTableCells(); 
         rebuildAndRenderSummary();
         updateAllMergeOverlays();
-        hideCellAutocompleteSuggestions(); // Hide suggestions when switching tables
+        hideCellAutocompleteSuggestions(); 
     }
 
     function addNewTable(isInitial = false) {
@@ -1534,26 +1695,25 @@
             btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
         }
         if (!selectionMode) deselectAllTableCells(); 
-        hideCellAutocompleteSuggestions(); // Hide autocomplete when toggling selection
+        hideCellAutocompleteSuggestions(); 
     }
 
     function handleTableCellClick(event) {
         const cell = event.target.closest('td, th');
         if (!cell || !cell.closest(`#${activeTableId}`)) return; 
         lastClickedCell = cell; 
-        // If autocomplete is visible and click is outside suggestions, hide it
         if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
             hideCellAutocompleteSuggestions();
         }
 
-        if (selectedNameFromList) { // From modal
+        if (selectedNameFromList) { 
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
                 const overlay = cell.querySelector('.merged-cell-overlay');
                 if (overlay) overlay.textContent = selectedNameFromList;
                 else cell.textContent = selectedNameFromList;
                 rebuildAndRenderSummary(); 
                 showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500);
-                clearNameSelection(); // Clear modal selection
+                clearNameSelection(); 
             } else {
                 showMessage('Click an editable data cell to insert name.', 'info');
             }
@@ -1605,7 +1765,7 @@
         overlay.style.setProperty('--merged-width', `${totalWidth}px`);
         overlay.style.setProperty('--merged-height', `${totalHeight}px`);
         overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); });
-        overlay.addEventListener('input', (e) => { // Propagate input for autocomplete
+        overlay.addEventListener('input', (e) => { 
             const text = e.target.textContent;
             if (primaryCell && (primaryCell.cellIndex > 0 || primaryCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
                  showCellAutocompleteSuggestions(primaryCell, text);
@@ -1686,10 +1846,10 @@
         if(nameModalTitleElement) nameModalTitleElement.textContent = `Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
         if(searchNameInputElement) searchNameInputElement.value = ''; 
         renderNameListFromFirestore(); 
-        hideCellAutocompleteSuggestions(); // Hide if session changes
+        hideCellAutocompleteSuggestions(); 
     }
 
-    function highlightSelectedNameInList(nameToHighlight) { // For modal
+    function highlightSelectedNameInList(nameToHighlight) { 
         if (!nameListContainer) return;
         const nameToHighlightStr = String(nameToHighlight || '');
         nameListContainer.querySelectorAll('.name-item span').forEach(span => {
@@ -1697,7 +1857,7 @@
         });
     }
 
-    function clearNameSelection() { // For modal
+    function clearNameSelection() { 
         selectedNameFromList = null;
         if (nameListContainer) {
             nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => {
@@ -1726,10 +1886,10 @@
             if(newNameInput) newNameInput.focus();
             clearNameSelection();
         }
-        hideCellAutocompleteSuggestions(); // Hide any cell autocomplete
+        hideCellAutocompleteSuggestions(); 
     }
 
-    function renderNameListFromFirestore(filterText = '') { // For Modal
+    function renderNameListFromFirestore(filterText = '') { 
         if (!nameListContainer) return;
         if (!fbIsAuthReady) {
             nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading names...</p>'; return;
@@ -1754,7 +1914,7 @@
         highlightSelectedNameInList(selectedNameFromList); 
     }
 
-    function selectNameForCellInsertion(name) { // For Modal selection
+    function selectNameForCellInsertion(name) { 
         selectedNameFromList = String(name || '');
         highlightSelectedNameInList(selectedNameFromList); 
         showMessage(`Selected "${selectedNameFromList}". Click a cell to insert.`, 'info', 4000);
@@ -1815,7 +1975,7 @@
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
         if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
-        const overlaysData = []; // Temporarily replace overlays with their text for export
+        const overlaysData = []; 
         tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
             const parentCell = overlay.parentElement;
             overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML });
@@ -1824,7 +1984,7 @@
         const tableName = tableToExport.dataset.tableName || activeTableId;
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
-        overlaysData.forEach(data => { // Restore overlays
+        overlaysData.forEach(data => { 
             data.parent.innerHTML = data.originalHTML; 
             const newOverlay = data.parent.querySelector('.merged-cell-overlay');
             if (newOverlay) {
@@ -1850,7 +2010,6 @@
                 if (!scheduleTable.tBodies[0]) return; 
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        // Skip first column (class/time identifier) for name gathering
                         if (cellIndex === 0 && cell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() === 'class') return;
 
                         const overlay = cell.querySelector('.merged-cell-overlay');
@@ -1879,7 +2038,7 @@
         if (tablesContainer) {
             tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
                 if (scheduleTable.tHead && scheduleTable.tHead.rows.length > 0) {
-                    for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) { // Start from 1 to skip class/time
+                    for (let hIdx = 1; hIdx < scheduleTable.tHead.rows[0].cells.length; hIdx++) { 
                         const headerText = String(scheduleTable.tHead.rows[0].cells[hIdx].textContent || '').trim();
                         if (headerText) tempRawHeadersFromSchedules.add(headerText);
                     }
@@ -1948,7 +2107,7 @@
         const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
         
-        Array.from(summaryBody.rows).forEach(summaryRow => { // Clear previous data
+        Array.from(summaryBody.rows).forEach(summaryRow => { 
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).slice(1).forEach(cell => {
                 cell.textContent = ''; cell.classList.remove('highlight-conflict'); 
             });
@@ -1991,7 +2150,7 @@
                 });
             });
         }
-        Array.from(summaryBody.rows).forEach(summaryRow => { // Highlight conflicts
+        Array.from(summaryBody.rows).forEach(summaryRow => { 
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
                 if (cellIndex > 0 && cell.textContent.includes(',')) cell.classList.add('highlight-conflict');
             });
@@ -2001,81 +2160,3 @@
 </script>
 </body>
 </html>
-
-<style>
-/* Mobile-friendly responsive styles */
-@media (max-width: 768px) {
-    body { padding: 10px; }
-    .main-container { padding: 15px; border-radius: 8px; }
-    .bar { flex-wrap: wrap; justify-content: center; }
-    .bar button { margin: 5px; min-height: 44px; font-size: 14px; }
-    table { display: block; overflow-x: auto; white-space: nowrap; }
-    th, td { min-width: 80px; padding: 8px; }
-    .modal-content { width: 95%; max-width: 95%; margin: 10px auto; max-height: 90vh; }
-    #nameList { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; padding: 5px; }
-    #nameList .name-item { background-color: #f8f9fa; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.2s; }
-    #nameList .name-item:hover { background-color: #e9ecef; transform: translateY(-2px); }
-    #nameList .name-item span { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #nameList .name-item button { background-color: #ff4d4f; color: white; border: none; border-radius: 4px; width: 28px; height: 28px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; margin-left: 5px; }
-    input[type="text"], input:not([type]) { padding: 10px; font-size: 16px; }
-    #tablesContainer { -webkit-overflow-scrolling: touch; }
-}
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-#nameList .name-item { animation: fadeIn 0.3s ease-out both; }
-#nameList .name-item:nth-child(1) { animation-delay: 0.05s; }
-#nameList .name-item:nth-child(2) { animation-delay: 0.1s; }
-#nameList .name-item:nth-child(3) { animation-delay: 0.15s; }
-</style>
-
-<script>
-// Mobile-friendly enhancements (separate script block)
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        if (typeof window.renderNameListFromFirestore === 'function') {
-            const originalRenderNameList = window.renderNameListFromFirestore;
-            window.renderNameListFromFirestore = function(filterText = '') {
-                originalRenderNameList(filterText); // Call original
-                const nameList = document.getElementById('nameList');
-                if (nameList) {
-                    nameList.querySelectorAll('.name-item').forEach((item, index) => {
-                        item.style.animationDelay = `${0.05 + (index * 0.02)}s`;
-                        const deleteBtn = item.querySelector('button');
-                        const nameSpan = item.querySelector('span');
-                        if (deleteBtn && nameSpan) deleteBtn.title = `Delete ${nameSpan.textContent}`;
-                        if (nameSpan) nameSpan.title = `Click to select '${nameSpan.textContent}' for insertion`;
-                    });
-                }
-            };
-        }
-        const nameModalContent = document.getElementById('nameModalContent');
-        if (nameModalContent) {
-            function adjustModalForMobile() {
-                if (window.innerWidth < 768) {
-                    nameModalContent.style.margin = '10px auto'; nameModalContent.style.width = '95%';
-                    nameModalContent.style.maxWidth = '95%'; nameModalContent.style.maxHeight = '90vh';
-                } else {
-                    nameModalContent.style.margin = ''; nameModalContent.style.width = '';
-                    nameModalContent.style.maxWidth = ''; nameModalContent.style.maxHeight = '';
-                }
-            }
-            adjustModalForMobile(); window.addEventListener('resize', adjustModalForMobile);
-        }
-    }, 1000);
-});
-
-// Firestore offline persistence (conceptual, simplified)
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        // fbDb should be initialized by the main script
-        // For full v9 modular SDK, persistence is enabled differently.
-        // This is illustrative.
-        function handleNetworkStatusChange() {
-            if (typeof showMessage === 'function') {
-                showMessage(navigator.onLine ? "You're back online!" : "You're offline. Features might be limited.", "info", 2500);
-            }
-        }
-        window.addEventListener('online', handleNetworkStatusChange);
-        window.addEventListener('offline', handleNetworkStatusChange);
-    }, 2500);
-});
-</script>
