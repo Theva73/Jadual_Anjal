@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.1, maximum-scale=5.0">
     <title>Shared Weekly Schedule with Firestore</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; /* Modern font stack */
@@ -237,6 +238,8 @@
         #deselectBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
         #exportSharedSchedulesBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;}
         #importSharedSchedulesBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;}
+        #downloadPdfBtn { background-color: #dc3545; color: white; border-color: #dc3545;} /* New PDF button style */
+
 
         .table-tabs {
             margin-bottom: 15px;
@@ -492,6 +495,66 @@
             color: #0056b3;
         }
 
+        /* Styles for PDF content container */
+        #pdfContent {
+            padding: 20px;
+            background-color: #fff;
+            color: #333;
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            box-sizing: border-box;
+            width: 100%; /* Ensure it takes full width for PDF generation */
+        }
+        #pdfContent h2, #pdfContent h3 {
+            text-align: center;
+            color: #1c1e21;
+            margin-bottom: 15px;
+        }
+        #pdfContent table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            box-shadow: none; /* Remove box-shadow for PDF */
+        }
+        #pdfContent th, #pdfContent td {
+            border: 1px solid #dee2e6;
+            padding: 8px 10px; /* Slightly smaller padding for PDF */
+            text-align: center;
+            font-size: 0.9em; /* Adjust font size for PDF */
+            white-space: nowrap; /* Prevent wrapping in PDF cells */
+        }
+        #pdfContent table th {
+            background-color: #f8f9fa;
+            color: #343a40;
+            font-weight: 600;
+        }
+        #pdfContent table tbody tr td:first-child,
+        #pdfContent table thead tr th:first-child {
+            background-color: aliceblue; /* User request: Lighter blue */
+            font-weight: bold;
+        }
+        #pdfContent .highlight-conflict {
+            background-color: #f8d7da !important;
+            font-weight: bold;
+            color: #721c24 !important;
+        }
+        #pdfContent .merged-cell-overlay {
+            position: static !important; /* Important for PDF rendering */
+            display: block !important;
+            width: auto !important;
+            height: auto !important;
+            border: none !important;
+            background-color: transparent !important;
+            font-style: normal !important;
+            padding: 0;
+            margin: 0;
+        }
+        #pdfContent .subsumed-cell {
+            display: none !important; /* Hide subsumed cells in PDF */
+        }
+        #pdfContent .merged-cell-container {
+            position: relative; /* Keep relative for text positioning */
+        }
+
     </style>
 </head>
 <body>
@@ -506,7 +569,7 @@
     <div id="collapsibleButtonBars" class="open"> 
         <div class="bar">
             <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
-        </div>
+            <button id="downloadPdfBtn" title="Download schedule tables as PDF">📄 Download PDF</button> </div>
         <div class="bar">
             <button id="excelBtnTrigger" title="Export the currently active table to an Excel file">💾 Export Active Table to Excel</button>
             <button id="importExcelBtn" title="Import data from an Excel file into a new table">📂 Import from Excel</button>
@@ -543,7 +606,7 @@
     </div> <div id="sharedScheduleListContainer" style="display:none;"></div>
     <div class="bar table-tabs" id="tableTabs"></div>
     <div id="tablesContainer">
-        <table id="tbl_1" class="active" data-table-name="Table 1">
+        <table id="tbl_1" class="active" data-table-name="Kelas 3 & 5">
             <thead>
                 <tr>
                     <th contenteditable="true">Class</th>
@@ -564,6 +627,36 @@
                  <tr>
                     <td contenteditable="true">5S2</td>
                     <td contenteditable="true">*SpecialAssembly</td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                </tr>
+            </tbody>
+        </table>
+        <table id="tbl_2" data-table-name="Kelas 1, 2 & 4">
+            <thead>
+                <tr>
+                    <th contenteditable="true">Class</th>
+                    <th contenteditable="true">08:00</th>
+                    <th contenteditable="true">09:00</th>
+                    <th contenteditable="true">10:00</th>
+                    <th contenteditable="true">11:00</th>
+                    <th contenteditable="true">12:00</th>
+                    <th contenteditable="true">13:00</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td contenteditable="true">1A</td>
+                    <td contenteditable="true">MATH</td><td contenteditable="true"></td><td contenteditable="true">SCIENCE</td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                </tr>
+                 <tr>
+                    <td contenteditable="true">2B</td>
+                    <td contenteditable="true"></td><td contenteditable="true">HISTORY</td><td contenteditable="true"></td>
+                    <td contenteditable="true"></td><td contenteditable="true">ART</td><td contenteditable="true"></td>
+                </tr>
+                <tr>
+                    <td contenteditable="true">4C</td>
+                    <td contenteditable="true">PHYSICS</td><td contenteditable="true"></td><td contenteditable="true">CHEMISTRY</td>
                     <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
             </tbody>
@@ -599,6 +692,8 @@
     <div id="customMessageBox" class="custom-message-box"></div>
     <div id="generalLoadingIndicator" style="display:none;"><div class="spinner"></div></div>
 </div>
+
+<div id="pdfContent" style="display:none;"></div>
 
 <script type="module">
     // Firebase App (the core Firebase SDK) is always required and must be listed first
@@ -684,7 +779,7 @@
     const AUTO_SAVE_INTERVAL = 60000; 
 
     // DOM Element Cache
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement; // Added new elements
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement; // Added new elements
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -1481,13 +1576,15 @@
         generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator');
         controlsTogglerElement = document.getElementById('controlsToggler'); // New
         collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); // New
+        downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); // New PDF button
+        pdfContentElement = document.getElementById('pdfContent'); // New PDF content container
 
 
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement) { // Check new elements
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) { // Check new elements
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
             return;
@@ -1582,7 +1679,27 @@
         activeTableId = null; // Reset activeTableId
 
         // Add a brand new default table
-        addNewTable(true); // This function now sets activeTableId internally and calls switchTable
+        // Modified to add existing tables from the HTML directly
+        const table1 = document.getElementById('tbl_1');
+        const table2 = document.getElementById('tbl_2');
+
+        if (table1) {
+            tablesContainer.appendChild(table1);
+            addTabButton(table1.id, table1.dataset.tableName || 'Kelas 3 & 5');
+        }
+        if (table2) {
+            tablesContainer.appendChild(table2);
+            addTabButton(table2.id, table2.dataset.tableName || 'Kelas 1, 2 & 4');
+        }
+
+        if (table1) {
+            switchTable(table1.id);
+        } else if (tablesContainer.querySelector('table')) {
+            switchTable(tablesContainer.querySelector('table').id);
+        } else {
+            console.warn("setupInitialTableState: No tables found in HTML, adding a new one dynamically.");
+            addNewTable(true); // Fallback to adding a new table if none exist
+        }
         
         if (!activeTableId && tablesContainer.querySelector('table')) {
             // Fallback if addNewTable somehow didn't set activeTableId but did create a table
@@ -1610,6 +1727,7 @@
         if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility); // New listener
 
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
+        if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf); // New PDF button listener
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) {
             nameModalHeader.addEventListener('mousedown', startDragModal);
@@ -2402,6 +2520,115 @@
         const words = textForSummary.split(/\s+/); 
         const filteredWords = words.filter(word => !word.startsWith('*'));
         return filteredWords.join(' ').trim(); 
+    }
+
+    // --- PDF Generation Function ---
+    async function generateSchedulePdf() {
+        if (!pdfContentElement || !tablesContainer || !summaryTableElement) {
+            showMessage('PDF generation elements not found.', 'error');
+            return;
+        }
+
+        showGeneralLoading(true);
+        showMessage('Generating PDF...', 'info', 5000);
+
+        // Clear previous content
+        pdfContentElement.innerHTML = '';
+
+        // Get the schedule title
+        const scheduleTitle = scheduleTitleElement ? scheduleTitleElement.textContent : 'Weekly Schedule';
+        const titleH2 = document.createElement('h2');
+        titleH2.textContent = scheduleTitle;
+        pdfContentElement.appendChild(titleH2);
+
+        // Get "Kelas 3 & 5" table (assuming it's tbl_1)
+        const kelas35Table = document.getElementById('tbl_1');
+        if (kelas35Table) {
+            const h3 = document.createElement('h3');
+            h3.textContent = kelas35Table.dataset.tableName || 'Kelas 3 & 5';
+            pdfContentElement.appendChild(h3);
+            pdfContentElement.appendChild(cloneTableForPdf(kelas35Table));
+        } else {
+            console.warn("Table 'Kelas 3 & 5' (tbl_1) not found for PDF.");
+        }
+
+        // Get "Kelas 1, 2 & 4" table (assuming it's tbl_2)
+        const kelas124Table = document.getElementById('tbl_2');
+        if (kelas124Table) {
+            const h3 = document.createElement('h3');
+            h3.textContent = kelas124Table.dataset.tableName || 'Kelas 1, 2 & 4';
+            pdfContentElement.appendChild(h3);
+            pdfContentElement.appendChild(cloneTableForPdf(kelas124Table));
+        } else {
+            console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found for PDF.");
+        }
+
+        // Add Teacher/Subject Attendance Summary
+        const summaryTitleH3 = document.createElement('h3');
+        summaryTitleH3.textContent = 'Teacher/Subject Attendance Summary';
+        pdfContentElement.appendChild(summaryTitleH3);
+        pdfContentElement.appendChild(cloneTableForPdf(summaryTableElement));
+
+        // Define PDF options
+        const pdfOptions = {
+            margin: 10,
+            filename: `${scheduleTitle.replace(/\s/g, '_')}_Schedule.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, // Landscape for wider tables
+            pagebreak: { mode: 'avoid-all' } // Try to keep content on single page
+        };
+
+        try {
+            // Use html2pdf to generate and save the PDF
+            await html2pdf().set(pdfOptions).from(pdfContentElement).save();
+            showMessage('PDF downloaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showMessage(`Failed to generate PDF. Error: ${error.message}`, 'error');
+        } finally {
+            // Clean up the temporary content
+            pdfContentElement.innerHTML = '';
+            showGeneralLoading(false);
+        }
+    }
+
+    // Helper function to clone tables for PDF generation, handling merged cells
+    function cloneTableForPdf(originalTable) {
+        const clonedTable = originalTable.cloneNode(true);
+        clonedTable.removeAttribute('id'); // Remove ID to prevent conflicts
+
+        // Handle contenteditable attribute
+        clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.removeAttribute('contenteditable');
+        });
+
+        // Handle merged cells for PDF export
+        clonedTable.querySelectorAll('.merged-cell-container').forEach(containerCell => {
+            const overlay = containerCell.querySelector('.merged-cell-overlay');
+            if (overlay) {
+                // For PDF, we want the text from the overlay to be directly in the cell
+                containerCell.textContent = overlay.textContent;
+                overlay.remove(); // Remove the overlay element
+            }
+        });
+
+        // Remove subsumed cells (they should be hidden by CSS but good to explicitly handle)
+        clonedTable.querySelectorAll('.subsumed-cell').forEach(subsumedCell => {
+            subsumedCell.remove(); // Remove the cell entirely from the cloned table
+        });
+
+        // Re-apply merge attributes as rowSpan and colSpan for PDF
+        // This part is crucial for proper PDF rendering of merged cells.
+        // It's complex and might require a more robust algorithm if merges are arbitrary.
+        // For simple row/column merges, you might iterate and set rowSpan/colSpan.
+        // html2pdf.js often handles basic CSS merges, but direct attributes are more reliable.
+        // Given the current CSS-based merging, the direct text transfer should work.
+        // If complex merges don't render correctly, you'd need to calculate and set rowSpan/colSpan here.
+        // For this example, we'll rely on the CSS `display: none` for `subsumed-cell` and
+        // the `merged-cell-overlay` content being transferred.
+
+        return clonedTable;
     }
 
 
