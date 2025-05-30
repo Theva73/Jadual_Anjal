@@ -503,6 +503,7 @@
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             box-sizing: border-box;
             width: 100%; /* Ensure it takes full width for PDF generation */
+            display: none; /* Hidden by default, temporarily shown for debugging */
         }
         #pdfContent h2, #pdfContent h3 {
             text-align: center;
@@ -537,6 +538,7 @@
             font-weight: bold;
             color: #721c24 !important;
         }
+        /* For PDF, we want merged cells to display their content directly, and subsumed cells to be hidden */
         #pdfContent .merged-cell-overlay {
             position: static !important; /* Important for PDF rendering */
             display: block !important;
@@ -693,7 +695,7 @@
     <div id="generalLoadingIndicator" style="display:none;"><div class="spinner"></div></div>
 </div>
 
-<div id="pdfContent" style="display:none;"></div>
+<div id="pdfContent"></div>
 
 <script type="module">
     // Firebase App (the core Firebase SDK) is always required and must be listed first
@@ -1678,8 +1680,7 @@
         currentWorkingScheduleDocId = null; 
         activeTableId = null; // Reset activeTableId
 
-        // Add a brand new default table
-        // Modified to add existing tables from the HTML directly
+        // Add existing tables from the HTML directly
         const table1 = document.getElementById('tbl_1');
         const table2 = document.getElementById('tbl_2');
 
@@ -2549,7 +2550,8 @@
             pdfContentElement.appendChild(h3);
             pdfContentElement.appendChild(cloneTableForPdf(kelas35Table));
         } else {
-            console.warn("Table 'Kelas 3 & 5' (tbl_1) not found for PDF.");
+            console.warn("Table 'Kelas 3 & 5' (tbl_1) not found for PDF generation.");
+            showMessage("Table 'Kelas 3 & 5' not found for PDF.", "error", 3000);
         }
 
         // Get "Kelas 1, 2 & 4" table (assuming it's tbl_2)
@@ -2560,7 +2562,8 @@
             pdfContentElement.appendChild(h3);
             pdfContentElement.appendChild(cloneTableForPdf(kelas124Table));
         } else {
-            console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found for PDF.");
+            console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found for PDF generation.");
+            showMessage("Table 'Kelas 1, 2 & 4' not found for PDF.", "error", 3000);
         }
 
         // Add Teacher/Subject Attendance Summary
@@ -2568,6 +2571,9 @@
         summaryTitleH3.textContent = 'Teacher/Subject Attendance Summary';
         pdfContentElement.appendChild(summaryTitleH3);
         pdfContentElement.appendChild(cloneTableForPdf(summaryTableElement));
+
+        // Temporarily make pdfContent visible for debugging
+        pdfContentElement.style.display = 'block';
 
         // Define PDF options
         const pdfOptions = {
@@ -2587,8 +2593,9 @@
             console.error('Error generating PDF:', error);
             showMessage(`Failed to generate PDF. Error: ${error.message}`, 'error');
         } finally {
-            // Clean up the temporary content
+            // Clean up the temporary content and hide the container
             pdfContentElement.innerHTML = '';
+            pdfContentElement.style.display = 'none'; // Hide it again
             showGeneralLoading(false);
         }
     }
@@ -2598,36 +2605,15 @@
         const clonedTable = originalTable.cloneNode(true);
         clonedTable.removeAttribute('id'); // Remove ID to prevent conflicts
 
-        // Handle contenteditable attribute
+        // Remove contenteditable attributes from the cloned table
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.removeAttribute('contenteditable');
         });
 
-        // Handle merged cells for PDF export
-        clonedTable.querySelectorAll('.merged-cell-container').forEach(containerCell => {
-            const overlay = containerCell.querySelector('.merged-cell-overlay');
-            if (overlay) {
-                // For PDF, we want the text from the overlay to be directly in the cell
-                containerCell.textContent = overlay.textContent;
-                overlay.remove(); // Remove the overlay element
-            }
-        });
-
-        // Remove subsumed cells (they should be hidden by CSS but good to explicitly handle)
-        clonedTable.querySelectorAll('.subsumed-cell').forEach(subsumedCell => {
-            subsumedCell.remove(); // Remove the cell entirely from the cloned table
-        });
-
-        // Re-apply merge attributes as rowSpan and colSpan for PDF
-        // This part is crucial for proper PDF rendering of merged cells.
-        // It's complex and might require a more robust algorithm if merges are arbitrary.
-        // For simple row/column merges, you might iterate and set rowSpan/colSpan.
-        // html2pdf.js often handles basic CSS merges, but direct attributes are more reliable.
-        // Given the current CSS-based merging, the direct text transfer should work.
-        // If complex merges don't render correctly, you'd need to calculate and set rowSpan/colSpan here.
-        // For this example, we'll rely on the CSS `display: none` for `subsumed-cell` and
-        // the `merged-cell-overlay` content being transferred.
-
+        // The CSS for #pdfContent should handle .merged-cell-overlay and .subsumed-cell display.
+        // We don't need to manually manipulate their content or removal here,
+        // as html2pdf.js should render based on the applied CSS within #pdfContent.
+        
         return clonedTable;
     }
 
