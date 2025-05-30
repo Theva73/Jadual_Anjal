@@ -781,7 +781,7 @@
     const AUTO_SAVE_INTERVAL = 60000; 
 
     // DOM Element Cache
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement; // Added new elements
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement;
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -1576,17 +1576,17 @@
         loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
         nameModalTitleElement = document.getElementById('nameModalTitle');
         generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator');
-        controlsTogglerElement = document.getElementById('controlsToggler'); // New
-        collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); // New
-        downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); // New PDF button
-        pdfContentElement = document.getElementById('pdfContent'); // New PDF content container
+        controlsTogglerElement = document.getElementById('controlsToggler'); 
+        collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); 
+        downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); 
+        pdfContentElement = document.getElementById('pdfContent'); 
 
 
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) { // Check new elements
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) { 
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
             return;
@@ -1676,20 +1676,23 @@
 
         console.log("setupInitialTableState: No schedule loaded or tables are missing. Initializing default view.");
         tableTabs.innerHTML = ''; 
-        tablesContainer.innerHTML = ''; 
+        // DO NOT clear tablesContainer.innerHTML here if we want to use pre-defined HTML tables.
+        // tablesContainer.innerHTML = ''; 
         currentWorkingScheduleDocId = null; 
         activeTableId = null; // Reset activeTableId
 
         // Add existing tables from the HTML directly
+        // The tables tbl_1 and tbl_2 should already be in tablesContainer from the initial HTML.
+        // We just need to create tabs for them.
         const table1 = document.getElementById('tbl_1');
         const table2 = document.getElementById('tbl_2');
 
         if (table1) {
-            tablesContainer.appendChild(table1);
+            // tablesContainer.appendChild(table1); // Not needed if it's already there
             addTabButton(table1.id, table1.dataset.tableName || 'Kelas 3 & 5');
         }
         if (table2) {
-            tablesContainer.appendChild(table2);
+            // tablesContainer.appendChild(table2); // Not needed if it's already there
             addTabButton(table2.id, table2.dataset.tableName || 'Kelas 1, 2 & 4');
         }
 
@@ -1725,10 +1728,10 @@
     }
 
     function initializeEventListeners() {
-        if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility); // New listener
+        if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility); 
 
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
-        if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf); // New PDF button listener
+        if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf); 
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) {
             nameModalHeader.addEventListener('mousedown', startDragModal);
@@ -2525,8 +2528,8 @@
 
     // --- PDF Generation Function ---
     async function generateSchedulePdf() {
-        if (!pdfContentElement || !tablesContainer || !summaryTableElement) {
-            showMessage('PDF generation elements not found.', 'error');
+        if (!pdfContentElement || !tablesContainer) { // Removed summaryTableElement check
+            showMessage('PDF generation elements (pdfContent or tablesContainer) not found.', 'error');
             return;
         }
 
@@ -2551,7 +2554,7 @@
             pdfContentElement.appendChild(cloneTableForPdf(kelas35Table));
         } else {
             console.warn("Table 'Kelas 3 & 5' (tbl_1) not found for PDF generation.");
-            showMessage("Table 'Kelas 3 & 5' not found for PDF.", "error", 3000);
+            showMessage("Table 'Kelas 3 & 5' not found for PDF.", "warning", 3000); // Changed to warning as it might not be critical if one is missing
         }
 
         // Get "Kelas 1, 2 & 4" table (assuming it's tbl_2)
@@ -2563,26 +2566,30 @@
             pdfContentElement.appendChild(cloneTableForPdf(kelas124Table));
         } else {
             console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found for PDF generation.");
-            showMessage("Table 'Kelas 1, 2 & 4' not found for PDF.", "error", 3000);
+            showMessage("Table 'Kelas 1, 2 & 4' not found for PDF.", "warning", 3000); // Changed to warning
+        }
+        
+        // Check if any table was added to the PDF content
+        if (pdfContentElement.querySelectorAll('table').length === 0) {
+            showMessage('No specified tables were found to include in the PDF.', 'error');
+            pdfContentElement.innerHTML = ''; // Clear any titles if no tables
+            pdfContentElement.style.display = 'none';
+            showGeneralLoading(false);
+            return;
         }
 
-        // Add Teacher/Subject Attendance Summary
-        const summaryTitleH3 = document.createElement('h3');
-        summaryTitleH3.textContent = 'Teacher/Subject Attendance Summary';
-        pdfContentElement.appendChild(summaryTitleH3);
-        pdfContentElement.appendChild(cloneTableForPdf(summaryTableElement));
 
-        // Temporarily make pdfContent visible for debugging
-        pdfContentElement.style.display = 'block';
+        // Temporarily make pdfContent visible for debugging if needed
+        // pdfContentElement.style.display = 'block'; // Uncomment for debugging
 
         // Define PDF options
         const pdfOptions = {
             margin: 10,
-            filename: `${scheduleTitle.replace(/\s/g, '_')}_Schedule.pdf`,
+            filename: `${scheduleTitle.replace(/\s/g, '_')}_Refined_Schedule.pdf`, // Updated filename
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, // Landscape for wider tables
-            pagebreak: { mode: 'avoid-all' } // Try to keep content on single page
+            html2canvas: { scale: 2, useCORS: true, logging: false }, // Added logging: false
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // Added more robust pagebreak modes
         };
 
         try {
@@ -2595,7 +2602,7 @@
         } finally {
             // Clean up the temporary content and hide the container
             pdfContentElement.innerHTML = '';
-            pdfContentElement.style.display = 'none'; // Hide it again
+            pdfContentElement.style.display = 'none'; 
             showGeneralLoading(false);
         }
     }
@@ -2604,15 +2611,33 @@
     function cloneTableForPdf(originalTable) {
         const clonedTable = originalTable.cloneNode(true);
         clonedTable.removeAttribute('id'); // Remove ID to prevent conflicts
+        clonedTable.classList.remove('active'); // Remove active class if present
 
         // Remove contenteditable attributes from the cloned table
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.removeAttribute('contenteditable');
         });
-
-        // The CSS for #pdfContent should handle .merged-cell-overlay and .subsumed-cell display.
-        // We don't need to manually manipulate their content or removal here,
-        // as html2pdf.js should render based on the applied CSS within #pdfContent.
+        
+        // Ensure merged cell overlays are correctly handled for PDF
+        // The CSS for #pdfContent should make .merged-cell-overlay display its content
+        // and .subsumed-cell to be hidden.
+        // We can explicitly set the text content of the primary merged cell from its overlay
+        // and clear subsumed cells for robustness, though CSS should handle it.
+        clonedTable.querySelectorAll('.merged-cell-container').forEach(containerCell => {
+            const overlay = containerCell.querySelector('.merged-cell-overlay');
+            if (overlay) {
+                // For PDF, the overlay itself might not render correctly if it's absolutely positioned.
+                // So, we transfer its content to the container cell directly.
+                containerCell.textContent = overlay.textContent;
+                overlay.remove(); // Remove the overlay div itself for PDF
+            }
+        });
+        clonedTable.querySelectorAll('.subsumed-cell').forEach(subsumedCell => {
+             // subsumedCell.textContent = ''; // Clear content
+             // subsumedCell.style.display = 'none'; // Explicitly hide, though CSS should do this
+             // Or better, remove them if they cause layout issues in PDF
+             // For html2pdf, it's often better to let CSS handle display:none
+        });
         
         return clonedTable;
     }
@@ -2639,7 +2664,6 @@
             });
         }
         const allSummaryNames = [...scheduledNames].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
-        // console.log("Summary Names (after remark and '*' processing):", allSummaryNames); // Less verbose
         buildSummaryTableSkeleton(allSummaryNames);
         updateSummaryTableData(allSummaryNames);
     }
@@ -2659,8 +2683,7 @@
         summaryTableElement.innerHTML = ''; 
         
         let activeTableHeaders = [];
-        const activeTableElement = document.getElementById(activeTableId); // activeTableId should be set by now
-        // console.log(`Active Table for Summary: ID='${activeTableId}', Element found: ${!!activeTableElement}`); // Less verbose
+        const activeTableElement = document.getElementById(activeTableId); 
 
         if (activeTableElement && activeTableElement.tHead && activeTableElement.tHead.rows.length > 0) {
             for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) { 
@@ -2672,7 +2695,6 @@
         } else {
             console.warn(`Active table for summary (ID: ${activeTableId}) NOT found. Summary headers will be empty. This might happen if initial load failed and no table was made active.`);
         }
-        // console.log("Summary Headers from Active Table:", activeTableHeaders); // Less verbose
 
         let laulisahRuleRequiresSpecialSlot = false;
         const specialNamesForRule = ["LAU", "LISAH"];
@@ -2701,8 +2723,7 @@
                 });
             }
         }
-        // if (laulisahRuleRequiresSpecialSlot) console.log("LAU/LISAH rule requires special slot:", targetSlotForSpecialNamesRule); // Less verbose
-
+        
         let combinedHeaders = new Set(activeTableHeaders);
         if (laulisahRuleRequiresSpecialSlot) {
             combinedHeaders.add(targetSlotForSpecialNamesRule);
@@ -2714,7 +2735,6 @@
             if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  
             return String(a).localeCompare(String(b));
         });
-        // console.log("Final Sorted Unique Headers for Summary:", sortedUniqueHeaders); // Less verbose
 
         const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedUniqueHeaders];
         const thead = summaryTableElement.createTHead();
@@ -2742,17 +2762,14 @@
                 for (let i = 1; i < finalSummaryColumnHeaders.length; i++) tr.insertCell().textContent = '';
             });
         }
-        // console.log("Summary table skeleton built."); // Less verbose
     }
 
     function updateSummaryTableData(allAvailableNames) { 
         if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) {
-            // console.warn("Cannot update summary table data: table body or header not found."); // Less verbose
             return;
         }
         const summaryBody = summaryTableElement.tBodies[0];
         if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) { 
-            // console.log("No rows in summary table to update (or only placeholder row)."); // Less verbose
             return;
         }
         
@@ -2811,7 +2828,6 @@
                 if (cellIndex > 0 && cell.textContent.includes(',')) cell.classList.add('highlight-conflict');
             });
         });
-        // console.log("Summary table data updated."); // Less verbose
     }
 
 </script>
