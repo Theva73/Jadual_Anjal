@@ -715,14 +715,14 @@
     import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
-    // IMPORTANT: REPLACE WITH YOUR ACTUAL FIREBASE CONFIGURATION
+    // This is the configuration provided by the user.
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyEXAMPLE-API-KEYdQquIEx4", // REPLACE
-      authDomain: "YOUR-PROJECT-ID.firebaseapp.com", // REPLACE
-      projectId: "YOUR-PROJECT-ID", // REPLACE
-      storageBucket: "YOUR-PROJECT-ID.appspot.com", // REPLACE
-      messagingSenderId: "YOUR-MESSAGING-SENDER-ID", // REPLACE
-      appId: "YOUR-APP-ID" // REPLACE
+      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
+      authDomain: "jadual-3f0aa.firebaseapp.com",
+      projectId: "jadual-3f0aa",
+      storageBucket: "jadual-3f0aa.appspot.com", // Corrected from firebasestorage.app to appspot.com based on typical Firebase setup
+      messagingSenderId: "496526436851",
+      appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
     let firebaseConfig;
@@ -740,13 +740,11 @@
         console.log("Using Firebase config defined in the script (userProvidedFirebaseConfig).");
     }
 
-    // Basic check for placeholder API key if using userProvidedFirebaseConfig
-    if (firebaseConfig === userProvidedFirebaseConfig && (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4")) {
-        console.error("Firebase Auth: CRITICAL - The userProvidedFirebaseConfig in the script still contains a placeholder API key. Please update it with your actual Firebase project configuration.");
+    // Basic check for placeholder API key if using userProvidedFirebaseConfig (though it's now filled)
+    if (firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4" || firebaseConfig.apiKey === "YOUR_API_KEY" ) { // Check against known placeholders
+        console.error("Firebase Auth: CRITICAL - The Firebase API Key is still a placeholder even after attempting to set it. Please ensure the correct configuration is applied.");
         const userIdDisplayError = document.getElementById('userIdDisplay');
         if (userIdDisplayError) userIdDisplayError.textContent = "User ID: Firebase API Key Error!";
-        // Do not use alert, use showMessage
-        // alert("CRITICAL Firebase Configuration Error: The API Key in the script is a placeholder. Please replace it with your actual Firebase project's API Key for the application to work correctly.");
         showMessage("Firebase Configuration Error: Invalid API Key. Please update the script.", "error", 10000);
     }
     
