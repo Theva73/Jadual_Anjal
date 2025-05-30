@@ -72,21 +72,26 @@
             height: 20px;
         }
         #controlsToggler[aria-expanded="false"] .toggler-icon {
-            transform: rotate(180deg);
+            transform: rotate(180deg); /* Icon points up when controls are hidden */
+        }
+         #controlsToggler[aria-expanded="true"] .toggler-icon {
+            transform: rotate(0deg); /* Icon points down when controls are shown */
         }
 
+
         #collapsibleButtonBars {
-            max-height: 1000px;
+            max-height: 1000px; /* Allow enough height for content */
             overflow: hidden;
             transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out, padding-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out;
-            padding-top: 5px;
+            padding-top: 5px; /* Some padding when open */
             padding-bottom: 5px;
+            /* margin-top: 15px; */ /* Ensure consistent spacing */
         }
         #collapsibleButtonBars:not(.open) {
             max-height: 0;
             padding-top: 0;
             padding-bottom: 0;
-            margin-top: 0;
+            margin-top: 0; /* No margin when closed */
         }
         /* --- End of Styles for Collapsible Button Controls --- */
 
@@ -501,7 +506,7 @@
             background-color: #f0f8ff !important; /* AliceBlue for first column */
             font-weight: bold;
         }
-        /* NEW: Styles for the PDF footnote */
+        /* Styles for the PDF footnote */
         #pdfContent .pdf-footnote {
             text-align: right;
             font-size: 0.7em;
@@ -520,7 +525,8 @@
     <div id="userIdDisplay">User ID: Loading...</div>
 
     <button id="controlsToggler" aria-expanded="true" aria-controls="collapsibleButtonBars" title="Toggle button controls visibility">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg> <span>Hide Controls</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        <span>Hide Controls</span>
     </button>
 
     <div id="collapsibleButtonBars" class="open">
@@ -560,7 +566,8 @@
             <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
             <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
         </div>
-    </div> <div id="sharedScheduleListContainer" style="display:none;"></div>
+    </div>
+    <div id="sharedScheduleListContainer" style="display:none;"></div>
     <div class="bar table-tabs" id="tableTabs"></div>
     <div id="tablesContainer">
         <table id="tbl_1" class="active" data-table-name="Kelas 3 & 5">
@@ -686,32 +693,41 @@
     import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
-    // IMPORTANT: Replace with your actual Firebase config or ensure __firebase_config is injected
+    // This is the configuration provided by the user from SDK config.txt
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyEXAMPLE-API-KEYdQquIEx4", // Replace with your actual API key
+      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.appspot.com",
+      storageBucket: "jadual-3f0aa.appspot.com", // Corrected from firebasestorage.app
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
     let firebaseConfig;
+    // Check if a global __firebase_config is injected (e.g., by a platform)
     if (typeof __firebase_config !== 'undefined' && __firebase_config !== null && __firebase_config.trim() !== '') {
         try {
             firebaseConfig = JSON.parse(__firebase_config);
             console.log("Using injected Firebase config (__firebase_config).");
         } catch (e) {
             console.error("Error parsing injected __firebase_config. Falling back to userProvidedFirebaseConfig. Error:", e);
-            firebaseConfig = userProvidedFirebaseConfig;
+            firebaseConfig = userProvidedFirebaseConfig; // Fallback to the one in script
         }
     } else {
+        // If no injected config, use the one defined in this script
         firebaseConfig = userProvidedFirebaseConfig;
-        console.warn("Firebase Auth: __firebase_config is not defined or empty. Using userProvidedFirebaseConfig from the script.");
-        if (firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4" || firebaseConfig.projectId === "YOUR_PROJECT_ID") { // Check against placeholder
-            console.error("Firebase Auth: CRITICAL - The userProvidedFirebaseConfig contains placeholder values. Firebase will NOT work. Please update the firebaseConfig object in the script with your actual Firebase project details if not running in an environment that injects __firebase_config.");
-        }
+        console.log("Using Firebase config defined in the script (userProvidedFirebaseConfig).");
     }
+
+    // Ensure API key is not a placeholder if using the script-defined config
+    if (firebaseConfig === userProvidedFirebaseConfig && (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4")) {
+        console.error("Firebase Auth: CRITICAL - The userProvidedFirebaseConfig in the script still contains a placeholder API key. Please replace it with your actual Firebase project API key if __firebase_config is not being injected.");
+        // Display a more prominent error to the user if the key is clearly a placeholder
+        const userIdDisplayError = document.getElementById('userIdDisplay');
+        if (userIdDisplayError) userIdDisplayError.textContent = "User ID: Firebase API Key Error!";
+        showMessage("Firebase Configuration Error: Invalid API Key. Please update the script.", "error", 10000);
+    }
+
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app');
 
@@ -733,7 +749,7 @@
         console.log("Firebase services initialized for Shared Scheduler with Project ID:", firebaseConfig.projectId);
     } catch (e) {
         console.error("CRITICAL Error initializing Firebase services:", e);
-        showMessage("Critical Error: Firebase initialization failed. Cloud features will not work.", "error", 10000);
+        showMessage("Critical Error: Firebase initialization failed. Cloud features will not work. Error: " + e.message, "error", 10000);
         const userIdDisplayInitError = document.getElementById('userIdDisplay');
         if (userIdDisplayInitError) userIdDisplayInitError.textContent = "User ID: Firebase Init Error!";
     }
@@ -825,8 +841,13 @@
         const isOpen = collapsibleButtonBarsElement.classList.toggle('open');
         controlsTogglerElement.setAttribute('aria-expanded', isOpen.toString());
         const textSpan = controlsTogglerElement.querySelector('span');
+        const icon = controlsTogglerElement.querySelector('.toggler-icon');
         if (textSpan) {
             textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
+        }
+         // Ensure icon rotation is correct based on state
+        if (icon) {
+            icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
         }
     }
 
@@ -1506,10 +1527,22 @@
         controlsTogglerElement = document.getElementById('controlsToggler');
         collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars');
         downloadPdfButtonElement = document.getElementById('downloadPdfBtn');
-        pdfContentElement = document.getElementById('pdfContent'); // Crucial for PDF generation
+        pdfContentElement = document.getElementById('pdfContent');
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
+
+        // Ensure controls are visible by default and button text is correct
+        if (controlsTogglerElement && collapsibleButtonBarsElement) {
+            collapsibleButtonBarsElement.classList.add('open'); // Ensure controls are open
+            controlsTogglerElement.setAttribute('aria-expanded', 'true');
+            const textSpan = controlsTogglerElement.querySelector('span');
+            const icon = controlsTogglerElement.querySelector('.toggler-icon');
+            if (textSpan) textSpan.textContent = 'Hide Controls';
+            if (icon) icon.style.transform = 'rotate(0deg)'; // Icon pointing down
+        }
+
+
         if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) {
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
@@ -1589,7 +1622,7 @@
         console.log("setupInitialTableState: No schedule loaded or tables are missing. Initializing default view.");
         tableTabs.innerHTML = '';
         currentWorkingScheduleDocId = null;
-        activeTableId = null; // Reset activeTableId
+        activeTableId = null;
         const table1 = document.getElementById('tbl_1');
         const table2 = document.getElementById('tbl_2');
         if (table1) {
@@ -1598,21 +1631,20 @@
         if (table2) {
             addTabButton(table2.id, table2.dataset.tableName || 'Kelas 1, 2 & 4');
         }
-        if (table1) { // Default to tbl_1 if it exists
+        if (table1) {
             switchTable(table1.id);
-        } else if (table2) { // Fallback to tbl_2 if tbl_1 doesn't exist but tbl_2 does
+        } else if (table2) {
              switchTable(table2.id);
-        } else if (tablesContainer.querySelector('table')) { // Fallback to any first table
+        } else if (tablesContainer.querySelector('table')) {
             switchTable(tablesContainer.querySelector('table').id);
         } else {
             console.warn("setupInitialTableState: No tables found in HTML, adding a new one dynamically.");
-            addNewTable(true); // This will also call switchTable
+            addNewTable(true);
         }
 
-        // Ensure activeTableId is set if a table exists
         if (!activeTableId && tablesContainer.querySelector('table')) {
             activeTableId = tablesContainer.querySelector('table').id;
-            switchTable(activeTableId); // Ensure UI consistency
+            switchTable(activeTableId);
              console.warn("setupInitialTableState: Fallback to first table in DOM as active after initial setup.");
         } else if (!activeTableId) {
             console.error("setupInitialTableState: Critical error, no active table could be established even after attempting to add one.");
@@ -1887,13 +1919,13 @@
         if (!targetTable && tablesContainer) {
             const firstTableInDOM = tablesContainer.querySelector('table');
             if (firstTableInDOM) {
-                id = firstTableInDOM.id; // Update id to the one found
+                id = firstTableInDOM.id;
                 console.warn(`SwitchTable: Target table for original ID not found, falling back to first table in DOM: ${id}.`);
             } else {
                 if (tablesContainer && tablesContainer.children.length === 0) {
                     console.log("SwitchTable: No tables exist, adding a new one.");
-                    addNewTable(true); // This will set activeTableId and call switchTable again
-                    return; // Exit as addNewTable will handle the switch
+                    addNewTable(true);
+                    return;
                 }
                 console.error(`SwitchTable: Target table for original ID not found and no fallback available.`);
                 return;
@@ -1904,7 +1936,7 @@
         }
 
         console.log(`Switching to table: ${id}`);
-        activeTableId = id; // Set the global activeTableId
+        activeTableId = id;
         if(tablesContainer) tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
         if(tableTabs) tableTabs.querySelectorAll('button').forEach(b => { b.classList.toggle('active', b.dataset.tableId === id); });
         deselectAllTableCells();
@@ -1946,7 +1978,7 @@
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTable.id, label || defaultTableName);
-        switchTable(newTable.id); // This will set activeTableId
+        switchTable(newTable.id);
         if (!isInitial) {
             showMessage(`Table "${label || defaultTableName}" added.`, 'success');
         } else {
@@ -1997,7 +2029,7 @@
             } else {
                 activeTableId = null;
                 console.log("Last table deleted. Adding a new default table.");
-                addNewTable(true); // This will also call switchTable
+                addNewTable(true);
             }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
@@ -2415,7 +2447,6 @@
         return filteredWords.join(' ').trim();
     }
 
-    // --- PDF Generation Function ---
     async function generateSchedulePdf() {
         if (!pdfContentElement || !tablesContainer ) {
             showMessage('PDF generation elements (pdfContent or tablesContainer) not found.', 'error');
@@ -2424,16 +2455,15 @@
         }
 
         showGeneralLoading(true);
-        showMessage('Generating PDF, please wait...', 'info', 15000); // Extended duration for PDF generation
+        showMessage('Generating PDF, please wait...', 'info', 15000);
 
-        pdfContentElement.innerHTML = ''; // Clear previous content
+        pdfContentElement.innerHTML = '';
 
         const scheduleTitleText = scheduleTitleElement ? scheduleTitleElement.textContent : 'Weekly Schedule';
         const titleH2 = document.createElement('h2');
         titleH2.textContent = scheduleTitleText;
         pdfContentElement.appendChild(titleH2);
 
-        // Process Table 1: Kelas 3 & 5
         console.log("PDF Generation: Attempting to process tbl_1 (Kelas 3 & 5)...");
         const kelas35Table = document.getElementById('tbl_1');
         if (kelas35Table) {
@@ -2454,7 +2484,6 @@
             pdfContentElement.appendChild(document.createTextNode("Note: Kelas 3 & 5 table (tbl_1) was not found."));
         }
 
-        // Process Table 2: Kelas 1, 2 & 4
         console.log("PDF Generation: Attempting to process tbl_2 (Kelas 1, 2 & 4)...");
         const kelas124Table = document.getElementById('tbl_2');
         if (kelas124Table) {
@@ -2475,11 +2504,9 @@
              pdfContentElement.appendChild(document.createTextNode("Note: Kelas 1, 2 & 4 table (tbl_2) was not found."));
         }
 
-        // Add Footnote with today's date
         const footnoteDiv = document.createElement('div');
         footnoteDiv.className = 'pdf-footnote';
         const today = new Date();
-        // Using a more common date format, customize as needed
         const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
         footnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
         pdfContentElement.appendChild(footnoteDiv);
@@ -2487,11 +2514,9 @@
 
 
         if (pdfContentElement.querySelectorAll('table').length === 0 && !kelas35Table && !kelas124Table) {
-             // Only show this if NO tables were found at all
             showMessage('No schedule tables were found to include in the PDF.', 'error');
             console.error("PDF Generation Error: No tables were found or added to pdfContentElement.");
             pdfContentElement.innerHTML = '<h2>No Schedule Data Found</h2><p>Could not find any tables to include in the PDF.</p>';
-             // Add footnote here too if desired even for an empty report
             const emptyFootnoteDiv = document.createElement('div');
             emptyFootnoteDiv.className = 'pdf-footnote';
             emptyFootnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
@@ -2501,21 +2526,20 @@
 
         console.log("PDF Generation: Making pdfContentElement visible for capture.");
         pdfContentElement.style.display = 'block';
-        // console.log("PDF Generation: pdfContentElement innerHTML before html2pdf call (full):", pdfContentElement.innerHTML);
 
 
         const pdfOptions = {
-            margin: [10, 8, 15, 8], // Increased bottom margin slightly for footnote
+            margin: [10, 8, 15, 8],
             filename: `${scheduleTitleText.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete_schedule.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
-                logging: true, // Enable html2canvas logging for debugging
+                logging: true,
                 scrollX: 0,
-                scrollY: -window.scrollY, // Capture from top of element
-                windowWidth: pdfContentElement.scrollWidth, // Capture full width of content
-                windowHeight: pdfContentElement.scrollHeight // Capture full height of content
+                scrollY: -window.scrollY,
+                windowWidth: pdfContentElement.scrollWidth,
+                windowHeight: pdfContentElement.scrollHeight
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -2531,13 +2555,11 @@
             showMessage(`Failed to generate PDF. Error: ${error.message}. Check console for details.`, 'error', 10000);
         } finally {
             console.log("PDF Generation: Hiding pdfContentElement and stopping general loading indicator.");
-            pdfContentElement.style.display = 'none'; // Hide after generation
-            // pdfContentElement.innerHTML = ''; // Optionally clear after generation
+            pdfContentElement.style.display = 'none';
             showGeneralLoading(false);
         }
     }
 
-    // Helper function to clone tables for PDF generation, handling merged cells
     function cloneTableForPdf(originalTable) {
         if (!originalTable || typeof originalTable.cloneNode !== 'function') {
             console.error("cloneTableForPdf Error: Invalid originalTable provided:", originalTable);
@@ -2546,32 +2568,28 @@
         const tableIdForLog = originalTable.id || 'Unknown ID';
         console.log(`cloneTableForPdf: Starting clone for table: ${tableIdForLog}, Name: ${originalTable.dataset.tableName || 'N/A'}`);
 
-        const clonedTable = originalTable.cloneNode(true); // Deep clone
-        clonedTable.removeAttribute('id'); // Avoid duplicate IDs in pdfContent
-        clonedTable.classList.remove('active'); // Remove active class if present
-        clonedTable.style.width = '100%'; // Ensure full width in PDF
-        clonedTable.style.tableLayout = 'fixed'; // Better control over column widths in PDF
+        const clonedTable = originalTable.cloneNode(true);
+        clonedTable.removeAttribute('id');
+        clonedTable.classList.remove('active');
+        clonedTable.style.width = '100%';
+        clonedTable.style.tableLayout = 'fixed';
 
-        // Remove contenteditable attribute from all cells in the clone
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.removeAttribute('contenteditable');
         });
 
-        // --- Merged Cell Handling for PDF (rowspan/colspan) ---
-        const mergeGroups = {}; // Stores info about each merge group
-
-        // Step 1: Identify all merge groups and their extents from the original table
+        const mergeGroups = {};
         Array.from(originalTable.rows).forEach((originalRow, rowIndex) => {
             Array.from(originalRow.cells).forEach((originalCell, colIndex) => {
                 const mergeId = originalCell.dataset.mergeId;
-                if (!mergeId) return; // Not part of a merge
+                if (!mergeId) return;
 
                 if (!mergeGroups[mergeId]) {
                     mergeGroups[mergeId] = {
                         minRow: rowIndex, maxRow: rowIndex,
                         minCol: colIndex, maxCol: colIndex,
-                        primaryCellOriginal: null, // The cell containing the .merged-cell-overlay
-                        allOriginalCellsInGroup: [] // All original cells belonging to this mergeId
+                        primaryCellOriginal: null,
+                        allOriginalCellsInGroup: []
                     };
                 }
                 const group = mergeGroups[mergeId];
@@ -2581,17 +2599,13 @@
                 group.minCol = Math.min(group.minCol, colIndex);
                 group.maxCol = Math.max(group.maxCol, colIndex);
 
-                // Identify the primary cell (the one with the visible content/overlay)
                 if (originalCell.classList.contains('merged-cell-container')) {
                     group.primaryCellOriginal = originalCell;
                 }
             });
         });
 
-        // console.log(`cloneTableForPdf (${tableIdForLog}): Identified mergeGroups:`, JSON.parse(JSON.stringify(mergeGroups, (k,v) => (v instanceof HTMLElement) ? `${v.tagName}[${v.dataset.mergeId || ''}](${v.textContent.substring(0,10)})` : v )) );
 
-
-        // Step 2: Apply rowspan and colspan to the cloned table
         for (const mergeId in mergeGroups) {
             const group = mergeGroups[mergeId];
             if (!group.primaryCellOriginal) {
@@ -2602,12 +2616,9 @@
             const rowSpan = group.maxRow - group.minRow + 1;
             const colSpan = group.maxCol - group.minCol + 1;
 
-            // Find the corresponding primary cell in the cloned table
-            // This requires knowing the original primary cell's row and column index
             let primaryCellOriginalRowIndex = -1;
             let primaryCellOriginalColIndex = -1;
 
-            // Find original indices of the primary cell
             Array.from(originalTable.rows).forEach((r, rIdx) => {
                 Array.from(r.cells).forEach((c, cIdx) => {
                     if (c === group.primaryCellOriginal) {
@@ -2626,25 +2637,19 @@
             const clonedPrimaryCell = clonedTable.rows[primaryCellOriginalRowIndex]?.cells[primaryCellOriginalColIndex];
 
             if (clonedPrimaryCell) {
-                // Get text content from the overlay of the original primary cell
                 const overlayOriginal = group.primaryCellOriginal.querySelector('.merged-cell-overlay');
                 clonedPrimaryCell.textContent = overlayOriginal ? overlayOriginal.textContent : group.primaryCellOriginal.textContent;
 
-                // Remove any overlay div from the cloned cell, we only want text
                 const overlayCloned = clonedPrimaryCell.querySelector('.merged-cell-overlay');
                 if (overlayCloned) overlayCloned.remove();
 
-                // Apply rowspan and colspan
                 if (rowSpan > 1) clonedPrimaryCell.rowSpan = rowSpan;
                 if (colSpan > 1) clonedPrimaryCell.colSpan = colSpan;
-                // console.log(`cloneTableForPdf (${tableIdForLog}): Applied rowspan: ${rowSpan}, colspan: ${colSpan} to cell for mergeId: ${mergeId} (text: "${clonedPrimaryCell.textContent.substring(0,20)}")`);
 
-                // Step 3: Remove subsumed cells from the cloned table
                 const cellsToRemoveFromClonedTable = [];
                 group.allOriginalCellsInGroup.forEach(originalSubsumedCell => {
-                    if (originalSubsumedCell === group.primaryCellOriginal) return; // Don't remove the primary cell itself
+                    if (originalSubsumedCell === group.primaryCellOriginal) return;
 
-                    // Find original indices of the subsumed cell
                     let subsumedOriginalRowIndex = -1;
                     let subsumedOriginalColIndex = -1;
                      Array.from(originalTable.rows).forEach((r, rIdx) => {
@@ -2659,14 +2664,12 @@
 
                     if (subsumedOriginalRowIndex !== -1 && subsumedOriginalColIndex !== -1) {
                          const clonedSubsumedCell = clonedTable.rows[subsumedOriginalRowIndex]?.cells[subsumedOriginalColIndex];
-                         // Important: Ensure we are not trying to remove the primary cell if it was misidentified
                          if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) {
                             cellsToRemoveFromClonedTable.push(clonedSubsumedCell);
                          }
                     }
                 });
                 cellsToRemoveFromClonedTable.forEach(cell => cell.remove());
-                // console.log(`cloneTableForPdf (${tableIdForLog}): Removed ${cellsToRemoveFromClonedTable.length} subsumed cells for mergeId: ${mergeId}`);
 
             } else {
                  console.warn(`cloneTableForPdf (${tableIdForLog}): Cloned primary cell not found for mergeId: ${mergeId} at original cloned indices [${primaryCellOriginalRowIndex},${primaryCellOriginalColIndex}]`);
@@ -2684,7 +2687,7 @@
                 if (!scheduleTable.tBodies[0]) return;
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        if (cellIndex > 0) { // Skip first column (Class/Time)
+                        if (cellIndex > 0) {
                             const overlay = cell.querySelector('.merged-cell-overlay');
                             const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
                             const actualNameForSummary = getTextForSummary(nameFromCell);
