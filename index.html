@@ -31,7 +31,7 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        #scheduleTitle {
+        #scheduleTitle { /* This is "Jadual Anjal" */
             font-size: 2.2em;
             color: #0056b3;
             border-bottom: 2px solid #0056b3;
@@ -472,53 +472,53 @@
         }
         #pdfContent .pdf-page-wrapper {
             page-break-inside: avoid !important;
-            padding-bottom: 25px; /* Space for footnote */
+            padding-bottom: 25px;
             box-sizing: border-box;
+            /* page-break-after: always; REMOVED - will be applied selectively in JS */
         }
-        #pdfContent .pdf-page-wrapper:not(:first-child) { /* Add page break before subsequent wrappers */
+         #pdfContent .pdf-page-wrapper:not(:first-child) { /* Add page break before subsequent wrappers */
              page-break-before: always !important;
         }
-         #pdfContent .pdf-page-wrapper:last-child { /* No page break after the very last wrapper */
-             page-break-after: auto !important;
+        #pdfContent .pdf-page-wrapper:last-child {
+             page-break-after: auto !important; /* No page break after the very last one */
         }
-
-        #pdfContent h2 { /* Main schedule title */
+        #pdfContent h2 { /* Main schedule title - "Jadual Anjal" */
             text-align: center;
             color: #1c1e21;
-            margin-bottom: 15px; /* Increased margin for main title */
-            font-size: 1.4em; /* Adjusted main title size */
-            page-break-after: avoid !important; /* Try to keep it with the first table if possible */
+            margin-bottom: 10px; /* Reduced margin to keep it closer to the first table's title */
+            font-size: 1.3em;
+            page-break-after: avoid !important; /* Try to keep with content below */
         }
         #pdfContent h3 { /* Individual table titles */
             text-align: center;
             color: #1c1e21;
-            margin-top: 5px; /* Reduced top margin for table titles */
-            margin-bottom: 10px;
-            font-size: 1.0em; /* Adjusted table title size */
+            margin-top: 5px;
+            margin-bottom: 8px; /* Reduced margin */
+            font-size: 1.0em;
             page-break-before: avoid !important;
             page-break-after: avoid !important;
         }
         #pdfContent table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px; /* Reduced margin */
+            margin-bottom: 10px;
             box-shadow: none;
             background-color: #fff;
             table-layout: fixed;
             page-break-inside: avoid !important;
         }
-        #pdfContent th {
+        #pdfContent th { /* Table headers */
             background-color: #f0f0f0 !important;
             color: #000;
             font-weight: bold;
-            font-size: 0.75em; /* Slightly smaller font for PDF table headers */
-            padding: 5px 5px; /* Adjusted padding */
+            font-size: 0.75em;
+            padding: 4px 5px;
         }
-        #pdfContent td {
-            border: 1px solid #555 !important; /* Slightly darker border for PDF cells */
-            padding: 4px 5px; /* Adjusted padding */
+        #pdfContent td { /* Table cells */
+            border: 1px solid #555 !important;
+            padding: 3px 4px; /* Further reduced padding */
             text-align: center;
-            font-size: 0.7em; /* Smaller font for PDF table cells */
+            font-size: 0.7em; /* Further reduced font size */
             word-wrap: break-word;
             background-color: #fff;
         }
@@ -531,7 +531,7 @@
             text-align: right;
             font-size: 0.65em;
             color: #555555;
-            margin-top: 15px; /* Adjusted margin */
+            margin-top: 10px;
             padding-top: 5px;
             border-top: 1px solid #dddddd;
             width: 100%;
@@ -543,14 +543,16 @@
 </head>
 <body>
 <div class="main-container">
-    <h2 contenteditable="true" id="scheduleTitle">Jadual Anjal</h2> <div id="userIdDisplay">User ID: Loading...</div>
+    <h2 contenteditable="true" id="scheduleTitle">Jadual Anjal</h2>
+    <div id="userIdDisplay">User ID: Loading...</div>
 
     <button id="controlsToggler" aria-expanded="false" aria-controls="collapsibleButtonBars" title="Toggle button controls visibility">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
         <span>Show Controls</span>
     </button>
 
-    <div id="collapsibleButtonBars"> <div class="bar">
+    <div id="collapsibleButtonBars">
+        <div class="bar">
             <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
             <button id="downloadPdfBtn" title="Download schedule tables as PDF">📄 Download PDF</button> </div>
         <div class="bar">
@@ -2447,34 +2449,47 @@
 
         showGeneralLoading(true);
         showMessage('Generating PDF, please wait...', 'info', 15000);
-        pdfContentElement.innerHTML = '';
-
-        const scheduleTitleText = scheduleTitleElement.textContent || 'Weekly Schedule';
-        const mainTitleH2 = document.createElement('h2');
-        mainTitleH2.textContent = scheduleTitleText; // This is "Jadual Anjal"
-        pdfContentElement.appendChild(mainTitleH2);
+        pdfContentElement.innerHTML = ''; // Clear previous content for PDF
 
         const tablesToPrint = tablesContainer.querySelectorAll('table');
         const numTables = tablesToPrint.length;
 
         if (numTables === 0) {
             console.warn("PDF Generation Warning: No tables found to print.");
+             // Create a wrapper even for the "no tables" message to include the main title and footnote
+            const pageWrapper = document.createElement('div');
+            pageWrapper.className = 'pdf-page-wrapper';
+
+            const mainTitleText = scheduleTitleElement.textContent || 'Weekly Schedule';
+            const mainTitleH2 = document.createElement('h2');
+            mainTitleH2.textContent = mainTitleText;
+            pageWrapper.appendChild(mainTitleH2);
+
             const noTablesMessage = document.createElement('p');
             noTablesMessage.textContent = "No tables available to print.";
             noTablesMessage.style.textAlign = "center";
-            pdfContentElement.appendChild(noTablesMessage);
-            // Add a footnote even if there are no tables
-            const emptyFootnoteDiv = document.createElement('div');
-            emptyFootnoteDiv.className = 'pdf-footnote';
+            pageWrapper.appendChild(noTablesMessage);
+
+            const footnoteDiv = document.createElement('div');
+            footnoteDiv.className = 'pdf-footnote';
             const today = new Date();
             const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            emptyFootnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
-            pdfContentElement.appendChild(emptyFootnoteDiv);
+            footnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
+            pageWrapper.appendChild(footnoteDiv);
+            pdfContentElement.appendChild(pageWrapper);
 
         } else {
             tablesToPrint.forEach((tableElement, index) => {
                 const pageWrapper = document.createElement('div');
                 pageWrapper.className = 'pdf-page-wrapper';
+
+                // Add main "Jadual Anjal" title only to the first page wrapper
+                if (index === 0) {
+                    const mainTitleText = scheduleTitleElement.textContent || 'Weekly Schedule';
+                    const mainTitleH2 = document.createElement('h2');
+                    mainTitleH2.textContent = mainTitleText;
+                    pageWrapper.appendChild(mainTitleH2);
+                }
 
                 const tableId = tableElement.id;
                 const tableName = tableElement.dataset.tableName || tableId || `Table ${index + 1}`;
@@ -2487,12 +2502,9 @@
                 const clonedTable = cloneTableForPdf(tableElement);
                 if (clonedTable) {
                     pageWrapper.appendChild(clonedTable);
-                    console.log(`PDF Generation: Table "${tableName}" (ID: ${tableId}) successfully cloned.`);
                 } else {
-                    console.error(`PDF Generation Error: Failed to clone table "${tableName}" (ID: ${tableId}).`);
                     const errorMsg = document.createElement('p');
                     errorMsg.textContent = `Error: Table "${tableName}" could not be generated.`;
-                    errorMsg.style.color = 'red';
                     pageWrapper.appendChild(errorMsg);
                 }
 
@@ -2510,21 +2522,21 @@
         pdfContentElement.style.display = 'block';
 
         const pdfOptions = {
-            margin: [10, 5, 10, 5],
-            filename: `${scheduleTitleText.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete_schedule.pdf`,
+            margin: [8, 5, 8, 5], // Slightly reduced margins
+            filename: `${(scheduleTitleElement.textContent || 'schedule').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete.pdf`,
             image: { type: 'jpeg', quality: 0.92 },
             html2canvas: {
-                scale: 1.8, // Adjusted scale
+                scale: 1.8,
                 useCORS: true,
                 logging: true,
                 scrollX: 0,
                 scrollY: -window.scrollY,
                 windowWidth: pdfContentElement.scrollWidth,
                 windowHeight: pdfContentElement.scrollHeight,
-                removeContainer: true // Try to clean up the cloned element
+                removeContainer: true
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-            pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-wrapper', avoid: ['h3', 'table', '.pdf-footnote'] }
+            pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-wrapper:not(:first-child)', avoid: ['h2', 'h3', 'table', '.pdf-footnote'] }
         };
 
         try {
