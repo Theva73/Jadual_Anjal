@@ -76,17 +76,17 @@
         }
 
         #collapsibleButtonBars {
-            max-height: 1000px; 
+            max-height: 1000px;
             overflow: hidden;
             transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out, padding-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out;
-            padding-top: 5px; 
+            padding-top: 5px;
             padding-bottom: 5px;
         }
         #collapsibleButtonBars:not(.open) {
             max-height: 0;
             padding-top: 0;
             padding-bottom: 0;
-            margin-top: 0; 
+            margin-top: 0;
         }
         /* --- End of Styles for Collapsible Button Controls --- */
 
@@ -97,29 +97,29 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             background-color: #fff;
-            table-layout: auto; 
+            table-layout: auto;
         }
         #tablesContainer, #summaryTableContainer {
-            overflow-x: auto; 
+            overflow-x: auto;
             position: relative;
             width: 100%;
         }
         #tablesContainer > table {
-            display: none; 
+            display: none;
         }
         #tablesContainer > table.active {
-            display: table; 
+            display: table;
         }
         #summaryTable {
             margin-top: 25px;
         }
         th, td {
-            border: 1px solid #dee2e6; 
-            padding: 12px 15px; 
+            border: 1px solid #dee2e6;
+            padding: 12px 15px;
             text-align: center;
-            min-width: 100px; 
+            min-width: 100px;
             box-sizing: border-box;
-            position: relative; 
+            position: relative;
         }
         table th {
             background-color: #f8f9fa;
@@ -129,38 +129,38 @@
         }
         #tablesContainer > table > thead > tr > th {
             font-weight: bold;
-            background-color: lightgrey; 
+            background-color: lightgrey;
             color: #343a40;
         }
         #tablesContainer > table > thead > tr > th:first-child,
         #tablesContainer > table > tbody > tr > td:first-child,
-        #tablesContainer > table > tbody > tr > th:first-child { 
+        #tablesContainer > table > tbody > tr > th:first-child {
             font-weight: bold;
-            background-color: aliceblue; 
-            color: #1c1e21; 
+            background-color: aliceblue;
+            color: #1c1e21;
         }
         #summaryTable > thead > tr > th {
             font-weight: bold;
-            background-color: lightgrey; 
+            background-color: lightgrey;
             color: #212529;
         }
         #summaryTable > thead > tr > th:first-child,
         #summaryTable > tbody > tr > td:first-child {
             font-weight: bold;
-            background-color: aliceblue; 
-            color: #1c1e21; 
+            background-color: aliceblue;
+            color: #1c1e21;
         }
-        td.selected, th.selected { 
+        td.selected, th.selected {
             outline: 3px solid #007bff;
-            background-color: #dbeafe; 
+            background-color: #dbeafe;
         }
         .bar {
             display: flex;
-            flex-wrap: wrap; 
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
             align-items: center;
-            justify-content: center; 
+            justify-content: center;
         }
         .bar button, .table-tabs button, .name-session-tabs button {
             padding: 10px 18px;
@@ -174,7 +174,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            flex-shrink: 0; 
+            flex-shrink: 0;
         }
         .bar button:hover, .table-tabs button:hover, .name-session-tabs button:hover {
             background-color: #f8f9fa;
@@ -227,9 +227,9 @@
             margin-bottom: 15px;
             border-bottom: 2px solid #007bff;
             padding-bottom: 0;
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 5px; 
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
         }
         .table-tabs button {
             background-color: transparent;
@@ -238,7 +238,7 @@
             border-radius: 6px 6px 0 0;
             color: #0056b3;
             font-weight: 500;
-            padding: 10px 15px; 
+            padding: 10px 15px;
         }
         .table-tabs button.active {
             background-color: #007bff;
@@ -249,43 +249,43 @@
             margin-bottom: 20px;
             border-bottom: 2px solid #dee2e6;
             padding-bottom: 8px;
-            display: flex; 
-            flex-wrap: wrap; 
+            display: flex;
+            flex-wrap: wrap;
             gap: 5px;
         }
         .name-session-tabs button {
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
             border-bottom: none;
-            margin-bottom: -2px; 
+            margin-bottom: -2px;
             padding: 10px 15px;
             font-size: 1em;
         }
         .name-session-tabs button.active {
             background-color: #007bff;
             color: white;
-            border-color: #007bff #007bff #fff; 
+            border-color: #007bff #007bff #fff;
             font-weight: bold;
         }
-        #summaryTable td { 
+        #summaryTable td {
             background-color: #fff9e6;
         }
         #summaryTable > tbody > tr > td:first-child {
-             background-color: aliceblue !important; 
+             background-color: aliceblue !important;
         }
-        .highlight-conflict { 
+        .highlight-conflict {
             background-color: #f8d7da !important;
             font-weight: bold;
             color: #721c24 !important;
         }
         #summaryTable > tbody > tr > td.highlight-conflict:first-child {
             background-color: aliceblue !important;
-            color: #721c24 !important; 
+            color: #721c24 !important;
         }
         .modal {
-            display: none; 
+            display: none;
             position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: hidden; 
+            overflow: hidden;
             background-color: rgba(0,0,0,0.5);
             align-items: center; justify-content: center;
             pointer-events: none;
@@ -296,8 +296,8 @@
             border-radius: 10px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.3); position: relative;
             pointer-events: auto;
-            max-height: 90vh; 
-            overflow-y: auto; 
+            max-height: 90vh;
+            overflow-y: auto;
             box-sizing: border-box;
         }
         .modal-content.dragging { transform: none; }
@@ -346,12 +346,12 @@
         #newNameInput, #searchNameInput {
             padding: 10px;
             margin-right: 8px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1;
-            width: calc(100% - 120px); 
+            width: calc(100% - 120px);
             box-sizing: border-box;
         }
          #searchNameInput {
             margin-bottom: 15px;
-            width: 100%; 
+            width: 100%;
             box-sizing: border-box;
             margin-right: 0;
          }
@@ -373,7 +373,7 @@
         }
         #nameList {
             margin-top:15px;
-            max-height:250px; 
+            max-height:250px;
             overflow-y:auto;
         }
         @media (min-width: 480px) {
@@ -388,8 +388,8 @@
             background-color: #333; color: white; padding: 15px 25px; border-radius: 8px;
             z-index: 2000;
             box-shadow: 0 4px 15px rgba(0,0,0,0.25); font-size: 1.05em;
-            text-align: center; 
-            width: 90%; 
+            text-align: center;
+            width: 90%;
             max-width: 400px;
         }
         .custom-message-box.success { background-color: #28a745; }
@@ -406,23 +406,23 @@
         }
         .subsumed-cell { visibility: hidden; }
         #loadingIndicatorModal, #generalLoadingIndicator {
-            position: absolute; 
+            position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.85);
             display: flex; align-items: center; justify-content: center;
-            z-index: 10; 
-            border-radius: 10px; 
+            z-index: 10;
+            border-radius: 10px;
         }
         #generalLoadingIndicator {
-            position: fixed; 
-            z-index: 3000; 
-            border-radius: 0; 
+            position: fixed;
+            z-index: 3000;
+            border-radius: 0;
         }
         .spinner {
             border: 5px solid rgba(0, 0, 0, 0.1);
             width: 40px; height: 40px;
             border-radius: 50%;
-            border-left-color: #007bff; 
+            border-left-color: #007bff;
             animation: spin 1s ease infinite;
         }
         @keyframes spin {
@@ -438,14 +438,14 @@
             opacity: 0;
         }
         #autocompleteSuggestions {
-            display: none; 
+            display: none;
             position: absolute;
             border: 1px solid #ccc;
             background-color: white;
-            z-index: 1001; 
+            z-index: 1001;
             max-height: 150px;
             overflow-y: auto;
-            min-width: 120px; 
+            min-width: 120px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.15);
             border-radius: 4px;
         }
@@ -456,19 +456,19 @@
             white-space: nowrap;
         }
         .suggestion-item:hover, .suggestion-item.active-suggestion {
-            background-color: #e9ecef; 
+            background-color: #e9ecef;
             color: #0056b3;
         }
 
         /* Styles for PDF content container */
         #pdfContent {
             padding: 20px;
-            background-color: #fff; 
+            background-color: #fff;
             color: #333;
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             box-sizing: border-box;
-            width: 100%; 
-            display: none; 
+            width: 100%;
+            display: none; /* Hidden by default, shown during PDF generation */
         }
         #pdfContent h2, #pdfContent h3 {
             text-align: center;
@@ -477,29 +477,40 @@
         }
         #pdfContent table {
             width: 100%;
-            border-collapse: collapse; 
+            border-collapse: collapse;
             margin-bottom: 25px;
-            box-shadow: none; 
-            background-color: #fff; 
-            table-layout: fixed; 
+            box-shadow: none;
+            background-color: #fff;
+            table-layout: fixed; /* Important for PDF layout */
         }
         #pdfContent th, #pdfContent td {
-            border: 1px solid #333 !important; 
-            padding: 6px 8px; 
+            border: 1px solid #333 !important; /* Darker borders for PDF */
+            padding: 6px 8px; /* Adjust padding for PDF */
             text-align: center;
-            font-size: 0.85em; 
-            word-wrap: break-word; 
-            background-color: #fff; 
+            font-size: 0.85em; /* Slightly smaller font for PDF */
+            word-wrap: break-word; /* Ensure long text wraps */
+            background-color: #fff; /* Ensure cells are not transparent */
         }
-        #pdfContent table th { 
-            background-color: #e9ecef !important; 
+        #pdfContent table th {
+            background-color: #e9ecef !important; /* Light grey background for headers */
             color: #212529;
-            font-weight: bold; 
-        }
-        #pdfContent table tbody tr td:first-child, 
-        #pdfContent table thead tr th:first-child { 
-            background-color: #f0f8ff !important; 
             font-weight: bold;
+        }
+        #pdfContent table tbody tr td:first-child,
+        #pdfContent table thead tr th:first-child { /* First column styling */
+            background-color: #f0f8ff !important; /* AliceBlue for first column */
+            font-weight: bold;
+        }
+        /* NEW: Styles for the PDF footnote */
+        #pdfContent .pdf-footnote {
+            text-align: right;
+            font-size: 0.7em;
+            color: #555555;
+            margin-top: 20px;
+            padding-top: 5px;
+            border-top: 1px solid #dddddd;
+            width: 100%;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -512,7 +523,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg> <span>Hide Controls</span>
     </button>
 
-    <div id="collapsibleButtonBars" class="open"> 
+    <div id="collapsibleButtonBars" class="open">
         <div class="bar">
             <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
             <button id="downloadPdfBtn" title="Download schedule tables as PDF">📄 Download PDF</button> </div>
@@ -672,11 +683,12 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     // Add SDKs for Firebase products that you want to use
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
+    // IMPORTANT: Replace with your actual Firebase config or ensure __firebase_config is injected
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4", 
+      apiKey: "AIzaSyEXAMPLE-API-KEYdQquIEx4", // Replace with your actual API key
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
       storageBucket: "jadual-3f0aa.appspot.com",
@@ -696,13 +708,13 @@
     } else {
         firebaseConfig = userProvidedFirebaseConfig;
         console.warn("Firebase Auth: __firebase_config is not defined or empty. Using userProvidedFirebaseConfig from the script.");
-        if (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID") { 
+        if (firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4" || firebaseConfig.projectId === "YOUR_PROJECT_ID") { // Check against placeholder
             console.error("Firebase Auth: CRITICAL - The userProvidedFirebaseConfig contains placeholder values. Firebase will NOT work. Please update the firebaseConfig object in the script with your actual Firebase project details if not running in an environment that injects __firebase_config.");
         }
     }
-    
+
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app');
-    
+
     if (typeof __app_id === 'undefined') {
         console.warn("Firebase Auth: __app_id is not defined. Using App ID from Firebase config or a default value. This appId scopes your shared data in Firestore.");
     }
@@ -728,14 +740,14 @@
 
     // --- Global State and Configuration ---
     const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
-    let activeTableId = 'tbl_1'; 
-    let tableCount = 1; 
+    let activeTableId = 'tbl_1';
+    let tableCount = 1; // Keep track of table creation for unique IDs
     let selectionMode = false;
     let selectedCells = [];
     let lastClickedCell = null;
-    let selectedNameFromList = null; 
+    let selectedNameFromList = null;
 
-    let currentNameListSession = 'pagi'; 
+    let currentNameListSession = 'pagi';
     let namesPagiShared = [];
     let namesPetangShared = [];
 
@@ -744,11 +756,11 @@
 
     let autocompleteSuggestionsDiv = null;
     let activeCellForAutocomplete = null;
-    let currentAutocompleteIndex = -1; 
+    let currentAutocompleteIndex = -1;
 
-    let currentWorkingScheduleDocId = null; 
+    let currentWorkingScheduleDocId = null;
     let autoSaveIntervalId = null;
-    const AUTO_SAVE_INTERVAL = 60000; 
+    const AUTO_SAVE_INTERVAL = 60000; // 1 minute
 
     // DOM Element Cache
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement;
@@ -914,7 +926,7 @@
                         const wordsInMain = mainContent.split(/\s+/);
                         const newWordsInMain = wordsInMain.filter(word => {
                             if (word.startsWith('*') && mainContent.includes(nameToDeleteStr)) {
-                                return !mainContent.includes(word.substring(1)); 
+                                return !mainContent.includes(word.substring(1));
                             }
                             return word !== nameToDeleteStr;
                         });
@@ -963,7 +975,7 @@
             if (sessionToListen === currentNameListSession && nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
                 renderNameListFromFirestore(searchNameInputElement.value);
             }
-            rebuildAndRenderSummary(); 
+            rebuildAndRenderSummary();
             showNameModalLoading(false);
         }, (error) => {
             console.error(`Error listening to shared ${sessionToListen} names:`, error);
@@ -995,13 +1007,13 @@
             meta: allTableMeta,
             activeTableId: activeTableId,
             createdAt: serverTimestamp(),
-            lastUpdatedAt: serverTimestamp(), 
+            lastUpdatedAt: serverTimestamp(),
             lastUpdatedBy: fbUserId || "anonymous"
         };
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
             const newDocRef = await addDoc(sharedSchedulesCollectionRef, scheduleData);
-            currentWorkingScheduleDocId = newDocRef.id; 
+            currentWorkingScheduleDocId = newDocRef.id;
             showMessage(`Shared schedule "${scheduleName.trim()}" saved to Cloud! (ID: ${currentWorkingScheduleDocId})`, 'success');
             if (sharedScheduleListContainerElement && sharedScheduleListContainerElement.style.display === 'block') {
                 await loadAndRenderSharedSchedulesFromFirestore();
@@ -1013,10 +1025,10 @@
             showGeneralLoading(false);
         }
     }
-    
+
     async function autoSaveCurrentSchedule() {
         if (!fbDb || !fbIsAuthReady || !currentWorkingScheduleDocId) {
-            if (currentWorkingScheduleDocId) { 
+            if (currentWorkingScheduleDocId) {
                  console.log("Auto-save skipped: Firebase not ready or no active shared schedule document ID.");
             }
             return;
@@ -1036,21 +1048,21 @@
             const docSnap = await getDoc(docRef);
             if (!docSnap.exists()) {
                 console.warn(`Auto-save: Document ${currentWorkingScheduleDocId} not found. Clearing active schedule ID.`);
-                currentWorkingScheduleDocId = null; 
+                currentWorkingScheduleDocId = null;
                 return;
             }
             const existingData = docSnap.data();
             const scheduleDataForUpdate = {
-                name: existingData.name, 
+                name: existingData.name,
                 html: allTablesData,
                 meta: allTableMeta,
                 activeTableId: activeTableId,
-                createdAt: existingData.createdAt, 
-                lastUpdatedAt: serverTimestamp(), 
+                createdAt: existingData.createdAt,
+                lastUpdatedAt: serverTimestamp(),
                 lastUpdatedBy: fbUserId || "anonymous",
             };
             await setDoc(docRef, scheduleDataForUpdate);
-            showMessage(`Auto-saved to "${existingData.name}"`, 'success', 2000); 
+            showMessage(`Auto-saved to "${existingData.name}"`, 'success', 2000);
         } catch (error) {
             console.error(`Error auto-saving schedule ID ${currentWorkingScheduleDocId}:`, error);
             showMessage(`Auto-save failed. Error: ${error.message}`, "error", 3000);
@@ -1069,7 +1081,7 @@
         let querySnapshot;
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            let q = query(sharedSchedulesCollectionRef, orderBy("lastUpdatedAt", "desc"), orderBy("createdAt", "desc")); 
+            let q = query(sharedSchedulesCollectionRef, orderBy("lastUpdatedAt", "desc"), orderBy("createdAt", "desc"));
             querySnapshot = await getDocs(q);
         } catch (error) {
             console.error("Error loading shared schedules with primary sort (lastUpdatedAt, createdAt):", error);
@@ -1102,10 +1114,10 @@
         sharedScheduleListContainerElement.style.display = 'block';
         showGeneralLoading(false);
     }
-    
+
     function renderSharedScheduleList(schedulesArray) {
         if (!sharedScheduleListContainerElement) return;
-        sharedScheduleListContainerElement.innerHTML = ''; 
+        sharedScheduleListContainerElement.innerHTML = '';
         if (!schedulesArray || schedulesArray.length === 0) {
             sharedScheduleListContainerElement.innerHTML = '<p>No shared schedules saved to Cloud yet.</p>'; return;
         }
@@ -1146,7 +1158,7 @@
                 const scheduleData = docSnap.data();
                 tablesContainer.innerHTML = scheduleData.html;
                 const tableMeta = scheduleData.meta || {};
-                tableTabs.innerHTML = ''; 
+                tableTabs.innerHTML = '';
                 tablesContainer.querySelectorAll('table').forEach(table => {
                     const id = table.id;
                     const metaInfo = tableMeta[id] || {};
@@ -1162,34 +1174,34 @@
                     switchTable(tablesContainer.querySelector('table').id);
                 } else {
                     console.warn("Loaded schedule has no tables or activeTableId is invalid. Adding new table.");
-                    addNewTable(true); 
+                    addNewTable(true);
                 }
-                currentWorkingScheduleDocId = scheduleDocId; 
-                if (!isDefaultLoad) { 
+                currentWorkingScheduleDocId = scheduleDocId;
+                if (!isDefaultLoad) {
                     showMessage(`Shared schedule "${scheduleData.name}" loaded from Cloud!`, 'success');
                 } else {
                      console.log(`Default schedule "${scheduleData.name}" loaded.`);
                 }
                 if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.style.display = 'none';
                 rebuildAndRenderSummary();
-                updateAllMergeOverlays(); 
+                updateAllMergeOverlays();
                 return true;
             } else {
                 if (!isDefaultLoad) showMessage(`Shared schedule with ID "${scheduleDocId}" not found in Cloud.`, "error");
                 else console.log(`Default schedule ID "${scheduleDocId}" not found.`)
-                currentWorkingScheduleDocId = null; 
+                currentWorkingScheduleDocId = null;
                 return false;
             }
         } catch (error) {
             console.error("Error loading selected shared schedule from Firestore:", error);
             if (!isDefaultLoad) showMessage(`Failed to load shared schedule. Error: ${error.message}`, "error");
-            currentWorkingScheduleDocId = null; 
+            currentWorkingScheduleDocId = null;
             return false;
         } finally {
             showGeneralLoading(false);
         }
     }
-    
+
     async function loadLatestSharedScheduleAsDefault() {
         if (!fbDb || !fbIsAuthReady) {
             console.log("loadLatestSharedScheduleAsDefault: Firebase not ready.");
@@ -1249,12 +1261,12 @@
             try {
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
                 await deleteDoc(docRef);
-                if (currentWorkingScheduleDocId === scheduleDocId) { 
+                if (currentWorkingScheduleDocId === scheduleDocId) {
                     currentWorkingScheduleDocId = null;
                     console.log("Deleted schedule was the current working draft. Cleared currentWorkingScheduleDocId.");
                 }
                 showMessage(`Shared schedule "${scheduleName}" deleted from Cloud.`, 'success');
-                await loadAndRenderSharedSchedulesFromFirestore(); 
+                await loadAndRenderSharedSchedulesFromFirestore();
             } catch (error) {
                 console.error("Error deleting shared schedule from Firestore:", error);
                 showMessage(`Failed to delete shared schedule. Error: ${error.message}`, "error");
@@ -1271,7 +1283,7 @@
         showGeneralLoading(true);
         try {
             const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            const q = query(schedulesCollectionRef, orderBy("createdAt", "desc")); 
+            const q = query(schedulesCollectionRef, orderBy("createdAt", "desc"));
             const querySnapshot = await getDocs(q);
             const schedulesToExport = [];
             querySnapshot.forEach((docSnap) => {
@@ -1287,7 +1299,7 @@
                 });
             });
             if (schedulesToExport.length === 0) {
-                showMessage('No shared schedules in Cloud to export.', 'info'); 
+                showMessage('No shared schedules in Cloud to export.', 'info');
                 showGeneralLoading(false);
                 return;
             }
@@ -1337,7 +1349,7 @@
                                 }
                             } else {
                                 skippedCount++;
-                                continue; 
+                                continue;
                             }
                         }
                         await addDoc(schedulesCollectionRef, {
@@ -1345,7 +1357,7 @@
                             html: schedule.html,
                             meta: schedule.meta,
                             activeTableId: schedule.activeTableId,
-                            createdAt: schedule.createdAt ? new Date(schedule.createdAt) : serverTimestamp(), 
+                            createdAt: schedule.createdAt ? new Date(schedule.createdAt) : serverTimestamp(),
                             lastUpdatedAt: schedule.lastUpdatedAt ? new Date(schedule.lastUpdatedAt) : serverTimestamp(),
                             lastUpdatedBy: schedule.lastUpdatedBy || fbUserId || "anonymous"
                         });
@@ -1357,20 +1369,20 @@
                 }
                 showMessage(`Shared schedules import to Cloud: ${importedCount} imported/overwritten, ${skippedCount} skipped.`, 'success', 5000);
                 if (sharedScheduleListContainerElement && (sharedScheduleListContainerElement.style.display === 'block' || importedCount > 0)) {
-                    await loadAndRenderSharedSchedulesFromFirestore(); 
+                    await loadAndRenderSharedSchedulesFromFirestore();
                 }
-            } catch (error) { 
+            } catch (error) {
                 console.error("Error processing shared schedule file for Firestore import:", error);
-                showMessage('Error processing schedule file. Ensure it is a valid JSON export from this app.', 'error', 5000); 
+                showMessage('Error processing schedule file. Ensure it is a valid JSON export from this app.', 'error', 5000);
             }
-            finally { 
-                event.target.value = ''; 
+            finally {
+                event.target.value = '';
                 showGeneralLoading(false);
-            } 
+            }
         };
-        reader.onerror = () => { 
-            showMessage('Failed to read the schedule file.', 'error'); 
-            event.target.value = ''; 
+        reader.onerror = () => {
+            showMessage('Failed to read the schedule file.', 'error');
+            event.target.value = '';
             showGeneralLoading(false);
         };
         reader.readAsText(file);
@@ -1379,9 +1391,9 @@
     function showCellAutocompleteSuggestions(cell, inputText) {
         if (!autocompleteSuggestionsDiv) return;
         const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
-        let textForMatchingInput = String(inputText || '').split(' // ')[0]; 
-        const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*')); 
-        const textForMatching = wordsForMatching.join(' ').toLowerCase().trim(); 
+        let textForMatchingInput = String(inputText || '').split(' // ')[0];
+        const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*'));
+        const textForMatching = wordsForMatching.join(' ').toLowerCase().trim();
         if (!textForMatching) {
             hideCellAutocompleteSuggestions();
             return;
@@ -1392,13 +1404,13 @@
         });
         if (filteredSuggestions.length > 0) {
             activeCellForAutocomplete = cell;
-            autocompleteSuggestionsDiv.innerHTML = ''; 
-            filteredSuggestions.slice(0, 10).forEach(suggestion => { 
+            autocompleteSuggestionsDiv.innerHTML = '';
+            filteredSuggestions.slice(0, 10).forEach(suggestion => {
                 const item = document.createElement('div');
                 item.className = 'suggestion-item';
                 item.textContent = suggestion;
-                item.addEventListener('mousedown', (e) => { 
-                    e.preventDefault(); 
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
                     selectCellAutocompleteSuggestion(suggestion);
                 });
                 autocompleteSuggestionsDiv.appendChild(item);
@@ -1408,7 +1420,7 @@
             autocompleteSuggestionsDiv.style.top = `${cellRect.bottom + window.scrollY}px`;
             autocompleteSuggestionsDiv.style.minWidth = `${cellRect.width}px`;
             autocompleteSuggestionsDiv.style.display = 'block';
-            currentAutocompleteIndex = -1; 
+            currentAutocompleteIndex = -1;
         } else {
             hideCellAutocompleteSuggestions();
         }
@@ -1424,7 +1436,7 @@
 
     function selectCellAutocompleteSuggestion(suggestionText) {
         if (activeCellForAutocomplete) {
-            const targetCell = activeCellForAutocomplete; 
+            const targetCell = activeCellForAutocomplete;
             const overlay = targetCell.querySelector('.merged-cell-overlay');
             const currentFullText = overlay ? overlay.textContent : targetCell.textContent;
             const remarkPart = currentFullText.includes(' // ') ? currentFullText.substring(currentFullText.indexOf(' // ')) : '';
@@ -1442,13 +1454,13 @@
             }
             hideCellAutocompleteSuggestions();
             rebuildAndRenderSummary();
-            targetCell.focus(); 
+            targetCell.focus();
             const range = document.createRange();
             const sel = window.getSelection();
             const contentNode = overlay || targetCell;
             if (contentNode.childNodes.length > 0) {
-                range.selectNodeContents(contentNode); 
-                range.collapse(false); 
+                range.selectNodeContents(contentNode);
+                range.collapse(false);
             } else {
                 range.setStart(contentNode, 0);
                 range.collapse(true);
@@ -1457,7 +1469,7 @@
             sel.addRange(range);
         }
     }
-    
+
     function updateCellSuggestionHighlight() {
         if (!autocompleteSuggestionsDiv || autocompleteSuggestionsDiv.style.display === 'none') return;
         const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
@@ -1491,14 +1503,14 @@
         loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
         nameModalTitleElement = document.getElementById('nameModalTitle');
         generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator');
-        controlsTogglerElement = document.getElementById('controlsToggler'); 
-        collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); 
-        downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); 
-        pdfContentElement = document.getElementById('pdfContent'); 
+        controlsTogglerElement = document.getElementById('controlsToggler');
+        collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars');
+        downloadPdfButtonElement = document.getElementById('downloadPdfBtn');
+        pdfContentElement = document.getElementById('pdfContent'); // Crucial for PDF generation
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) { 
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) {
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
             return;
@@ -1523,10 +1535,10 @@
                     const loadedDefault = await loadLatestSharedScheduleAsDefault();
                     if (!loadedDefault) {
                         console.log("No default schedule loaded, setting up initial table state.");
-                        setupInitialTableState(); 
+                        setupInitialTableState();
                     }
-                    rebuildAndRenderSummary(); 
-                    if (autoSaveIntervalId) clearInterval(autoSaveIntervalId); 
+                    rebuildAndRenderSummary();
+                    if (autoSaveIntervalId) clearInterval(autoSaveIntervalId);
                     autoSaveIntervalId = setInterval(autoSaveCurrentSchedule, AUTO_SAVE_INTERVAL);
                     console.log(`Auto-save interval started (every ${AUTO_SAVE_INTERVAL/1000}s).`);
                 } else {
@@ -1548,7 +1560,7 @@
                         console.error("Firebase Auth: Error during sign-in:", error);
                         showMessage(`Firebase Auth failed. Cloud features may not work. Error: ${error.message}`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
-                        setupInitialTableState(); 
+                        setupInitialTableState();
                         rebuildAndRenderSummary();
                     }
                 }
@@ -1558,10 +1570,10 @@
              else console.warn("userIdDisplayElement not found in DOM.");
              console.error("Firebase Auth: fbAuth object is not available. Firebase Auth service could not be initialized.");
              showMessage("Critical Error: Firebase Auth service could not be initialized. Check Firebase setup.", "error", 10000);
-             setupInitialTableState(); 
+             setupInitialTableState();
              rebuildAndRenderSummary();
         }
-        loadScheduleTitleFromLocalStorage(); 
+        loadScheduleTitleFromLocalStorage();
         initializeEventListeners();
         handleNameListSessionSwitch('pagi');
     });
@@ -1571,13 +1583,13 @@
         const existingTables = tablesContainer.querySelectorAll('table');
         if (currentWorkingScheduleDocId && existingTables.length > 0 && document.getElementById(activeTableId)) {
             console.log("setupInitialTableState: A schedule is already loaded and active.");
-            switchTable(activeTableId); 
+            switchTable(activeTableId);
             return;
         }
         console.log("setupInitialTableState: No schedule loaded or tables are missing. Initializing default view.");
-        tableTabs.innerHTML = ''; 
-        currentWorkingScheduleDocId = null; 
-        activeTableId = null; 
+        tableTabs.innerHTML = '';
+        currentWorkingScheduleDocId = null;
+        activeTableId = null; // Reset activeTableId
         const table1 = document.getElementById('tbl_1');
         const table2 = document.getElementById('tbl_2');
         if (table1) {
@@ -1586,28 +1598,32 @@
         if (table2) {
             addTabButton(table2.id, table2.dataset.tableName || 'Kelas 1, 2 & 4');
         }
-        if (table1) {
+        if (table1) { // Default to tbl_1 if it exists
             switchTable(table1.id);
-        } else if (tablesContainer.querySelector('table')) {
+        } else if (table2) { // Fallback to tbl_2 if tbl_1 doesn't exist but tbl_2 does
+             switchTable(table2.id);
+        } else if (tablesContainer.querySelector('table')) { // Fallback to any first table
             switchTable(tablesContainer.querySelector('table').id);
         } else {
             console.warn("setupInitialTableState: No tables found in HTML, adding a new one dynamically.");
-            addNewTable(true); 
+            addNewTable(true); // This will also call switchTable
         }
+
+        // Ensure activeTableId is set if a table exists
         if (!activeTableId && tablesContainer.querySelector('table')) {
             activeTableId = tablesContainer.querySelector('table').id;
-            switchTable(activeTableId);
-             console.warn("setupInitialTableState: Fallback to first table in DOM as active.");
+            switchTable(activeTableId); // Ensure UI consistency
+             console.warn("setupInitialTableState: Fallback to first table in DOM as active after initial setup.");
         } else if (!activeTableId) {
-            console.error("setupInitialTableState: Critical error, no active table could be established.");
+            console.error("setupInitialTableState: Critical error, no active table could be established even after attempting to add one.");
         }
     }
 
-    function loadScheduleTitleFromLocalStorage() { 
+    function loadScheduleTitleFromLocalStorage() {
         const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
         if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
         if (scheduleTitleElement) {
-            scheduleTitleElement.addEventListener('blur', () => { 
+            scheduleTitleElement.addEventListener('blur', () => {
                 localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent);
                 showMessage('Schedule title saved (locally)!', 'success');
             });
@@ -1615,9 +1631,9 @@
     }
 
     function initializeEventListeners() {
-        if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility); 
+        if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility);
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
-        if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf); 
+        if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) {
             nameModalHeader.addEventListener('mousedown', startDragModal);
@@ -1689,7 +1705,7 @@
                     } else {
                         hideCellAutocompleteSuggestions();
                     }
-                    setTimeout(rebuildAndRenderSummary, 300); 
+                    setTimeout(rebuildAndRenderSummary, 300);
                 } else if (cell.classList.contains('merged-cell-overlay')) {
                     const text = cell.textContent;
                     const parentCell = cell.parentElement;
@@ -1698,29 +1714,29 @@
                     } else {
                          hideCellAutocompleteSuggestions();
                     }
-                    setTimeout(rebuildAndRenderSummary, 300); 
+                    setTimeout(rebuildAndRenderSummary, 300);
                 }
             });
-            tablesContainer.addEventListener('blur', (e) => { 
+            tablesContainer.addEventListener('blur', (e) => {
                 const cell = e.target;
-                if ((cell.tagName === 'TD' || cell.tagName === 'TH' || cell.classList.contains('merged-cell-overlay')) && cell.isContentEditable !== false) { 
+                if ((cell.tagName === 'TD' || cell.tagName === 'TH' || cell.classList.contains('merged-cell-overlay')) && cell.isContentEditable !== false) {
                     setTimeout(rebuildAndRenderSummary, 0);
                     setTimeout(() => {
                         if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' &&
                             !autocompleteSuggestionsDiv.contains(document.activeElement) &&
-                            activeCellForAutocomplete !== document.activeElement && 
-                            (activeCellForAutocomplete && activeCellForAutocomplete.querySelector('.merged-cell-overlay') !== document.activeElement) 
+                            activeCellForAutocomplete !== document.activeElement &&
+                            (activeCellForAutocomplete && activeCellForAutocomplete.querySelector('.merged-cell-overlay') !== document.activeElement)
                            ) {
                            hideCellAutocompleteSuggestions();
                         }
-                    }, 150); 
+                    }, 150);
                 }
-            }, true); 
+            }, true);
         }
         window.addEventListener('resize', () => {
             updateAllMergeOverlays();
-            hideCellAutocompleteSuggestions(); 
-        }); 
+            hideCellAutocompleteSuggestions();
+        });
         document.addEventListener('keydown', (e) => {
             if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && activeCellForAutocomplete) {
                 const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
@@ -1739,13 +1755,13 @@
                         selectCellAutocompleteSuggestion(items[currentAutocompleteIndex].textContent);
                     } else {
                         hideCellAutocompleteSuggestions();
-                        if(activeCellForAutocomplete) activeCellForAutocomplete.blur(); 
+                        if(activeCellForAutocomplete) activeCellForAutocomplete.blur();
                     }
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
                     hideCellAutocompleteSuggestions();
                 } else if (e.key === 'Tab') {
-                    hideCellAutocompleteSuggestions(); 
+                    hideCellAutocompleteSuggestions();
                 }
             }
         });
@@ -1762,7 +1778,7 @@
     }
 
     function startDragModal(e) {
-        if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; } 
+        if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; }
         isDraggingModal = true;
         if(nameModalContent) nameModalContent.classList.add('dragging');
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
@@ -1771,10 +1787,10 @@
         nameModalContent.style.position = 'fixed';
         nameModalContent.style.left = `${rect.left}px`;
         nameModalContent.style.top = `${rect.top}px`;
-        nameModalContent.style.transform = 'none'; 
+        nameModalContent.style.transform = 'none';
         modalDragOffsetX = clientX - nameModalContent.offsetLeft;
         modalDragOffsetY = clientY - nameModalContent.offsetTop;
-        if (e.type === 'touchstart') e.preventDefault(); 
+        if (e.type === 'touchstart') e.preventDefault();
     }
 
     function dragModal(e) {
@@ -1783,7 +1799,7 @@
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         let newLeft = clientX - modalDragOffsetX;
         let newTop = clientY - modalDragOffsetY;
-        const modalRect = nameModalContent.getBoundingClientRect(); 
+        const modalRect = nameModalContent.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         if (newLeft < 0) newLeft = 0;
@@ -1792,7 +1808,7 @@
         if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
         nameModalContent.style.left = `${newLeft}px`;
         nameModalContent.style.top = `${newTop}px`;
-        if (e.type === 'touchmove') e.preventDefault(); 
+        if (e.type === 'touchmove') e.preventDefault();
     }
 
     function stopDragModal() {
@@ -1838,20 +1854,20 @@
                         c.removeAttribute('data-merge-id');
                         c.classList.remove('merged-cell-container', 'subsumed-cell');
                         const overlay = c.querySelector('.merged-cell-overlay');
-                        if (overlay) c.textContent = overlay.textContent; 
-                        else c.innerHTML = ''; 
-                        const overlayChild = c.querySelector('.merged-cell-overlay'); 
+                        if (overlay) c.textContent = overlay.textContent;
+                        else c.innerHTML = '';
+                        const overlayChild = c.querySelector('.merged-cell-overlay');
                         if(overlayChild) overlayChild.remove();
                     });
                 }
             });
             activeTableElement.querySelectorAll('tbody td, tbody th').forEach(cell => {
-                cell.innerHTML = ''; 
-                cell.classList.remove('selected'); 
+                cell.innerHTML = '';
+                cell.classList.remove('selected');
             });
-            selectedCells = []; 
+            selectedCells = [];
             rebuildAndRenderSummary();
-            updateAllMergeOverlays(); 
+            updateAllMergeOverlays();
             showMessage(`Content of "${tableName}" cleared.`, 'success');
         }
     }
@@ -1868,32 +1884,33 @@
 
     function switchTable(id) {
         const targetTable = document.getElementById(id);
-        if (!targetTable && tablesContainer) { 
+        if (!targetTable && tablesContainer) {
             const firstTableInDOM = tablesContainer.querySelector('table');
             if (firstTableInDOM) {
-                id = firstTableInDOM.id; 
-                console.warn(`SwitchTable: Target table ${id} not found, falling back to first table in DOM.`);
-            } else { 
+                id = firstTableInDOM.id; // Update id to the one found
+                console.warn(`SwitchTable: Target table for original ID not found, falling back to first table in DOM: ${id}.`);
+            } else {
                 if (tablesContainer && tablesContainer.children.length === 0) {
                     console.log("SwitchTable: No tables exist, adding a new one.");
-                    addNewTable(true); 
-                    return; 
+                    addNewTable(true); // This will set activeTableId and call switchTable again
+                    return; // Exit as addNewTable will handle the switch
                 }
-                console.error(`SwitchTable: Target table ${id} not found and no fallback available.`);
-                return; 
+                console.error(`SwitchTable: Target table for original ID not found and no fallback available.`);
+                return;
             }
         } else if (!targetTable) {
-             console.error(`SwitchTable: Target table ${id} not found and tablesContainer is also missing.`);
+             console.error(`SwitchTable: Target table for ID ${id} not found and tablesContainer is also missing.`);
              return;
         }
+
         console.log(`Switching to table: ${id}`);
-        activeTableId = id;
+        activeTableId = id; // Set the global activeTableId
         if(tablesContainer) tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
         if(tableTabs) tableTabs.querySelectorAll('button').forEach(b => { b.classList.toggle('active', b.dataset.tableId === id); });
-        deselectAllTableCells(); 
+        deselectAllTableCells();
         rebuildAndRenderSummary();
         updateAllMergeOverlays();
-        hideCellAutocompleteSuggestions(); 
+        hideCellAutocompleteSuggestions();
     }
 
     function addNewTable(isInitial = false) {
@@ -1901,7 +1918,7 @@
             console.error("addNewTable: Critical DOM elements missing (tablesContainer or tableTabs).");
             return;
         }
-        tableCount++; 
+        tableCount++;
         const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
         const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
         if (!label && !isInitial) {
@@ -1909,7 +1926,7 @@
             return;
         }
         const newTable = document.createElement('table');
-        newTable.id = `tbl_${Date.now()}_${tableCount}`; 
+        newTable.id = `tbl_${Date.now()}_${tableCount}`;
         newTable.dataset.tableName = label || defaultTableName;
         const thead = newTable.createTHead();
         const headerRow = thead.insertRow();
@@ -1920,16 +1937,16 @@
             headerRow.appendChild(th);
         });
         const tbody = newTable.createTBody();
-        for (let r = 0; r < 2; r++) { 
+        for (let r = 0; r < 2; r++) {
             const dataRow = tbody.insertRow();
             for (let c = 0; c < headerRow.cells.length; c++) {
                 const td = dataRow.insertCell(); td.contentEditable = 'true';
-                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`; 
+                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`;
             }
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTable.id, label || defaultTableName);
-        switchTable(newTable.id); 
+        switchTable(newTable.id); // This will set activeTableId
         if (!isInitial) {
             showMessage(`Table "${label || defaultTableName}" added.`, 'success');
         } else {
@@ -1953,7 +1970,7 @@
         const newName = customPrompt('Enter new table name:', oldName);
         if (newName && newName.trim() && newName.trim() !== oldName) {
             const trimmedNewName = newName.trim();
-            currentTab.textContent = trimmedNewName; currentTab.title = `Switch to table: ${trimmedNewName}`; 
+            currentTab.textContent = trimmedNewName; currentTab.title = `Switch to table: ${trimmedNewName}`;
             tableElement.dataset.tableName = trimmedNewName;
             showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
         } else if (newName && newName.trim() === oldName) showMessage('Name unchanged.', 'info');
@@ -1971,32 +1988,32 @@
         const tableName = tableElement?.dataset.tableName || activeTab?.textContent || 'the active table';
         if (await customConfirm(`Delete table "${tableName}"? This cannot be undone.`)) {
             if (tableElement) tableElement.remove();
-            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove(); 
-            activeTab?.remove(); 
+            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
+            activeTab?.remove();
             const firstRemainingTab = tableTabs.querySelector('button');
-            if (firstRemainingTab) { 
-                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; 
+            if (firstRemainingTab) {
+                const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1];
                 switchTable(nextActiveId);
-            } else { 
-                activeTableId = null; 
+            } else {
+                activeTableId = null;
                 console.log("Last table deleted. Adding a new default table.");
-                addNewTable(true); 
+                addNewTable(true); // This will also call switchTable
             }
             showMessage(`Table "${tableName}" deleted.`, 'success');
         }
     }
 
     function addRowToTable(tableBody, rowIndex, numCols) {
-        const row = tableBody.insertRow(rowIndex); 
+        const row = tableBody.insertRow(rowIndex);
         for (let i = 0; i < numCols; i++) {
             const cell = row.insertCell(); cell.contentEditable = 'true';
         }
     }
     function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId);
-        if (!table || !table.tBodies[0] || table.rows.length === 0) return; 
-        const numCols = table.rows[0].cells.length; 
-        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex : 0; 
+        if (!table || !table.tBodies[0] || table.rows.length === 0) return;
+        const numCols = table.rows[0].cells.length;
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex : 0;
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
@@ -2004,11 +2021,11 @@
         const table = document.getElementById(activeTableId);
         if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const numCols = table.rows[0].cells.length;
-        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex + 1 : -1; 
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex + 1 : -1;
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    function addColumnToTable(table, colIndex) { 
+    function addColumnToTable(table, colIndex) {
         for (const row of table.rows) {
             const isHeaderRow = row.parentElement.tagName === 'THEAD';
             const cell = isHeaderRow ? document.createElement('th') : row.insertCell(colIndex === -1 ? row.cells.length : colIndex);
@@ -2016,7 +2033,7 @@
             if (isHeaderRow) {
                 cell.textContent = "New Header";
                 if (colIndex !== -1 && row.cells[colIndex]) row.insertBefore(cell, row.cells[colIndex]);
-                else if (isHeaderRow) row.appendChild(cell); 
+                else if (isHeaderRow) row.appendChild(cell);
             }
         }
     }
@@ -2030,7 +2047,7 @@
     function addColumnRightToActiveTable() {
         const table = document.getElementById(activeTableId);
         if (!table) return;
-        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex + 1 : -1; 
+        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex + 1 : -1;
         addColumnToTable(table, insertAtIndex);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
@@ -2044,8 +2061,8 @@
         }
         if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete the last data row.', 'error'); return; }
         if (await customConfirm('Delete this row?')) {
-            rowToDelete.remove(); lastClickedCell = null; 
-            deselectAllTableCells(); 
+            rowToDelete.remove(); lastClickedCell = null;
+            deselectAllTableCells();
             rebuildAndRenderSummary(); updateAllMergeOverlays();
             showMessage('Row deleted.', 'success');
         }
@@ -2073,20 +2090,20 @@
             btn.classList.toggle('active', selectionMode);
             btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells';
         }
-        if (!selectionMode) deselectAllTableCells(); 
-        hideCellAutocompleteSuggestions(); 
+        if (!selectionMode) deselectAllTableCells();
+        hideCellAutocompleteSuggestions();
     }
 
     function handleTableCellClick(event) {
         const cell = event.target.closest('td, th');
-        if (!cell || !cell.closest(`#${activeTableId}`)) return; 
-        lastClickedCell = cell; 
-        if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && 
+        if (!cell || !cell.closest(`#${activeTableId}`)) return;
+        lastClickedCell = cell;
+        if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' &&
             !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
             hideCellAutocompleteSuggestions();
         }
-        if (selectedNameFromList) { 
-            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
+        if (selectedNameFromList) {
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
                 const overlay = cell.querySelector('.merged-cell-overlay');
                 const currentCellText = overlay ? overlay.textContent : cell.textContent;
                 const remarkPart = currentCellText.includes(' // ') ? currentCellText.substring(currentCellText.indexOf(' // ')) : '';
@@ -2099,15 +2116,15 @@
                 newText = (newText.trim() + remarkPart).trim();
                 if (overlay) overlay.textContent = newText;
                 else cell.textContent = newText;
-                rebuildAndRenderSummary(); 
+                rebuildAndRenderSummary();
                 showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500);
-                clearNameSelection(); 
+                clearNameSelection();
             } else {
                 showMessage('Click an editable data cell to insert name.', 'info');
             }
-            return; 
+            return;
         }
-        if (selectionMode) { 
+        if (selectionMode) {
             if (cell.classList.contains('subsumed-cell') ||
                 (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) {
                 showMessage('Cannot select subsumed cells or mix merge groups.', 'warning'); return;
@@ -2148,12 +2165,12 @@
         const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const overlay = document.createElement('div');
         overlay.className = 'merged-cell-overlay';
-        overlay.textContent = primaryCell.textContent; 
-        overlay.contentEditable = 'true'; 
+        overlay.textContent = primaryCell.textContent;
+        overlay.contentEditable = 'true';
         overlay.style.setProperty('--merged-width', `${totalWidth}px`);
         overlay.style.setProperty('--merged-height', `${totalHeight}px`);
-        overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); }); 
-        overlay.addEventListener('input', (e) => { 
+        overlay.addEventListener('blur', () => { rebuildAndRenderSummary(); });
+        overlay.addEventListener('input', (e) => {
             const text = e.target.textContent;
             if (primaryCell && (primaryCell.cellIndex > 0 || primaryCell.closest('table')?.querySelector('thead th:first-child')?.textContent?.toLowerCase() !== 'class')) {
                  showCellAutocompleteSuggestions(primaryCell, text);
@@ -2166,20 +2183,20 @@
         primaryCell.setAttribute('data-merge-id', mergeId);
         selectedCells.forEach(cell => {
             if (cell !== primaryCell) {
-                cell.textContent = ''; 
+                cell.textContent = '';
                 cell.classList.add('subsumed-cell');
                 cell.setAttribute('data-merge-id', mergeId);
             }
         });
         deselectAllTableCells();
-        if (selectionMode) toggleCellSelectionMode(); 
+        if (selectionMode) toggleCellSelectionMode();
         showMessage('Cells visually merged.', 'success');
     }
 
     function unmergeActiveCellIfMerged() {
-        const cell = lastClickedCell; 
+        const cell = lastClickedCell;
         if (!cell) { showMessage('Click a merged cell to unmerge.', 'info'); return; }
-        const containerCell = cell.closest('[data-merge-id]'); 
+        const containerCell = cell.closest('[data-merge-id]');
         if (!containerCell) { showMessage('Clicked cell is not merged.', 'error'); return; }
         const mergeId = containerCell.dataset.mergeId;
         const table = containerCell.closest('table');
@@ -2190,17 +2207,17 @@
         if (primaryCellInGroup) {
             const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay');
             if (overlay) originalText = overlay.textContent;
-            else originalText = primaryCellInGroup.textContent; 
+            else originalText = primaryCellInGroup.textContent;
         }
         cellsInGroup.forEach(c => {
             c.removeAttribute('data-merge-id');
             c.classList.remove('merged-cell-container', 'subsumed-cell');
             const overlayChild = c.querySelector('.merged-cell-overlay');
-            if (overlayChild) overlayChild.remove(); 
-            c.innerHTML = ''; 
+            if (overlayChild) overlayChild.remove();
+            c.innerHTML = '';
         });
         if (primaryCellInGroup) primaryCellInGroup.textContent = originalText;
-        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText; 
+        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText;
         rebuildAndRenderSummary();
         showMessage('Cells unmerged.', 'success');
     }
@@ -2220,7 +2237,7 @@
                 minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right);
                 minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom);
             });
-            if (minLeft === Infinity) return; 
+            if (minLeft === Infinity) return;
             overlay.style.setProperty('--merged-width', `${maxRight - minLeft}px`);
             overlay.style.setProperty('--merged-height', `${maxBottom - minTop}px`);
         });
@@ -2231,12 +2248,12 @@
         if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi');
         if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang');
         if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`;
-        if(searchNameInputElement) searchNameInputElement.value = ''; 
+        if(searchNameInputElement) searchNameInputElement.value = '';
         renderNameListFromFirestore();
-        hideCellAutocompleteSuggestions(); 
+        hideCellAutocompleteSuggestions();
     }
 
-    function highlightSelectedNameInList(nameToHighlight) { 
+    function highlightSelectedNameInList(nameToHighlight) {
         if (!nameListContainer) return;
         const nameToHighlightStr = String(nameToHighlight || '');
         nameListContainer.querySelectorAll('.name-item span').forEach(span => {
@@ -2244,7 +2261,7 @@
         });
     }
 
-    function clearNameSelection() { 
+    function clearNameSelection() {
         selectedNameFromList = null;
         if (nameListContainer) {
             nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => {
@@ -2255,8 +2272,8 @@
 
     function closeNameModal() {
         if (nameModal) nameModal.style.display = 'none';
-        clearNameSelection(); 
-        if(searchNameInputElement) searchNameInputElement.value = ''; 
+        clearNameSelection();
+        if(searchNameInputElement) searchNameInputElement.value = '';
     }
 
     function toggleNameListModalVisibility() {
@@ -2264,24 +2281,24 @@
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) closeNameModal();
         else {
-            nameModalContent.style.position = 'relative'; 
+            nameModalContent.style.position = 'relative';
             nameModalContent.style.left = 'auto'; nameModalContent.style.top = 'auto';
-            nameModalContent.style.transform = 'none'; 
+            nameModalContent.style.transform = 'none';
             nameModal.style.display = 'flex';
-            if(searchNameInputElement) searchNameInputElement.value = ''; 
-            handleNameListSessionSwitch(currentNameListSession); 
+            if(searchNameInputElement) searchNameInputElement.value = '';
+            handleNameListSessionSwitch(currentNameListSession);
             if(newNameInput) newNameInput.focus();
             clearNameSelection();
         }
-        hideCellAutocompleteSuggestions(); 
+        hideCellAutocompleteSuggestions();
     }
 
-    function renderNameListFromFirestore(filterText = '') { 
+    function renderNameListFromFirestore(filterText = '') {
         if (!nameListContainer) return;
         if (!fbIsAuthReady) {
             nameListContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">Loading shared names...</p>'; return;
         }
-        nameListContainer.innerHTML = ''; 
+        nameListContainer.innerHTML = '';
         const namesToRender = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         const normalizedFilterText = String(filterText || '').toLowerCase().trim();
         if (!Array.isArray(namesToRender)) {
@@ -2294,16 +2311,16 @@
         filteredNames.forEach(name => {
             const itemDiv = document.createElement('div'); itemDiv.className = 'name-item';
             const nameStr = String(name || '');
-            const safeNameAttr = nameStr.replace(/"/g, '&quot;'); 
+            const safeNameAttr = nameStr.replace(/"/g, '&quot;');
             itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}' from shared list">Delete</button>`;
             nameListContainer.appendChild(itemDiv);
         });
-        highlightSelectedNameInList(selectedNameFromList); 
+        highlightSelectedNameInList(selectedNameFromList);
     }
 
-    function selectNameForCellInsertion(name) { 
+    function selectNameForCellInsertion(name) {
         selectedNameFromList = String(name || '');
-        highlightSelectedNameInList(selectedNameFromList); 
+        highlightSelectedNameInList(selectedNameFromList);
         showMessage(`Selected "${selectedNameFromList}". Click a cell to insert.`, 'info', 4000);
     }
 
@@ -2323,7 +2340,7 @@
                 const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
                 await saveSharedNameListToFirestore(currentNameListSession, combinedNames);
             } catch (error) { showMessage('Error processing name list file.', 'error'); }
-            finally { event.target.value = ''; } 
+            finally { event.target.value = ''; }
         };
         reader.onerror = () => { showMessage('Failed to read name list file.', 'error'); event.target.value = ''; };
         reader.readAsText(file);
@@ -2336,9 +2353,9 @@
         reader.onload = (e) => {
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const sheetName = workbook.SheetNames[0]; 
+                const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); 
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false });
                 tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
                 const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
@@ -2350,11 +2367,11 @@
                     importedTableElement.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
                     addTabButton(newTableId, importedTableName);
-                    switchTable(newTableId); 
+                    switchTable(newTableId);
                     showMessage('Excel data imported!', 'success');
                 } else showMessage('Could not parse table from Excel.', 'error');
             } catch (error) { showMessage('Error processing Excel file.', 'error'); console.error("Excel import error:", error); }
-            finally { event.target.value = ''; } 
+            finally { event.target.value = ''; }
         };
         reader.readAsArrayBuffer(file);
     }
@@ -2362,17 +2379,17 @@
     function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId);
         if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
-        const overlaysData = []; 
+        const overlaysData = [];
         tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => {
             const parentCell = overlay.parentElement;
             overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML });
-            parentCell.textContent = overlay.textContent; 
+            parentCell.textContent = overlay.textContent;
         });
         const tableName = tableToExport.dataset.tableName || activeTableId;
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
-        overlaysData.forEach(data => { 
-            data.parent.innerHTML = data.originalHTML; 
+        overlaysData.forEach(data => {
+            data.parent.innerHTML = data.originalHTML;
             const newOverlay = data.parent.querySelector('.merged-cell-overlay');
             if (newOverlay) {
                 newOverlay.addEventListener('blur', () => rebuildAndRenderSummary());
@@ -2386,28 +2403,28 @@
                 });
             }
         });
-        if(overlaysData.length > 0) updateAllMergeOverlays(); 
+        if(overlaysData.length > 0) updateAllMergeOverlays();
         showMessage(`Table "${tableName}" exported.`, 'success');
     }
 
     function getTextForSummary(cellText) {
         if (typeof cellText !== 'string') return '';
-        let textForSummary = cellText.split(' // ')[0]; 
-        const words = textForSummary.split(/\s+/); 
+        let textForSummary = cellText.split(' // ')[0];
+        const words = textForSummary.split(/\s+/);
         const filteredWords = words.filter(word => !word.startsWith('*'));
-        return filteredWords.join(' ').trim(); 
+        return filteredWords.join(' ').trim();
     }
 
     // --- PDF Generation Function ---
     async function generateSchedulePdf() {
-        if (!pdfContentElement || !tablesContainer ) { 
+        if (!pdfContentElement || !tablesContainer ) {
             showMessage('PDF generation elements (pdfContent or tablesContainer) not found.', 'error');
             console.error("PDF Generation Error: pdfContentElement or tablesContainer not found.");
             return;
         }
 
         showGeneralLoading(true);
-        showMessage('Generating PDF, please wait...', 'info', 15000); 
+        showMessage('Generating PDF, please wait...', 'info', 15000); // Extended duration for PDF generation
 
         pdfContentElement.innerHTML = ''; // Clear previous content
 
@@ -2416,70 +2433,92 @@
         titleH2.textContent = scheduleTitleText;
         pdfContentElement.appendChild(titleH2);
 
+        // Process Table 1: Kelas 3 & 5
         console.log("PDF Generation: Attempting to process tbl_1 (Kelas 3 & 5)...");
         const kelas35Table = document.getElementById('tbl_1');
         if (kelas35Table) {
-            console.log("PDF Generation: tbl_1 found. Original outerHTML (first 300):", kelas35Table.outerHTML.substring(0,300));
+            console.log("PDF Generation: tbl_1 found.");
             const h3_tbl1 = document.createElement('h3');
             h3_tbl1.textContent = kelas35Table.dataset.tableName || 'Kelas 3 & 5';
             pdfContentElement.appendChild(h3_tbl1);
             const clonedTbl1 = cloneTableForPdf(kelas35Table);
             if (clonedTbl1) {
                 pdfContentElement.appendChild(clonedTbl1);
-                console.log("PDF Generation: tbl_1 successfully cloned and added to PDF content. Cloned outerHTML (first 300):", clonedTbl1.outerHTML.substring(0,300));
+                console.log("PDF Generation: tbl_1 successfully cloned and added to PDF content.");
             } else {
                 console.error("PDF Generation Error: Failed to clone tbl_1. cloneTableForPdf returned null.");
+                pdfContentElement.appendChild(document.createTextNode("Error: Kelas 3 & 5 table could not be generated."));
             }
         } else {
             console.warn("PDF Generation Warning: Table 'Kelas 3 & 5' (tbl_1) not found in the document.");
+            pdfContentElement.appendChild(document.createTextNode("Note: Kelas 3 & 5 table (tbl_1) was not found."));
         }
 
+        // Process Table 2: Kelas 1, 2 & 4
         console.log("PDF Generation: Attempting to process tbl_2 (Kelas 1, 2 & 4)...");
         const kelas124Table = document.getElementById('tbl_2');
         if (kelas124Table) {
-            console.log("PDF Generation: tbl_2 found. Original outerHTML (first 300):", kelas124Table.outerHTML.substring(0,300));
+            console.log("PDF Generation: tbl_2 found.");
             const h3_tbl2 = document.createElement('h3');
             h3_tbl2.textContent = kelas124Table.dataset.tableName || 'Kelas 1, 2 & 4';
             pdfContentElement.appendChild(h3_tbl2);
             const clonedTbl2 = cloneTableForPdf(kelas124Table);
              if (clonedTbl2) {
                 pdfContentElement.appendChild(clonedTbl2);
-                console.log("PDF Generation: tbl_2 successfully cloned and added to PDF content. Cloned outerHTML (first 300):", clonedTbl2.outerHTML.substring(0,300));
+                console.log("PDF Generation: tbl_2 successfully cloned and added to PDF content.");
             } else {
                 console.error("PDF Generation Error: Failed to clone tbl_2. cloneTableForPdf returned null.");
+                pdfContentElement.appendChild(document.createTextNode("Error: Kelas 1, 2 & 4 table could not be generated."));
             }
         } else {
             console.warn("PDF Generation Warning: Table 'Kelas 1, 2 & 4' (tbl_2) not found in the document.");
+             pdfContentElement.appendChild(document.createTextNode("Note: Kelas 1, 2 & 4 table (tbl_2) was not found."));
         }
-        
-        if (pdfContentElement.querySelectorAll('table').length === 0) {
+
+        // Add Footnote with today's date
+        const footnoteDiv = document.createElement('div');
+        footnoteDiv.className = 'pdf-footnote';
+        const today = new Date();
+        // Using a more common date format, customize as needed
+        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        footnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
+        pdfContentElement.appendChild(footnoteDiv);
+        console.log("PDF Generation: Footnote added.");
+
+
+        if (pdfContentElement.querySelectorAll('table').length === 0 && !kelas35Table && !kelas124Table) {
+             // Only show this if NO tables were found at all
             showMessage('No schedule tables were found to include in the PDF.', 'error');
-            console.error("PDF Generation Error: No tables were added to pdfContentElement after attempting to add both tbl_1 and tbl_2.");
-            pdfContentElement.innerHTML = ''; 
-            showGeneralLoading(false);
-            return;
+            console.error("PDF Generation Error: No tables were found or added to pdfContentElement.");
+            pdfContentElement.innerHTML = '<h2>No Schedule Data Found</h2><p>Could not find any tables to include in the PDF.</p>';
+             // Add footnote here too if desired even for an empty report
+            const emptyFootnoteDiv = document.createElement('div');
+            emptyFootnoteDiv.className = 'pdf-footnote';
+            emptyFootnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
+            pdfContentElement.appendChild(emptyFootnoteDiv);
         }
-        
+
+
         console.log("PDF Generation: Making pdfContentElement visible for capture.");
-        pdfContentElement.style.display = 'block'; 
-        console.log("PDF Generation: pdfContentElement innerHTML before html2pdf call (full):", pdfContentElement.innerHTML);
+        pdfContentElement.style.display = 'block';
+        // console.log("PDF Generation: pdfContentElement innerHTML before html2pdf call (full):", pdfContentElement.innerHTML);
 
 
         const pdfOptions = {
-            margin: [10, 8, 10, 8], 
-            filename: `${scheduleTitleText.replace(/\s/g, '_')}_Complete_Schedule.pdf`,
+            margin: [10, 8, 15, 8], // Increased bottom margin slightly for footnote
+            filename: `${scheduleTitleText.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete_schedule.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                logging: true, 
-                scrollX: 0, 
-                scrollY: -window.scrollY, 
-                windowWidth: pdfContentElement.scrollWidth, 
-                windowHeight: pdfContentElement.scrollHeight 
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                logging: true, // Enable html2canvas logging for debugging
+                scrollX: 0,
+                scrollY: -window.scrollY, // Capture from top of element
+                windowWidth: pdfContentElement.scrollWidth, // Capture full width of content
+                windowHeight: pdfContentElement.scrollHeight // Capture full height of content
             },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
         try {
@@ -2492,7 +2531,8 @@
             showMessage(`Failed to generate PDF. Error: ${error.message}. Check console for details.`, 'error', 10000);
         } finally {
             console.log("PDF Generation: Hiding pdfContentElement and stopping general loading indicator.");
-            pdfContentElement.style.display = 'none'; 
+            pdfContentElement.style.display = 'none'; // Hide after generation
+            // pdfContentElement.innerHTML = ''; // Optionally clear after generation
             showGeneralLoading(false);
         }
     }
@@ -2506,28 +2546,32 @@
         const tableIdForLog = originalTable.id || 'Unknown ID';
         console.log(`cloneTableForPdf: Starting clone for table: ${tableIdForLog}, Name: ${originalTable.dataset.tableName || 'N/A'}`);
 
-        const clonedTable = originalTable.cloneNode(true);
-        clonedTable.removeAttribute('id');
-        clonedTable.classList.remove('active');
-        clonedTable.style.width = '100%'; 
-        clonedTable.style.tableLayout = 'fixed'; 
+        const clonedTable = originalTable.cloneNode(true); // Deep clone
+        clonedTable.removeAttribute('id'); // Avoid duplicate IDs in pdfContent
+        clonedTable.classList.remove('active'); // Remove active class if present
+        clonedTable.style.width = '100%'; // Ensure full width in PDF
+        clonedTable.style.tableLayout = 'fixed'; // Better control over column widths in PDF
 
+        // Remove contenteditable attribute from all cells in the clone
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.removeAttribute('contenteditable');
         });
 
-        const mergeGroups = {}; 
+        // --- Merged Cell Handling for PDF (rowspan/colspan) ---
+        const mergeGroups = {}; // Stores info about each merge group
+
+        // Step 1: Identify all merge groups and their extents from the original table
         Array.from(originalTable.rows).forEach((originalRow, rowIndex) => {
             Array.from(originalRow.cells).forEach((originalCell, colIndex) => {
                 const mergeId = originalCell.dataset.mergeId;
-                if (!mergeId) return;
+                if (!mergeId) return; // Not part of a merge
 
                 if (!mergeGroups[mergeId]) {
                     mergeGroups[mergeId] = {
                         minRow: rowIndex, maxRow: rowIndex,
                         minCol: colIndex, maxCol: colIndex,
-                        primaryCellOriginal: null, 
-                        allOriginalCellsInGroup: [] 
+                        primaryCellOriginal: null, // The cell containing the .merged-cell-overlay
+                        allOriginalCellsInGroup: [] // All original cells belonging to this mergeId
                     };
                 }
                 const group = mergeGroups[mergeId];
@@ -2537,15 +2581,17 @@
                 group.minCol = Math.min(group.minCol, colIndex);
                 group.maxCol = Math.max(group.maxCol, colIndex);
 
+                // Identify the primary cell (the one with the visible content/overlay)
                 if (originalCell.classList.contains('merged-cell-container')) {
                     group.primaryCellOriginal = originalCell;
                 }
             });
         });
-        
-        console.log(`cloneTableForPdf (${tableIdForLog}): Identified mergeGroups:`, JSON.parse(JSON.stringify(mergeGroups, (k,v) => (v instanceof HTMLElement) ? v.tagName + (v.dataset.mergeId ? `[${v.dataset.mergeId}]` : '') : v )) );
+
+        // console.log(`cloneTableForPdf (${tableIdForLog}): Identified mergeGroups:`, JSON.parse(JSON.stringify(mergeGroups, (k,v) => (v instanceof HTMLElement) ? `${v.tagName}[${v.dataset.mergeId || ''}](${v.textContent.substring(0,10)})` : v )) );
 
 
+        // Step 2: Apply rowspan and colspan to the cloned table
         for (const mergeId in mergeGroups) {
             const group = mergeGroups[mergeId];
             if (!group.primaryCellOriginal) {
@@ -2556,65 +2602,71 @@
             const rowSpan = group.maxRow - group.minRow + 1;
             const colSpan = group.maxCol - group.minCol + 1;
 
+            // Find the corresponding primary cell in the cloned table
+            // This requires knowing the original primary cell's row and column index
             let primaryCellOriginalRowIndex = -1;
             let primaryCellOriginalColIndex = -1;
-            
-            for(let rIdx = 0; rIdx < originalTable.rows.length; rIdx++) {
-                const r = originalTable.rows[rIdx];
-                for(let cIdx = 0; cIdx < r.cells.length; cIdx++) {
-                    if (r.cells[cIdx] === group.primaryCellOriginal) {
+
+            // Find original indices of the primary cell
+            Array.from(originalTable.rows).forEach((r, rIdx) => {
+                Array.from(r.cells).forEach((c, cIdx) => {
+                    if (c === group.primaryCellOriginal) {
                         primaryCellOriginalRowIndex = rIdx;
                         primaryCellOriginalColIndex = cIdx;
-                        break;
                     }
-                }
-                if (primaryCellOriginalRowIndex !== -1) break;
-            }
-            
+                });
+            });
+
+
             if (primaryCellOriginalRowIndex === -1 || primaryCellOriginalColIndex === -1) {
                 console.warn(`cloneTableForPdf (${tableIdForLog}): Could not find original primary cell's indices for mergeId ${mergeId}. Skipping.`);
                 continue;
             }
-            
+
             const clonedPrimaryCell = clonedTable.rows[primaryCellOriginalRowIndex]?.cells[primaryCellOriginalColIndex];
 
             if (clonedPrimaryCell) {
+                // Get text content from the overlay of the original primary cell
                 const overlayOriginal = group.primaryCellOriginal.querySelector('.merged-cell-overlay');
                 clonedPrimaryCell.textContent = overlayOriginal ? overlayOriginal.textContent : group.primaryCellOriginal.textContent;
-                
+
+                // Remove any overlay div from the cloned cell, we only want text
                 const overlayCloned = clonedPrimaryCell.querySelector('.merged-cell-overlay');
-                if (overlayCloned) overlayCloned.remove(); 
+                if (overlayCloned) overlayCloned.remove();
 
-                clonedPrimaryCell.rowSpan = rowSpan;
-                clonedPrimaryCell.colSpan = colSpan;
-                // console.log(`cloneTableForPdf (${tableIdForLog}): Applied rowspan: ${rowSpan}, colspan: ${colSpan} to cell for mergeId: ${mergeId} (text: "${clonedPrimaryCell.textContent}")`);
+                // Apply rowspan and colspan
+                if (rowSpan > 1) clonedPrimaryCell.rowSpan = rowSpan;
+                if (colSpan > 1) clonedPrimaryCell.colSpan = colSpan;
+                // console.log(`cloneTableForPdf (${tableIdForLog}): Applied rowspan: ${rowSpan}, colspan: ${colSpan} to cell for mergeId: ${mergeId} (text: "${clonedPrimaryCell.textContent.substring(0,20)}")`);
 
+                // Step 3: Remove subsumed cells from the cloned table
                 const cellsToRemoveFromClonedTable = [];
                 group.allOriginalCellsInGroup.forEach(originalSubsumedCell => {
-                    if (originalSubsumedCell === group.primaryCellOriginal) return; 
+                    if (originalSubsumedCell === group.primaryCellOriginal) return; // Don't remove the primary cell itself
 
+                    // Find original indices of the subsumed cell
                     let subsumedOriginalRowIndex = -1;
                     let subsumedOriginalColIndex = -1;
-                    for(let rIdx = 0; rIdx < originalTable.rows.length; rIdx++) {
-                        const r = originalTable.rows[rIdx];
-                        for(let cIdx = 0; cIdx < r.cells.length; cIdx++) {
-                             if (r.cells[cIdx] === originalSubsumedCell) {
+                     Array.from(originalTable.rows).forEach((r, rIdx) => {
+                        Array.from(r.cells).forEach((c, cIdx) => {
+                             if (c === originalSubsumedCell) {
                                 subsumedOriginalRowIndex = rIdx;
                                 subsumedOriginalColIndex = cIdx;
-                                break;
                             }
-                        }
-                        if (subsumedOriginalRowIndex !== -1) break;
-                    }
+                        });
+                    });
+
 
                     if (subsumedOriginalRowIndex !== -1 && subsumedOriginalColIndex !== -1) {
                          const clonedSubsumedCell = clonedTable.rows[subsumedOriginalRowIndex]?.cells[subsumedOriginalColIndex];
-                         if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) { 
+                         // Important: Ensure we are not trying to remove the primary cell if it was misidentified
+                         if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) {
                             cellsToRemoveFromClonedTable.push(clonedSubsumedCell);
                          }
                     }
                 });
                 cellsToRemoveFromClonedTable.forEach(cell => cell.remove());
+                // console.log(`cloneTableForPdf (${tableIdForLog}): Removed ${cellsToRemoveFromClonedTable.length} subsumed cells for mergeId: ${mergeId}`);
 
             } else {
                  console.warn(`cloneTableForPdf (${tableIdForLog}): Cloned primary cell not found for mergeId: ${mergeId} at original cloned indices [${primaryCellOriginalRowIndex},${primaryCellOriginalColIndex}]`);
@@ -2626,17 +2678,17 @@
 
 
     function rebuildAndRenderSummary() {
-        const scheduledNames = new Set(); 
+        const scheduledNames = new Set();
         if (tablesContainer) {
-            tablesContainer.querySelectorAll('table').forEach(scheduleTable => { 
-                if (!scheduleTable.tBodies[0]) return; 
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+                if (!scheduleTable.tBodies[0]) return;
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        if (cellIndex > 0) { 
+                        if (cellIndex > 0) { // Skip first column (Class/Time)
                             const overlay = cell.querySelector('.merged-cell-overlay');
                             const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
-                            const actualNameForSummary = getTextForSummary(nameFromCell); 
-                            if (actualNameForSummary) { 
+                            const actualNameForSummary = getTextForSummary(nameFromCell);
+                            if (actualNameForSummary) {
                                 scheduledNames.add(actualNameForSummary);
                             }
                         }
@@ -2650,22 +2702,21 @@
     }
 
     function parseTimeToMinutes(timeStr) {
-        if (typeof timeStr !== 'string') return Infinity; 
+        if (typeof timeStr !== 'string') return Infinity;
         const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
         if (match) return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
-        return Infinity; 
+        return Infinity;
     }
 
-    function buildSummaryTableSkeleton(allAvailableNames) { 
+    function buildSummaryTableSkeleton(allAvailableNames) {
         if (!summaryTableElement) {
-            // console.error("Summary table element not found. Cannot build skeleton."); // Already logged if critical
             return;
         }
-        summaryTableElement.innerHTML = ''; 
+        summaryTableElement.innerHTML = '';
         let activeTableHeaders = [];
-        const activeTableElement = document.getElementById(activeTableId); 
+        const activeTableElement = document.getElementById(activeTableId);
         if (activeTableElement && activeTableElement.tHead && activeTableElement.tHead.rows.length > 0) {
-            for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) { 
+            for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) {
                 const headerText = String(activeTableElement.tHead.rows[0].cells[hIdx].textContent || '').trim();
                 if (headerText) activeTableHeaders.push(headerText);
             }
@@ -2676,19 +2727,19 @@
         const sourceSlotToShiftRule = "10.30-12.00";
         if (tablesContainer) {
             for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
-                if (laulisahRuleRequiresSpecialSlot) break; 
+                if (laulisahRuleRequiresSpecialSlot) break;
                 if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) continue;
                 const currentScheduleTableHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
                 Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
-                    if (laulisahRuleRequiresSpecialSlot) return; 
+                    if (laulisahRuleRequiresSpecialSlot) return;
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                          const scheduleCell = scheduleDataRow.cells[cellIdx];
                          let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
-                         let entryInScheduleCellForRule = getTextForSummary(entryInScheduleCellFull); 
+                         let entryInScheduleCellForRule = getTextForSummary(entryInScheduleCellFull);
                          if (specialNamesForRule.includes(entryInScheduleCellForRule)) {
                             const headerText = currentScheduleTableHeaders[cellIdx];
                             if (headerText && headerText.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
-                                laulisahRuleRequiresSpecialSlot = true; return; 
+                                laulisahRuleRequiresSpecialSlot = true; return;
                             }
                          }
                     }
@@ -2702,7 +2753,7 @@
         let sortedUniqueHeaders = Array.from(combinedHeaders).sort((a, b) => {
             const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b);
             if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
-            if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  
+            if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;
             return String(a).localeCompare(String(b));
         });
         const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedUniqueHeaders];
@@ -2716,7 +2767,7 @@
         if (allAvailableNames.length === 0 && sortedUniqueHeaders.length === 0) {
             const tr = tbody.insertRow(); const td = tr.insertCell();
             td.textContent = "No names scheduled and no time slots defined in active table.";
-            td.colSpan = finalSummaryColumnHeaders.length || 1; 
+            td.colSpan = finalSummaryColumnHeaders.length || 1;
             td.style.textAlign = 'center'; td.style.fontStyle = 'italic';
         } else if (allAvailableNames.length === 0) {
             const tr = tbody.insertRow(); const td = tr.insertCell();
@@ -2732,35 +2783,35 @@
         }
     }
 
-    function updateSummaryTableData(allAvailableNames) { 
+    function updateSummaryTableData(allAvailableNames) {
         if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) {
             return;
         }
         const summaryBody = summaryTableElement.tBodies[0];
-        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) { 
+        if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) {
             return;
         }
         const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
-        Array.from(summaryBody.rows).forEach(summaryRow => { 
+        Array.from(summaryBody.rows).forEach(summaryRow => {
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).slice(1).forEach(cell => {
-                cell.textContent = ''; cell.classList.remove('highlight-conflict'); 
+                cell.textContent = ''; cell.classList.remove('highlight-conflict');
             });
         });
         if (tablesContainer) {
             tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
-                if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) return; 
+                if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) return;
                 const scheduleHeaders = Array.from(scheduleTable.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
                 Array.from(scheduleTable.tBodies[0].rows).forEach((scheduleDataRow) => {
                     const classIdentifier = String(scheduleDataRow.cells[0]?.textContent||'').trim();
-                    if (!classIdentifier) return; 
+                    if (!classIdentifier) return;
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                         const scheduleCell = scheduleDataRow.cells[cellIdx];
                         let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
-                        let actualEntryForSummary = getTextForSummary(entryInScheduleCellFull); 
-                        if (actualEntryForSummary) { 
+                        let actualEntryForSummary = getTextForSummary(entryInScheduleCellFull);
+                        if (actualEntryForSummary) {
                             let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx];
-                            if (!scheduleColumnHeaderForThisCell) continue; 
+                            if (!scheduleColumnHeaderForThisCell) continue;
                             let summaryColumnToUse = scheduleColumnHeaderForThisCell;
                             const specialNamesForRule = ["LAU", "LISAH"];
                             const targetSlotForSpecialNamesRule = "10.15-10.30";
@@ -2771,7 +2822,7 @@
                             const targetSummaryRow = Array.from(summaryBody.rows).find(sr => String(sr.cells[0]?.textContent||'') === actualEntryForSummary);
                             if (targetSummaryRow?.cells.length > 1) {
                                 const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.indexOf(summaryColumnToUse.replace(/\s/g, "").replace(/:/g,"."));
-                                if (targetSummaryColumnCellIndex > 0) { 
+                                if (targetSummaryColumnCellIndex > 0) {
                                     const summaryCellToUpdate = targetSummaryRow.cells[targetSummaryColumnCellIndex];
                                     let existingClasses = summaryCellToUpdate.textContent.trim() ? summaryCellToUpdate.textContent.trim().split(',').map(s => s.trim()) : [];
                                     if (!existingClasses.includes(classIdentifier)) {
@@ -2785,7 +2836,7 @@
                 });
             });
         }
-        Array.from(summaryBody.rows).forEach(summaryRow => { 
+        Array.from(summaryBody.rows).forEach(summaryRow => {
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).forEach((cell, cellIndex) => {
                 if (cellIndex > 0 && cell.textContent.includes(',')) cell.classList.add('highlight-conflict');
             });
