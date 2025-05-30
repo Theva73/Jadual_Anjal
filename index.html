@@ -477,35 +477,30 @@
         }
         #pdfContent table {
             width: 100%;
-            border-collapse: collapse; /* Crucial for PDF borders */
+            border-collapse: collapse; 
             margin-bottom: 25px;
             box-shadow: none; 
             background-color: #fff; 
+            table-layout: fixed; /* Added for PDF consistency */
         }
         #pdfContent th, #pdfContent td {
-            border: 1px solid #333 !important; /* Make borders darker and !important for PDF */
-            padding: 6px 8px; /* Slightly reduced padding for PDF */
+            border: 1px solid #333 !important; 
+            padding: 6px 8px; 
             text-align: center;
-            font-size: 0.85em; /* Slightly reduced font size for PDF */
-            word-wrap: break-word; /* Allow long words to break */
-            /* white-space: nowrap; /* Removed to allow wrapping */
+            font-size: 0.85em; 
+            word-wrap: break-word; 
             background-color: #fff; 
         }
-        #pdfContent table th { /* PDF Table Headers */
+        #pdfContent table th { 
             background-color: #e9ecef !important; 
             color: #212529;
-            font-weight: bold; /* Ensure bold */
+            font-weight: bold; 
         }
-        #pdfContent table tbody tr td:first-child, /* PDF First Column Cells */
-        #pdfContent table thead tr th:first-child { /* PDF First Column Header */
-            background-color: #f0f8ff !important; /* Aliceblue, ensure it applies */
+        #pdfContent table tbody tr td:first-child, 
+        #pdfContent table thead tr th:first-child { 
+            background-color: #f0f8ff !important; 
             font-weight: bold;
         }
-        /* Merged cells in PDF should look like normal cells but spanned */
-        /* The cloneTableForPdf function now handles setting text and col/rowspan */
-        /* So, no special styling needed for .merged-cell-container or .merged-cell-overlay in PDF */
-        /* .subsumed-cell are removed by cloneTableForPdf, so no style needed */
-
     </style>
 </head>
 <body>
@@ -734,7 +729,7 @@
     // --- Global State and Configuration ---
     const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
     let activeTableId = 'tbl_1'; 
-    let tableCount = 1; // Keep track of table creation for unique IDs
+    let tableCount = 1; 
     let selectionMode = false;
     let selectedCells = [];
     let lastClickedCell = null;
@@ -753,7 +748,7 @@
 
     let currentWorkingScheduleDocId = null; 
     let autoSaveIntervalId = null;
-    const AUTO_SAVE_INTERVAL = 60000; // 1 minute
+    const AUTO_SAVE_INTERVAL = 60000; 
 
     // DOM Element Cache
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement;
@@ -2407,11 +2402,12 @@
     async function generateSchedulePdf() {
         if (!pdfContentElement || !tablesContainer ) { 
             showMessage('PDF generation elements (pdfContent or tablesContainer) not found.', 'error');
+            console.error("PDF Generation Error: pdfContentElement or tablesContainer not found.");
             return;
         }
 
         showGeneralLoading(true);
-        showMessage('Generating PDF, please wait...', 'info', 15000); // Increased duration
+        showMessage('Generating PDF, please wait...', 'info', 15000); 
 
         pdfContentElement.innerHTML = ''; // Clear previous content
 
@@ -2420,9 +2416,10 @@
         titleH2.textContent = scheduleTitleText;
         pdfContentElement.appendChild(titleH2);
 
-        console.log("Attempting to clone and add tbl_1 to PDF content...");
+        console.log("PDF Generation: Processing tbl_1 (Kelas 3 & 5)...");
         const kelas35Table = document.getElementById('tbl_1');
         if (kelas35Table) {
+            console.log("tbl_1 found. Cloning...");
             const h3_tbl1 = document.createElement('h3');
             h3_tbl1.textContent = kelas35Table.dataset.tableName || 'Kelas 3 & 5';
             pdfContentElement.appendChild(h3_tbl1);
@@ -2431,15 +2428,16 @@
                 pdfContentElement.appendChild(clonedTbl1);
                 console.log("tbl_1 successfully cloned and added to PDF content.");
             } else {
-                console.error("Failed to clone tbl_1 for PDF.");
+                console.error("Failed to clone tbl_1 for PDF. cloneTableForPdf returned null.");
             }
         } else {
-            console.warn("Table 'Kelas 3 & 5' (tbl_1) not found in the document.");
+            console.warn("Table 'Kelas 3 & 5' (tbl_1) not found in the document for PDF generation.");
         }
 
-        console.log("Attempting to clone and add tbl_2 to PDF content...");
+        console.log("PDF Generation: Processing tbl_2 (Kelas 1, 2 & 4)...");
         const kelas124Table = document.getElementById('tbl_2');
         if (kelas124Table) {
+            console.log("tbl_2 found. Cloning...");
             const h3_tbl2 = document.createElement('h3');
             h3_tbl2.textContent = kelas124Table.dataset.tableName || 'Kelas 1, 2 & 4';
             pdfContentElement.appendChild(h3_tbl2);
@@ -2448,48 +2446,54 @@
                 pdfContentElement.appendChild(clonedTbl2);
                 console.log("tbl_2 successfully cloned and added to PDF content.");
             } else {
-                console.error("Failed to clone tbl_2 for PDF.");
+                console.error("Failed to clone tbl_2 for PDF. cloneTableForPdf returned null.");
             }
         } else {
-            console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found in the document.");
+            console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found in the document for PDF generation.");
         }
         
         if (pdfContentElement.querySelectorAll('table').length === 0) {
             showMessage('No schedule tables were found to include in the PDF.', 'error');
+            console.error("PDF Generation Error: No tables were added to pdfContentElement.");
             pdfContentElement.innerHTML = ''; 
             showGeneralLoading(false);
             return;
         }
         
-        pdfContentElement.style.display = 'block'; // Make content visible for html2pdf
+        console.log("PDF Generation: Making pdfContentElement visible for capture.");
+        pdfContentElement.style.display = 'block'; 
+        console.log("PDF Generation: pdfContentElement innerHTML before html2pdf call (first 1000 chars):", pdfContentElement.innerHTML.substring(0,1000));
+
 
         const pdfOptions = {
-            margin: [10, 5, 10, 5], // top, left, bottom, right margins in mm
-            filename: `${scheduleTitleText.replace(/\s/g, '_')}_Refined_Schedule.pdf`,
+            margin: [10, 8, 10, 8], // Slightly adjusted margins
+            filename: `${scheduleTitleText.replace(/\s/g, '_')}_Complete_Schedule.pdf`, // New filename
             image: { type: 'jpeg', quality: 0.95 },
             html2canvas: { 
                 scale: 2, 
                 useCORS: true, 
-                logging: true, // Enable logging for html2canvas for debugging
-                scrollX: 0, // Try to prevent horizontal scroll issues
-                scrollY: -window.scrollY,
-                windowWidth: pdfContentElement.scrollWidth,
-                windowHeight: pdfContentElement.scrollHeight
+                logging: true, // Keep logging true for html2canvas
+                scrollX: 0, 
+                scrollY: -window.scrollY, // Standard practice
+                windowWidth: pdfContentElement.scrollWidth, // Try to capture full width
+                windowHeight: pdfContentElement.scrollHeight // Try to capture full height
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
         };
 
         try {
-            console.log("Calling html2pdf().from(pdfContentElement).set(pdfOptions).save()...");
+            console.log("PDF Generation: Calling html2pdf().from(pdfContentElement).set(pdfOptions).save()...");
             await html2pdf().from(pdfContentElement).set(pdfOptions).save();
             showMessage('PDF downloaded successfully!', 'success');
+            console.log("PDF Generation: html2pdf save() completed.");
         } catch (error) {
-            console.error('Error generating PDF:', error);
+            console.error('Error generating PDF with html2pdf:', error);
             showMessage(`Failed to generate PDF. Error: ${error.message}. Check console for details.`, 'error', 10000);
         } finally {
+            console.log("PDF Generation: Hiding pdfContentElement and stopping general loading indicator.");
             pdfContentElement.style.display = 'none'; 
-            // pdfContentElement.innerHTML = ''; // Keep content for a moment if debugging is needed, then clear
+            // pdfContentElement.innerHTML = ''; // Optionally clear content after a delay if debugging
             showGeneralLoading(false);
         }
     }
@@ -2497,28 +2501,23 @@
     // Helper function to clone tables for PDF generation, handling merged cells
     function cloneTableForPdf(originalTable) {
         if (!originalTable || typeof originalTable.cloneNode !== 'function') {
-            console.error("Invalid originalTable provided to cloneTableForPdf:", originalTable);
+            console.error("cloneTableForPdf Error: Invalid originalTable provided:", originalTable);
             return null;
         }
-        console.log(`Cloning table: ${originalTable.id || originalTable.dataset.tableName}`);
+        console.log(`cloneTableForPdf: Starting clone for table ID: ${originalTable.id || 'N/A'}, Name: ${originalTable.dataset.tableName || 'N/A'}`);
 
-        // 1. Deep clone the entire table.
         const clonedTable = originalTable.cloneNode(true);
         clonedTable.removeAttribute('id');
         clonedTable.classList.remove('active');
-        clonedTable.style.width = '100%'; // Ensure full width for PDF
-        clonedTable.style.tableLayout = 'fixed'; // Often better for PDF rendering consistency
+        clonedTable.style.width = '100%'; 
+        clonedTable.style.tableLayout = 'fixed'; // Helps with consistent column widths in PDF
 
-
-        // 2. Remove contenteditable attributes.
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.removeAttribute('contenteditable');
         });
 
-        // 3. Process merged cells: set colspan/rowspan, copy text, remove overlay.
         const mergeGroups = {}; 
-
-        // Iterate over original table cells to correctly map row/col indices for spans
+        // Populate mergeGroups with information from the original table
         Array.from(originalTable.rows).forEach((originalRow, rowIndex) => {
             Array.from(originalRow.cells).forEach((originalCell, colIndex) => {
                 const mergeId = originalCell.dataset.mergeId;
@@ -2528,8 +2527,8 @@
                     mergeGroups[mergeId] = {
                         minRow: rowIndex, maxRow: rowIndex,
                         minCol: colIndex, maxCol: colIndex,
-                        primaryCellOriginal: null,
-                        allOriginalCellsInGroup: []
+                        primaryCellOriginal: null, // Store the original primary cell
+                        allOriginalCellsInGroup: [] // Store all original cells in this group
                     };
                 }
                 const group = mergeGroups[mergeId];
@@ -2545,36 +2544,39 @@
             });
         });
         
-        // Apply transformations to the clonedTable
+        // Process the clonedTable using the information from mergeGroups
         for (const mergeId in mergeGroups) {
             const group = mergeGroups[mergeId];
             if (!group.primaryCellOriginal) {
-                console.warn(`No primary cell found for mergeId: ${mergeId}. Skipping this merge group for PDF.`);
+                console.warn(`cloneTableForPdf: No primary cell found for mergeId: ${mergeId} in original table. Skipping this merge group.`);
                 continue;
             }
 
             const rowSpan = group.maxRow - group.minRow + 1;
             const colSpan = group.maxCol - group.minCol + 1;
 
-            // Find the corresponding primary cell in the cloned table.
-            // We need its original row and column index to find it in the cloned table.
+            // Find the original row and column index of the primary cell
             let primaryCellOriginalRowIndex = -1;
             let primaryCellOriginalColIndex = -1;
-
-            Array.from(originalTable.rows).forEach((r, rIdx) => {
-                Array.from(r.cells).forEach((c, cIdx) => {
-                    if (c === group.primaryCellOriginal) {
+            // Find the primaryCellOriginal in the originalTable to get its indices
+            for(let rIdx = 0; rIdx < originalTable.rows.length; rIdx++) {
+                const r = originalTable.rows[rIdx];
+                for(let cIdx = 0; cIdx < r.cells.length; cIdx++) {
+                    if (r.cells[cIdx] === group.primaryCellOriginal) {
                         primaryCellOriginalRowIndex = rIdx;
                         primaryCellOriginalColIndex = cIdx;
+                        break;
                     }
-                });
-            });
+                }
+                if (primaryCellOriginalRowIndex !== -1) break;
+            }
             
             if (primaryCellOriginalRowIndex === -1 || primaryCellOriginalColIndex === -1) {
-                console.warn(`Could not find original primary cell for mergeId ${mergeId} in its table. Skipping.`);
+                console.warn(`cloneTableForPdf: Could not find original primary cell's indices for mergeId ${mergeId}. Skipping.`);
                 continue;
             }
-
+            
+            // Get the corresponding cell in the cloned table
             const clonedPrimaryCell = clonedTable.rows[primaryCellOriginalRowIndex]?.cells[primaryCellOriginalColIndex];
 
             if (clonedPrimaryCell) {
@@ -2582,47 +2584,51 @@
                 clonedPrimaryCell.textContent = overlayOriginal ? overlayOriginal.textContent : group.primaryCellOriginal.textContent;
                 
                 const overlayCloned = clonedPrimaryCell.querySelector('.merged-cell-overlay');
-                if (overlayCloned) overlayCloned.remove();
+                if (overlayCloned) overlayCloned.remove(); // Remove the visual overlay div
 
                 clonedPrimaryCell.rowSpan = rowSpan;
                 clonedPrimaryCell.colSpan = colSpan;
-                console.log(`Applied rowspan: ${rowSpan}, colspan: ${colSpan} to cell for mergeId: ${mergeId} (text: "${clonedPrimaryCell.textContent}")`);
+                // console.log(`cloneTableForPdf: Applied rowspan: ${rowSpan}, colspan: ${colSpan} to cell for mergeId: ${mergeId} (text: "${clonedPrimaryCell.textContent}")`);
 
-                // Remove other cells that are now spanned by this primary cell in the cloned table
-                // Iterate through the cells that were part of this merge group in the original table
+                // Remove other cells in the cloned table that are now spanned by this primary cell
+                const cellsToRemoveFromClonedTable = [];
                 group.allOriginalCellsInGroup.forEach(originalSubsumedCell => {
-                    if (originalSubsumedCell === group.primaryCellOriginal) return; // Don't remove the primary cell itself
+                    if (originalSubsumedCell === group.primaryCellOriginal) return; 
 
-                    // Find its corresponding cell in the cloned table to remove it
                     let subsumedOriginalRowIndex = -1;
                     let subsumedOriginalColIndex = -1;
-                     Array.from(originalTable.rows).forEach((r, rIdx) => {
-                        Array.from(r.cells).forEach((c, cIdx) => {
-                            if (c === originalSubsumedCell) {
+                    for(let rIdx = 0; rIdx < originalTable.rows.length; rIdx++) {
+                        const r = originalTable.rows[rIdx];
+                        for(let cIdx = 0; cIdx < r.cells.length; cIdx++) {
+                             if (r.cells[cIdx] === originalSubsumedCell) {
                                 subsumedOriginalRowIndex = rIdx;
                                 subsumedOriginalColIndex = cIdx;
+                                break;
                             }
-                        });
-                    });
+                        }
+                        if (subsumedOriginalRowIndex !== -1) break;
+                    }
 
                     if (subsumedOriginalRowIndex !== -1 && subsumedOriginalColIndex !== -1) {
                          const clonedSubsumedCell = clonedTable.rows[subsumedOriginalRowIndex]?.cells[subsumedOriginalColIndex];
-                         if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) { // Ensure not removing the primary again
-                            clonedSubsumedCell.remove();
+                         if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) { 
+                            cellsToRemoveFromClonedTable.push(clonedSubsumedCell);
                          }
                     }
                 });
+                cellsToRemoveFromClonedTable.forEach(cell => cell.remove());
+
             } else {
-                 console.warn(`Cloned primary cell not found for mergeId: ${mergeId} at [${primaryCellOriginalRowIndex},${primaryCellOriginalColIndex}]`);
+                 console.warn(`cloneTableForPdf: Cloned primary cell not found for mergeId: ${mergeId} at original cloned indices [${primaryCellOriginalRowIndex},${primaryCellOriginalColIndex}]`);
             }
         }
-        console.log(`Finished cloning table. Cloned table outerHTML (first 500 chars): ${clonedTable.outerHTML.substring(0,500)}`);
+        // console.log(`cloneTableForPdf: Finished cloning table ID: ${originalTable.id || 'N/A'}. Cloned outerHTML (first 500 chars): ${clonedTable.outerHTML.substring(0,500)}`);
         return clonedTable;
     }
 
 
     function rebuildAndRenderSummary() {
-        console.log("Rebuilding and rendering summary...");
+        // console.log("Rebuilding and rendering summary..."); // Less verbose
         const scheduledNames = new Set(); 
         if (tablesContainer) {
             tablesContainer.querySelectorAll('table').forEach(scheduleTable => { 
@@ -2667,9 +2673,9 @@
                 if (headerText) activeTableHeaders.push(headerText);
             }
         } else if (activeTableElement) {
-            console.warn("Active table for summary found, but has no headers or tHead rows. Summary headers might be empty.");
+            // console.warn("Active table for summary found, but has no headers or tHead rows. Summary headers might be empty.");
         } else {
-            console.warn(`Active table for summary (ID: ${activeTableId}) NOT found. Summary headers will be empty.`);
+            // console.warn(`Active table for summary (ID: ${activeTableId}) NOT found. Summary headers will be empty.`);
         }
         let laulisahRuleRequiresSpecialSlot = false;
         const specialNamesForRule = ["LAU", "LISAH"];
