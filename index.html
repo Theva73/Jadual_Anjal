@@ -8,26 +8,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
-            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; /* Modern font stack */
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             margin: 0;
-            background-color: #f0f2f5; /* Lighter grey background */
+            background-color: #f0f2f5;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            box-sizing: border-box; /* Ensure padding doesn't add to width */
+            box-sizing: border-box;
         }
         .main-container {
             width: 100%;
-            max-width: 1400px; /* Increased max-width */
+            max-width: 1400px;
             background-color: #ffffff;
             padding: 25px;
-            border-radius: 12px; /* Softer radius */
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08); /* More subtle shadow */
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
             box-sizing: border-box;
         }
         h2, h3 {
-            color: #1c1e21; /* Darker, less harsh color */
+            color: #1c1e21;
             text-align: center;
             margin-bottom: 20px;
         }
@@ -42,10 +42,9 @@
             font-size: 0.9em;
             color: #555;
             margin-bottom: 20px;
-            min-height: 1.2em; /* Prevent layout shift while loading */
+            min-height: 1.2em;
         }
 
-        /* --- Styles for Collapsible Button Controls --- */
         #controlsToggler {
             display: flex;
             align-items: center;
@@ -58,9 +57,9 @@
             border: 1px solid #007bff;
             background-color: #007bff;
             color: white;
-            margin-bottom: 15px; /* Space before the button bars container */
+            margin-bottom: 15px;
             transition: background-color 0.2s ease, border-color 0.2s ease;
-            width: auto; /* Fit content */
+            width: auto;
         }
         #controlsToggler:hover {
             background-color: #0056b3;
@@ -68,31 +67,28 @@
         }
         #controlsToggler .toggler-icon {
             transition: transform 0.3s ease-out;
-            width: 20px; /* Ensure icon has a size */
+            width: 20px;
             height: 20px;
         }
         #controlsToggler[aria-expanded="false"] .toggler-icon {
-            transform: rotate(180deg); /* Icon points up when controls are hidden */
+            transform: rotate(180deg);
         }
          #controlsToggler[aria-expanded="true"] .toggler-icon {
-            transform: rotate(0deg); /* Icon points down when controls are shown */
+            transform: rotate(0deg);
         }
-
-
         #collapsibleButtonBars {
-            max-height: 1000px; /* Allow enough height for content */
+            max-height: 1000px;
             overflow: hidden;
             transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out, padding-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out;
-            padding-top: 5px; /* Some padding when open */
+            padding-top: 5px;
             padding-bottom: 5px;
         }
         #collapsibleButtonBars:not(.open) {
             max-height: 0;
             padding-top: 0;
             padding-bottom: 0;
-            margin-top: 0; /* No margin when closed */
+            margin-top: 0;
         }
-        /* --- End of Styles for Collapsible Button Controls --- */
 
         table {
             border-collapse: collapse;
@@ -472,7 +468,14 @@
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             box-sizing: border-box;
             width: 100%;
-            display: none; /* Hidden by default, shown during PDF generation */
+            display: none;
+        }
+        #pdfContent .pdf-page-wrapper { /* New wrapper for each page's content */
+            page-break-after: always; /* Attempt to force page break after each wrapper */
+            padding-bottom: 30px; /* Space for footnote if it's at the bottom of this wrapper */
+        }
+        #pdfContent .pdf-page-wrapper:last-child {
+            page-break-after: auto; /* No page break after the last one */
         }
         #pdfContent h2, #pdfContent h3 {
             text-align: center;
@@ -485,27 +488,26 @@
             margin-bottom: 25px;
             box-shadow: none;
             background-color: #fff;
-            table-layout: fixed; /* Important for PDF layout */
+            table-layout: fixed;
         }
         #pdfContent th, #pdfContent td {
-            border: 1px solid #333 !important; /* Darker borders for PDF */
-            padding: 6px 8px; /* Adjust padding for PDF */
+            border: 1px solid #333 !important;
+            padding: 6px 8px;
             text-align: center;
-            font-size: 0.85em; /* Slightly smaller font for PDF */
-            word-wrap: break-word; /* Ensure long text wraps */
-            background-color: #fff; /* Ensure cells are not transparent */
+            font-size: 0.85em;
+            word-wrap: break-word;
+            background-color: #fff;
         }
         #pdfContent table th {
-            background-color: #e9ecef !important; /* Light grey background for headers */
+            background-color: #e9ecef !important;
             color: #212529;
             font-weight: bold;
         }
         #pdfContent table tbody tr td:first-child,
-        #pdfContent table thead tr th:first-child { /* First column styling */
-            background-color: #f0f8ff !important; /* AliceBlue for first column */
+        #pdfContent table thead tr th:first-child {
+            background-color: #f0f8ff !important;
             font-weight: bold;
         }
-        /* Styles for the PDF footnote */
         #pdfContent .pdf-footnote {
             text-align: right;
             font-size: 0.7em;
@@ -523,13 +525,12 @@
     <h2 contenteditable="true" id="scheduleTitle">Shared Weekly Schedule</h2>
     <div id="userIdDisplay">User ID: Loading...</div>
 
-    <button id="controlsToggler" aria-expanded="true" aria-controls="collapsibleButtonBars" title="Toggle button controls visibility">
+    <button id="controlsToggler" aria-expanded="false" aria-controls="collapsibleButtonBars" title="Toggle button controls visibility">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
-        <span>Hide Controls</span>
+        <span>Show Controls</span>
     </button>
 
-    <div id="collapsibleButtonBars" class="open">
-        <div class="bar">
+    <div id="collapsibleButtonBars"> <div class="bar">
             <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
             <button id="downloadPdfBtn" title="Download schedule tables as PDF">📄 Download PDF</button> </div>
         <div class="bar">
@@ -830,9 +831,7 @@
         if (textSpan) {
             textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
         }
-        if (icon) {
-            icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-        }
+        // CSS handles icon rotation based on aria-expanded
     }
 
     function showNameModalLoading(isLoading) {
@@ -1086,22 +1085,18 @@
         let querySnapshot;
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            // MODIFIED: Primary sort by lastUpdatedAt only
             let q = query(sharedSchedulesCollectionRef, orderBy("lastUpdatedAt", "desc"));
             console.log("Attempting to load shared schedules sorted by lastUpdatedAt desc.");
             querySnapshot = await getDocs(q);
         } catch (error) {
             console.error("Error loading shared schedules with primary sort (lastUpdatedAt):", error);
-            // Check if the error is specifically an index error, though less likely for single field sort
             if (error.message.toLowerCase().includes("index")) {
-                showMessage("Primary sort by lastUpdated failed (unexpected index issue). Trying fallback sort by creation date.", "info", 5000);
-                console.warn("Firestore query for shared schedules (lastUpdatedAt) failed due to an unexpected index issue. Trying fallback (createdAt).");
+                showMessage("Primary sort by lastUpdated failed. Trying fallback sort by creation date.", "info", 5000);
+                console.warn("Firestore query for shared schedules (lastUpdatedAt) failed. Trying fallback (createdAt). Error:", error.message);
             } else {
-                 // For other errors, show a generic message and try fallback
                 showMessage("Error loading schedules. Trying fallback sort by creation date.", "info", 5000);
                 console.warn("An error occurred loading schedules by lastUpdatedAt. Trying fallback (createdAt). Error:", error.message);
             }
-            // Fallback sort by createdAt
             try {
                 const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
                 console.log("Attempting to load shared schedules with fallback sort by createdAt desc.");
@@ -1223,7 +1218,6 @@
         let loadedSuccessfully = false;
         try {
             const schedulesRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            // MODIFIED: Primary sort by lastUpdatedAt only
             const qPrimary = query(schedulesRef, orderBy("lastUpdatedAt", "desc"), limit(1));
             console.log("Attempting to load latest schedule sorted by lastUpdatedAt desc, limit 1.");
             querySnapshot = await getDocs(qPrimary);
@@ -1237,13 +1231,12 @@
         } catch (error) {
             console.error("Error loading latest shared schedule with primary sort (lastUpdatedAt):", error);
             if (error.message.toLowerCase().includes("index")) {
-                console.warn("Firestore query for latest schedule (lastUpdatedAt) failed due to an unexpected index issue. Trying fallback (createdAt).");
-                showMessage("Loading latest schedule by update time failed (index). Trying by creation time.", "info", 5000);
+                console.warn("Firestore query for latest schedule (lastUpdatedAt) failed. Trying fallback (createdAt). Error:", error.message);
+                showMessage("Loading latest schedule by update time failed. Trying by creation time.", "info", 5000);
             } else {
                 showMessage("Error loading latest schedule. Trying by creation time.", "info", 5000);
                 console.warn("An error occurred loading latest schedule by lastUpdatedAt. Trying fallback (createdAt). Error:", error.message);
             }
-            // Fallback sort by createdAt
             try {
                 const schedulesRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
                 console.log("Attempting to load latest schedule with fallback sort by createdAt desc, limit 1.");
@@ -1530,13 +1523,15 @@
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
 
+        // Set initial state for controls toggler (collapsed by default)
         if (controlsTogglerElement && collapsibleButtonBarsElement) {
-            collapsibleButtonBarsElement.classList.add('open');
-            controlsTogglerElement.setAttribute('aria-expanded', 'true');
+            collapsibleButtonBarsElement.classList.remove('open'); // Ensure it's closed
+            controlsTogglerElement.setAttribute('aria-expanded', 'false');
             const textSpan = controlsTogglerElement.querySelector('span');
-            const icon = controlsTogglerElement.querySelector('.toggler-icon');
-            if (textSpan) textSpan.textContent = 'Hide Controls';
-            if (icon) icon.style.transform = 'rotate(0deg)';
+            if (textSpan) {
+                textSpan.textContent = 'Show Controls';
+            }
+            // Icon rotation is handled by CSS based on aria-expanded
         }
 
         if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) {
@@ -2430,64 +2425,71 @@
         return filteredWords.join(' ').trim();
     }
 
-    // --- PDF Generation Function (Revised) ---
     async function generateSchedulePdf() {
-        // Check for essential elements
         if (!pdfContentElement || !tablesContainer || !scheduleTitleElement) {
-            showMessage('PDF generation elements (pdfContent, tablesContainer, or scheduleTitleElement) not found.', 'error');
-            console.error("PDF Generation Error: Critical elements not found.");
+            showMessage('PDF generation elements not found.', 'error');
             return;
         }
 
         showGeneralLoading(true);
         showMessage('Generating PDF, please wait...', 'info', 15000);
-        pdfContentElement.innerHTML = ''; // Clear previous content
+        pdfContentElement.innerHTML = '';
 
         const scheduleTitleText = scheduleTitleElement.textContent || 'Weekly Schedule';
-        const titleH2 = document.createElement('h2');
-        titleH2.textContent = scheduleTitleText;
-        pdfContentElement.appendChild(titleH2);
+        const mainTitleH2 = document.createElement('h2');
+        mainTitleH2.textContent = scheduleTitleText;
+        pdfContentElement.appendChild(mainTitleH2); // Add main title once at the top
 
-        const tablesToPrint = tablesContainer.querySelectorAll('table'); // Get all current tables in the container
+        const tablesToPrint = tablesContainer.querySelectorAll('table');
+        const numTables = tablesToPrint.length;
 
-        if (tablesToPrint.length === 0) {
-            console.warn("PDF Generation Warning: No tables found in tablesContainer to print.");
-            pdfContentElement.appendChild(document.createTextNode("No tables available to print."));
+        if (numTables === 0) {
+            console.warn("PDF Generation Warning: No tables found to print.");
+            const noTablesMessage = document.createElement('p');
+            noTablesMessage.textContent = "No tables available to print.";
+            noTablesMessage.style.textAlign = "center";
+            pdfContentElement.appendChild(noTablesMessage);
         } else {
-            tablesToPrint.forEach(tableElement => {
+            tablesToPrint.forEach((tableElement, index) => {
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = 'pdf-page-wrapper'; // For CSS styling and page breaks
+
                 const tableId = tableElement.id;
-                const tableName = tableElement.dataset.tableName || tableId || 'Unnamed Table'; // Use data-table-name or ID
+                const tableName = tableElement.dataset.tableName || tableId || `Table ${index + 1}`;
                 console.log(`PDF Generation: Processing table ID: ${tableId}, Name: "${tableName}"`);
 
-                const h3_tableTitle = document.createElement('h3');
-                h3_tableTitle.textContent = tableName;
-                pdfContentElement.appendChild(h3_tableTitle);
+                const tableTitleH3 = document.createElement('h3');
+                tableTitleH3.textContent = tableName;
+                pageWrapper.appendChild(tableTitleH3);
 
                 const clonedTable = cloneTableForPdf(tableElement);
                 if (clonedTable) {
-                    pdfContentElement.appendChild(clonedTable);
-                    console.log(`PDF Generation: Table "${tableName}" (ID: ${tableId}) successfully cloned and added.`);
+                    pageWrapper.appendChild(clonedTable);
+                    console.log(`PDF Generation: Table "${tableName}" (ID: ${tableId}) successfully cloned.`);
                 } else {
                     console.error(`PDF Generation Error: Failed to clone table "${tableName}" (ID: ${tableId}).`);
-                    pdfContentElement.appendChild(document.createTextNode(`Error: Table "${tableName}" could not be generated.`));
+                    const errorMsg = document.createElement('p');
+                    errorMsg.textContent = `Error: Table "${tableName}" could not be generated.`;
+                    errorMsg.style.color = 'red';
+                    pageWrapper.appendChild(errorMsg);
                 }
+
+                // Add footnote to this page wrapper
+                const footnoteDiv = document.createElement('div');
+                footnoteDiv.className = 'pdf-footnote';
+                const today = new Date();
+                const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                footnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
+                pageWrapper.appendChild(footnoteDiv);
+
+                pdfContentElement.appendChild(pageWrapper);
             });
         }
 
-        // Add Footnote
-        const footnoteDiv = document.createElement('div');
-        footnoteDiv.className = 'pdf-footnote';
-        const today = new Date();
-        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-        footnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
-        pdfContentElement.appendChild(footnoteDiv);
-        console.log("PDF Generation: Footnote added.");
-
-        // Ensure pdfContentElement is visible for html2pdf capture
         pdfContentElement.style.display = 'block';
 
         const pdfOptions = {
-            margin: [10, 8, 15, 8], // top, left, bottom, right
+            margin: [10, 8, 15, 8],
             filename: `${scheduleTitleText.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete_schedule.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
             html2canvas: {
@@ -2500,17 +2502,15 @@
                 windowHeight: pdfContentElement.scrollHeight
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-wrapper' } // Try to break before each wrapper
         };
 
         try {
-            console.log("PDF Generation: Calling html2pdf().from(pdfContentElement).set(pdfOptions).save()...");
             await html2pdf().from(pdfContentElement).set(pdfOptions).save();
             showMessage('PDF downloaded successfully!', 'success');
-            console.log("PDF Generation: html2pdf save() completed.");
         } catch (error) {
             console.error('Error generating PDF with html2pdf:', error);
-            showMessage(`Failed to generate PDF. Error: ${error.message}. Check console for details.`, 'error', 10000);
+            showMessage(`Failed to generate PDF. Error: ${error.message}. Check console.`, 'error', 10000);
         } finally {
             pdfContentElement.style.display = 'none';
             showGeneralLoading(false);
