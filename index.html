@@ -61,7 +61,6 @@
             margin-bottom: 15px; /* Space before the button bars container */
             transition: background-color 0.2s ease, border-color 0.2s ease;
             width: auto; /* Fit content */
-            /* align-self: flex-start; /* Uncomment if main-container is flex column and you want left align */
         }
         #controlsToggler:hover {
             background-color: #0056b3;
@@ -72,16 +71,14 @@
             width: 20px; /* Ensure icon has a size */
             height: 20px;
         }
-        /* When aria-expanded is false (closed), rotate the default up-chevron to point down */
         #controlsToggler[aria-expanded="false"] .toggler-icon {
             transform: rotate(180deg);
         }
 
         #collapsibleButtonBars {
-            max-height: 1000px; /* Adjust if necessary, should be more than content height when open */
+            max-height: 1000px; 
             overflow: hidden;
             transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out, padding-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out;
-            /* Add some padding for visual separation when open */
             padding-top: 5px; 
             padding-bottom: 5px;
         }
@@ -89,7 +86,7 @@
             max-height: 0;
             padding-top: 0;
             padding-bottom: 0;
-            margin-top: 0; /* Remove any top margin when closed */
+            margin-top: 0; 
         }
         /* --- End of Styles for Collapsible Button Controls --- */
 
@@ -100,81 +97,70 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             background-color: #fff;
-            table-layout: auto; /* Let browser determine column widths, good for varying content */
+            table-layout: auto; 
         }
         #tablesContainer, #summaryTableContainer {
-            overflow-x: auto; /* Allows horizontal scrolling for tables on small screens */
+            overflow-x: auto; 
             position: relative;
             width: 100%;
         }
         #tablesContainer > table {
-            display: none; /* Tables are hidden by default, active one shown by JS */
+            display: none; 
         }
         #tablesContainer > table.active {
-            display: table; /* Show the active table */
+            display: table; 
         }
         #summaryTable {
             margin-top: 25px;
         }
         th, td {
-            border: 1px solid #dee2e6; /* Lighter border color */
-            padding: 12px 15px; /* Increased padding for better touch targets and readability */
+            border: 1px solid #dee2e6; 
+            padding: 12px 15px; 
             text-align: center;
-            min-width: 100px; /* Minimum width for cells, helps with layout */
+            min-width: 100px; 
             box-sizing: border-box;
-            position: relative; /* For positioning autocomplete suggestions */
+            position: relative; 
         }
-        /* Default table header styling (can be overridden) */
         table th {
             background-color: #f8f9fa;
             color: #343a40;
             font-weight: 600;
             white-space: nowrap;
         }
-
-        /* Styling for the first row of schedule tables (headers) */
         #tablesContainer > table > thead > tr > th {
             font-weight: bold;
-            background-color: lightgrey; /* User request for header row */
+            background-color: lightgrey; 
             color: #343a40;
         }
-
-        /* Styling for the first column of schedule tables */
         #tablesContainer > table > thead > tr > th:first-child,
         #tablesContainer > table > tbody > tr > td:first-child,
-        #tablesContainer > table > tbody > tr > th:first-child { /* In case <th> is used in tbody first col */
+        #tablesContainer > table > tbody > tr > th:first-child { 
             font-weight: bold;
-            background-color: aliceblue; /* User request: Lighter blue */
-            color: #1c1e21; /* Ensure good contrast on lightblue */
+            background-color: aliceblue; 
+            color: #1c1e21; 
         }
-
-        /* Styling for the first row (headers) of the summary table */
         #summaryTable > thead > tr > th {
             font-weight: bold;
-            background-color: lightgrey; /* User request for header row */
+            background-color: lightgrey; 
             color: #212529;
         }
-
-        /* Styling for the first column of the summary table */
         #summaryTable > thead > tr > th:first-child,
         #summaryTable > tbody > tr > td:first-child {
             font-weight: bold;
-            background-color: aliceblue; /* User request: Lighter blue */
-            color: #1c1e21; /* Ensure good contrast on lightblue */
+            background-color: aliceblue; 
+            color: #1c1e21; 
         }
-
-
-        td.selected, th.selected { /* Styling for selected cells */
+        td.selected, th.selected { 
             outline: 3px solid #007bff;
-            background-color: #dbeafe; /* Adjusted selection color */
+            background-color: #dbeafe; 
         }
         .bar {
             display: flex;
-            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            flex-wrap: wrap; 
             gap: 10px;
             margin-bottom: 20px;
             align-items: center;
-            justify-content: center; /* Center buttons in the bar */
+            justify-content: center; 
         }
         .bar button, .table-tabs button, .name-session-tabs button {
             padding: 10px 18px;
@@ -188,7 +174,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            flex-shrink: 0; /* Prevent buttons from shrinking too much */
+            flex-shrink: 0; 
         }
         .bar button:hover, .table-tabs button:hover, .name-session-tabs button:hover {
             background-color: #f8f9fa;
@@ -199,7 +185,6 @@
             transform: translateY(0);
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-
         #rowColManipulationBar button {
             background-image: linear-gradient(to bottom, #ffffff 0%, #f1f3f5 100%);
             border: 1px solid #ced4da;
@@ -221,7 +206,6 @@
             background-image: linear-gradient(to bottom, #f5c6cb 0%, #ebaeb3 100%);
             border-color: #f1b0b7;
         }
-        /* Specific button styling */
         #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;}
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #007bff;}
@@ -238,16 +222,14 @@
         #deselectBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
         #exportSharedSchedulesBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;}
         #importSharedSchedulesBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;}
-        #downloadPdfBtn { background-color: #dc3545; color: white; border-color: #dc3545;} /* New PDF button style */
-
-
+        #downloadPdfBtn { background-color: #dc3545; color: white; border-color: #dc3545;}
         .table-tabs {
             margin-bottom: 15px;
             border-bottom: 2px solid #007bff;
             padding-bottom: 0;
-            display: flex; /* Use flex for tabs */
-            flex-wrap: wrap; /* Allow tabs to wrap */
-            gap: 5px; /* Space between tab buttons */
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 5px; 
         }
         .table-tabs button {
             background-color: transparent;
@@ -256,59 +238,52 @@
             border-radius: 6px 6px 0 0;
             color: #0056b3;
             font-weight: 500;
-            padding: 10px 15px; /* Adjust padding for tabs */
+            padding: 10px 15px; 
         }
         .table-tabs button.active {
             background-color: #007bff;
             color: white;
             border-color: #007bff;
         }
-        
         .name-session-tabs {
             margin-bottom: 20px;
             border-bottom: 2px solid #dee2e6;
             padding-bottom: 8px;
-            display: flex; /* Use flex for tabs */
-            flex-wrap: wrap; /* Allow tabs to wrap */
+            display: flex; 
+            flex-wrap: wrap; 
             gap: 5px;
         }
         .name-session-tabs button {
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
             border-bottom: none;
-            margin-bottom: -2px; /* Align with bottom border */
+            margin-bottom: -2px; 
             padding: 10px 15px;
             font-size: 1em;
         }
         .name-session-tabs button.active {
             background-color: #007bff;
             color: white;
-            border-color: #007bff #007bff #fff; /* Creates the tab effect */
+            border-color: #007bff #007bff #fff; 
             font-weight: bold;
         }
-
-        #summaryTable td { /* General summary table data cells */
+        #summaryTable td { 
             background-color: #fff9e6;
         }
-        /* Ensure first column of summary data cells gets aliceblue */
         #summaryTable > tbody > tr > td:first-child {
              background-color: aliceblue !important; 
         }
-
-        .highlight-conflict { /* Style for cells with conflicting entries */
+        .highlight-conflict { 
             background-color: #f8d7da !important;
             font-weight: bold;
             color: #721c24 !important;
         }
-        /* Ensure conflict highlighting doesn't override first column blue, but keeps conflict text color */
         #summaryTable > tbody > tr > td.highlight-conflict:first-child {
             background-color: aliceblue !important;
-            color: #721c24 !important; /* Keep conflict text color */
+            color: #721c24 !important; 
         }
-
-
         .modal {
-            display: none; /* Hidden by default */
+            display: none; 
             position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
             overflow: hidden; 
             background-color: rgba(0,0,0,0.5);
@@ -340,7 +315,6 @@
             transition: color 0.2s;
         }
         .modal-close-btn:hover { opacity: 1; color: #dc3545; }
-
         .name-item {
             display: flex;
             justify-content: space-between; align-items: center;
@@ -355,7 +329,6 @@
             padding: 6px 12px; font-size: 0.9em; transition: background-color 0.2s; }
         .name-item button:hover { background-color: #c82333; }
         .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
-
         #sharedScheduleListContainer {
             border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px;
             background-color: #f8f9fa;
@@ -370,8 +343,6 @@
         .shared-schedule-item .schedule-date { font-size: 0.8em; color: #6c757d; margin-right: 10px; white-space: nowrap;}
         .shared-schedule-item button { background-color: #dc3545; color: white; border: none; border-radius: 5px;
             padding: 6px 12px; font-size: 0.9em; flex-shrink: 0; }
-
-
         #newNameInput, #searchNameInput {
             padding: 10px;
             margin-right: 8px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1;
@@ -411,8 +382,6 @@
                 column-gap: 20px;
             }
         }
-
-
         .custom-message-box {
             display: none;
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -426,7 +395,6 @@
         .custom-message-box.success { background-color: #28a745; }
         .custom-message-box.error { background-color: #dc3545; }
         .custom-message-box.info { background-color: #007bff; }
-
         .merged-cell-container { position: relative; z-index: 2; vertical-align: top; }
         .merged-cell-overlay {
             position: absolute;
@@ -437,7 +405,6 @@
             box-sizing: border-box; z-index: 5;
         }
         .subsumed-cell { visibility: hidden; }
-
         #loadingIndicatorModal, #generalLoadingIndicator {
             position: absolute; 
             top: 0; left: 0; width: 100%; height: 100%;
@@ -462,7 +429,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
         input[type="file"][style*="display:none"],
         input[type="file"][style*="display: none"] {
             position: absolute;
@@ -471,7 +437,6 @@
             height: 1px;
             opacity: 0;
         }
-
         #autocompleteSuggestions {
             display: none; 
             position: absolute;
@@ -498,12 +463,13 @@
         /* Styles for PDF content container */
         #pdfContent {
             padding: 20px;
-            background-color: #fff;
+            background-color: #fff; /* Ensure background for capture */
             color: #333;
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             box-sizing: border-box;
-            width: 100%; /* Ensure it takes full width for PDF generation */
-            display: none; /* Hidden by default, temporarily shown for debugging */
+            width: 100%; 
+            display: none; /* Hidden by default, made visible temporarily for PDF generation */
+            /* position: absolute; left: -9999px; top: -9999px; /* Alternative to display:none to keep it in layout flow */
         }
         #pdfContent h2, #pdfContent h3 {
             text-align: center;
@@ -514,23 +480,25 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 25px;
-            box-shadow: none; /* Remove box-shadow for PDF */
+            box-shadow: none; 
+            background-color: #fff; /* Ensure table background for capture */
         }
         #pdfContent th, #pdfContent td {
             border: 1px solid #dee2e6;
-            padding: 8px 10px; /* Slightly smaller padding for PDF */
+            padding: 8px 10px; 
             text-align: center;
-            font-size: 0.9em; /* Adjust font size for PDF */
-            white-space: nowrap; /* Prevent wrapping in PDF cells */
+            font-size: 0.9em; 
+            white-space: nowrap; 
+            background-color: #fff; /* Ensure cell background for capture */
         }
         #pdfContent table th {
-            background-color: #f8f9fa;
+            background-color: #f8f9fa !important; /* Important to override other styles */
             color: #343a40;
             font-weight: 600;
         }
         #pdfContent table tbody tr td:first-child,
         #pdfContent table thead tr th:first-child {
-            background-color: aliceblue; /* User request: Lighter blue */
+            background-color: aliceblue !important; /* Important to override */
             font-weight: bold;
         }
         #pdfContent .highlight-conflict {
@@ -538,25 +506,26 @@
             font-weight: bold;
             color: #721c24 !important;
         }
-        /* For PDF, we want merged cells to display their content directly, and subsumed cells to be hidden */
-        #pdfContent .merged-cell-overlay {
-            position: static !important; /* Important for PDF rendering */
-            display: block !important;
+        #pdfContent .merged-cell-overlay { /* This makes the overlay content behave like normal cell content for PDF */
+            position: static !important; 
+            display: block !important; /* Or inline, depending on desired flow */
             width: auto !important;
             height: auto !important;
             border: none !important;
             background-color: transparent !important;
             font-style: normal !important;
-            padding: 0;
-            margin: 0;
+            text-align: center !important; /* Ensure text alignment matches other cells */
+            padding: 0; /* Reset padding if any */
+            margin: 0; /* Reset margin if any */
+            color: inherit !important; /* Inherit text color */
         }
         #pdfContent .subsumed-cell {
-            display: none !important; /* Hide subsumed cells in PDF */
+            display: none !important; /* Hide subsumed cells completely in PDF */
         }
-        #pdfContent .merged-cell-container {
-            position: relative; /* Keep relative for text positioning */
+        #pdfContent .merged-cell-container { /* The container itself should just be a normal cell */
+            position: relative; 
+            /* background-color: transparent !important; /* Ensure no conflicting background */
         }
-
     </style>
 </head>
 <body>
@@ -758,7 +727,7 @@
 
     // --- Global State and Configuration ---
     const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
-    let activeTableId = 'tbl_1'; // Default, will be overridden by loaded data or setupInitialTableState
+    let activeTableId = 'tbl_1'; 
     let tableCount = 1;
     let selectionMode = false;
     let selectedCells = [];
@@ -838,20 +807,16 @@
         }
     }
 
-    // --- Collapsible Button Bar Function ---
     function toggleButtonBarsVisibility() {
         if (!collapsibleButtonBarsElement || !controlsTogglerElement) return;
         const isOpen = collapsibleButtonBarsElement.classList.toggle('open');
         controlsTogglerElement.setAttribute('aria-expanded', isOpen.toString());
         const textSpan = controlsTogglerElement.querySelector('span');
-        // The SVG icon rotation is handled by CSS based on the aria-expanded attribute
         if (textSpan) {
             textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
         }
     }
 
-
-    // --- Firestore Shared Name List Functions ---
     function showNameModalLoading(isLoading) {
         if (loadingIndicatorModalElement) {
             loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
@@ -945,7 +910,6 @@
                         const parts = cellText.split(' // ');
                         let mainContent = parts[0];
                         const remarkContent = parts.length > 1 ? ` // ${parts.slice(1).join(' // ')}` : '';
-
                         const wordsInMain = mainContent.split(/\s+/);
                         const newWordsInMain = wordsInMain.filter(word => {
                             if (word.startsWith('*') && mainContent.includes(nameToDeleteStr)) {
@@ -953,9 +917,7 @@
                             }
                             return word !== nameToDeleteStr;
                         });
-                        
                         const newMainContent = newWordsInMain.join(' ').trim();
-
                         if (newMainContent || remarkContent) {
                             cell.textContent = (newMainContent + remarkContent).trim();
                         } else {
@@ -1009,7 +971,6 @@
         });
     }
 
-    // --- Firestore Shared Schedule Functions ---
     async function saveSharedScheduleToFirestore() {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot save shared schedule.", "error"); return;
@@ -1021,14 +982,12 @@
         if (!scheduleName || scheduleName.trim() === "") {
             showMessage('Save cancelled or name is empty.', 'info'); return;
         }
-
         showGeneralLoading(true);
         const allTablesData = tablesContainer.innerHTML;
         const allTableMeta = {};
         tablesContainer.querySelectorAll('table').forEach(table => {
             allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
         });
-
         const scheduleData = {
             name: scheduleName.trim(),
             html: allTablesData,
@@ -1038,7 +997,6 @@
             lastUpdatedAt: serverTimestamp(), 
             lastUpdatedBy: fbUserId || "anonymous"
         };
-
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
             const newDocRef = await addDoc(sharedSchedulesCollectionRef, scheduleData);
@@ -1066,15 +1024,12 @@
             console.log('Auto-save skipped: No schedule data to save.');
             return;
         }
-
         console.log(`Attempting auto-save for document ID: ${currentWorkingScheduleDocId}`);
-        
         const allTablesData = tablesContainer.innerHTML;
         const allTableMeta = {};
         tablesContainer.querySelectorAll('table').forEach(table => {
             allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
         });
-
         const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
         try {
             const docSnap = await getDoc(docRef);
@@ -1084,7 +1039,6 @@
                 return;
             }
             const existingData = docSnap.data();
-
             const scheduleDataForUpdate = {
                 name: existingData.name, 
                 html: allTablesData,
@@ -1094,7 +1048,6 @@
                 lastUpdatedAt: serverTimestamp(), 
                 lastUpdatedBy: fbUserId || "anonymous",
             };
-            
             await setDoc(docRef, scheduleDataForUpdate);
             showMessage(`Auto-saved to "${existingData.name}"`, 'success', 2000); 
         } catch (error) {
@@ -1103,7 +1056,6 @@
         }
     }
 
-
     async function loadAndRenderSharedSchedulesFromFirestore() {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot load shared schedules.", "error");
@@ -1111,7 +1063,6 @@
             return;
         }
         if (!sharedScheduleListContainerElement) return;
-
         showGeneralLoading(true);
         sharedScheduleListContainerElement.innerHTML = '<p>Loading shared schedules from Cloud...</p>';
         let querySnapshot;
@@ -1142,12 +1093,10 @@
                 return;
             }
         }
-            
         const schedules = [];
         querySnapshot.forEach((docSnap) => {
             schedules.push({ id: docSnap.id, ...docSnap.data() });
         });
-
         renderSharedScheduleList(schedules);
         sharedScheduleListContainerElement.style.display = 'block';
         showGeneralLoading(false);
@@ -1162,14 +1111,12 @@
         schedulesArray.forEach(schedule => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'shared-schedule-item';
-            
             let dateToShow = 'N/A';
             if (schedule.lastUpdatedAt && schedule.lastUpdatedAt.toDate) {
                 dateToShow = `Updated: ${schedule.lastUpdatedAt.toDate().toLocaleString()}`;
             } else if (schedule.createdAt && schedule.createdAt.toDate) {
                 dateToShow = `Created: ${schedule.createdAt.toDate().toLocaleString()}`;
             }
-
             const updatedByText = schedule.lastUpdatedBy ? ` (by ${schedule.lastUpdatedBy.substring(0,8)}...)` : '';
             itemDiv.innerHTML = `
                 <span data-schedule-id="${schedule.id}" title="Load shared schedule: ${schedule.name}">${schedule.name}${updatedByText}</span>
@@ -1190,12 +1137,10 @@
             console.error("loadSelectedSharedScheduleFromFirestore: Critical DOM elements missing (tablesContainer or tableTabs).");
             return false;
         }
-
         showGeneralLoading(true);
         try {
             const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
             const docSnap = await getDoc(docRef);
-
             if (docSnap.exists()) {
                 const scheduleData = docSnap.data();
                 tablesContainer.innerHTML = scheduleData.html;
@@ -1210,7 +1155,6 @@
                     table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                 });
                 activeTableId = scheduleData.activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1';
-                
                 if (document.getElementById(activeTableId)) {
                     switchTable(activeTableId);
                 } else if (tablesContainer.querySelector('table')) {
@@ -1254,13 +1198,10 @@
         console.log("Attempting to load the latest shared schedule as default...");
         let querySnapshot;
         let loadedSuccessfully = false;
-
         try {
-            // Primary attempt: order by lastUpdatedAt then createdAt
             const schedulesRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
             const qPrimary = query(schedulesRef, orderBy("lastUpdatedAt", "desc"), orderBy("createdAt", "desc"), limit(1));
             querySnapshot = await getDocs(qPrimary);
-
             if (!querySnapshot.empty) {
                 const latestScheduleDoc = querySnapshot.docs[0];
                 console.log(`Latest schedule (primary sort) found: ID = ${latestScheduleDoc.id}, Name = ${latestScheduleDoc.data().name}`);
@@ -1273,12 +1214,10 @@
             if (error.message.toLowerCase().includes("index")) {
                 console.warn("Firestore query for latest schedule failed due to missing index (lastUpdatedAt, createdAt). Trying fallback (createdAt). Ensure the composite index 'sharedSchedules: lastUpdatedAt DESC, createdAt DESC' exists.");
                 showMessage("Loading latest schedule failed (needs index). Trying fallback.", "info", 5000);
-                // Fallback attempt: order only by createdAt
                 try {
                     const schedulesRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
                     const qFallback = query(schedulesRef, orderBy("createdAt", "desc"), limit(1));
                     querySnapshot = await getDocs(qFallback);
-
                     if (!querySnapshot.empty) {
                         const latestScheduleDoc = querySnapshot.docs[0];
                         console.log(`Latest schedule (fallback sort by createdAt) found: ID = ${latestScheduleDoc.id}, Name = ${latestScheduleDoc.data().name}`);
@@ -1299,7 +1238,6 @@
         if (!loadedSuccessfully) currentWorkingScheduleDocId = null;
         return loadedSuccessfully;
     }
-
 
     async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) {
         if (!fbDb || !fbIsAuthReady) {
@@ -1332,9 +1270,8 @@
         showGeneralLoading(true);
         try {
             const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            const q = query(schedulesCollectionRef, orderBy("createdAt", "desc")); // Simple sort for export
+            const q = query(schedulesCollectionRef, orderBy("createdAt", "desc")); 
             const querySnapshot = await getDocs(q);
-            
             const schedulesToExport = [];
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
@@ -1348,13 +1285,11 @@
                     lastUpdatedBy: data.lastUpdatedBy || null
                 });
             });
-
             if (schedulesToExport.length === 0) {
                 showMessage('No shared schedules in Cloud to export.', 'info'); 
                 showGeneralLoading(false);
                 return;
             }
-
             const blob = new Blob([JSON.stringify(schedulesToExport, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1362,7 +1297,6 @@
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
             showMessage('All shared schedules exported successfully!', 'success');
-
         } catch (error) {
             console.error("Error exporting shared schedules from Firestore:", error);
             showMessage(`Failed to export shared schedules. Error: ${error.message}`, "error");
@@ -1381,7 +1315,6 @@
             showMessage('Invalid file type. Please select a .json file exported from this app.', 'error');
             event.target.value = ''; return;
         }
-        
         showGeneralLoading(true);
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -1390,15 +1323,12 @@
                 if (!Array.isArray(importedSchedulesData)) {
                     showMessage('Invalid schedule file format. Expected an array of schedules.', 'error'); return;
                 }
-
                 let importedCount = 0, skippedCount = 0;
                 const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-
                 for (const schedule of importedSchedulesData) {
                     if (schedule && typeof schedule.name === 'string' && typeof schedule.html === 'string' && typeof schedule.meta === 'object' && typeof schedule.activeTableId === 'string') {
                         const q = query(schedulesCollectionRef, where("name", "==", schedule.name));
                         const existingSnapshot = await getDocs(q);
-
                         if (!existingSnapshot.empty) {
                              if (await customConfirm(`A shared schedule named "${schedule.name}" already exists. Overwrite?`)) {
                                 for(const docToDel of existingSnapshot.docs) {
@@ -1409,7 +1339,6 @@
                                 continue; 
                             }
                         }
-                        
                         await addDoc(schedulesCollectionRef, {
                             name: schedule.name,
                             html: schedule.html,
@@ -1446,26 +1375,20 @@
         reader.readAsText(file);
     }
 
-
-    // --- Inline Autocomplete Functions ---
     function showCellAutocompleteSuggestions(cell, inputText) {
         if (!autocompleteSuggestionsDiv) return;
         const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
-        
         let textForMatchingInput = String(inputText || '').split(' // ')[0]; 
         const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*')); 
         const textForMatching = wordsForMatching.join(' ').toLowerCase().trim(); 
-                
         if (!textForMatching) {
             hideCellAutocompleteSuggestions();
             return;
         }
-
         const filteredSuggestions = namesForAutocomplete.filter(name => {
             const nameStr = String(name || '').toLowerCase().trim();
             return nameStr.startsWith(textForMatching) && nameStr !== textForMatching;
         });
-
         if (filteredSuggestions.length > 0) {
             activeCellForAutocomplete = cell;
             autocompleteSuggestionsDiv.innerHTML = ''; 
@@ -1479,7 +1402,6 @@
                 });
                 autocompleteSuggestionsDiv.appendChild(item);
             });
-
             const cellRect = cell.getBoundingClientRect();
             autocompleteSuggestionsDiv.style.left = `${cellRect.left + window.scrollX}px`;
             autocompleteSuggestionsDiv.style.top = `${cellRect.bottom + window.scrollY}px`;
@@ -1503,20 +1425,15 @@
         if (activeCellForAutocomplete) {
             const targetCell = activeCellForAutocomplete; 
             const overlay = targetCell.querySelector('.merged-cell-overlay');
-            
             const currentFullText = overlay ? overlay.textContent : targetCell.textContent;
             const remarkPart = currentFullText.includes(' // ') ? currentFullText.substring(currentFullText.indexOf(' // ')) : '';
-            
             const contentBeforeRemark = currentFullText.split(' // ')[0];
             const starWordsBeforeRemark = contentBeforeRemark.split(/\s+/).filter(word => word.startsWith('*')).join(' ');
-
             let newText = suggestionText;
             if (starWordsBeforeRemark) {
                 newText += ' ' + starWordsBeforeRemark;
             }
             newText = (newText.trim() + remarkPart).trim();
-
-
             if (overlay) {
                 overlay.textContent = newText;
             } else {
@@ -1548,10 +1465,7 @@
         });
     }
 
-
-    // --- Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Cache DOM elements
         scheduleTitleElement = document.getElementById('scheduleTitle');
         tablesContainer = document.getElementById('tablesContainer');
         tableTabs = document.getElementById('tableTabs');
@@ -1580,18 +1494,14 @@
         collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); 
         downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); 
         pdfContentElement = document.getElementById('pdfContent'); 
-
-
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
-
         if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) { 
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
             return;
         }
-
         if (fbAuth) {
             console.log("Firebase Auth: Setting up onAuthStateChanged listener.");
             onAuthStateChanged(fbAuth, async (user) => {
@@ -1601,30 +1511,23 @@
                     fbIsAuthReady = true;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
                     else console.warn("userIdDisplayElement not found in DOM.");
-
                     if (unsubscribePagiShared) unsubscribePagiShared();
                     if (unsubscribePetangShared) unsubscribePetangShared();
-                    
                     console.log("Firebase Auth: Subscribing to shared name lists.");
                     unsubscribePagiShared = listenToSharedNameList('pagi');
                     unsubscribePetangShared = listenToSharedNameList('petang');
-
                     if (nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
                         renderNameListFromFirestore(searchNameInputElement.value);
                     }
-                    
                     const loadedDefault = await loadLatestSharedScheduleAsDefault();
                     if (!loadedDefault) {
                         console.log("No default schedule loaded, setting up initial table state.");
                         setupInitialTableState(); 
                     }
                     rebuildAndRenderSummary(); 
-
                     if (autoSaveIntervalId) clearInterval(autoSaveIntervalId); 
                     autoSaveIntervalId = setInterval(autoSaveCurrentSchedule, AUTO_SAVE_INTERVAL);
                     console.log(`Auto-save interval started (every ${AUTO_SAVE_INTERVAL/1000}s).`);
-
-
                 } else {
                     console.log("Firebase Auth: No user is currently signed in. Attempting to sign in.");
                     fbIsAuthReady = false; fbUserId = null;
@@ -1644,7 +1547,7 @@
                         console.error("Firebase Auth: Error during sign-in:", error);
                         showMessage(`Firebase Auth failed. Cloud features may not work. Error: ${error.message}`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
-                        setupInitialTableState(); // Ensure UI is usable even if auth fails
+                        setupInitialTableState(); 
                         rebuildAndRenderSummary();
                     }
                 }
@@ -1654,10 +1557,9 @@
              else console.warn("userIdDisplayElement not found in DOM.");
              console.error("Firebase Auth: fbAuth object is not available. Firebase Auth service could not be initialized.");
              showMessage("Critical Error: Firebase Auth service could not be initialized. Check Firebase setup.", "error", 10000);
-             setupInitialTableState(); // Ensure UI is usable
+             setupInitialTableState(); 
              rebuildAndRenderSummary();
         }
-
         loadScheduleTitleFromLocalStorage(); 
         initializeEventListeners();
         handleNameListSessionSwitch('pagi');
@@ -1666,47 +1568,32 @@
     function setupInitialTableState() {
         console.log("Running setupInitialTableState...");
         const existingTables = tablesContainer.querySelectorAll('table');
-        
         if (currentWorkingScheduleDocId && existingTables.length > 0 && document.getElementById(activeTableId)) {
-            // A schedule was loaded successfully, activeTableId should be set.
             console.log("setupInitialTableState: A schedule is already loaded and active.");
-            switchTable(activeTableId); // Ensure it's visually active
+            switchTable(activeTableId); 
             return;
         }
-
         console.log("setupInitialTableState: No schedule loaded or tables are missing. Initializing default view.");
         tableTabs.innerHTML = ''; 
-        // DO NOT clear tablesContainer.innerHTML here if we want to use pre-defined HTML tables.
-        // tablesContainer.innerHTML = ''; 
         currentWorkingScheduleDocId = null; 
-        activeTableId = null; // Reset activeTableId
-
-        // Add existing tables from the HTML directly
-        // The tables tbl_1 and tbl_2 should already be in tablesContainer from the initial HTML.
-        // We just need to create tabs for them.
+        activeTableId = null; 
         const table1 = document.getElementById('tbl_1');
         const table2 = document.getElementById('tbl_2');
-
         if (table1) {
-            // tablesContainer.appendChild(table1); // Not needed if it's already there
             addTabButton(table1.id, table1.dataset.tableName || 'Kelas 3 & 5');
         }
         if (table2) {
-            // tablesContainer.appendChild(table2); // Not needed if it's already there
             addTabButton(table2.id, table2.dataset.tableName || 'Kelas 1, 2 & 4');
         }
-
         if (table1) {
             switchTable(table1.id);
         } else if (tablesContainer.querySelector('table')) {
             switchTable(tablesContainer.querySelector('table').id);
         } else {
             console.warn("setupInitialTableState: No tables found in HTML, adding a new one dynamically.");
-            addNewTable(true); // Fallback to adding a new table if none exist
+            addNewTable(true); 
         }
-        
         if (!activeTableId && tablesContainer.querySelector('table')) {
-            // Fallback if addNewTable somehow didn't set activeTableId but did create a table
             activeTableId = tablesContainer.querySelector('table').id;
             switchTable(activeTableId);
              console.warn("setupInitialTableState: Fallback to first table in DOM as active.");
@@ -1714,7 +1601,6 @@
             console.error("setupInitialTableState: Critical error, no active table could be established.");
         }
     }
-
 
     function loadScheduleTitleFromLocalStorage() { 
         const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
@@ -1729,7 +1615,6 @@
 
     function initializeEventListeners() {
         if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility); 
-
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf); 
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
@@ -1744,13 +1629,11 @@
         document.getElementById('excelBtnTrigger')?.addEventListener('click', exportActiveTableToExcel);
         document.getElementById('importExcelBtn')?.addEventListener('click', () => fileInputElement?.click());
         if(fileInputElement) fileInputElement.addEventListener('change', handleExcelFileImport);
-        
         document.getElementById('saveSharedScheduleBtn')?.addEventListener('click', saveSharedScheduleToFirestore);
         document.getElementById('loadSharedScheduleBtn')?.addEventListener('click', loadAndRenderSharedSchedulesFromFirestore);
         document.getElementById('exportSharedSchedulesBtn')?.addEventListener('click', exportAllSharedSchedulesFromFirestore);
         document.getElementById('importSharedSchedulesBtn')?.addEventListener('click', () => sharedScheduleImportFileInputElement?.click());
         if(sharedScheduleImportFileInputElement) sharedScheduleImportFileInputElement.addEventListener('change', handleSharedSchedulesImport);
-        
         if(sharedScheduleListContainerElement) sharedScheduleListContainerElement.addEventListener('click', async (e) => {
             const targetSpan = e.target.closest('.shared-schedule-item span[data-schedule-id]');
             const targetButton = e.target.closest('.shared-schedule-item button[data-schedule-id]');
@@ -1762,7 +1645,6 @@
                 await confirmAndDeleteSharedScheduleFromFirestore(scheduleId, scheduleName);
             }
         });
-
         document.getElementById('clearActiveTableContentBtn')?.addEventListener('click', confirmAndClearActiveTableContent);
         document.getElementById('selectBtn')?.addEventListener('click', toggleCellSelectionMode);
         document.getElementById('mergeBtn')?.addEventListener('click', mergeSelectedTableCells);
@@ -1842,7 +1724,6 @@
             if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && activeCellForAutocomplete) {
                 const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
                 if (items.length === 0 && e.key !== 'Escape') return;
-
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     currentAutocompleteIndex = (currentAutocompleteIndex + 1) % items.length;
@@ -2004,7 +1885,6 @@
              console.error(`SwitchTable: Target table ${id} not found and tablesContainer is also missing.`);
              return;
         }
-
         console.log(`Switching to table: ${id}`);
         activeTableId = id;
         if(tablesContainer) tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
@@ -2048,7 +1928,7 @@
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTable.id, label || defaultTableName);
-        switchTable(newTable.id); // This will set activeTableId
+        switchTable(newTable.id); 
         if (!isInitial) {
             showMessage(`Table "${label || defaultTableName}" added.`, 'success');
         } else {
@@ -2068,7 +1948,6 @@
         }
         const tableElement = document.getElementById(tableIdToRename);
         if (!tableElement) { showMessage(`Table element for ID ${tableIdToRename} not found.`, 'error'); return; }
-
         const oldName = tableElement.dataset.tableName || currentTab.textContent;
         const newName = customPrompt('Enter new table name:', oldName);
         if (newName && newName.trim() && newName.trim() !== oldName) {
@@ -2089,12 +1968,10 @@
         const tableIdToDelete = activeTab?.dataset.tableId;
         const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
         const tableName = tableElement?.dataset.tableName || activeTab?.textContent || 'the active table';
-
         if (await customConfirm(`Delete table "${tableName}"? This cannot be undone.`)) {
             if (tableElement) tableElement.remove();
             else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove(); 
             activeTab?.remove(); 
-            
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) { 
                 const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; 
@@ -2207,25 +2084,20 @@
             !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
             hideCellAutocompleteSuggestions();
         }
-
         if (selectedNameFromList) { 
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
                 const overlay = cell.querySelector('.merged-cell-overlay');
                 const currentCellText = overlay ? overlay.textContent : cell.textContent;
-                
                 const remarkPart = currentCellText.includes(' // ') ? currentCellText.substring(currentCellText.indexOf(' // ')) : '';
                 const contentBeforeRemark = currentCellText.split(' // ')[0];
                 const starWords = contentBeforeRemark.split(/\s+/).filter(w => w.startsWith('*')).join(' ');
-
                 let newText = selectedNameFromList;
                 if (starWords) {
                     newText += ' ' + starWords;
                 }
                 newText = (newText.trim() + remarkPart).trim();
-
                 if (overlay) overlay.textContent = newText;
                 else cell.textContent = newText;
-                
                 rebuildAndRenderSummary(); 
                 showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500);
                 clearNameSelection(); 
@@ -2288,7 +2160,6 @@
                  hideCellAutocompleteSuggestions();
             }
         });
-
         primaryCell.innerHTML = ''; primaryCell.appendChild(overlay);
         primaryCell.classList.add('merged-cell-container');
         primaryCell.setAttribute('data-merge-id', mergeId);
@@ -2528,16 +2399,17 @@
 
     // --- PDF Generation Function ---
     async function generateSchedulePdf() {
-        if (!pdfContentElement || !tablesContainer) { // Removed summaryTableElement check
+        if (!pdfContentElement || !tablesContainer ) { 
             showMessage('PDF generation elements (pdfContent or tablesContainer) not found.', 'error');
             return;
         }
 
         showGeneralLoading(true);
-        showMessage('Generating PDF...', 'info', 5000);
+        showMessage('Generating PDF...', 'info', 10000); // Increased duration for user to see
 
-        // Clear previous content
+        // Clear previous content and ensure it's ready for new content
         pdfContentElement.innerHTML = '';
+        // pdfContentElement.style.display = 'block'; // Make it visible BEFORE adding content
 
         // Get the schedule title
         const scheduleTitle = scheduleTitleElement ? scheduleTitleElement.textContent : 'Weekly Schedule';
@@ -2554,7 +2426,6 @@
             pdfContentElement.appendChild(cloneTableForPdf(kelas35Table));
         } else {
             console.warn("Table 'Kelas 3 & 5' (tbl_1) not found for PDF generation.");
-            showMessage("Table 'Kelas 3 & 5' not found for PDF.", "warning", 3000); // Changed to warning as it might not be critical if one is missing
         }
 
         // Get "Kelas 1, 2 & 4" table (assuming it's tbl_2)
@@ -2566,82 +2437,61 @@
             pdfContentElement.appendChild(cloneTableForPdf(kelas124Table));
         } else {
             console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found for PDF generation.");
-            showMessage("Table 'Kelas 1, 2 & 4' not found for PDF.", "warning", 3000); // Changed to warning
         }
         
-        // Check if any table was added to the PDF content
         if (pdfContentElement.querySelectorAll('table').length === 0) {
             showMessage('No specified tables were found to include in the PDF.', 'error');
-            pdfContentElement.innerHTML = ''; // Clear any titles if no tables
-            pdfContentElement.style.display = 'none';
+            pdfContentElement.innerHTML = ''; 
+            pdfContentElement.style.display = 'none'; // Hide if no content
             showGeneralLoading(false);
             return;
         }
+        
+        // CRITICAL: Make the pdfContentElement visible in the DOM for html2pdf to capture
+        pdfContentElement.style.display = 'block'; 
 
+        // Optional: Add a small delay to ensure rendering, though appendChild is synchronous
+        // await new Promise(resolve => setTimeout(resolve, 50)); // e.g., 50ms
 
-        // Temporarily make pdfContent visible for debugging if needed
-        // pdfContentElement.style.display = 'block'; // Uncomment for debugging
-
-        // Define PDF options
         const pdfOptions = {
             margin: 10,
-            filename: `${scheduleTitle.replace(/\s/g, '_')}_Refined_Schedule.pdf`, // Updated filename
+            filename: `${scheduleTitle.replace(/\s/g, '_')}_Refined_Schedule.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false }, // Added logging: false
+            html2canvas: { scale: 2, useCORS: true, logging: false }, // logging can be true for debug
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // Added more robust pagebreak modes
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
         };
 
         try {
-            // Use html2pdf to generate and save the PDF
             await html2pdf().set(pdfOptions).from(pdfContentElement).save();
             showMessage('PDF downloaded successfully!', 'success');
         } catch (error) {
             console.error('Error generating PDF:', error);
             showMessage(`Failed to generate PDF. Error: ${error.message}`, 'error');
         } finally {
-            // Clean up the temporary content and hide the container
-            pdfContentElement.innerHTML = '';
-            pdfContentElement.style.display = 'none'; 
+            // Clean up: Clear content and hide the container
+            pdfContentElement.innerHTML = ''; // Clear the content
+            pdfContentElement.style.display = 'none'; // Hide it again
             showGeneralLoading(false);
         }
     }
 
-    // Helper function to clone tables for PDF generation, handling merged cells
+    // Helper function to clone tables for PDF generation
     function cloneTableForPdf(originalTable) {
         const clonedTable = originalTable.cloneNode(true);
-        clonedTable.removeAttribute('id'); // Remove ID to prevent conflicts
-        clonedTable.classList.remove('active'); // Remove active class if present
+        clonedTable.removeAttribute('id'); 
+        clonedTable.classList.remove('active'); 
 
         // Remove contenteditable attributes from the cloned table
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.removeAttribute('contenteditable');
         });
         
-        // Ensure merged cell overlays are correctly handled for PDF
-        // The CSS for #pdfContent should make .merged-cell-overlay display its content
-        // and .subsumed-cell to be hidden.
-        // We can explicitly set the text content of the primary merged cell from its overlay
-        // and clear subsumed cells for robustness, though CSS should handle it.
-        clonedTable.querySelectorAll('.merged-cell-container').forEach(containerCell => {
-            const overlay = containerCell.querySelector('.merged-cell-overlay');
-            if (overlay) {
-                // For PDF, the overlay itself might not render correctly if it's absolutely positioned.
-                // So, we transfer its content to the container cell directly.
-                containerCell.textContent = overlay.textContent;
-                overlay.remove(); // Remove the overlay div itself for PDF
-            }
-        });
-        clonedTable.querySelectorAll('.subsumed-cell').forEach(subsumedCell => {
-             // subsumedCell.textContent = ''; // Clear content
-             // subsumedCell.style.display = 'none'; // Explicitly hide, though CSS should do this
-             // Or better, remove them if they cause layout issues in PDF
-             // For html2pdf, it's often better to let CSS handle display:none
-        });
-        
+        // The CSS rules for #pdfContent are designed to handle the visual representation
+        // of merged cells (.merged-cell-overlay) and subsumed cells (.subsumed-cell)
+        // correctly for PDF generation. So, no further structural manipulation is needed here.
         return clonedTable;
     }
-
 
     function rebuildAndRenderSummary() {
         console.log("Rebuilding and rendering summary...");
@@ -2681,10 +2531,8 @@
             return;
         }
         summaryTableElement.innerHTML = ''; 
-        
         let activeTableHeaders = [];
         const activeTableElement = document.getElementById(activeTableId); 
-
         if (activeTableElement && activeTableElement.tHead && activeTableElement.tHead.rows.length > 0) {
             for (let hIdx = 1; hIdx < activeTableElement.tHead.rows[0].cells.length; hIdx++) { 
                 const headerText = String(activeTableElement.tHead.rows[0].cells[hIdx].textContent || '').trim();
@@ -2693,14 +2541,12 @@
         } else if (activeTableElement) {
             console.warn("Active table for summary found, but has no headers or tHead rows. Summary headers might be empty.");
         } else {
-            console.warn(`Active table for summary (ID: ${activeTableId}) NOT found. Summary headers will be empty. This might happen if initial load failed and no table was made active.`);
+            console.warn(`Active table for summary (ID: ${activeTableId}) NOT found. Summary headers will be empty.`);
         }
-
         let laulisahRuleRequiresSpecialSlot = false;
         const specialNamesForRule = ["LAU", "LISAH"];
         const targetSlotForSpecialNamesRule = "10.15-10.30";
         const sourceSlotToShiftRule = "10.30-12.00";
-
         if (tablesContainer) {
             for (const scheduleTable of tablesContainer.querySelectorAll('table')) {
                 if (laulisahRuleRequiresSpecialSlot) break; 
@@ -2712,7 +2558,6 @@
                          const scheduleCell = scheduleDataRow.cells[cellIdx];
                          let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
                          let entryInScheduleCellForRule = getTextForSummary(entryInScheduleCellFull); 
-
                          if (specialNamesForRule.includes(entryInScheduleCellForRule)) {
                             const headerText = currentScheduleTableHeaders[cellIdx];
                             if (headerText && headerText.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
@@ -2723,19 +2568,16 @@
                 });
             }
         }
-        
         let combinedHeaders = new Set(activeTableHeaders);
         if (laulisahRuleRequiresSpecialSlot) {
             combinedHeaders.add(targetSlotForSpecialNamesRule);
         }
-        
         let sortedUniqueHeaders = Array.from(combinedHeaders).sort((a, b) => {
             const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b);
             if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
             if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1;  
             return String(a).localeCompare(String(b));
         });
-
         const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedUniqueHeaders];
         const thead = summaryTableElement.createTHead();
         const headerRowForSummary = thead.insertRow();
@@ -2744,7 +2586,6 @@
             headerRowForSummary.appendChild(th);
         });
         const tbody = summaryTableElement.createTBody();
-        
         if (allAvailableNames.length === 0 && sortedUniqueHeaders.length === 0) {
             const tr = tbody.insertRow(); const td = tr.insertCell();
             td.textContent = "No names scheduled and no time slots defined in active table.";
@@ -2772,16 +2613,13 @@
         if (summaryBody.rows.length === 0 && !(summaryBody.rows[0]?.cells[0]?.colSpan > 1)) { 
             return;
         }
-        
         const summaryTableDisplayHeaders = Array.from(summaryTableElement.tHead.rows[0].cells).map(th => String(th.textContent||'').trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(h => h.replace(/\s/g, "").replace(/:/g,"."));
-        
         Array.from(summaryBody.rows).forEach(summaryRow => { 
             if (summaryRow.cells.length > 1) Array.from(summaryRow.cells).slice(1).forEach(cell => {
                 cell.textContent = ''; cell.classList.remove('highlight-conflict'); 
             });
         });
-
         if (tablesContainer) {
             tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
                 if (!scheduleTable.tHead?.rows.length > 0 || !scheduleTable.tBodies[0]) return; 
@@ -2793,11 +2631,9 @@
                         const scheduleCell = scheduleDataRow.cells[cellIdx];
                         let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
                         let actualEntryForSummary = getTextForSummary(entryInScheduleCellFull); 
-
                         if (actualEntryForSummary) { 
                             let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx];
                             if (!scheduleColumnHeaderForThisCell) continue; 
-                            
                             let summaryColumnToUse = scheduleColumnHeaderForThisCell;
                             const specialNamesForRule = ["LAU", "LISAH"];
                             const targetSlotForSpecialNamesRule = "10.15-10.30";
@@ -2805,7 +2641,6 @@
                             if (specialNamesForRule.includes(actualEntryForSummary) && scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) {
                                 summaryColumnToUse = targetSlotForSpecialNamesRule;
                             }
-
                             const targetSummaryRow = Array.from(summaryBody.rows).find(sr => String(sr.cells[0]?.textContent||'') === actualEntryForSummary);
                             if (targetSummaryRow?.cells.length > 1) {
                                 const targetSummaryColumnCellIndex = normalizedSummaryHeadersForLookup.indexOf(summaryColumnToUse.replace(/\s/g, "").replace(/:/g,"."));
@@ -2829,8 +2664,6 @@
             });
         });
     }
-
 </script>
 </body>
 </html>
-
