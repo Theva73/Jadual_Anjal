@@ -85,7 +85,6 @@
             transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out, padding-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out;
             padding-top: 5px; /* Some padding when open */
             padding-bottom: 5px;
-            /* margin-top: 15px; */ /* Ensure consistent spacing */
         }
         #collapsibleButtonBars:not(.open) {
             max-height: 0;
@@ -693,49 +692,42 @@
     import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
-    // This is the configuration provided by the user from SDK config.txt
     const userProvidedFirebaseConfig = {
       apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.appspot.com", // Corrected from firebasestorage.app
+      storageBucket: "jadual-3f0aa.appspot.com",
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
     let firebaseConfig;
-    // Check if a global __firebase_config is injected (e.g., by a platform)
     if (typeof __firebase_config !== 'undefined' && __firebase_config !== null && __firebase_config.trim() !== '') {
         try {
             firebaseConfig = JSON.parse(__firebase_config);
             console.log("Using injected Firebase config (__firebase_config).");
         } catch (e) {
             console.error("Error parsing injected __firebase_config. Falling back to userProvidedFirebaseConfig. Error:", e);
-            firebaseConfig = userProvidedFirebaseConfig; // Fallback to the one in script
+            firebaseConfig = userProvidedFirebaseConfig;
         }
     } else {
-        // If no injected config, use the one defined in this script
         firebaseConfig = userProvidedFirebaseConfig;
         console.log("Using Firebase config defined in the script (userProvidedFirebaseConfig).");
     }
 
-    // Ensure API key is not a placeholder if using the script-defined config
-    if (firebaseConfig === userProvidedFirebaseConfig && (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4")) {
-        console.error("Firebase Auth: CRITICAL - The userProvidedFirebaseConfig in the script still contains a placeholder API key. Please replace it with your actual Firebase project API key if __firebase_config is not being injected.");
-        // Display a more prominent error to the user if the key is clearly a placeholder
+    if (firebaseConfig === userProvidedFirebaseConfig && (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4")) { // Check against known placeholder
+        console.error("Firebase Auth: CRITICAL - The userProvidedFirebaseConfig in the script still contains a placeholder API key.");
         const userIdDisplayError = document.getElementById('userIdDisplay');
         if (userIdDisplayError) userIdDisplayError.textContent = "User ID: Firebase API Key Error!";
         showMessage("Firebase Configuration Error: Invalid API Key. Please update the script.", "error", 10000);
     }
 
-
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app');
 
     if (typeof __app_id === 'undefined') {
-        console.warn("Firebase Auth: __app_id is not defined. Using App ID from Firebase config or a default value. This appId scopes your shared data in Firestore.");
+        console.warn("Firebase Auth: __app_id is not defined. Using App ID from Firebase config or a default value.");
     }
 
-    // --- Initialize Firebase ---
     let fbApp, fbAuth, fbDb;
     let fbUserId = null;
     let fbIsAuthReady = false;
@@ -754,34 +746,27 @@
         if (userIdDisplayInitError) userIdDisplayInitError.textContent = "User ID: Firebase Init Error!";
     }
 
-    // --- Global State and Configuration ---
     const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
     let activeTableId = 'tbl_1';
-    let tableCount = 1; // Keep track of table creation for unique IDs
+    let tableCount = 1;
     let selectionMode = false;
     let selectedCells = [];
     let lastClickedCell = null;
     let selectedNameFromList = null;
-
     let currentNameListSession = 'pagi';
     let namesPagiShared = [];
     let namesPetangShared = [];
-
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
-
     let autocompleteSuggestionsDiv = null;
     let activeCellForAutocomplete = null;
     let currentAutocompleteIndex = -1;
-
     let currentWorkingScheduleDocId = null;
     let autoSaveIntervalId = null;
-    const AUTO_SAVE_INTERVAL = 60000; // 1 minute
+    const AUTO_SAVE_INTERVAL = 60000;
 
-    // DOM Element Cache
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement;
 
-    // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
         if (!customMessageBox) {
             customMessageBox = document.getElementById('customMessageBox');
@@ -845,7 +830,6 @@
         if (textSpan) {
             textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
         }
-         // Ensure icon rotation is correct based on state
         if (icon) {
             icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
         }
@@ -1102,31 +1086,36 @@
         let querySnapshot;
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            let q = query(sharedSchedulesCollectionRef, orderBy("lastUpdatedAt", "desc"), orderBy("createdAt", "desc"));
+            // MODIFIED: Primary sort by lastUpdatedAt only
+            let q = query(sharedSchedulesCollectionRef, orderBy("lastUpdatedAt", "desc"));
+            console.log("Attempting to load shared schedules sorted by lastUpdatedAt desc.");
             querySnapshot = await getDocs(q);
         } catch (error) {
-            console.error("Error loading shared schedules with primary sort (lastUpdatedAt, createdAt):", error);
+            console.error("Error loading shared schedules with primary sort (lastUpdatedAt):", error);
+            // Check if the error is specifically an index error, though less likely for single field sort
             if (error.message.toLowerCase().includes("index")) {
-                showMessage("Primary sort failed (needs index). Trying fallback sort by creation date.", "info", 5000);
-                console.warn("Firestore query for shared schedules failed due to missing index (lastUpdatedAt, createdAt). Trying fallback (createdAt). Ensure the composite index 'sharedSchedules: lastUpdatedAt DESC, createdAt DESC' exists.");
-                try {
-                    const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-                    let qFallback = query(sharedSchedulesCollectionRef, orderBy("createdAt", "desc"));
-                    querySnapshot = await getDocs(qFallback);
-                } catch (fallbackError) {
-                    console.error("Error loading shared schedules with fallback sort (createdAt):", fallbackError);
-                    showMessage(`Failed to load shared schedules. Error: ${fallbackError.message}`, "error");
-                    sharedScheduleListContainerElement.innerHTML = `<p>Error loading shared schedules. Index might be required. Check console.</p>`;
-                    showGeneralLoading(false);
-                    return;
-                }
+                showMessage("Primary sort by lastUpdated failed (unexpected index issue). Trying fallback sort by creation date.", "info", 5000);
+                console.warn("Firestore query for shared schedules (lastUpdatedAt) failed due to an unexpected index issue. Trying fallback (createdAt).");
             } else {
-                showMessage(`Failed to load shared schedules. Error: ${error.message}`, "error");
-                sharedScheduleListContainerElement.innerHTML = '<p>Error loading shared schedules.</p>';
+                 // For other errors, show a generic message and try fallback
+                showMessage("Error loading schedules. Trying fallback sort by creation date.", "info", 5000);
+                console.warn("An error occurred loading schedules by lastUpdatedAt. Trying fallback (createdAt). Error:", error.message);
+            }
+            // Fallback sort by createdAt
+            try {
+                const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
+                console.log("Attempting to load shared schedules with fallback sort by createdAt desc.");
+                let qFallback = query(sharedSchedulesCollectionRef, orderBy("createdAt", "desc"));
+                querySnapshot = await getDocs(qFallback);
+            } catch (fallbackError) {
+                console.error("Error loading shared schedules with fallback sort (createdAt):", fallbackError);
+                showMessage(`Failed to load shared schedules. Error: ${fallbackError.message}`, "error");
+                sharedScheduleListContainerElement.innerHTML = `<p>Error loading shared schedules. Please check console.</p>`;
                 showGeneralLoading(false);
                 return;
             }
         }
+
         const schedules = [];
         querySnapshot.forEach((docSnap) => {
             schedules.push({ id: docSnap.id, ...docSnap.data() });
@@ -1234,44 +1223,53 @@
         let loadedSuccessfully = false;
         try {
             const schedulesRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-            const qPrimary = query(schedulesRef, orderBy("lastUpdatedAt", "desc"), orderBy("createdAt", "desc"), limit(1));
+            // MODIFIED: Primary sort by lastUpdatedAt only
+            const qPrimary = query(schedulesRef, orderBy("lastUpdatedAt", "desc"), limit(1));
+            console.log("Attempting to load latest schedule sorted by lastUpdatedAt desc, limit 1.");
             querySnapshot = await getDocs(qPrimary);
             if (!querySnapshot.empty) {
                 const latestScheduleDoc = querySnapshot.docs[0];
-                console.log(`Latest schedule (primary sort) found: ID = ${latestScheduleDoc.id}, Name = ${latestScheduleDoc.data().name}`);
+                console.log(`Latest schedule (primary sort by lastUpdatedAt) found: ID = ${latestScheduleDoc.id}, Name = ${latestScheduleDoc.data().name}`);
                 loadedSuccessfully = await loadSelectedSharedScheduleFromFirestore(latestScheduleDoc.id, true);
             } else {
-                console.log("No shared schedules found with primary sort.");
+                console.log("No shared schedules found with primary sort by lastUpdatedAt.");
             }
         } catch (error) {
-            console.error("Error loading latest shared schedule with primary sort:", error);
+            console.error("Error loading latest shared schedule with primary sort (lastUpdatedAt):", error);
             if (error.message.toLowerCase().includes("index")) {
-                console.warn("Firestore query for latest schedule failed due to missing index (lastUpdatedAt, createdAt). Trying fallback (createdAt). Ensure the composite index 'sharedSchedules: lastUpdatedAt DESC, createdAt DESC' exists.");
-                showMessage("Loading latest schedule failed (needs index). Trying fallback.", "info", 5000);
-                try {
-                    const schedulesRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-                    const qFallback = query(schedulesRef, orderBy("createdAt", "desc"), limit(1));
-                    querySnapshot = await getDocs(qFallback);
-                    if (!querySnapshot.empty) {
-                        const latestScheduleDoc = querySnapshot.docs[0];
-                        console.log(`Latest schedule (fallback sort by createdAt) found: ID = ${latestScheduleDoc.id}, Name = ${latestScheduleDoc.data().name}`);
-                        loadedSuccessfully = await loadSelectedSharedScheduleFromFirestore(latestScheduleDoc.id, true);
-                    } else {
-                        console.log("No shared schedules found with fallback sort either.");
-                    }
-                } catch (fallbackError) {
-                    console.error("Error loading latest shared schedule with fallback sort:", fallbackError);
-                    showMessage("Could not load the latest schedule automatically (fallback failed).", "error");
-                }
+                console.warn("Firestore query for latest schedule (lastUpdatedAt) failed due to an unexpected index issue. Trying fallback (createdAt).");
+                showMessage("Loading latest schedule by update time failed (index). Trying by creation time.", "info", 5000);
             } else {
-                showMessage("Could not load the latest schedule automatically.", "error");
+                showMessage("Error loading latest schedule. Trying by creation time.", "info", 5000);
+                console.warn("An error occurred loading latest schedule by lastUpdatedAt. Trying fallback (createdAt). Error:", error.message);
+            }
+            // Fallback sort by createdAt
+            try {
+                const schedulesRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
+                console.log("Attempting to load latest schedule with fallback sort by createdAt desc, limit 1.");
+                const qFallback = query(schedulesRef, orderBy("createdAt", "desc"), limit(1));
+                querySnapshot = await getDocs(qFallback);
+                if (!querySnapshot.empty) {
+                    const latestScheduleDoc = querySnapshot.docs[0];
+                    console.log(`Latest schedule (fallback sort by createdAt) found: ID = ${latestScheduleDoc.id}, Name = ${latestScheduleDoc.data().name}`);
+                    loadedSuccessfully = await loadSelectedSharedScheduleFromFirestore(latestScheduleDoc.id, true);
+                } else {
+                    console.log("No shared schedules found with fallback sort by createdAt either.");
+                }
+            } catch (fallbackError) {
+                console.error("Error loading latest shared schedule with fallback sort (createdAt):", fallbackError);
+                showMessage("Could not load the latest schedule automatically (fallback failed).", "error");
             }
         } finally {
             showGeneralLoading(false);
         }
-        if (!loadedSuccessfully) currentWorkingScheduleDocId = null;
+        if (!loadedSuccessfully) {
+            console.log("No latest schedule loaded from Firestore. Initializing default table setup.");
+            currentWorkingScheduleDocId = null;
+        }
         return loadedSuccessfully;
     }
+
 
     async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) {
         if (!fbDb || !fbIsAuthReady) {
@@ -1532,16 +1530,14 @@
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
 
-        // Ensure controls are visible by default and button text is correct
         if (controlsTogglerElement && collapsibleButtonBarsElement) {
-            collapsibleButtonBarsElement.classList.add('open'); // Ensure controls are open
+            collapsibleButtonBarsElement.classList.add('open');
             controlsTogglerElement.setAttribute('aria-expanded', 'true');
             const textSpan = controlsTogglerElement.querySelector('span');
             const icon = controlsTogglerElement.querySelector('.toggler-icon');
             if (textSpan) textSpan.textContent = 'Hide Controls';
-            if (icon) icon.style.transform = 'rotate(0deg)'; // Icon pointing down
+            if (icon) icon.style.transform = 'rotate(0deg)';
         }
-
 
         if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) {
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
@@ -1549,17 +1545,13 @@
             return;
         }
         if (fbAuth) {
-            console.log("Firebase Auth: Setting up onAuthStateChanged listener.");
             onAuthStateChanged(fbAuth, async (user) => {
                 if (user) {
-                    console.log("Firebase Auth: User is authenticated. UID:", user.uid);
                     fbUserId = user.uid;
                     fbIsAuthReady = true;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: ${fbUserId}`;
-                    else console.warn("userIdDisplayElement not found in DOM.");
                     if (unsubscribePagiShared) unsubscribePagiShared();
                     if (unsubscribePetangShared) unsubscribePetangShared();
-                    console.log("Firebase Auth: Subscribing to shared name lists.");
                     unsubscribePagiShared = listenToSharedNameList('pagi');
                     unsubscribePetangShared = listenToSharedNameList('petang');
                     if (nameModal && nameModal.style.display === 'flex' && searchNameInputElement) {
@@ -1567,27 +1559,19 @@
                     }
                     const loadedDefault = await loadLatestSharedScheduleAsDefault();
                     if (!loadedDefault) {
-                        console.log("No default schedule loaded, setting up initial table state.");
                         setupInitialTableState();
                     }
                     rebuildAndRenderSummary();
                     if (autoSaveIntervalId) clearInterval(autoSaveIntervalId);
                     autoSaveIntervalId = setInterval(autoSaveCurrentSchedule, AUTO_SAVE_INTERVAL);
-                    console.log(`Auto-save interval started (every ${AUTO_SAVE_INTERVAL/1000}s).`);
                 } else {
-                    console.log("Firebase Auth: No user is currently signed in. Attempting to sign in.");
                     fbIsAuthReady = false; fbUserId = null;
                     if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
-                    else console.warn("userIdDisplayElement not found in DOM.");
                     try {
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && __initial_auth_token.trim() !== '') {
-                            console.log("Firebase Auth: Attempting sign-in with custom token.");
                             await signInWithCustomToken(fbAuth, __initial_auth_token);
-                            console.log("Firebase Auth: Sign-in with custom token successful (onAuthStateChanged will re-trigger).");
                         } else {
-                            console.log("Firebase Auth: Attempting anonymous sign-in.");
                             await signInAnonymously(fbAuth);
-                            console.log("Firebase Auth: Anonymous sign-in successful (onAuthStateChanged will re-trigger).");
                         }
                     } catch (error) {
                         console.error("Firebase Auth: Error during sign-in:", error);
@@ -1600,9 +1584,8 @@
             });
         } else {
              if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Auth Not Initialized";
-             else console.warn("userIdDisplayElement not found in DOM.");
-             console.error("Firebase Auth: fbAuth object is not available. Firebase Auth service could not be initialized.");
-             showMessage("Critical Error: Firebase Auth service could not be initialized. Check Firebase setup.", "error", 10000);
+             console.error("Firebase Auth: fbAuth object is not available.");
+             showMessage("Critical Error: Firebase Auth service could not be initialized.", "error", 10000);
              setupInitialTableState();
              rebuildAndRenderSummary();
         }
@@ -2447,63 +2430,51 @@
         return filteredWords.join(' ').trim();
     }
 
+    // --- PDF Generation Function (Revised) ---
     async function generateSchedulePdf() {
-        if (!pdfContentElement || !tablesContainer ) {
-            showMessage('PDF generation elements (pdfContent or tablesContainer) not found.', 'error');
-            console.error("PDF Generation Error: pdfContentElement or tablesContainer not found.");
+        // Check for essential elements
+        if (!pdfContentElement || !tablesContainer || !scheduleTitleElement) {
+            showMessage('PDF generation elements (pdfContent, tablesContainer, or scheduleTitleElement) not found.', 'error');
+            console.error("PDF Generation Error: Critical elements not found.");
             return;
         }
 
         showGeneralLoading(true);
         showMessage('Generating PDF, please wait...', 'info', 15000);
+        pdfContentElement.innerHTML = ''; // Clear previous content
 
-        pdfContentElement.innerHTML = '';
-
-        const scheduleTitleText = scheduleTitleElement ? scheduleTitleElement.textContent : 'Weekly Schedule';
+        const scheduleTitleText = scheduleTitleElement.textContent || 'Weekly Schedule';
         const titleH2 = document.createElement('h2');
         titleH2.textContent = scheduleTitleText;
         pdfContentElement.appendChild(titleH2);
 
-        console.log("PDF Generation: Attempting to process tbl_1 (Kelas 3 & 5)...");
-        const kelas35Table = document.getElementById('tbl_1');
-        if (kelas35Table) {
-            console.log("PDF Generation: tbl_1 found.");
-            const h3_tbl1 = document.createElement('h3');
-            h3_tbl1.textContent = kelas35Table.dataset.tableName || 'Kelas 3 & 5';
-            pdfContentElement.appendChild(h3_tbl1);
-            const clonedTbl1 = cloneTableForPdf(kelas35Table);
-            if (clonedTbl1) {
-                pdfContentElement.appendChild(clonedTbl1);
-                console.log("PDF Generation: tbl_1 successfully cloned and added to PDF content.");
-            } else {
-                console.error("PDF Generation Error: Failed to clone tbl_1. cloneTableForPdf returned null.");
-                pdfContentElement.appendChild(document.createTextNode("Error: Kelas 3 & 5 table could not be generated."));
-            }
+        const tablesToPrint = tablesContainer.querySelectorAll('table'); // Get all current tables in the container
+
+        if (tablesToPrint.length === 0) {
+            console.warn("PDF Generation Warning: No tables found in tablesContainer to print.");
+            pdfContentElement.appendChild(document.createTextNode("No tables available to print."));
         } else {
-            console.warn("PDF Generation Warning: Table 'Kelas 3 & 5' (tbl_1) not found in the document.");
-            pdfContentElement.appendChild(document.createTextNode("Note: Kelas 3 & 5 table (tbl_1) was not found."));
+            tablesToPrint.forEach(tableElement => {
+                const tableId = tableElement.id;
+                const tableName = tableElement.dataset.tableName || tableId || 'Unnamed Table'; // Use data-table-name or ID
+                console.log(`PDF Generation: Processing table ID: ${tableId}, Name: "${tableName}"`);
+
+                const h3_tableTitle = document.createElement('h3');
+                h3_tableTitle.textContent = tableName;
+                pdfContentElement.appendChild(h3_tableTitle);
+
+                const clonedTable = cloneTableForPdf(tableElement);
+                if (clonedTable) {
+                    pdfContentElement.appendChild(clonedTable);
+                    console.log(`PDF Generation: Table "${tableName}" (ID: ${tableId}) successfully cloned and added.`);
+                } else {
+                    console.error(`PDF Generation Error: Failed to clone table "${tableName}" (ID: ${tableId}).`);
+                    pdfContentElement.appendChild(document.createTextNode(`Error: Table "${tableName}" could not be generated.`));
+                }
+            });
         }
 
-        console.log("PDF Generation: Attempting to process tbl_2 (Kelas 1, 2 & 4)...");
-        const kelas124Table = document.getElementById('tbl_2');
-        if (kelas124Table) {
-            console.log("PDF Generation: tbl_2 found.");
-            const h3_tbl2 = document.createElement('h3');
-            h3_tbl2.textContent = kelas124Table.dataset.tableName || 'Kelas 1, 2 & 4';
-            pdfContentElement.appendChild(h3_tbl2);
-            const clonedTbl2 = cloneTableForPdf(kelas124Table);
-             if (clonedTbl2) {
-                pdfContentElement.appendChild(clonedTbl2);
-                console.log("PDF Generation: tbl_2 successfully cloned and added to PDF content.");
-            } else {
-                console.error("PDF Generation Error: Failed to clone tbl_2. cloneTableForPdf returned null.");
-                pdfContentElement.appendChild(document.createTextNode("Error: Kelas 1, 2 & 4 table could not be generated."));
-            }
-        } else {
-            console.warn("PDF Generation Warning: Table 'Kelas 1, 2 & 4' (tbl_2) not found in the document.");
-             pdfContentElement.appendChild(document.createTextNode("Note: Kelas 1, 2 & 4 table (tbl_2) was not found."));
-        }
-
+        // Add Footnote
         const footnoteDiv = document.createElement('div');
         footnoteDiv.className = 'pdf-footnote';
         const today = new Date();
@@ -2512,24 +2483,11 @@
         pdfContentElement.appendChild(footnoteDiv);
         console.log("PDF Generation: Footnote added.");
 
-
-        if (pdfContentElement.querySelectorAll('table').length === 0 && !kelas35Table && !kelas124Table) {
-            showMessage('No schedule tables were found to include in the PDF.', 'error');
-            console.error("PDF Generation Error: No tables were found or added to pdfContentElement.");
-            pdfContentElement.innerHTML = '<h2>No Schedule Data Found</h2><p>Could not find any tables to include in the PDF.</p>';
-            const emptyFootnoteDiv = document.createElement('div');
-            emptyFootnoteDiv.className = 'pdf-footnote';
-            emptyFootnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
-            pdfContentElement.appendChild(emptyFootnoteDiv);
-        }
-
-
-        console.log("PDF Generation: Making pdfContentElement visible for capture.");
+        // Ensure pdfContentElement is visible for html2pdf capture
         pdfContentElement.style.display = 'block';
 
-
         const pdfOptions = {
-            margin: [10, 8, 15, 8],
+            margin: [10, 8, 15, 8], // top, left, bottom, right
             filename: `${scheduleTitleText.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete_schedule.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
             html2canvas: {
@@ -2554,7 +2512,6 @@
             console.error('Error generating PDF with html2pdf:', error);
             showMessage(`Failed to generate PDF. Error: ${error.message}. Check console for details.`, 'error', 10000);
         } finally {
-            console.log("PDF Generation: Hiding pdfContentElement and stopping general loading indicator.");
             pdfContentElement.style.display = 'none';
             showGeneralLoading(false);
         }
