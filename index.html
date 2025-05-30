@@ -462,61 +462,76 @@
 
         /* Styles for PDF content container */
         #pdfContent {
-            padding: 20px;
+            padding: 10px; /* Reduced padding */
             background-color: #fff;
             color: #333;
-            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            font-family: 'Arial', sans-serif; /* Simpler font for PDF potentially */
             box-sizing: border-box;
             width: 100%;
             display: none;
         }
-        #pdfContent .pdf-page-wrapper { /* New wrapper for each page's content */
-            page-break-after: always; /* Attempt to force page break after each wrapper */
-            padding-bottom: 30px; /* Space for footnote if it's at the bottom of this wrapper */
+        #pdfContent .pdf-page-wrapper {
+            page-break-after: always !important; /* Force page break */
+            page-break-inside: avoid !important; /* Try to keep wrapper content together */
+            padding-bottom: 25px; /* Space for footnote */
+            box-sizing: border-box;
         }
         #pdfContent .pdf-page-wrapper:last-child {
-            page-break-after: auto; /* No page break after the last one */
+            page-break-after: auto !important;
         }
-        #pdfContent h2, #pdfContent h3 {
+        #pdfContent h2 { /* Main schedule title */
             text-align: center;
             color: #1c1e21;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            font-size: 1.5em; /* Slightly smaller main title for PDF */
+        }
+        #pdfContent h3 { /* Individual table titles */
+            text-align: center;
+            color: #1c1e21;
+            margin-top: 10px; /* Add some space above table title */
+            margin-bottom: 10px;
+            font-size: 1.1em; /* Smaller table titles */
+            page-break-before: avoid !important; /* Try to keep title with its table */
+            page-break-after: avoid !important;
         }
         #pdfContent table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 25px;
+            margin-bottom: 15px; /* Reduced margin */
             box-shadow: none;
             background-color: #fff;
             table-layout: fixed;
+            page-break-inside: avoid !important; /* Try to keep table on one page */
         }
         #pdfContent th, #pdfContent td {
-            border: 1px solid #333 !important;
-            padding: 6px 8px;
+            border: 1px solid #444 !important; /* Slightly darker border for clarity */
+            padding: 4px 6px; /* Further reduced padding */
             text-align: center;
-            font-size: 0.85em;
+            font-size: 0.75em; /* Significantly smaller font for PDF tables */
             word-wrap: break-word;
             background-color: #fff;
         }
         #pdfContent table th {
-            background-color: #e9ecef !important;
-            color: #212529;
+            background-color: #f0f0f0 !important; /* Lighter grey for headers */
+            color: #000;
             font-weight: bold;
         }
         #pdfContent table tbody tr td:first-child,
         #pdfContent table thead tr th:first-child {
-            background-color: #f0f8ff !important;
+            background-color: #e6f7ff !important; /* Lighter blue for first column */
             font-weight: bold;
         }
         #pdfContent .pdf-footnote {
             text-align: right;
-            font-size: 0.7em;
+            font-size: 0.65em; /* Smaller footnote */
             color: #555555;
-            margin-top: 20px;
+            margin-top: 10px; /* Reduced margin */
             padding-top: 5px;
             border-top: 1px solid #dddddd;
             width: 100%;
             box-sizing: border-box;
+            position: relative; /* To ensure it's part of the flow for page breaking */
+            bottom: 0; /* Try to keep it at the bottom of its wrapper */
         }
     </style>
 </head>
@@ -530,7 +545,8 @@
         <span>Show Controls</span>
     </button>
 
-    <div id="collapsibleButtonBars"> <div class="bar">
+    <div id="collapsibleButtonBars">
+        <div class="bar">
             <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
             <button id="downloadPdfBtn" title="Download schedule tables as PDF">📄 Download PDF</button> </div>
         <div class="bar">
@@ -827,11 +843,10 @@
         const isOpen = collapsibleButtonBarsElement.classList.toggle('open');
         controlsTogglerElement.setAttribute('aria-expanded', isOpen.toString());
         const textSpan = controlsTogglerElement.querySelector('span');
-        const icon = controlsTogglerElement.querySelector('.toggler-icon');
+        // const icon = controlsTogglerElement.querySelector('.toggler-icon'); // Icon rotation handled by CSS
         if (textSpan) {
             textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
         }
-        // CSS handles icon rotation based on aria-expanded
     }
 
     function showNameModalLoading(isLoading) {
@@ -1523,15 +1538,12 @@
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
 
-        // Set initial state for controls toggler (collapsed by default)
         if (controlsTogglerElement && collapsibleButtonBarsElement) {
-            collapsibleButtonBarsElement.classList.remove('open'); // Ensure it's closed
+            collapsibleButtonBarsElement.classList.remove('open');
             controlsTogglerElement.setAttribute('aria-expanded', 'false');
             const textSpan = controlsTogglerElement.querySelector('span');
-            if (textSpan) {
-                textSpan.textContent = 'Show Controls';
-            }
-            // Icon rotation is handled by CSS based on aria-expanded
+            if (textSpan) textSpan.textContent = 'Show Controls';
+             // Icon rotation is handled by CSS based on aria-expanded
         }
 
         if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) {
@@ -2438,7 +2450,7 @@
         const scheduleTitleText = scheduleTitleElement.textContent || 'Weekly Schedule';
         const mainTitleH2 = document.createElement('h2');
         mainTitleH2.textContent = scheduleTitleText;
-        pdfContentElement.appendChild(mainTitleH2); // Add main title once at the top
+        pdfContentElement.appendChild(mainTitleH2);
 
         const tablesToPrint = tablesContainer.querySelectorAll('table');
         const numTables = tablesToPrint.length;
@@ -2452,7 +2464,7 @@
         } else {
             tablesToPrint.forEach((tableElement, index) => {
                 const pageWrapper = document.createElement('div');
-                pageWrapper.className = 'pdf-page-wrapper'; // For CSS styling and page breaks
+                pageWrapper.className = 'pdf-page-wrapper';
 
                 const tableId = tableElement.id;
                 const tableName = tableElement.dataset.tableName || tableId || `Table ${index + 1}`;
@@ -2474,7 +2486,6 @@
                     pageWrapper.appendChild(errorMsg);
                 }
 
-                // Add footnote to this page wrapper
                 const footnoteDiv = document.createElement('div');
                 footnoteDiv.className = 'pdf-footnote';
                 const today = new Date();
@@ -2489,11 +2500,11 @@
         pdfContentElement.style.display = 'block';
 
         const pdfOptions = {
-            margin: [10, 8, 15, 8],
+            margin: [10, 5, 10, 5], // top, left, bottom, right - slightly reduced horizontal margins
             filename: `${scheduleTitleText.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete_schedule.pdf`,
-            image: { type: 'jpeg', quality: 0.95 },
+            image: { type: 'jpeg', quality: 0.92 }, // Slightly reduced quality for potentially smaller file
             html2canvas: {
-                scale: 2,
+                scale: 1.8, // Slightly reduced scale to help with fitting
                 useCORS: true,
                 logging: true,
                 scrollX: 0,
@@ -2502,7 +2513,7 @@
                 windowHeight: pdfContentElement.scrollHeight
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-            pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-wrapper' } // Try to break before each wrapper
+            pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-wrapper', avoid: ['h3', 'table', '.pdf-footnote'] }
         };
 
         try {
