@@ -462,91 +462,95 @@
 
         /* Styles for PDF content container */
         #pdfContent {
-            padding: 10px; /* Reduced padding */
+            padding: 10px;
             background-color: #fff;
             color: #333;
-            font-family: 'Arial', sans-serif; /* Simpler font for PDF potentially */
+            font-family: 'Arial', sans-serif;
             box-sizing: border-box;
             width: 100%;
             display: none;
         }
         #pdfContent .pdf-page-wrapper {
-            page-break-after: always !important; /* Force page break */
-            page-break-inside: avoid !important; /* Try to keep wrapper content together */
+            page-break-inside: avoid !important;
             padding-bottom: 25px; /* Space for footnote */
             box-sizing: border-box;
         }
-        #pdfContent .pdf-page-wrapper:last-child {
-            page-break-after: auto !important;
+        #pdfContent .pdf-page-wrapper:not(:first-child) { /* Add page break before subsequent wrappers */
+             page-break-before: always !important;
         }
+         #pdfContent .pdf-page-wrapper:last-child { /* No page break after the very last wrapper */
+             page-break-after: auto !important;
+        }
+
         #pdfContent h2 { /* Main schedule title */
             text-align: center;
             color: #1c1e21;
-            margin-bottom: 10px;
-            font-size: 1.5em; /* Slightly smaller main title for PDF */
+            margin-bottom: 15px; /* Increased margin for main title */
+            font-size: 1.4em; /* Adjusted main title size */
+            page-break-after: avoid !important; /* Try to keep it with the first table if possible */
         }
         #pdfContent h3 { /* Individual table titles */
             text-align: center;
             color: #1c1e21;
-            margin-top: 10px; /* Add some space above table title */
+            margin-top: 5px; /* Reduced top margin for table titles */
             margin-bottom: 10px;
-            font-size: 1.1em; /* Smaller table titles */
-            page-break-before: avoid !important; /* Try to keep title with its table */
+            font-size: 1.0em; /* Adjusted table title size */
+            page-break-before: avoid !important;
             page-break-after: avoid !important;
         }
         #pdfContent table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px; /* Reduced margin */
+            margin-bottom: 10px; /* Reduced margin */
             box-shadow: none;
             background-color: #fff;
             table-layout: fixed;
-            page-break-inside: avoid !important; /* Try to keep table on one page */
+            page-break-inside: avoid !important;
         }
-        #pdfContent th, #pdfContent td {
-            border: 1px solid #444 !important; /* Slightly darker border for clarity */
-            padding: 4px 6px; /* Further reduced padding */
+        #pdfContent th {
+            background-color: #f0f0f0 !important;
+            color: #000;
+            font-weight: bold;
+            font-size: 0.75em; /* Slightly smaller font for PDF table headers */
+            padding: 5px 5px; /* Adjusted padding */
+        }
+        #pdfContent td {
+            border: 1px solid #555 !important; /* Slightly darker border for PDF cells */
+            padding: 4px 5px; /* Adjusted padding */
             text-align: center;
-            font-size: 0.75em; /* Significantly smaller font for PDF tables */
+            font-size: 0.7em; /* Smaller font for PDF table cells */
             word-wrap: break-word;
             background-color: #fff;
         }
-        #pdfContent table th {
-            background-color: #f0f0f0 !important; /* Lighter grey for headers */
-            color: #000;
-            font-weight: bold;
-        }
         #pdfContent table tbody tr td:first-child,
         #pdfContent table thead tr th:first-child {
-            background-color: #e6f7ff !important; /* Lighter blue for first column */
+            background-color: #e6f7ff !important;
             font-weight: bold;
         }
         #pdfContent .pdf-footnote {
             text-align: right;
-            font-size: 0.65em; /* Smaller footnote */
+            font-size: 0.65em;
             color: #555555;
-            margin-top: 10px; /* Reduced margin */
+            margin-top: 15px; /* Adjusted margin */
             padding-top: 5px;
             border-top: 1px solid #dddddd;
             width: 100%;
             box-sizing: border-box;
-            position: relative; /* To ensure it's part of the flow for page breaking */
-            bottom: 0; /* Try to keep it at the bottom of its wrapper */
+            position: relative;
+            bottom: 0;
         }
     </style>
 </head>
 <body>
 <div class="main-container">
-    <h2 contenteditable="true" id="scheduleTitle">Shared Weekly Schedule</h2>
-    <div id="userIdDisplay">User ID: Loading...</div>
+    <h2 contenteditable="true" id="scheduleTitle">Jadual Anjal</h2> <div id="userIdDisplay">User ID: Loading...</div>
 
     <button id="controlsToggler" aria-expanded="false" aria-controls="collapsibleButtonBars" title="Toggle button controls visibility">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
         <span>Show Controls</span>
     </button>
 
-    <div id="collapsibleButtonBars">
-        <div class="bar">
+    <div id="collapsibleButtonBars"> <div class="bar">
             <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
             <button id="downloadPdfBtn" title="Download schedule tables as PDF">📄 Download PDF</button> </div>
         <div class="bar">
@@ -843,7 +847,6 @@
         const isOpen = collapsibleButtonBarsElement.classList.toggle('open');
         controlsTogglerElement.setAttribute('aria-expanded', isOpen.toString());
         const textSpan = controlsTogglerElement.querySelector('span');
-        // const icon = controlsTogglerElement.querySelector('.toggler-icon'); // Icon rotation handled by CSS
         if (textSpan) {
             textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
         }
@@ -1543,7 +1546,6 @@
             controlsTogglerElement.setAttribute('aria-expanded', 'false');
             const textSpan = controlsTogglerElement.querySelector('span');
             if (textSpan) textSpan.textContent = 'Show Controls';
-             // Icon rotation is handled by CSS based on aria-expanded
         }
 
         if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) {
@@ -2449,7 +2451,7 @@
 
         const scheduleTitleText = scheduleTitleElement.textContent || 'Weekly Schedule';
         const mainTitleH2 = document.createElement('h2');
-        mainTitleH2.textContent = scheduleTitleText;
+        mainTitleH2.textContent = scheduleTitleText; // This is "Jadual Anjal"
         pdfContentElement.appendChild(mainTitleH2);
 
         const tablesToPrint = tablesContainer.querySelectorAll('table');
@@ -2461,6 +2463,14 @@
             noTablesMessage.textContent = "No tables available to print.";
             noTablesMessage.style.textAlign = "center";
             pdfContentElement.appendChild(noTablesMessage);
+            // Add a footnote even if there are no tables
+            const emptyFootnoteDiv = document.createElement('div');
+            emptyFootnoteDiv.className = 'pdf-footnote';
+            const today = new Date();
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            emptyFootnoteDiv.textContent = `Generated on: ${today.toLocaleDateString(undefined, dateOptions)}`;
+            pdfContentElement.appendChild(emptyFootnoteDiv);
+
         } else {
             tablesToPrint.forEach((tableElement, index) => {
                 const pageWrapper = document.createElement('div');
@@ -2500,17 +2510,18 @@
         pdfContentElement.style.display = 'block';
 
         const pdfOptions = {
-            margin: [10, 5, 10, 5], // top, left, bottom, right - slightly reduced horizontal margins
+            margin: [10, 5, 10, 5],
             filename: `${scheduleTitleText.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete_schedule.pdf`,
-            image: { type: 'jpeg', quality: 0.92 }, // Slightly reduced quality for potentially smaller file
+            image: { type: 'jpeg', quality: 0.92 },
             html2canvas: {
-                scale: 1.8, // Slightly reduced scale to help with fitting
+                scale: 1.8, // Adjusted scale
                 useCORS: true,
                 logging: true,
                 scrollX: 0,
                 scrollY: -window.scrollY,
                 windowWidth: pdfContentElement.scrollWidth,
-                windowHeight: pdfContentElement.scrollHeight
+                windowHeight: pdfContentElement.scrollHeight,
+                removeContainer: true // Try to clean up the cloned element
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
             pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-wrapper', avoid: ['h3', 'table', '.pdf-footnote'] }
@@ -2816,4 +2827,3 @@
 </script>
 </body>
 </html>
-
