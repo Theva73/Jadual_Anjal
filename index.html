@@ -210,7 +210,7 @@
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #007bff;}
         #loadSharedScheduleBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
-        #clearAndResetScheduleBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;} /* Renamed ID */
+        #clearAndResetScheduleBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
         #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
         #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
         #mergeBtn { background-color: #6f42c1; color: white; border-color: #6f42c1;}
@@ -460,7 +460,6 @@
             color: #0056b3;
         }
 
-        /* Styles for PDF content container */
         #pdfContent {
             padding: 10px;
             background-color: #fff;
@@ -864,6 +863,28 @@
         }
     }
 
+    // Centralized function to update local state after any successful Firestore save/update
+    function _updateLocalStateAfterSave(docId, savedHtml, scheduleName, isAutoDraft = false, operationType = "save") {
+        currentWorkingScheduleDocId = docId;
+        lastSavedHTMLContent = savedHtml;
+        sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, docId);
+
+        const timestamp = new Date().toLocaleTimeString();
+        console.log(`%cStateUpdate (${operationType}): ID: ${docId}, Name: "${scheduleName}", Draft: ${isAutoDraft}, HTML updated. Time: ${timestamp}`, "color: blue; font-weight: bold;");
+
+        if (operationType === "auto-draft-created") {
+            showMessage(`Draft auto-created: "${scheduleName}"`, 'info', 3000);
+        } else if (operationType === "auto-save-update") {
+             showMessage(`Auto-saved to "${scheduleName || 'current schedule'}"`, 'success', 2000);
+        } else if (operationType === "explicit-save") {
+             showMessage(`Shared schedule "${scheduleName}" saved to Cloud! (ID: ${docId})`, 'success');
+        } else if (operationType === "load") {
+            const displayName = scheduleName + (isAutoDraft ? " (Draft)" : "");
+            showMessage(`Shared schedule "${displayName}" loaded from Cloud!`, 'success');
+        }
+    }
+
+
     async function saveSharedNameListToFirestore(session, namesArray) {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot save shared name list.", "error");
@@ -1047,12 +1068,11 @@
 
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
+            console.log(`Explicit Save: Attempting to save schedule "${scheduleData.name}"...`);
             const newDocRef = await addDoc(sharedSchedulesCollectionRef, scheduleData);
-            currentWorkingScheduleDocId = newDocRef.id; 
-            lastSavedHTMLContent = allTablesData; // Update tracker *after* successful save
-            sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, currentWorkingScheduleDocId); 
-            console.log(`Explicit Save: Successfully saved to new doc ID: ${currentWorkingScheduleDocId}. Timestamp: ${new Date().toISOString()}`);
-            showMessage(`Shared schedule "${scheduleName.trim()}" saved to Cloud! (ID: ${currentWorkingScheduleDocId})`, 'success');
+            // Call centralized state update after successful save
+            _updateLocalStateAfterSave(newDocRef.id, allTablesData, scheduleData.name, false, "explicit-save");
+            
             if (sharedScheduleListContainerElement && sharedScheduleListContainerElement.style.display === 'block') {
                 await loadAndRenderSharedSchedulesFromFirestore();
             }
@@ -1064,32 +1084,33 @@
         }
     }
 
-    async function ensureAutoSaveDocumentExists() {
-        if (currentWorkingScheduleDocId) return true; 
+    async function ensureAutoSaveDocumentExists(currentHTMLToSave) {
+        if (currentWorkingScheduleDocId) return true; // Already have a doc ID
 
         if (!fbDb || !fbIsAuthReady || !fbUserId) {
-            console.warn("ensureAutoSaveDocumentExists: Firebase not ready or user ID missing. Cannot create auto-save document.");
+            console.warn("ensureAutoSaveDocumentExists: Firebase not ready or user ID missing.");
             return false;
         }
         
-        const currentHTML = tablesContainer.innerHTML; // Capture current HTML *before* saving
-        if (!currentHTML || currentHTML.trim() === "" || tablesContainer.children.length === 0) {
-            console.log("ensureAutoSaveDocumentExists: No content to create a draft for.");
-            return false; // Don't create empty drafts
+        if (!currentHTMLToSave || currentHTMLToSave.trim() === "" || (tablesContainer && tablesContainer.children.length === 0)) {
+            console.log("ensureAutoSaveDocumentExists: No content to create a draft for. Skipping.");
+            return false; 
         }
         console.log("ensureAutoSaveDocumentExists: Creating a new auto-save document.");
         
         const scheduleName = `Autosaved Draft (${fbUserId.substring(0, 5)}...) - ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
         const allTableMeta = {};
-        tablesContainer.querySelectorAll('table').forEach(table => {
-            allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
-        });
+        if(tablesContainer) { // Ensure tablesContainer exists before querying
+            tablesContainer.querySelectorAll('table').forEach(table => {
+                allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
+            });
+        }
 
         const scheduleData = {
             name: scheduleName,
-            html: currentHTML, 
+            html: currentHTMLToSave, 
             meta: allTableMeta,
-            activeTableId: activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1', 
+            activeTableId: activeTableId || (tablesContainer ? tablesContainer.querySelector('table')?.id : null) || 'tbl_1', 
             createdAt: serverTimestamp(),
             lastUpdatedAt: serverTimestamp(),
             lastUpdatedBy: fbUserId || "anonymous",
@@ -1098,12 +1119,10 @@
 
         try {
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
+            console.log(`EnsureAutoSave: Attempting to create draft "${scheduleData.name}"...`);
             const newDocRef = await addDoc(sharedSchedulesCollectionRef, scheduleData);
-            currentWorkingScheduleDocId = newDocRef.id;
-            sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, currentWorkingScheduleDocId); 
-            lastSavedHTMLContent = currentHTML; 
-            console.log(`EnsureAutoSave: New draft created ID: ${currentWorkingScheduleDocId}, Name: "${scheduleName}". Timestamp: ${new Date().toISOString()}`);
-            showMessage(`Draft auto-created: "${scheduleName}"`, 'info', 3000); 
+            // Call centralized state update after successful draft creation
+            _updateLocalStateAfterSave(newDocRef.id, currentHTMLToSave, scheduleData.name, true, "auto-draft-created");
             return true;
         } catch (error) {
             console.error("Error creating auto-save document in Firestore:", error);
@@ -1117,46 +1136,37 @@
         if (!tablesContainer || tablesContainer.children.length === 0) { return; }
 
         const currentHTML = tablesContainer.innerHTML;
-        let docIdToSave = currentWorkingScheduleDocId;
-        let isNewDraftJustCreated = false;
-
-        if (!docIdToSave) {
-            // console.log("AutoSave: No docId. Attempting to ensure draft exists.");
-            const draftEnsured = await ensureAutoSaveDocumentExists();
-            if (!draftEnsured || !currentWorkingScheduleDocId) {
-                // console.log("AutoSave: Failed to ensure draft. Skipping save cycle.");
-                return;
+        
+        if (!currentWorkingScheduleDocId) {
+            // console.log("AutoSave: No currentWorkingScheduleDocId. Attempting to ensure draft exists with current HTML.");
+            // Pass currentHTML so ensureAutoSaveDocumentExists can save it if it creates a new doc
+            const draftEnsured = await ensureAutoSaveDocumentExists(currentHTML);
+            if (!draftEnsured) {
+                // console.log("AutoSave: Failed to ensure draft (or no content). Skipping save cycle.");
             }
-            docIdToSave = currentWorkingScheduleDocId;
-            isNewDraftJustCreated = true; 
-            // ensureAutoSaveDocumentExists has already saved the currentHTML and updated lastSavedHTMLContent.
-            // If it's a new draft, the "Draft auto-created" message was shown there.
-            // We can return here as the content is already persisted for this first save of the draft.
-            // console.log(`AutoSave: New draft ${docIdToSave} was just created and saved by ensureAutoSaveDocumentExists. Current cycle complete.`);
+            // If draftEnsured is true, _updateLocalStateAfterSave was called, including lastSavedHTMLContent.
+            // The current cycle is complete.
             return; 
         }
         
-        // If it's an existing document (or a draft from a previous session), check for changes.
+        // If we have a currentWorkingScheduleDocId, check for changes
         if (currentHTML === lastSavedHTMLContent) {
-            // console.log(`AutoSave: No changes detected for ${docIdToSave} since last save.`);
+            // console.log(`AutoSave: No changes detected for ${currentWorkingScheduleDocId} since last save.`);
             return;
         }
 
-        console.log(`AutoSave: Changes detected for ${docIdToSave}. Attempting to save. Content starts: ${currentHTML.substring(0, 60)}...`);
+        console.log(`AutoSave: Changes detected for ${currentWorkingScheduleDocId}. Attempting to update.`);
         const allTableMeta = {};
         tablesContainer.querySelectorAll('table').forEach(table => {
             allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
         });
 
-        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", docIdToSave);
+        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
         try {
             const docSnap = await getDoc(docRef); 
             if (!docSnap.exists()) {
-                console.warn(`AutoSave: Document ${docIdToSave} not found (possibly deleted). Clearing active ID.`);
-                sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
-                currentWorkingScheduleDocId = null; 
-                lastSavedHTMLContent = null; 
-                // On next cycle, if content exists, ensureAutoSaveDocumentExists will create a new draft.
+                console.warn(`AutoSave: Document ${currentWorkingScheduleDocId} not found (possibly deleted). Clearing active ID and saved content.`);
+                _updateLocalStateAfterSave(null, null, null, false, "doc-not-found"); // Reset state
                 return; 
             }
 
@@ -1167,26 +1177,20 @@
                 activeTableId: activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1',
                 lastUpdatedAt: serverTimestamp(),
                 lastUpdatedBy: fbUserId || "anonymous",
+                name: existingData.name, // Preserve existing name
+                createdAt: existingData.createdAt, // Preserve original creation
+                isAutoDraft: typeof existingData.isAutoDraft === 'boolean' ? existingData.isAutoDraft : false // Preserve draft status
             };
             
-            if (existingData.name) scheduleDataForUpdate.name = existingData.name;
-            if (existingData.createdAt) scheduleDataForUpdate.createdAt = existingData.createdAt;
-            if (typeof existingData.isAutoDraft === 'boolean') { 
-                scheduleDataForUpdate.isAutoDraft = existingData.isAutoDraft;
-            }
+            console.log(`AutoSave: Preparing to update doc ID: ${currentWorkingScheduleDocId}. Name: "${scheduleDataForUpdate.name}"`);
+            await setDoc(docRef, scheduleDataForUpdate, { merge: true }); // Use merge:true to only update specified fields
             
-            console.log(`AutoSave: Preparing to save to doc ID: ${docIdToSave}. Name: "${scheduleDataForUpdate.name}"`);
-            await setDoc(docRef, scheduleDataForUpdate, { merge: true });
-            
-            // ----- Actions after successful save -----
-            lastSavedHTMLContent = currentHTML; 
-            sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, docIdToSave); 
-            console.log(`AutoSave: Successfully saved to doc ID: ${docIdToSave}. Timestamp: ${new Date().toISOString()}`);
-            showMessage(`Auto-saved to "${scheduleDataForUpdate.name || 'current schedule'}"`, 'success', 2000);
+            _updateLocalStateAfterSave(currentWorkingScheduleDocId, currentHTML, scheduleDataForUpdate.name, scheduleDataForUpdate.isAutoDraft, "auto-save-update");
 
         } catch (error) {
-            console.error(`AutoSave: Error saving schedule ID ${docIdToSave}:`, error);
-            showMessage(`Auto-save failed for "${docIdToSave}". Error: ${error.message}`, "error", 3000);
+            console.error(`AutoSave: Error updating schedule ID ${currentWorkingScheduleDocId}:`, error);
+            showMessage(`Auto-save failed for "${currentWorkingScheduleDocId}". Error: ${error.message}`, "error", 3000);
+            // Do NOT update lastSavedHTMLContent here, as the save failed.
         }
     }
 
@@ -1290,7 +1294,6 @@
                 const scheduleData = docSnap.data();
                 console.log(`loadSelected: Doc ${scheduleDocId} found. Name: "${scheduleData.name}". HTML starts: ${scheduleData.html ? scheduleData.html.substring(0,60) : 'N/A'}...`);
                 tablesContainer.innerHTML = scheduleData.html; 
-                lastSavedHTMLContent = scheduleData.html; 
                 const tableMeta = scheduleData.meta || {}; 
 
                 tableTabs.innerHTML = ''; 
@@ -1313,13 +1316,9 @@
                     addNewTable(true); 
                 }
                 
-                currentWorkingScheduleDocId = scheduleDocId; 
-                sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, currentWorkingScheduleDocId); 
-
-                if (!isDefaultLoad) {
-                    const displayName = scheduleData.name + (scheduleData.isAutoDraft ? " (Draft)" : "");
-                    showMessage(`Shared schedule "${displayName}" loaded from Cloud!`, 'success');
-                } else {
+                _updateLocalStateAfterSave(scheduleDocId, scheduleData.html, scheduleData.name, scheduleData.isAutoDraft, "load");
+                
+                if (isDefaultLoad) {
                      console.log(`Default/Session schedule "${scheduleData.name}" (ID: ${scheduleDocId}) loaded.`);
                 }
 
@@ -1330,17 +1329,13 @@
             } else {
                 console.warn(`loadSelected: Doc ID "${scheduleDocId}" not found in Cloud.`);
                 if (!isDefaultLoad) showMessage(`Shared schedule with ID "${scheduleDocId}" not found in Cloud.`, "error");
-                currentWorkingScheduleDocId = null; 
-                sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY); 
-                lastSavedHTMLContent = null;
+                _updateLocalStateAfterSave(null, null, null, false, "doc-not-found-on-load"); // Reset state
                 return false;
             }
         } catch (error) {
             console.error(`loadSelected: Error loading schedule ID ${scheduleDocId} from Firestore:`, error);
             if (!isDefaultLoad) showMessage(`Failed to load shared schedule. Error: ${error.message}`, "error");
-            currentWorkingScheduleDocId = null; 
-            sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
-            lastSavedHTMLContent = null;
+            _updateLocalStateAfterSave(null, null, null, false, "load-error"); // Reset state
             return false;
         } finally {
             showGeneralLoading(false);
@@ -1411,8 +1406,7 @@
 
         if (!loadedSuccessfully) {
             console.log("loadLatestDefault: No schedule loaded from Firestore. Will proceed with initial setup.");
-            currentWorkingScheduleDocId = null; 
-            lastSavedHTMLContent = null;
+            _updateLocalStateAfterSave(null, null, null, false, "no-default-loaded"); // Ensure state is reset
         }
         return loadedSuccessfully;
     }
@@ -1428,9 +1422,7 @@
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
                 await deleteDoc(docRef);
                 if (currentWorkingScheduleDocId === scheduleDocId) {
-                    currentWorkingScheduleDocId = null;
-                    sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
-                    lastSavedHTMLContent = null;
+                    _updateLocalStateAfterSave(null, null, null, false, "deleted-current");
                     console.log("Deleted schedule was the current working one. Cleared state.");
                 }
                 showMessage(`Shared schedule "${scheduleName}" deleted from Cloud.`, 'success');
@@ -1693,7 +1685,7 @@
         collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars');
         downloadPdfButtonElement = document.getElementById('downloadPdfBtn');
         pdfContentElement = document.getElementById('pdfContent');
-        clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); // Cache renamed button
+        clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); 
 
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
@@ -1730,14 +1722,19 @@
                     }
                     
                     const loadedDefault = await loadLatestSharedScheduleAsDefault();
-                    if (!loadedDefault) {
-                        setupInitialTableState(); 
+                    if (!loadedDefault) { // If nothing was loaded from session or Firestore
+                        setupInitialTableState(); // This will set up default tables
+                        // Ensure lastSavedHTMLContent is set to the initial state of these default tables
                         if (tablesContainer && tablesContainer.innerHTML.trim() !== "") {
                            lastSavedHTMLContent = tablesContainer.innerHTML; 
                         } else {
-                           lastSavedHTMLContent = null;
+                           lastSavedHTMLContent = null; // Should not happen if addNewTable works
                         }
+                        currentWorkingScheduleDocId = null; // No Firestore doc associated yet
                     }
+                    // If loadedDefault is true, loadSelectedSharedScheduleFromFirestore would have called _updateLocalStateAfterSave,
+                    // which sets currentWorkingScheduleDocId and lastSavedHTMLContent.
+                    
                     rebuildAndRenderSummary(); 
 
                     if (autoSaveIntervalId) clearInterval(autoSaveIntervalId); 
@@ -1761,6 +1758,9 @@
                         showMessage(`Firebase Auth failed. Cloud features may not work. Error: ${error.message}`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
                         setupInitialTableState();
+                        if (tablesContainer && tablesContainer.innerHTML.trim() !== "") {
+                           lastSavedHTMLContent = tablesContainer.innerHTML; 
+                        }
                         rebuildAndRenderSummary();
                     }
                 }
@@ -1770,6 +1770,9 @@
              console.error("Firebase Auth: fbAuth object is not available. Firebase did not initialize correctly.");
              showMessage("Critical Error: Firebase Auth service could not be initialized. Cloud features are disabled.", "error", 10000);
              setupInitialTableState(); 
+             if (tablesContainer && tablesContainer.innerHTML.trim() !== "") {
+                lastSavedHTMLContent = tablesContainer.innerHTML; 
+             }
              rebuildAndRenderSummary();
         }
 
@@ -1779,24 +1782,16 @@
     });
 
     function setupInitialTableState() {
-        console.log("Running setupInitialTableState...");
+        console.log("Running setupInitialTableState (called when no specific schedule is loaded from session/DB).");
         const existingTables = tablesContainer.querySelectorAll('table');
-
-        if (currentWorkingScheduleDocId && existingTables.length > 0 && document.getElementById(activeTableId)) {
-            console.log("setupInitialTableState: A schedule is already loaded (from session or previous load).");
-            switchTable(activeTableId); 
-            // lastSavedHTMLContent should have been set by the loading function
-            return;
-        }
         
-        console.log("setupInitialTableState: No specific schedule loaded. Initializing from HTML or creating new.");
         tableTabs.innerHTML = ''; 
-        currentWorkingScheduleDocId = null; 
-        sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY); 
+        // currentWorkingScheduleDocId should be null here, or handled by loadLatest...
+        // lastSavedHTMLContent will be set after tables are populated or cleared.
         activeTableId = null; 
-        lastSavedHTMLContent = null; 
 
         if (existingTables.length > 0) {
+            console.log("setupInitialTableState: Found existing tables in HTML. Setting them up.");
             existingTables.forEach((table, index) => {
                 const id = table.id || `tbl_html_${index + 1}`; 
                 if (!table.id) table.id = id;
@@ -1813,18 +1808,23 @@
             } else if (existingTables[0]) { 
                 switchTable(existingTables[0].id);
             }
-            lastSavedHTMLContent = tablesContainer.innerHTML; 
+            // lastSavedHTMLContent = tablesContainer.innerHTML; // Set based on current HTML
         } else {
             console.warn("setupInitialTableState: No tables found in HTML, adding a new default table.");
-            addNewTable(true); 
-            lastSavedHTMLContent = tablesContainer.innerHTML; 
+            addNewTable(true); // This will also set activeTableId and call switchTable
+            // lastSavedHTMLContent will be set by addNewTable if it's the first one
         }
         
+        // Ensure lastSavedHTMLContent is set to the current state of tablesContainer
+        // This is crucial if we didn't load from Firestore and are starting with default/HTML tables.
+        lastSavedHTMLContent = tablesContainer.innerHTML;
+        console.log("setupInitialTableState: lastSavedHTMLContent initialized based on current table structure.");
+
+
         if (!activeTableId && tablesContainer.querySelector('table')) {
             activeTableId = tablesContainer.querySelector('table').id;
             switchTable(activeTableId);
-            console.warn("setupInitialTableState: Fallback to first table in DOM as active after initial setup.");
-            if (!lastSavedHTMLContent) lastSavedHTMLContent = tablesContainer.innerHTML;
+            console.warn("setupInitialTableState: Fallback to first table in DOM as active.");
         } else if (!activeTableId) {
             console.error("setupInitialTableState: Critical error, no active table could be established.");
         }
@@ -1884,11 +1884,16 @@
                 tablesContainer.innerHTML = ''; 
                 tableTabs.innerHTML = ''; 
                 activeTableId = null;
-                currentWorkingScheduleDocId = null; 
-                lastSavedHTMLContent = null; 
-                sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY); 
-                addNewTable(true); 
-                lastSavedHTMLContent = tablesContainer.innerHTML; // Explicitly set after new table creation
+                // Use _updateLocalStateAfterSave to consistently reset these critical state variables
+                _updateLocalStateAfterSave(null, null, "New Schedule", false, "reset-all");
+                sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY); // Ensure session is also cleared
+
+                addNewTable(true); // Add a new blank table. This calls switchTable.
+                // After addNewTable, tablesContainer has new content. Update lastSavedHTMLContent to this new blank state.
+                lastSavedHTMLContent = tablesContainer.innerHTML; 
+                console.log("Clear & New: State reset. lastSavedHTMLContent set to new blank table.");
+                
+                rebuildAndRenderSummary(); // Rebuild summary for the new blank table
                 showMessage('All content cleared. New schedule started.', 'success');
             }
         });
@@ -2168,8 +2173,11 @@
         } else {
             console.log(`Initial table "${label || defaultTableName}" created with ID ${newTable.id}.`);
         }
+        // After adding a new table, especially if it's the first one or the only one after a reset,
+        // we should update lastSavedHTMLContent to reflect this new baseline.
         if (isInitial || tablesContainer.querySelectorAll('table').length === 1) {
-            lastSavedHTMLContent = tablesContainer.innerHTML; // Update for change detection
+            lastSavedHTMLContent = tablesContainer.innerHTML;
+            console.log("addNewTable: lastSavedHTMLContent updated to new table structure.");
         }
     }
 
