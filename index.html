@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.1, maximum-scale=5.0">
-    <title>Shared Weekly Schedule with Firestore</title>
+    <title>Shared Weekly Schedule with Firestore & Gemini AI</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -206,6 +206,25 @@
             background-image: linear-gradient(to bottom, #f5c6cb 0%, #ebaeb3 100%);
             border-color: #f1b0b7;
         }
+        /* Gemini AI Buttons Styling */
+        #suggestActivityBtn, #generateRemarkBtn {
+            background-color: #8a2be2; /* A nice purple for AI features */
+            color: white;
+            border-color: #7a1cc2;
+        }
+        #suggestActivityBtn:hover, #generateRemarkBtn:hover {
+            background-color: #7a1cc2;
+        }
+        #suggestActivityBtn[disabled], #generateRemarkBtn[disabled] {
+            background-color: #ccc;
+            border-color: #bbb;
+            color: #777;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+
         #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;}
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #007bff;}
@@ -463,13 +482,12 @@
         /* Styles for PDF content container */
         #pdfContent {
             padding: 20px;
-            background-color: #fff; /* Ensure background for capture */
+            background-color: #fff; 
             color: #333;
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             box-sizing: border-box;
             width: 100%; 
-            display: none; /* Hidden by default, made visible temporarily for PDF generation */
-            /* position: absolute; left: -9999px; top: -9999px; /* Alternative to display:none to keep it in layout flow */
+            display: none; 
         }
         #pdfContent h2, #pdfContent h3 {
             text-align: center;
@@ -478,54 +496,85 @@
         }
         #pdfContent table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse; /* Crucial for PDF borders */
             margin-bottom: 25px;
             box-shadow: none; 
-            background-color: #fff; /* Ensure table background for capture */
+            background-color: #fff; 
         }
         #pdfContent th, #pdfContent td {
-            border: 1px solid #dee2e6;
-            padding: 8px 10px; 
+            border: 1px solid #333 !important; /* Make borders darker and !important for PDF */
+            padding: 6px 8px; /* Slightly reduced padding for PDF */
             text-align: center;
-            font-size: 0.9em; 
-            white-space: nowrap; 
-            background-color: #fff; /* Ensure cell background for capture */
+            font-size: 0.85em; /* Slightly reduced font size for PDF */
+            word-wrap: break-word; /* Allow long words to break */
+            background-color: #fff; 
         }
-        #pdfContent table th {
-            background-color: #f8f9fa !important; /* Important to override other styles */
-            color: #343a40;
-            font-weight: 600;
+        #pdfContent table th { /* PDF Table Headers */
+            background-color: #e9ecef !important; 
+            color: #212529;
+            font-weight: bold; /* Ensure bold */
         }
-        #pdfContent table tbody tr td:first-child,
-        #pdfContent table thead tr th:first-child {
-            background-color: aliceblue !important; /* Important to override */
+        #pdfContent table tbody tr td:first-child, /* PDF First Column Cells */
+        #pdfContent table thead tr th:first-child { /* PDF First Column Header */
+            background-color: #f0f8ff !important; /* Aliceblue, ensure it applies */
             font-weight: bold;
         }
-        #pdfContent .highlight-conflict {
-            background-color: #f8d7da !important;
+       
+        /* Gemini Suggestion Modal */
+        #geminiSuggestionModal {
+            display: none;
+            position: fixed;
+            z-index: 2002; /* Higher than confirm modal */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+        #geminiSuggestionModal .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            min-width: 350px;
+            max-width: 500px;
+            width: 90%;
+        }
+        #geminiSuggestionModal .modal-header {
+            font-size: 1.2em;
             font-weight: bold;
-            color: #721c24 !important;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
-        #pdfContent .merged-cell-overlay { /* This makes the overlay content behave like normal cell content for PDF */
-            position: static !important; 
-            display: block !important; /* Or inline, depending on desired flow */
-            width: auto !important;
-            height: auto !important;
-            border: none !important;
-            background-color: transparent !important;
-            font-style: normal !important;
-            text-align: center !important; /* Ensure text alignment matches other cells */
-            padding: 0; /* Reset padding if any */
-            margin: 0; /* Reset margin if any */
-            color: inherit !important; /* Inherit text color */
+        #geminiSuggestionModal #geminiSuggestionsList {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        #pdfContent .subsumed-cell {
-            display: none !important; /* Hide subsumed cells completely in PDF */
+        #geminiSuggestionModal #geminiSuggestionsList li {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
-        #pdfContent .merged-cell-container { /* The container itself should just be a normal cell */
-            position: relative; 
-            /* background-color: transparent !important; /* Ensure no conflicting background */
+        #geminiSuggestionModal #geminiSuggestionsList li:last-child {
+            border-bottom: none;
         }
+        #geminiSuggestionModal #geminiSuggestionsList li:hover {
+            background-color: #f0f8ff; /* AliceBlue */
+        }
+        #geminiSuggestionModal .modal-close-btn {
+             /* Using existing close button style */
+        }
+
+
     </style>
 </head>
 <body>
@@ -573,6 +622,8 @@
             <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Add Column Right</button>
             <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
             <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
+            <button id="suggestActivityBtn" title="✨ Get AI suggestions for this empty cell" disabled>✨ Suggest Activity</button>
+            <button id="generateRemarkBtn" title="✨ Get AI suggestions for remarks on current cell content" disabled>✨ Generate Remarks</button>
         </div>
     </div> <div id="sharedScheduleListContainer" style="display:none;"></div>
     <div class="bar table-tabs" id="tableTabs"></div>
@@ -584,7 +635,10 @@
                     <th contenteditable="true">08:00</th>
                     <th contenteditable="true">09:00</th>
                     <th contenteditable="true">10:00</th>
-                    <th contenteditable="true">11:00</th>
+                    <th contenteditable="true" data-merge-id="rehat_tbl1_col4" class="merged-cell-container">
+                        <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true">REHAT</div>
+                    </th>
+                    <th contenteditable="true" data-merge-id="rehat_tbl1_col4" class="subsumed-cell">11:00</th>
                     <th contenteditable="true">12:00</th>
                     <th contenteditable="true">13:00</th>
                 </tr>
@@ -593,12 +647,20 @@
                 <tr>
                     <td contenteditable="true">5S1</td>
                     <td contenteditable="true"></td><td contenteditable="true">JAMES *ReportDue // Sick leave</td><td contenteditable="true"></td>
-                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl1_col4_row1" class="merged-cell-container">
+                         <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div>
+                    </td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl1_col4_row1" class="subsumed-cell"></td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
                  <tr>
                     <td contenteditable="true">5S2</td>
                     <td contenteditable="true">*SpecialAssembly</td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
-                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                     <td contenteditable="true" data-merge-id="rehat_tbl1_col4_row2" class="merged-cell-container">
+                         <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div>
+                    </td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl1_col4_row2" class="subsumed-cell"></td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
             </tbody>
         </table>
@@ -609,7 +671,10 @@
                     <th contenteditable="true">08:00</th>
                     <th contenteditable="true">09:00</th>
                     <th contenteditable="true">10:00</th>
-                    <th contenteditable="true">11:00</th>
+                    <th contenteditable="true" data-merge-id="rehat_tbl2_col4" class="merged-cell-container">
+                        <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true">REHAT</div>
+                    </th>
+                    <th contenteditable="true" data-merge-id="rehat_tbl2_col4" class="subsumed-cell">11:00</th>
                     <th contenteditable="true">12:00</th>
                     <th contenteditable="true">13:00</th>
                 </tr>
@@ -618,17 +683,29 @@
                 <tr>
                     <td contenteditable="true">1A</td>
                     <td contenteditable="true">MATH</td><td contenteditable="true"></td><td contenteditable="true">SCIENCE</td>
-                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl2_col4_row1" class="merged-cell-container">
+                         <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div>
+                    </td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl2_col4_row1" class="subsumed-cell"></td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
                  <tr>
                     <td contenteditable="true">2B</td>
                     <td contenteditable="true"></td><td contenteditable="true">HISTORY</td><td contenteditable="true"></td>
-                    <td contenteditable="true"></td><td contenteditable="true">ART</td><td contenteditable="true"></td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl2_col4_row2" class="merged-cell-container">
+                         <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div>
+                    </td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl2_col4_row2" class="subsumed-cell"></td>
+                    <td contenteditable="true">ART</td><td contenteditable="true"></td>
                 </tr>
                 <tr>
                     <td contenteditable="true">4C</td>
                     <td contenteditable="true">PHYSICS</td><td contenteditable="true"></td><td contenteditable="true">CHEMISTRY</td>
-                    <td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl2_col4_row3" class="merged-cell-container">
+                         <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div>
+                    </td>
+                    <td contenteditable="true" data-merge-id="rehat_tbl2_col4_row3" class="subsumed-cell"></td>
+                    <td contenteditable="true"></td><td contenteditable="true"></td>
                 </tr>
             </tbody>
         </table>
@@ -665,6 +742,18 @@
 </div>
 
 <div id="pdfContent"></div>
+
+<div id="geminiSuggestionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" id="geminiSuggestionModalHeader">
+            <span>✨ AI Suggestions</span>
+            <button type="button" class="modal-close-btn" id="closeGeminiSuggestionModalBtn" title="Close suggestions">×</button>
+        </div>
+        <ul id="geminiSuggestionsList">
+            </ul>
+    </div>
+</div>
+
 
 <script type="module">
     // Firebase App (the core Firebase SDK) is always required and must be listed first
@@ -728,7 +817,7 @@
     // --- Global State and Configuration ---
     const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
     let activeTableId = 'tbl_1'; 
-    let tableCount = 1;
+    let tableCount = 1; 
     let selectionMode = false;
     let selectedCells = [];
     let lastClickedCell = null;
@@ -750,7 +839,7 @@
     const AUTO_SAVE_INTERVAL = 60000; 
 
     // DOM Element Cache
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement, suggestActivityButtonElement, generateRemarkButtonElement, geminiSuggestionModalElement, geminiSuggestionsListElement, closeGeminiSuggestionModalButtonElement, geminiSuggestionModalHeaderElement;
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -1494,10 +1583,21 @@
         collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); 
         downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); 
         pdfContentElement = document.getElementById('pdfContent'); 
+        
+        // Gemini AI Feature Elements
+        suggestActivityButtonElement = document.getElementById('suggestActivityBtn');
+        generateRemarkButtonElement = document.getElementById('generateRemarkBtn');
+        geminiSuggestionModalElement = document.getElementById('geminiSuggestionModal');
+        geminiSuggestionsListElement = document.getElementById('geminiSuggestionsList');
+        closeGeminiSuggestionModalButtonElement = document.getElementById('closeGeminiSuggestionModalBtn');
+        geminiSuggestionModalHeaderElement = document.getElementById('geminiSuggestionModalHeader');
+
+
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) { 
+
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !suggestActivityButtonElement || !generateRemarkButtonElement || !geminiSuggestionModalElement || !geminiSuggestionsListElement || !closeGeminiSuggestionModalButtonElement) { 
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
             return;
@@ -1677,8 +1777,17 @@
                 await deleteNameFromSharedSessionInFirestore(deleteButton.dataset.nameDelete);
             }
         });
+
+        // Gemini AI Button Listeners
+        if(suggestActivityButtonElement) suggestActivityButtonElement.addEventListener('click', handleSuggestActivity);
+        if(generateRemarkButtonElement) generateRemarkButtonElement.addEventListener('click', handleGenerateRemark);
+        if(closeGeminiSuggestionModalButtonElement) closeGeminiSuggestionModalButtonElement.addEventListener('click', () => {
+            if(geminiSuggestionModalElement) geminiSuggestionModalElement.style.display = 'none';
+        });
+
+
         if(tablesContainer) {
-            tablesContainer.addEventListener('click', handleTableCellClick);
+            tablesContainer.addEventListener('click', handleTableCellClick); // Also updates AI button states
             tablesContainer.addEventListener('input', (e) => {
                 const cell = e.target;
                 if ((cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) && cell.isContentEditable) {
@@ -1689,6 +1798,7 @@
                         hideCellAutocompleteSuggestions();
                     }
                     setTimeout(rebuildAndRenderSummary, 300); 
+                    updateGeminiButtonsState(cell); // Update AI buttons on input
                 } else if (cell.classList.contains('merged-cell-overlay')) {
                     const text = cell.textContent;
                     const parentCell = cell.parentElement;
@@ -1698,6 +1808,7 @@
                          hideCellAutocompleteSuggestions();
                     }
                     setTimeout(rebuildAndRenderSummary, 300); 
+                    updateGeminiButtonsState(parentCell); // Update AI buttons on input in overlay
                 }
             });
             tablesContainer.addEventListener('blur', (e) => { 
@@ -1756,6 +1867,10 @@
                 if (!isClickInsideCell && !isClickInsideSuggestions && !isClickInsideOverlay) {
                     hideCellAutocompleteSuggestions();
                 }
+            }
+            // Close Gemini modal if clicked outside
+            if (geminiSuggestionModalElement && geminiSuggestionModalElement.style.display === 'flex' && !geminiSuggestionModalElement.querySelector('.modal-content').contains(event.target)) {
+                geminiSuggestionModalElement.style.display = 'none';
             }
         });
     }
@@ -1893,6 +2008,7 @@
         rebuildAndRenderSummary();
         updateAllMergeOverlays();
         hideCellAutocompleteSuggestions(); 
+        updateGeminiButtonsState(null); // Reset AI buttons on table switch
     }
 
     function addNewTable(isInitial = false) {
@@ -2078,12 +2194,18 @@
 
     function handleTableCellClick(event) {
         const cell = event.target.closest('td, th');
-        if (!cell || !cell.closest(`#${activeTableId}`)) return; 
+        if (!cell || !cell.closest(`#${activeTableId}`)) {
+            updateGeminiButtonsState(null); // Clicked outside active table or non-cell
+            return;
+        } 
         lastClickedCell = cell; 
+        updateGeminiButtonsState(cell); // Update AI buttons based on clicked cell
+
         if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && 
             !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
             hideCellAutocompleteSuggestions();
         }
+
         if (selectedNameFromList) { 
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
                 const overlay = cell.querySelector('.merged-cell-overlay');
@@ -2101,6 +2223,7 @@
                 rebuildAndRenderSummary(); 
                 showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500);
                 clearNameSelection(); 
+                updateGeminiButtonsState(cell); // Cell content changed
             } else {
                 showMessage('Click an editable data cell to insert name.', 'info');
             }
@@ -2159,6 +2282,7 @@
             } else {
                  hideCellAutocompleteSuggestions();
             }
+            updateGeminiButtonsState(primaryCell);
         });
         primaryCell.innerHTML = ''; primaryCell.appendChild(overlay);
         primaryCell.classList.add('merged-cell-container');
@@ -2173,6 +2297,7 @@
         deselectAllTableCells();
         if (selectionMode) toggleCellSelectionMode(); 
         showMessage('Cells visually merged.', 'success');
+        updateGeminiButtonsState(primaryCell);
     }
 
     function unmergeActiveCellIfMerged() {
@@ -2202,6 +2327,7 @@
         else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText; 
         rebuildAndRenderSummary();
         showMessage('Cells unmerged.', 'success');
+        updateGeminiButtonsState(primaryCellInGroup || cellsInGroup[0]);
     }
 
     function updateAllMergeOverlays() {
@@ -2405,93 +2531,167 @@
         }
 
         showGeneralLoading(true);
-        showMessage('Generating PDF...', 'info', 10000); // Increased duration for user to see
+        showMessage('Generating PDF, please wait...', 'info', 15000); 
 
-        // Clear previous content and ensure it's ready for new content
-        pdfContentElement.innerHTML = '';
-        // pdfContentElement.style.display = 'block'; // Make it visible BEFORE adding content
+        pdfContentElement.innerHTML = ''; 
 
-        // Get the schedule title
-        const scheduleTitle = scheduleTitleElement ? scheduleTitleElement.textContent : 'Weekly Schedule';
+        const scheduleTitleText = scheduleTitleElement ? scheduleTitleElement.textContent : 'Weekly Schedule';
         const titleH2 = document.createElement('h2');
-        titleH2.textContent = scheduleTitle;
+        titleH2.textContent = scheduleTitleText;
         pdfContentElement.appendChild(titleH2);
 
-        // Get "Kelas 3 & 5" table (assuming it's tbl_1)
+        console.log("Attempting to clone and add tbl_1 to PDF content...");
         const kelas35Table = document.getElementById('tbl_1');
         if (kelas35Table) {
-            const h3 = document.createElement('h3');
-            h3.textContent = kelas35Table.dataset.tableName || 'Kelas 3 & 5';
-            pdfContentElement.appendChild(h3);
-            pdfContentElement.appendChild(cloneTableForPdf(kelas35Table));
+            const h3_tbl1 = document.createElement('h3');
+            h3_tbl1.textContent = kelas35Table.dataset.tableName || 'Kelas 3 & 5';
+            pdfContentElement.appendChild(h3_tbl1);
+            const clonedTbl1 = cloneTableForPdf(kelas35Table);
+            if (clonedTbl1) {
+                pdfContentElement.appendChild(clonedTbl1);
+                console.log("tbl_1 successfully cloned and added to PDF content.");
+            } else {
+                console.error("Failed to clone tbl_1 for PDF.");
+            }
         } else {
-            console.warn("Table 'Kelas 3 & 5' (tbl_1) not found for PDF generation.");
+            console.warn("Table 'Kelas 3 & 5' (tbl_1) not found in the document.");
         }
 
-        // Get "Kelas 1, 2 & 4" table (assuming it's tbl_2)
+        console.log("Attempting to clone and add tbl_2 to PDF content...");
         const kelas124Table = document.getElementById('tbl_2');
         if (kelas124Table) {
-            const h3 = document.createElement('h3');
-            h3.textContent = kelas124Table.dataset.tableName || 'Kelas 1, 2 & 4';
-            pdfContentElement.appendChild(h3);
-            pdfContentElement.appendChild(cloneTableForPdf(kelas124Table));
+            const h3_tbl2 = document.createElement('h3');
+            h3_tbl2.textContent = kelas124Table.dataset.tableName || 'Kelas 1, 2 & 4';
+            pdfContentElement.appendChild(h3_tbl2);
+            const clonedTbl2 = cloneTableForPdf(kelas124Table);
+             if (clonedTbl2) {
+                pdfContentElement.appendChild(clonedTbl2);
+                console.log("tbl_2 successfully cloned and added to PDF content.");
+            } else {
+                console.error("Failed to clone tbl_2 for PDF.");
+            }
         } else {
-            console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found for PDF generation.");
+            console.warn("Table 'Kelas 1, 2 & 4' (tbl_2) not found in the document.");
         }
         
         if (pdfContentElement.querySelectorAll('table').length === 0) {
-            showMessage('No specified tables were found to include in the PDF.', 'error');
+            showMessage('No schedule tables were found to include in the PDF.', 'error');
             pdfContentElement.innerHTML = ''; 
-            pdfContentElement.style.display = 'none'; // Hide if no content
             showGeneralLoading(false);
             return;
         }
         
-        // CRITICAL: Make the pdfContentElement visible in the DOM for html2pdf to capture
         pdfContentElement.style.display = 'block'; 
 
-        // Optional: Add a small delay to ensure rendering, though appendChild is synchronous
-        // await new Promise(resolve => setTimeout(resolve, 50)); // e.g., 50ms
-
         const pdfOptions = {
-            margin: 10,
-            filename: `${scheduleTitle.replace(/\s/g, '_')}_Refined_Schedule.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false }, // logging can be true for debug
+            margin: [10, 5, 10, 5], 
+            filename: `${scheduleTitleText.replace(/\s/g, '_')}_Refined_Schedule.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                logging: true, 
+                scrollX: 0, 
+                scrollY: -window.scrollY,
+                windowWidth: pdfContentElement.scrollWidth,
+                windowHeight: pdfContentElement.scrollHeight
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
         };
 
         try {
-            await html2pdf().set(pdfOptions).from(pdfContentElement).save();
+            console.log("Calling html2pdf().from(pdfContentElement).set(pdfOptions).save()...");
+            await html2pdf().from(pdfContentElement).set(pdfOptions).save();
             showMessage('PDF downloaded successfully!', 'success');
         } catch (error) {
             console.error('Error generating PDF:', error);
-            showMessage(`Failed to generate PDF. Error: ${error.message}`, 'error');
+            showMessage(`Failed to generate PDF. Error: ${error.message}. Check console for details.`, 'error', 10000);
         } finally {
-            // Clean up: Clear content and hide the container
-            pdfContentElement.innerHTML = ''; // Clear the content
-            pdfContentElement.style.display = 'none'; // Hide it again
+            pdfContentElement.style.display = 'none'; 
             showGeneralLoading(false);
         }
     }
 
-    // Helper function to clone tables for PDF generation
     function cloneTableForPdf(originalTable) {
+        if (!originalTable || typeof originalTable.cloneNode !== 'function') {
+            console.error("Invalid originalTable provided to cloneTableForPdf:", originalTable);
+            return null;
+        }
+        console.log(`Cloning table: ${originalTable.id || originalTable.dataset.tableName}`);
         const clonedTable = originalTable.cloneNode(true);
-        clonedTable.removeAttribute('id'); 
-        clonedTable.classList.remove('active'); 
-
-        // Remove contenteditable attributes from the cloned table
+        clonedTable.removeAttribute('id');
+        clonedTable.classList.remove('active');
+        clonedTable.style.width = '100%'; 
+        clonedTable.style.tableLayout = 'fixed'; 
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.removeAttribute('contenteditable');
         });
-        
-        // The CSS rules for #pdfContent are designed to handle the visual representation
-        // of merged cells (.merged-cell-overlay) and subsumed cells (.subsumed-cell)
-        // correctly for PDF generation. So, no further structural manipulation is needed here.
+
+        const mergeGroupsData = {};
+        Array.from(originalTable.rows).forEach((row, rowIndex) => {
+            Array.from(row.cells).forEach((cell, colIndex) => {
+                const mergeId = cell.dataset.mergeId;
+                if (mergeId) {
+                    if (!mergeGroupsData[mergeId]) {
+                        mergeGroupsData[mergeId] = {
+                            cells: [],
+                            minRow: rowIndex, maxRow: rowIndex,
+                            minCol: colIndex, maxCol: colIndex,
+                            primaryCellContent: '',
+                            primaryCellOriginal: null
+                        };
+                    }
+                    const group = mergeGroupsData[mergeId];
+                    group.cells.push({cell, rowIndex, colIndex});
+                    group.minRow = Math.min(group.minRow, rowIndex);
+                    group.maxRow = Math.max(group.maxRow, rowIndex);
+                    group.minCol = Math.min(group.minCol, colIndex);
+                    group.maxCol = Math.max(group.maxCol, colIndex);
+                    if (cell.classList.contains('merged-cell-container')) {
+                        const overlay = cell.querySelector('.merged-cell-overlay');
+                        group.primaryCellContent = overlay ? overlay.textContent : cell.textContent;
+                        group.primaryCellOriginal = cell; 
+                    }
+                }
+            });
+        });
+
+        for (const mergeId in mergeGroupsData) {
+            const group = mergeGroupsData[mergeId];
+            if (!group.primaryCellOriginal) continue;
+
+            const primaryOriginalRowIndex = Array.from(originalTable.rows).findIndex(row => Array.from(row.cells).includes(group.primaryCellOriginal));
+            const primaryOriginalColIndex = Array.from(originalTable.rows[primaryOriginalRowIndex].cells).indexOf(group.primaryCellOriginal);
+            
+            const clonedPrimaryCell = clonedTable.rows[primaryOriginalRowIndex]?.cells[primaryOriginalColIndex];
+
+            if (clonedPrimaryCell) {
+                clonedPrimaryCell.textContent = group.primaryCellContent;
+                const overlayCloned = clonedPrimaryCell.querySelector('.merged-cell-overlay');
+                if (overlayCloned) overlayCloned.remove();
+                
+                clonedPrimaryCell.rowSpan = group.maxRow - group.minRow + 1;
+                clonedPrimaryCell.colSpan = group.maxCol - group.minCol + 1;
+
+                group.cells.forEach(item => {
+                    if (item.cell !== group.primaryCellOriginal) {
+                        const clonedSubsumedCell = clonedTable.rows[item.rowIndex]?.cells[item.colIndex];
+                        if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) {
+                             // Check if the cell still exists before trying to remove it,
+                             // as previous removals in the same row might shift indices.
+                             // A safer way is to mark for removal then remove in a separate pass,
+                             // or remove from parentNode if sure about the reference.
+                            if(clonedSubsumedCell.parentElement) clonedSubsumedCell.remove();
+                        }
+                    }
+                });
+            }
+        }
+        console.log(`Finished cloning table: ${originalTable.id || originalTable.dataset.tableName}`);
         return clonedTable;
     }
+
 
     function rebuildAndRenderSummary() {
         console.log("Rebuilding and rendering summary...");
@@ -2664,6 +2864,156 @@
             });
         });
     }
+
+    // --- Gemini AI Feature Functions ---
+
+    function updateGeminiButtonsState(cell) {
+        if (!suggestActivityButtonElement || !generateRemarkButtonElement) return;
+
+        if (cell && cell.isContentEditable && cell.closest('tbody') && cell.cellIndex > 0) { // Ensure it's a data cell
+            const cellText = (cell.querySelector('.merged-cell-overlay')?.textContent || cell.textContent || '').trim();
+            if (cellText === '') {
+                suggestActivityButtonElement.disabled = false;
+                generateRemarkButtonElement.disabled = true;
+            } else {
+                suggestActivityButtonElement.disabled = true;
+                generateRemarkButtonElement.disabled = false;
+            }
+        } else { // No valid cell selected or it's a header/class cell
+            suggestActivityButtonElement.disabled = true;
+            generateRemarkButtonElement.disabled = true;
+        }
+    }
+
+    async function callGeminiAPI(prompt) {
+        showGeneralLoading(true);
+        let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+        const payload = { contents: chatHistory };
+        const apiKey = ""; // Handled by Canvas environment
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const errorBody = await response.json();
+                console.error('Gemini API Error:', errorBody);
+                throw new Error(`Gemini API request failed with status ${response.status}: ${errorBody.error?.message || response.statusText}`);
+            }
+            const result = await response.json();
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                console.error('Gemini API Error: Unexpected response structure or no content', result);
+                throw new Error('Unexpected response structure from Gemini API or no content.');
+            }
+        } catch (error) {
+            console.error('Error calling Gemini API:', error);
+            showMessage(`✨ AI Error: ${error.message}`, 'error', 5000);
+            return null;
+        } finally {
+            showGeneralLoading(false);
+        }
+    }
+
+    function displayGeminiSuggestions(suggestionsText, type) {
+        if (!geminiSuggestionModalElement || !geminiSuggestionsListElement || !geminiSuggestionModalHeaderElement) return;
+        
+        geminiSuggestionsListElement.innerHTML = ''; // Clear previous suggestions
+        const suggestions = suggestionsText.split(';').map(s => s.trim()).filter(s => s);
+
+        if (suggestions.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'No suggestions available at the moment.';
+            geminiSuggestionsListElement.appendChild(li);
+        } else {
+            suggestions.forEach(suggestion => {
+                const li = document.createElement('li');
+                li.textContent = suggestion;
+                li.addEventListener('click', () => {
+                    if (lastClickedCell) {
+                        const targetElement = lastClickedCell.querySelector('.merged-cell-overlay') || lastClickedCell;
+                        if (type === 'activity') {
+                            targetElement.textContent = suggestion;
+                        } else if (type === 'remark') {
+                            const currentText = targetElement.textContent.split('//')[0].trim();
+                            targetElement.textContent = `${currentText} // ${suggestion}`;
+                        }
+                        rebuildAndRenderSummary();
+                        updateGeminiButtonsState(lastClickedCell); // Update button states after modification
+                    }
+                    geminiSuggestionModalElement.style.display = 'none';
+                });
+                geminiSuggestionsListElement.appendChild(li);
+            });
+        }
+        geminiSuggestionModalHeaderElement.querySelector('span').textContent = type === 'activity' ? '✨ Suggested Activities' : '✨ Suggested Remarks';
+        geminiSuggestionModalElement.style.display = 'flex';
+    }
+
+    async function handleSuggestActivity() {
+        if (!lastClickedCell || !lastClickedCell.isContentEditable) {
+            showMessage('Please select an editable cell first.', 'info');
+            return;
+        }
+        const cellText = (lastClickedCell.querySelector('.merged-cell-overlay')?.textContent || lastClickedCell.textContent || '').trim();
+        if (cellText !== '') {
+            showMessage('Cell is not empty. Use "Generate Remarks" or clear the cell.', 'info');
+            return;
+        }
+
+        const activeTableElement = document.getElementById(activeTableId);
+        if (!activeTableElement) return;
+
+        const rowIndex = lastClickedCell.parentElement.rowIndex;
+        const cellIndex = lastClickedCell.cellIndex;
+
+        const className = activeTableElement.rows[rowIndex]?.cells[0]?.textContent.trim() || 'Unknown Class';
+        const timeSlot = activeTableElement.rows[0]?.cells[cellIndex]?.textContent.trim() || 'Unknown Time';
+        const tableName = activeTableElement.dataset.tableName || 'Current Schedule';
+        
+        const prompt = `You are a helpful school schedule assistant.
+For a class named '${className}' in the schedule table '${tableName}', suggest a suitable school activity or subject for the time slot '${timeSlot}'.
+The cell for this activity is currently empty.
+Provide 3 concise and relevant suggestions for a typical Malaysian school context.
+Separate each suggestion with a semicolon. Do not use numbered lists.
+Example suggestions: Bahasa Melayu; Mathematics; Physical Education; Art Class; Science Lab`;
+
+        const suggestionsText = await callGeminiAPI(prompt);
+        if (suggestionsText) {
+            displayGeminiSuggestions(suggestionsText, 'activity');
+        }
+    }
+
+    async function handleGenerateRemark() {
+        if (!lastClickedCell || !lastClickedCell.isContentEditable) {
+            showMessage('Please select an editable cell with content first.', 'info');
+            return;
+        }
+        const cellTextContent = (lastClickedCell.querySelector('.merged-cell-overlay')?.textContent || lastClickedCell.textContent || '');
+        const mainActivity = cellTextContent.split('//')[0].trim();
+
+        if (mainActivity === '') {
+            showMessage('Cell is empty. Use "Suggest Activity" instead.', 'info');
+            return;
+        }
+        
+        const prompt = `For a school schedule entry that currently shows "${mainActivity}", suggest 3 common and brief academic or administrative remarks that could be appended after it.
+The remarks should be suitable for a Malaysian school context.
+Examples of remarks: Report Due; Cancelled; Special Assembly; Substitute: Puan Aisyah; Field Trip; Exam.
+Separate each suggestion with a semicolon. Do not use numbered lists.`;
+
+        const suggestionsText = await callGeminiAPI(prompt);
+        if (suggestionsText) {
+            displayGeminiSuggestions(suggestionsText, 'remark');
+        }
+    }
+
 </script>
 </body>
 </html>
