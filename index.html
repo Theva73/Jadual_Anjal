@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.1, maximum-scale=5.0">
-    <title>Shared Weekly Schedule with Firestore & Gemini AI</title>
+    <title>Shared Weekly Schedule with Firestore</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -206,25 +206,6 @@
             background-image: linear-gradient(to bottom, #f5c6cb 0%, #ebaeb3 100%);
             border-color: #f1b0b7;
         }
-        /* Gemini AI Buttons Styling */
-        #suggestActivityBtn, #generateRemarkBtn {
-            background-color: #8a2be2; /* A nice purple for AI features */
-            color: white;
-            border-color: #7a1cc2;
-        }
-        #suggestActivityBtn:hover, #generateRemarkBtn:hover {
-            background-color: #7a1cc2;
-        }
-        #suggestActivityBtn[disabled], #generateRemarkBtn[disabled] {
-            background-color: #ccc;
-            border-color: #bbb;
-            color: #777;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        }
-
-
         #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;}
         #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
         #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #007bff;}
@@ -507,6 +488,7 @@
             text-align: center;
             font-size: 0.85em; /* Slightly reduced font size for PDF */
             word-wrap: break-word; /* Allow long words to break */
+            /* white-space: nowrap; /* Removed to allow wrapping */
             background-color: #fff; 
         }
         #pdfContent table th { /* PDF Table Headers */
@@ -519,61 +501,10 @@
             background-color: #f0f8ff !important; /* Aliceblue, ensure it applies */
             font-weight: bold;
         }
-       
-        /* Gemini Suggestion Modal */
-        #geminiSuggestionModal {
-            display: none;
-            position: fixed;
-            z-index: 2002; /* Higher than confirm modal */
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.6);
-            align-items: center;
-            justify-content: center;
-        }
-        #geminiSuggestionModal .modal-content {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: left;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            min-width: 350px;
-            max-width: 500px;
-            width: 90%;
-        }
-        #geminiSuggestionModal .modal-header {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        #geminiSuggestionModal #geminiSuggestionsList {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 15px 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        #geminiSuggestionModal #geminiSuggestionsList li {
-            padding: 10px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #geminiSuggestionModal #geminiSuggestionsList li:last-child {
-            border-bottom: none;
-        }
-        #geminiSuggestionModal #geminiSuggestionsList li:hover {
-            background-color: #f0f8ff; /* AliceBlue */
-        }
-        #geminiSuggestionModal .modal-close-btn {
-             /* Using existing close button style */
-        }
-
+        /* Merged cells in PDF should look like normal cells but spanned */
+        /* The cloneTableForPdf function now handles setting text and col/rowspan */
+        /* So, no special styling needed for .merged-cell-container or .merged-cell-overlay in PDF */
+        /* .subsumed-cell are removed by cloneTableForPdf, so no style needed */
 
     </style>
 </head>
@@ -622,8 +553,6 @@
             <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Add Column Right</button>
             <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
             <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
-            <button id="suggestActivityBtn" title="✨ Get AI suggestions for this empty cell" disabled>✨ Suggest Activity</button>
-            <button id="generateRemarkBtn" title="✨ Get AI suggestions for remarks on current cell content" disabled>✨ Generate Remarks</button>
         </div>
     </div> <div id="sharedScheduleListContainer" style="display:none;"></div>
     <div class="bar table-tabs" id="tableTabs"></div>
@@ -743,18 +672,6 @@
 
 <div id="pdfContent"></div>
 
-<div id="geminiSuggestionModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header" id="geminiSuggestionModalHeader">
-            <span>✨ AI Suggestions</span>
-            <button type="button" class="modal-close-btn" id="closeGeminiSuggestionModalBtn" title="Close suggestions">×</button>
-        </div>
-        <ul id="geminiSuggestionsList">
-            </ul>
-    </div>
-</div>
-
-
 <script type="module">
     // Firebase App (the core Firebase SDK) is always required and must be listed first
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -817,7 +734,7 @@
     // --- Global State and Configuration ---
     const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
     let activeTableId = 'tbl_1'; 
-    let tableCount = 1; 
+    let tableCount = 1; // Keep track of table creation for unique IDs
     let selectionMode = false;
     let selectedCells = [];
     let lastClickedCell = null;
@@ -836,10 +753,10 @@
 
     let currentWorkingScheduleDocId = null; 
     let autoSaveIntervalId = null;
-    const AUTO_SAVE_INTERVAL = 60000; 
+    const AUTO_SAVE_INTERVAL = 60000; // 1 minute
 
     // DOM Element Cache
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement, suggestActivityButtonElement, generateRemarkButtonElement, geminiSuggestionModalElement, geminiSuggestionsListElement, closeGeminiSuggestionModalButtonElement, geminiSuggestionModalHeaderElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement;
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -1583,21 +1500,10 @@
         collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); 
         downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); 
         pdfContentElement = document.getElementById('pdfContent'); 
-        
-        // Gemini AI Feature Elements
-        suggestActivityButtonElement = document.getElementById('suggestActivityBtn');
-        generateRemarkButtonElement = document.getElementById('generateRemarkBtn');
-        geminiSuggestionModalElement = document.getElementById('geminiSuggestionModal');
-        geminiSuggestionsListElement = document.getElementById('geminiSuggestionsList');
-        closeGeminiSuggestionModalButtonElement = document.getElementById('closeGeminiSuggestionModalBtn');
-        geminiSuggestionModalHeaderElement = document.getElementById('geminiSuggestionModalHeader');
-
-
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
-
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !suggestActivityButtonElement || !generateRemarkButtonElement || !geminiSuggestionModalElement || !geminiSuggestionsListElement || !closeGeminiSuggestionModalButtonElement) { 
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement) { 
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
             return;
@@ -1777,17 +1683,8 @@
                 await deleteNameFromSharedSessionInFirestore(deleteButton.dataset.nameDelete);
             }
         });
-
-        // Gemini AI Button Listeners
-        if(suggestActivityButtonElement) suggestActivityButtonElement.addEventListener('click', handleSuggestActivity);
-        if(generateRemarkButtonElement) generateRemarkButtonElement.addEventListener('click', handleGenerateRemark);
-        if(closeGeminiSuggestionModalButtonElement) closeGeminiSuggestionModalButtonElement.addEventListener('click', () => {
-            if(geminiSuggestionModalElement) geminiSuggestionModalElement.style.display = 'none';
-        });
-
-
         if(tablesContainer) {
-            tablesContainer.addEventListener('click', handleTableCellClick); // Also updates AI button states
+            tablesContainer.addEventListener('click', handleTableCellClick);
             tablesContainer.addEventListener('input', (e) => {
                 const cell = e.target;
                 if ((cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) && cell.isContentEditable) {
@@ -1798,7 +1695,6 @@
                         hideCellAutocompleteSuggestions();
                     }
                     setTimeout(rebuildAndRenderSummary, 300); 
-                    updateGeminiButtonsState(cell); // Update AI buttons on input
                 } else if (cell.classList.contains('merged-cell-overlay')) {
                     const text = cell.textContent;
                     const parentCell = cell.parentElement;
@@ -1808,7 +1704,6 @@
                          hideCellAutocompleteSuggestions();
                     }
                     setTimeout(rebuildAndRenderSummary, 300); 
-                    updateGeminiButtonsState(parentCell); // Update AI buttons on input in overlay
                 }
             });
             tablesContainer.addEventListener('blur', (e) => { 
@@ -1867,10 +1762,6 @@
                 if (!isClickInsideCell && !isClickInsideSuggestions && !isClickInsideOverlay) {
                     hideCellAutocompleteSuggestions();
                 }
-            }
-            // Close Gemini modal if clicked outside
-            if (geminiSuggestionModalElement && geminiSuggestionModalElement.style.display === 'flex' && !geminiSuggestionModalElement.querySelector('.modal-content').contains(event.target)) {
-                geminiSuggestionModalElement.style.display = 'none';
             }
         });
     }
@@ -2008,7 +1899,6 @@
         rebuildAndRenderSummary();
         updateAllMergeOverlays();
         hideCellAutocompleteSuggestions(); 
-        updateGeminiButtonsState(null); // Reset AI buttons on table switch
     }
 
     function addNewTable(isInitial = false) {
@@ -2194,18 +2084,12 @@
 
     function handleTableCellClick(event) {
         const cell = event.target.closest('td, th');
-        if (!cell || !cell.closest(`#${activeTableId}`)) {
-            updateGeminiButtonsState(null); // Clicked outside active table or non-cell
-            return;
-        } 
+        if (!cell || !cell.closest(`#${activeTableId}`)) return; 
         lastClickedCell = cell; 
-        updateGeminiButtonsState(cell); // Update AI buttons based on clicked cell
-
         if (autocompleteSuggestionsDiv && autocompleteSuggestionsDiv.style.display === 'block' && 
             !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) {
             hideCellAutocompleteSuggestions();
         }
-
         if (selectedNameFromList) { 
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
                 const overlay = cell.querySelector('.merged-cell-overlay');
@@ -2223,7 +2107,6 @@
                 rebuildAndRenderSummary(); 
                 showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500);
                 clearNameSelection(); 
-                updateGeminiButtonsState(cell); // Cell content changed
             } else {
                 showMessage('Click an editable data cell to insert name.', 'info');
             }
@@ -2282,7 +2165,6 @@
             } else {
                  hideCellAutocompleteSuggestions();
             }
-            updateGeminiButtonsState(primaryCell);
         });
         primaryCell.innerHTML = ''; primaryCell.appendChild(overlay);
         primaryCell.classList.add('merged-cell-container');
@@ -2297,7 +2179,6 @@
         deselectAllTableCells();
         if (selectionMode) toggleCellSelectionMode(); 
         showMessage('Cells visually merged.', 'success');
-        updateGeminiButtonsState(primaryCell);
     }
 
     function unmergeActiveCellIfMerged() {
@@ -2327,7 +2208,6 @@
         else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText; 
         rebuildAndRenderSummary();
         showMessage('Cells unmerged.', 'success');
-        updateGeminiButtonsState(primaryCellInGroup || cellsInGroup[0]);
     }
 
     function updateAllMergeOverlays() {
@@ -2531,9 +2411,9 @@
         }
 
         showGeneralLoading(true);
-        showMessage('Generating PDF, please wait...', 'info', 15000); 
+        showMessage('Generating PDF, please wait...', 'info', 15000); // Increased duration
 
-        pdfContentElement.innerHTML = ''; 
+        pdfContentElement.innerHTML = ''; // Clear previous content
 
         const scheduleTitleText = scheduleTitleElement ? scheduleTitleElement.textContent : 'Weekly Schedule';
         const titleH2 = document.createElement('h2');
@@ -2581,17 +2461,17 @@
             return;
         }
         
-        pdfContentElement.style.display = 'block'; 
+        pdfContentElement.style.display = 'block'; // Make content visible for html2pdf
 
         const pdfOptions = {
-            margin: [10, 5, 10, 5], 
+            margin: [10, 5, 10, 5], // top, left, bottom, right margins in mm
             filename: `${scheduleTitleText.replace(/\s/g, '_')}_Refined_Schedule.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
             html2canvas: { 
                 scale: 2, 
                 useCORS: true, 
-                logging: true, 
-                scrollX: 0, 
+                logging: true, // Enable logging for html2canvas for debugging
+                scrollX: 0, // Try to prevent horizontal scroll issues
                 scrollY: -window.scrollY,
                 windowWidth: pdfContentElement.scrollWidth,
                 windowHeight: pdfContentElement.scrollHeight
@@ -2609,86 +2489,134 @@
             showMessage(`Failed to generate PDF. Error: ${error.message}. Check console for details.`, 'error', 10000);
         } finally {
             pdfContentElement.style.display = 'none'; 
+            // pdfContentElement.innerHTML = ''; // Keep content for a moment if debugging is needed, then clear
             showGeneralLoading(false);
         }
     }
 
+    // Helper function to clone tables for PDF generation, handling merged cells
     function cloneTableForPdf(originalTable) {
         if (!originalTable || typeof originalTable.cloneNode !== 'function') {
             console.error("Invalid originalTable provided to cloneTableForPdf:", originalTable);
             return null;
         }
         console.log(`Cloning table: ${originalTable.id || originalTable.dataset.tableName}`);
+
+        // 1. Deep clone the entire table.
         const clonedTable = originalTable.cloneNode(true);
         clonedTable.removeAttribute('id');
         clonedTable.classList.remove('active');
-        clonedTable.style.width = '100%'; 
-        clonedTable.style.tableLayout = 'fixed'; 
+        clonedTable.style.width = '100%'; // Ensure full width for PDF
+        clonedTable.style.tableLayout = 'fixed'; // Often better for PDF rendering consistency
+
+
+        // 2. Remove contenteditable attributes.
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.removeAttribute('contenteditable');
         });
 
-        const mergeGroupsData = {};
-        Array.from(originalTable.rows).forEach((row, rowIndex) => {
-            Array.from(row.cells).forEach((cell, colIndex) => {
-                const mergeId = cell.dataset.mergeId;
-                if (mergeId) {
-                    if (!mergeGroupsData[mergeId]) {
-                        mergeGroupsData[mergeId] = {
-                            cells: [],
-                            minRow: rowIndex, maxRow: rowIndex,
-                            minCol: colIndex, maxCol: colIndex,
-                            primaryCellContent: '',
-                            primaryCellOriginal: null
-                        };
-                    }
-                    const group = mergeGroupsData[mergeId];
-                    group.cells.push({cell, rowIndex, colIndex});
-                    group.minRow = Math.min(group.minRow, rowIndex);
-                    group.maxRow = Math.max(group.maxRow, rowIndex);
-                    group.minCol = Math.min(group.minCol, colIndex);
-                    group.maxCol = Math.max(group.maxCol, colIndex);
-                    if (cell.classList.contains('merged-cell-container')) {
-                        const overlay = cell.querySelector('.merged-cell-overlay');
-                        group.primaryCellContent = overlay ? overlay.textContent : cell.textContent;
-                        group.primaryCellOriginal = cell; 
-                    }
+        // 3. Process merged cells: set colspan/rowspan, copy text, remove overlay.
+        const mergeGroups = {}; 
+
+        // Iterate over original table cells to correctly map row/col indices for spans
+        Array.from(originalTable.rows).forEach((originalRow, rowIndex) => {
+            Array.from(originalRow.cells).forEach((originalCell, colIndex) => {
+                const mergeId = originalCell.dataset.mergeId;
+                if (!mergeId) return;
+
+                if (!mergeGroups[mergeId]) {
+                    mergeGroups[mergeId] = {
+                        minRow: rowIndex, maxRow: rowIndex,
+                        minCol: colIndex, maxCol: colIndex,
+                        primaryCellOriginal: null,
+                        allOriginalCellsInGroup: []
+                    };
+                }
+                const group = mergeGroups[mergeId];
+                group.allOriginalCellsInGroup.push(originalCell);
+                group.minRow = Math.min(group.minRow, rowIndex);
+                group.maxRow = Math.max(group.maxRow, rowIndex);
+                group.minCol = Math.min(group.minCol, colIndex);
+                group.maxCol = Math.max(group.maxCol, colIndex);
+
+                if (originalCell.classList.contains('merged-cell-container')) {
+                    group.primaryCellOriginal = originalCell;
                 }
             });
         });
+        
+        // Apply transformations to the clonedTable
+        for (const mergeId in mergeGroups) {
+            const group = mergeGroups[mergeId];
+            if (!group.primaryCellOriginal) {
+                console.warn(`No primary cell found for mergeId: ${mergeId}. Skipping this merge group for PDF.`);
+                continue;
+            }
 
-        for (const mergeId in mergeGroupsData) {
-            const group = mergeGroupsData[mergeId];
-            if (!group.primaryCellOriginal) continue;
+            const rowSpan = group.maxRow - group.minRow + 1;
+            const colSpan = group.maxCol - group.minCol + 1;
 
-            const primaryOriginalRowIndex = Array.from(originalTable.rows).findIndex(row => Array.from(row.cells).includes(group.primaryCellOriginal));
-            const primaryOriginalColIndex = Array.from(originalTable.rows[primaryOriginalRowIndex].cells).indexOf(group.primaryCellOriginal);
-            
-            const clonedPrimaryCell = clonedTable.rows[primaryOriginalRowIndex]?.cells[primaryOriginalColIndex];
+            // Find the corresponding primary cell in the cloned table.
+            // We need its original row and column index to find it in the cloned table.
+            let primaryCellOriginalRowIndex = -1;
+            let primaryCellOriginalColIndex = -1;
 
-            if (clonedPrimaryCell) {
-                clonedPrimaryCell.textContent = group.primaryCellContent;
-                const overlayCloned = clonedPrimaryCell.querySelector('.merged-cell-overlay');
-                if (overlayCloned) overlayCloned.remove();
-                
-                clonedPrimaryCell.rowSpan = group.maxRow - group.minRow + 1;
-                clonedPrimaryCell.colSpan = group.maxCol - group.minCol + 1;
-
-                group.cells.forEach(item => {
-                    if (item.cell !== group.primaryCellOriginal) {
-                        const clonedSubsumedCell = clonedTable.rows[item.rowIndex]?.cells[item.colIndex];
-                        if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) {
-                             // Check if the cell still exists before trying to remove it,
-                             // as previous removals in the same row might shift indices.
-                             // A safer way is to mark for removal then remove in a separate pass,
-                             // or remove from parentNode if sure about the reference.
-                            if(clonedSubsumedCell.parentElement) clonedSubsumedCell.remove();
-                        }
+            Array.from(originalTable.rows).forEach((r, rIdx) => {
+                Array.from(r.cells).forEach((c, cIdx) => {
+                    if (c === group.primaryCellOriginal) {
+                        primaryCellOriginalRowIndex = rIdx;
+                        primaryCellOriginalColIndex = cIdx;
                     }
                 });
+            });
+            
+            if (primaryCellOriginalRowIndex === -1 || primaryCellOriginalColIndex === -1) {
+                console.warn(`Could not find original primary cell for mergeId ${mergeId} in its table. Skipping.`);
+                continue;
+            }
+
+            const clonedPrimaryCell = clonedTable.rows[primaryCellOriginalRowIndex]?.cells[primaryCellOriginalColIndex];
+
+            if (clonedPrimaryCell) {
+                const overlayOriginal = group.primaryCellOriginal.querySelector('.merged-cell-overlay');
+                clonedPrimaryCell.textContent = overlayOriginal ? overlayOriginal.textContent : group.primaryCellOriginal.textContent;
+                
+                const overlayCloned = clonedPrimaryCell.querySelector('.merged-cell-overlay');
+                if (overlayCloned) overlayCloned.remove();
+
+                clonedPrimaryCell.rowSpan = rowSpan;
+                clonedPrimaryCell.colSpan = colSpan;
+                console.log(`Applied rowspan: ${rowSpan}, colspan: ${colSpan} to cell for mergeId: ${mergeId} (text: "${clonedPrimaryCell.textContent}")`);
+
+                // Remove other cells that are now spanned by this primary cell in the cloned table
+                // Iterate through the cells that were part of this merge group in the original table
+                group.allOriginalCellsInGroup.forEach(originalSubsumedCell => {
+                    if (originalSubsumedCell === group.primaryCellOriginal) return; // Don't remove the primary cell itself
+
+                    // Find its corresponding cell in the cloned table to remove it
+                    let subsumedOriginalRowIndex = -1;
+                    let subsumedOriginalColIndex = -1;
+                     Array.from(originalTable.rows).forEach((r, rIdx) => {
+                        Array.from(r.cells).forEach((c, cIdx) => {
+                            if (c === originalSubsumedCell) {
+                                subsumedOriginalRowIndex = rIdx;
+                                subsumedOriginalColIndex = cIdx;
+                            }
+                        });
+                    });
+
+                    if (subsumedOriginalRowIndex !== -1 && subsumedOriginalColIndex !== -1) {
+                         const clonedSubsumedCell = clonedTable.rows[subsumedOriginalRowIndex]?.cells[subsumedOriginalColIndex];
+                         if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) { // Ensure not removing the primary again
+                            clonedSubsumedCell.remove();
+                         }
+                    }
+                });
+            } else {
+                 console.warn(`Cloned primary cell not found for mergeId: ${mergeId} at [${primaryCellOriginalRowIndex},${primaryCellOriginalColIndex}]`);
             }
         }
-        console.log(`Finished cloning table: ${originalTable.id || originalTable.dataset.tableName}`);
+        console.log(`Finished cloning table. Cloned table outerHTML (first 500 chars): ${clonedTable.outerHTML.substring(0,500)}`);
         return clonedTable;
     }
 
@@ -2864,156 +2792,6 @@
             });
         });
     }
-
-    // --- Gemini AI Feature Functions ---
-
-    function updateGeminiButtonsState(cell) {
-        if (!suggestActivityButtonElement || !generateRemarkButtonElement) return;
-
-        if (cell && cell.isContentEditable && cell.closest('tbody') && cell.cellIndex > 0) { // Ensure it's a data cell
-            const cellText = (cell.querySelector('.merged-cell-overlay')?.textContent || cell.textContent || '').trim();
-            if (cellText === '') {
-                suggestActivityButtonElement.disabled = false;
-                generateRemarkButtonElement.disabled = true;
-            } else {
-                suggestActivityButtonElement.disabled = true;
-                generateRemarkButtonElement.disabled = false;
-            }
-        } else { // No valid cell selected or it's a header/class cell
-            suggestActivityButtonElement.disabled = true;
-            generateRemarkButtonElement.disabled = true;
-        }
-    }
-
-    async function callGeminiAPI(prompt) {
-        showGeneralLoading(true);
-        let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-        const payload = { contents: chatHistory };
-        const apiKey = ""; // Handled by Canvas environment
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) {
-                const errorBody = await response.json();
-                console.error('Gemini API Error:', errorBody);
-                throw new Error(`Gemini API request failed with status ${response.status}: ${errorBody.error?.message || response.statusText}`);
-            }
-            const result = await response.json();
-            if (result.candidates && result.candidates.length > 0 &&
-                result.candidates[0].content && result.candidates[0].content.parts &&
-                result.candidates[0].content.parts.length > 0) {
-                return result.candidates[0].content.parts[0].text;
-            } else {
-                console.error('Gemini API Error: Unexpected response structure or no content', result);
-                throw new Error('Unexpected response structure from Gemini API or no content.');
-            }
-        } catch (error) {
-            console.error('Error calling Gemini API:', error);
-            showMessage(`✨ AI Error: ${error.message}`, 'error', 5000);
-            return null;
-        } finally {
-            showGeneralLoading(false);
-        }
-    }
-
-    function displayGeminiSuggestions(suggestionsText, type) {
-        if (!geminiSuggestionModalElement || !geminiSuggestionsListElement || !geminiSuggestionModalHeaderElement) return;
-        
-        geminiSuggestionsListElement.innerHTML = ''; // Clear previous suggestions
-        const suggestions = suggestionsText.split(';').map(s => s.trim()).filter(s => s);
-
-        if (suggestions.length === 0) {
-            const li = document.createElement('li');
-            li.textContent = 'No suggestions available at the moment.';
-            geminiSuggestionsListElement.appendChild(li);
-        } else {
-            suggestions.forEach(suggestion => {
-                const li = document.createElement('li');
-                li.textContent = suggestion;
-                li.addEventListener('click', () => {
-                    if (lastClickedCell) {
-                        const targetElement = lastClickedCell.querySelector('.merged-cell-overlay') || lastClickedCell;
-                        if (type === 'activity') {
-                            targetElement.textContent = suggestion;
-                        } else if (type === 'remark') {
-                            const currentText = targetElement.textContent.split('//')[0].trim();
-                            targetElement.textContent = `${currentText} // ${suggestion}`;
-                        }
-                        rebuildAndRenderSummary();
-                        updateGeminiButtonsState(lastClickedCell); // Update button states after modification
-                    }
-                    geminiSuggestionModalElement.style.display = 'none';
-                });
-                geminiSuggestionsListElement.appendChild(li);
-            });
-        }
-        geminiSuggestionModalHeaderElement.querySelector('span').textContent = type === 'activity' ? '✨ Suggested Activities' : '✨ Suggested Remarks';
-        geminiSuggestionModalElement.style.display = 'flex';
-    }
-
-    async function handleSuggestActivity() {
-        if (!lastClickedCell || !lastClickedCell.isContentEditable) {
-            showMessage('Please select an editable cell first.', 'info');
-            return;
-        }
-        const cellText = (lastClickedCell.querySelector('.merged-cell-overlay')?.textContent || lastClickedCell.textContent || '').trim();
-        if (cellText !== '') {
-            showMessage('Cell is not empty. Use "Generate Remarks" or clear the cell.', 'info');
-            return;
-        }
-
-        const activeTableElement = document.getElementById(activeTableId);
-        if (!activeTableElement) return;
-
-        const rowIndex = lastClickedCell.parentElement.rowIndex;
-        const cellIndex = lastClickedCell.cellIndex;
-
-        const className = activeTableElement.rows[rowIndex]?.cells[0]?.textContent.trim() || 'Unknown Class';
-        const timeSlot = activeTableElement.rows[0]?.cells[cellIndex]?.textContent.trim() || 'Unknown Time';
-        const tableName = activeTableElement.dataset.tableName || 'Current Schedule';
-        
-        const prompt = `You are a helpful school schedule assistant.
-For a class named '${className}' in the schedule table '${tableName}', suggest a suitable school activity or subject for the time slot '${timeSlot}'.
-The cell for this activity is currently empty.
-Provide 3 concise and relevant suggestions for a typical Malaysian school context.
-Separate each suggestion with a semicolon. Do not use numbered lists.
-Example suggestions: Bahasa Melayu; Mathematics; Physical Education; Art Class; Science Lab`;
-
-        const suggestionsText = await callGeminiAPI(prompt);
-        if (suggestionsText) {
-            displayGeminiSuggestions(suggestionsText, 'activity');
-        }
-    }
-
-    async function handleGenerateRemark() {
-        if (!lastClickedCell || !lastClickedCell.isContentEditable) {
-            showMessage('Please select an editable cell with content first.', 'info');
-            return;
-        }
-        const cellTextContent = (lastClickedCell.querySelector('.merged-cell-overlay')?.textContent || lastClickedCell.textContent || '');
-        const mainActivity = cellTextContent.split('//')[0].trim();
-
-        if (mainActivity === '') {
-            showMessage('Cell is empty. Use "Suggest Activity" instead.', 'info');
-            return;
-        }
-        
-        const prompt = `For a school schedule entry that currently shows "${mainActivity}", suggest 3 common and brief academic or administrative remarks that could be appended after it.
-The remarks should be suitable for a Malaysian school context.
-Examples of remarks: Report Due; Cancelled; Special Assembly; Substitute: Puan Aisyah; Field Trip; Exam.
-Separate each suggestion with a semicolon. Do not use numbered lists.`;
-
-        const suggestionsText = await callGeminiAPI(prompt);
-        if (suggestionsText) {
-            displayGeminiSuggestions(suggestionsText, 'remark');
-        }
-    }
-
 </script>
 </body>
 </html>
