@@ -43,6 +43,55 @@
             margin-bottom: 20px;
             min-height: 1.2em; /* Prevent layout shift while loading */
         }
+
+        /* --- Styles for Collapsible Button Controls --- */
+        #controlsToggler {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            font-size: 1em;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            margin-bottom: 15px; /* Space before the button bars container */
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            width: auto; /* Fit content */
+            /* align-self: flex-start; /* Uncomment if main-container is flex column and you want left align */
+        }
+        #controlsToggler:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        #controlsToggler .toggler-icon {
+            transition: transform 0.3s ease-out;
+            width: 20px; /* Ensure icon has a size */
+            height: 20px;
+        }
+        /* When aria-expanded is false (closed), rotate the default up-chevron to point down */
+        #controlsToggler[aria-expanded="false"] .toggler-icon {
+            transform: rotate(180deg);
+        }
+
+        #collapsibleButtonBars {
+            max-height: 1000px; /* Adjust if necessary, should be more than content height when open */
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out, padding-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out;
+            /* Add some padding for visual separation when open */
+            padding-top: 5px; 
+            padding-bottom: 5px;
+        }
+        #collapsibleButtonBars:not(.open) {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-top: 0; /* Remove any top margin when closed */
+        }
+        /* --- End of Styles for Collapsible Button Controls --- */
+
         table {
             border-collapse: collapse;
             width: 100%;
@@ -450,36 +499,48 @@
     <h2 contenteditable="true" id="scheduleTitle">Shared Weekly Schedule</h2>
     <div id="userIdDisplay">User ID: Loading...</div>
 
-    <div class="bar">
-        <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
-    </div>
-    <div class="bar">
-        <button id="excelBtnTrigger" title="Export the currently active table to an Excel file">💾 Export Active Table to Excel</button>
-        <button id="importExcelBtn" title="Import data from an Excel file into a new table">📂 Import from Excel</button>
-        <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
-    </div>
-    <div class="bar">
-        <button id="saveSharedScheduleBtn" title="Save current schedule to the shared Cloud space">💠 Save Shared Schedule</button>
-        <button id="loadSharedScheduleBtn" title="Show list of shared schedules from Cloud to load">☁️ Load Shared Schedule</button>
-        <button id="exportSharedSchedulesBtn" title="Export all shared schedules from Cloud to a JSON file">📤 Export All Shared Schedules</button>
-        <button id="importSharedSchedulesBtn" title="Import schedules from a JSON file to the shared Cloud space">📥 Import Shared Schedules</button>
-        <input type="file" id="sharedScheduleImportFile" accept=".json" style="display:none;">
-        <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
-    </div>
-    <div class="bar">
-        <button id="selectBtn" title="Toggle cell selection mode on/off">✨ Select Cells</button>
-        <button id="mergeBtn" title="Merge the currently selected cells">🔗 Merge Cells</button>
-        <button id="deselectBtn" title="Clear current cell selection">🚫 Deselect All</button>
-        <button id="unmergeBtn" title="Unmerge the cell that was last clicked if it's part of a merge">💔 Unmerge Cell</button>
-    </div>
-    <div class="bar">
-        <button id="addTableBtn" title="Add a new, empty table/sheet">➕ Add New Table</button>
-        <button id="renameTableBtn" title="Rename the currently active table/sheet">📝 Rename Active Table</button>
-        <button id="deleteTableBtn" title="Delete the currently active table/sheet">❌ Delete Active Table</button>
-        <button id="nameListBtn" title="Open a dialog to manage the shared list of names (Firestore)">👥 Manage Shared Names</button>
-    </div>
+    <button id="controlsToggler" aria-expanded="true" aria-controls="collapsibleButtonBars" title="Toggle button controls visibility">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg> <span>Hide Controls</span>
+    </button>
 
-    <div id="sharedScheduleListContainer" style="display:none;"></div>
+    <div id="collapsibleButtonBars" class="open"> 
+        <div class="bar">
+            <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
+        </div>
+        <div class="bar">
+            <button id="excelBtnTrigger" title="Export the currently active table to an Excel file">💾 Export Active Table to Excel</button>
+            <button id="importExcelBtn" title="Import data from an Excel file into a new table">📂 Import from Excel</button>
+            <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
+        </div>
+        <div class="bar">
+            <button id="saveSharedScheduleBtn" title="Save current schedule to the shared Cloud space">💠 Save Shared Schedule</button>
+            <button id="loadSharedScheduleBtn" title="Show list of shared schedules from Cloud to load">☁️ Load Shared Schedule</button>
+            <button id="exportSharedSchedulesBtn" title="Export all shared schedules from Cloud to a JSON file">📤 Export All Shared Schedules</button>
+            <button id="importSharedSchedulesBtn" title="Import schedules from a JSON file to the shared Cloud space">📥 Import Shared Schedules</button>
+            <input type="file" id="sharedScheduleImportFile" accept=".json" style="display:none;">
+            <button id="clearActiveTableContentBtn" title="Clear all data from the cells of the active table">🧹 Clear Active Table</button>
+        </div>
+        <div class="bar">
+            <button id="selectBtn" title="Toggle cell selection mode on/off">✨ Select Cells</button>
+            <button id="mergeBtn" title="Merge the currently selected cells">🔗 Merge Cells</button>
+            <button id="deselectBtn" title="Clear current cell selection">🚫 Deselect All</button>
+            <button id="unmergeBtn" title="Unmerge the cell that was last clicked if it's part of a merge">💔 Unmerge Cell</button>
+        </div>
+        <div class="bar">
+            <button id="addTableBtn" title="Add a new, empty table/sheet">➕ Add New Table</button>
+            <button id="renameTableBtn" title="Rename the currently active table/sheet">📝 Rename Active Table</button>
+            <button id="deleteTableBtn" title="Delete the currently active table/sheet">❌ Delete Active Table</button>
+            <button id="nameListBtn" title="Open a dialog to manage the shared list of names (Firestore)">👥 Manage Shared Names</button>
+        </div>
+        <div class="bar" id="rowColManipulationBar">
+            <button id="addRowAboveBtn" title="Add a new row above the currently selected/clicked row">⬆️ Add Row Above</button>
+            <button id="addRowBelowBtn" title="Add a new row below the currently selected/clicked row">⬇️ Add Row Below</button>
+            <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Add Column Left</button>
+            <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Add Column Right</button>
+            <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
+            <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
+        </div>
+    </div> <div id="sharedScheduleListContainer" style="display:none;"></div>
     <div class="bar table-tabs" id="tableTabs"></div>
     <div id="tablesContainer">
         <table id="tbl_1" class="active" data-table-name="Table 1">
@@ -507,15 +568,6 @@
                 </tr>
             </tbody>
         </table>
-    </div>
-
-    <div class="bar" id="rowColManipulationBar">
-        <button id="addRowAboveBtn" title="Add a new row above the currently selected/clicked row">⬆️ Add Row Above</button>
-        <button id="addRowBelowBtn" title="Add a new row below the currently selected/clicked row">⬇️ Add Row Below</button>
-        <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Add Column Left</button>
-        <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Add Column Right</button>
-        <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
-        <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
     </div>
 
     <div id="nameModal" class="modal">
@@ -632,7 +684,7 @@
     const AUTO_SAVE_INTERVAL = 60000; 
 
     // DOM Element Cache
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement;
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement; // Added new elements
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -688,6 +740,19 @@
             generalLoadingIndicatorElement.style.display = isLoading ? 'flex' : 'none';
         }
     }
+
+    // --- Collapsible Button Bar Function ---
+    function toggleButtonBarsVisibility() {
+        if (!collapsibleButtonBarsElement || !controlsTogglerElement) return;
+        const isOpen = collapsibleButtonBarsElement.classList.toggle('open');
+        controlsTogglerElement.setAttribute('aria-expanded', isOpen.toString());
+        const textSpan = controlsTogglerElement.querySelector('span');
+        // The SVG icon rotation is handled by CSS based on the aria-expanded attribute
+        if (textSpan) {
+            textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
+        }
+    }
+
 
     // --- Firestore Shared Name List Functions ---
     function showNameModalLoading(isLoading) {
@@ -1414,12 +1479,15 @@
         loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal');
         nameModalTitleElement = document.getElementById('nameModalTitle');
         generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator');
+        controlsTogglerElement = document.getElementById('controlsToggler'); // New
+        collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); // New
+
 
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement) {
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement) { // Check new elements
             console.error("CRITICAL DOM elements missing. App cannot initialize correctly.");
             document.body.innerHTML = "<p style='color:red; text-align:center; font-size:1.2em;'>Error: Application failed to initialize due to missing critical page elements. Please check the console for details.</p>";
             return;
@@ -1539,6 +1607,8 @@
     }
 
     function initializeEventListeners() {
+        if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility); // New listener
+
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) {
