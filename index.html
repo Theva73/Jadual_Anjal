@@ -74,7 +74,7 @@
             gap: 8px;
             white-space: nowrap;
             flex-grow: 1;
-            flex-basis: 150px;
+            flex-basis: 150px; /* Adjusted for potentially 4 buttons */
             text-align: center;
         }
 
@@ -105,6 +105,16 @@
             transform: translateY(-1px);
         }
         
+        /* New Button Style */
+        #clearScheduledNamesBtn.top-action-btn {
+            background-image: linear-gradient(to right, #6f42c1 0%, #563d7c 100%); /* Purple gradient */
+        }
+        #clearScheduledNamesBtn.top-action-btn:hover {
+            background-image: linear-gradient(to right, #5a2a9e 0%, #452863 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+
         .top-action-btn:active {
             transform: translateY(0px);
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
@@ -201,7 +211,7 @@
         #selectBtn:hover { background-color: #0f6674; }
         #selectBtn.active:hover { background-color: #c25202;}
         #mergeBtn:hover { background-color: #563299; }
-        #unmergeBtn:hover { background-color: #d9307b; } /* Original color was same as normal, fixed */
+        #unmergeBtn:hover { background-color: #d9307b; } 
         #addTableBtn:hover { background-color: #178d6f; }
         #renameTableBtn:hover, #deselectBtn:hover { background-color: #545b62; }
         #deleteTableBtn:hover, #rowColManipulationBar button.delete-btn:hover { background-color: #b21f2d; }
@@ -237,39 +247,35 @@
             position: relative;
             font-size: 0.9em;
         }
-        table th { /* General TH style */
+        table th { 
             background-color: #f8f9fa;
             color: #343a40;
             font-weight: 600;
             white-space: nowrap;
         }
-        /* Time Slot Header Row TH */
         #tablesContainer > table > thead > tr:not(.date-header-row) > th {
             font-weight: bold;
             background-color: #e9ecef;
             color: #343a40;
         }
-        /* First Column Headers (Class/Name) in Time Slot Row and Body */
         #tablesContainer > table > thead > tr:not(.date-header-row) > th:first-child,
         #tablesContainer > table > tbody > tr > td:first-child,
-        #tablesContainer > table > tbody > tr > th:first-child { /* For TH in tbody if any */
+        #tablesContainer > table > tbody > tr > th:first-child { 
             font-weight: bold;
-            background-color: #e6f7ff; /* Lighter aliceblue */
+            background-color: #e6f7ff; 
             color: #1c1e21;
         }
 
-        /* NEW: Date Header Row Styles */
         #tablesContainer > table > thead > tr.date-header-row > th.date-header-cell {
             font-weight: bold;
-            background-color: #cce0ff; /* Slightly darker blue: #cce0ff */
+            background-color: #cce0ff; 
             color: #1c1e21;
-            white-space: normal; /* Allow text wrapping */
+            white-space: normal; 
         }
-        /* NEW: Merged Cell Overlay in Date Header Row */
         #tablesContainer > table > thead > tr.date-header-row > th.date-header-cell.merged-cell-container .merged-cell-overlay {
-            background-color: #cce0ff; /* Match the cell background */
-            font-weight: bold; /* Ensure overlay text is also bold */
-            color: #1c1e21; /* Match text color */
+            background-color: #cce0ff; 
+            font-weight: bold; 
+            color: #1c1e21; 
         }
 
 
@@ -431,7 +437,7 @@
         .merged-cell-overlay {
             position: absolute; top: 0; left: 0;
             width: var(--merged-width); height: var(--merged-height);
-            background-color: rgba(240, 248, 255, 0.95); /* Default overlay color */
+            background-color: rgba(240, 248, 255, 0.95); 
             font-style: italic; border: 1px solid #add8e6;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; box-sizing: border-box; z-index: 5;
@@ -498,17 +504,15 @@
             text-align: center; word-wrap: break-word; overflow-wrap: break-word;
             background-color: #fff !important; page-break-inside: avoid !important;
         }
-        #pdfContent th { /* General TH for PDF */
+        #pdfContent th { 
             background-color: #f0f0f0 !important; color: #000; font-weight: bold;
         }
-        /* NEW: PDF Date Header Row */
         #pdfContent table thead tr.date-header-row th.date-header-cell {
-            background-color: #b8d6ff !important; /* Darker blue for PDF */
+            background-color: #b8d6ff !important; 
             font-weight: bold !important;
             color: #000 !important;
-            white-space: normal !important; /* Allow wrapping */
+            white-space: normal !important; 
         }
-        /* PDF First column (Class/Name) in Time Slot Row and Body */
         #pdfContent table thead tr:not(.date-header-row) th:first-child,
         #pdfContent table tbody tr td:first-child {
             background-color: #e6f7ff !important; font-weight: bold; white-space: normal;
@@ -524,16 +528,19 @@
             .main-container { padding: 15px; }
             #scheduleTitle { font-size: 1.8em; }
             h3 { font-size: 1.1em; }
-            .top-action-btn { font-size: 0.85em; padding: 8px 12px; flex-basis: 120px; }
+            .top-action-btn { font-size: 0.85em; padding: 8px 12px; flex-basis: calc(25% - 6px); } /* Adjusted for 4 buttons */
             .bar button { font-size: 0.85em; padding: 8px 12px; flex-basis: 100px; }
             th, td { padding: 8px 10px; min-width: 70px; font-size: 0.85em; }
             .table-tabs button, .name-session-tabs button { padding: 8px 10px; font-size: 0.9em; }
+        }
+        @media (max-width: 600px) { /* Added breakpoint for better button wrapping */
+             .top-action-btn { flex-basis: calc(50% - 4px); }
         }
         @media (max-width: 480px) {
             body { padding: 5px; }
             .main-container { padding: 10px; }
             #scheduleTitle { font-size: 1.5em; }
-            .top-action-btn { font-size: 0.8em; padding: 6px 10px; gap: 4px; flex-basis: calc(50% - 4px); }
+            /* .top-action-btn already handled by max-width: 600px for 2x2 layout */
             #controlsToggler .toggler-icon { width: 16px; height: 16px; }
              .bar button { font-size: 0.8em; padding: 6px 10px; gap: 4px; flex-basis: calc(50% - 4px); }
             th, td { padding: 6px 8px; min-width: 60px; font-size: 0.8em; }
@@ -551,8 +558,18 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
             <span>Show Controls</span>
         </button>
-        <button id="manualSaveBtn" class="top-action-btn" title="Manually save current page state to Cloud">💾 Save Page</button>
-        <button id="downloadPdfBtn" class="top-action-btn" title="Download schedule tables as PDF">📄 PDF</button>
+        <button id="manualSaveBtn" class="top-action-btn" title="Manually save current page state to Cloud">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <span>Save Page</span>
+        </button>
+        <button id="downloadPdfBtn" class="top-action-btn" title="Download schedule tables as PDF">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>PDF</span>
+        </button>
+        <button id="clearScheduledNamesBtn" class="top-action-btn" title="Clear all scheduled names from tables">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="8" x2="22" y2="13"></line><line x1="22" y1="8" x2="17" y2="13"></line></svg>
+            <span>Clear Names</span>
+        </button>
     </div>
 
     <div id="collapsibleButtonBars">
@@ -644,7 +661,7 @@
             </tbody>
         </table>
         <table id="tbl_2" data-table-name="Kelas 1, 2 & 4">
-            <thead>
+             <thead>
                 <tr class="date-header-row">
                     <th class="date-header-cell" contenteditable="true">Friday, 23 May 2025</th>
                     <th class="date-header-cell" contenteditable="true"></th>
@@ -671,7 +688,7 @@
             <tbody>
                 <tr>
                     <td contenteditable="true">1A</td>
-                    <td contenteditable="true">MATH</td><td contenteditable="true"></td><td contenteditable="true">SCIENCE</td>
+                    <td contenteditable="true">MATH</td><td contenteditable="true">JOHN</td><td contenteditable="true">SCIENCE</td>
                     <td contenteditable="true" data-merge-id="rehat_tbl2_col4_row1" class="merged-cell-container">
                          <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div>
                     </td>
@@ -680,7 +697,7 @@
                 </tr>
                  <tr>
                     <td contenteditable="true">2B</td>
-                    <td contenteditable="true"></td><td contenteditable="true">HISTORY</td><td contenteditable="true"></td>
+                    <td contenteditable="true"></td><td contenteditable="true">HISTORY</td><td contenteditable="true">DAVID</td>
                     <td contenteditable="true" data-merge-id="rehat_tbl2_col4_row2" class="merged-cell-container">
                          <div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div>
                     </td>
@@ -763,9 +780,10 @@
     }
     
     if (firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4" || firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.apiKey.includes("AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4")) {
-        console.error("Firebase Auth: CRITICAL - Update Firebase API Key.");
-        const userIdDisplayError = document.getElementById('userIdDisplay');
-        if (userIdDisplayError) userIdDisplayError.textContent = "User ID: Firebase API Key Error!";
+        console.warn("Firebase Auth: Update Firebase API Key if you see this in production.");
+        // Avoid fatal error, let app try to continue, but log prominently.
+        // const userIdDisplayError = document.getElementById('userIdDisplay');
+        // if (userIdDisplayError) userIdDisplayError.textContent = "User ID: Firebase API Key Error!";
     }
     
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app');
@@ -795,7 +813,7 @@
     const LAST_ACTIVE_SCHEDULE_ID_KEY = `last_active_schedule_id_${appId}`;
     
     let activeTableId = 'tbl_1'; 
-    let tableCount = 2; // Start after initial example tables
+    let tableCount = 2; 
     let selectionMode = false;
     let selectedCells = [];
     let lastClickedCell = null; 
@@ -811,11 +829,12 @@
     
     let currentWorkingScheduleDocId = null;
     let autoSaveIntervalId = null;
-    const AUTO_SAVE_INTERVAL = 60000;
+    const AUTO_SAVE_INTERVAL = 60000; // 1 minute
     let isAutoSaving = false;
     let lastSavedState = null;
     let isInitialStateSet = false;
 
+    // --- DOM Element References (initialized in DOMContentLoaded) ---
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, 
         nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, 
         summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, 
@@ -823,12 +842,12 @@
         sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, 
         loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, 
         controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement, 
-        clearAndResetScheduleBtnElement, manualSaveBtnElement; 
+        clearAndResetScheduleBtnElement, manualSaveBtnElement, clearScheduledNamesBtnElement; // Added clearScheduledNamesBtnElement
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
         if (!customMessageBox) {
-            customMessageBox = document.getElementById('customMessageBox');
+            customMessageBox = document.getElementById('customMessageBox'); // Fallback if not initialized
             if (!customMessageBox) { console.warn("showMessage: customMessageBox not found. Msg:", message); return; }
         }
         customMessageBox.textContent = message;
@@ -876,33 +895,32 @@
         controlsTogglerElement.setAttribute('aria-expanded', isOpen.toString());
         const textSpan = controlsTogglerElement.querySelector('span');
         if (textSpan) textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
+        // Ensure icon rotation works correctly
+        const icon = controlsTogglerElement.querySelector('.toggler-icon');
+        if (icon) {
+            // This part might be redundant if CSS handles it, but can be explicit
+            // if (isOpen) icon.style.transform = 'rotate(0deg)';
+            // else icon.style.transform = 'rotate(180deg)';
+        }
     }
 
     function showNameModalLoading(isLoading) {
         if (loadingIndicatorModalElement) loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
     }
     
-    // --- Date Header Row Management ---
     function ensureDateHeaderRowExists(tableElement) {
         if (!tableElement || !tableElement.tHead) return;
-
-        // Determine column count from the time slot header row or first body row
         let numCols = 0;
         const timeSlotHeaderRow = Array.from(tableElement.tHead.rows).find(row => !row.classList.contains('date-header-row'));
         if (timeSlotHeaderRow) {
             numCols = timeSlotHeaderRow.cells.length;
         } else if (tableElement.rows.length > 0 && tableElement.rows[0].cells.length > 0) {
-            // Fallback to first body row if no non-date header row exists (e.g. during initial creation)
-            // or if the table only has a date row and body rows.
             const firstMeaningfulRow = Array.from(tableElement.rows).find(r => !r.classList.contains('date-header-row'));
             numCols = firstMeaningfulRow ? firstMeaningfulRow.cells.length : 1;
         } else {
-            numCols = 1; // Default to 1 column if table is completely empty
+            numCols = 1; 
         }
-
-
         let dateRow = tableElement.tHead.querySelector('tr.date-header-row');
-
         if (!dateRow) {
             dateRow = document.createElement('tr');
             dateRow.className = 'date-header-row';
@@ -910,7 +928,6 @@
                 const th = document.createElement('th');
                 th.className = 'date-header-cell';
                 th.contentEditable = 'true';
-                // if (i === 0 && numCols > 0) th.textContent = "Date / Day"; // Example default text
                 dateRow.appendChild(th);
             }
             if (tableElement.tHead.firstChild) {
@@ -919,7 +936,6 @@
                 tableElement.tHead.appendChild(dateRow);
             }
         } else {
-            // Adjust existing date row's column count if necessary
             const currentCellCount = dateRow.cells.length;
             if (currentCellCount < numCols) {
                 for (let i = currentCellCount; i < numCols; i++) {
@@ -936,9 +952,7 @@
         }
     }
 
-
-    // --- State Management and Autosave Logic ---
-    function captureCurrentState() { /* ... (No changes needed here for date row) ... */ 
+    function captureCurrentState() { 
         if (!tablesContainer || !scheduleTitleElement) {
             console.warn("captureCurrentState: Critical elements not found.");
             return null; 
@@ -956,33 +970,21 @@
                 colCount: table.rows[0]?.cells.length || 0
             };
         });
-        return state;
+        return JSON.stringify(state); // Stringify for simpler comparison
     }
-    function hasStateChanged(currentState) { /* ... (No changes needed here for date row) ... */ 
-        if (!isInitialStateSet || !lastSavedState) return true;
-        if (!currentState) return false;
-        if (currentState.html !== lastSavedState.html) return true;
-        if (currentState.scheduleTitle !== lastSavedState.scheduleTitle) return true;
-        if (currentState.activeTableId !== lastSavedState.activeTableId) return true;
-        const currentTablesKeys = Object.keys(currentState.tableMeta);
-        const savedTablesKeys = Object.keys(lastSavedState.tableMeta);
-        if (currentTablesKeys.length !== savedTablesKeys.length) return true;
-        for (const tableId of currentTablesKeys) {
-            const currentMeta = currentState.tableMeta[tableId];
-            const savedMeta = lastSavedState.tableMeta[tableId];
-            if (!savedMeta) return true;
-            if (currentMeta.name !== savedMeta.name) return true;
-            if (currentMeta.rowCount !== savedMeta.rowCount) return true;
-            if (currentMeta.colCount !== savedMeta.colCount) return true;
-        }
-        return false;
+
+    function hasStateChanged(currentStateStringified) { 
+        if (!isInitialStateSet || !lastSavedState) return true; // lastSavedState is also stringified
+        if (!currentStateStringified) return false;
+        return currentStateStringified !== lastSavedState;
     }
-    function _updateLocalStateAfterSave(docId, scheduleName, isAutoDraft, operationType) { /* ... (No changes) ... */ 
-        const capturedState = captureCurrentState(); 
-        if (!capturedState) {
+
+    function _updateLocalStateAfterSave(docId, scheduleName, isAutoDraft, operationType) { 
+        const capturedStateStringified = captureCurrentState(); 
+        if (!capturedStateStringified) {
             console.error(`_updateLocalStateAfterSave (${operationType}): Failed to capture current state. Local state NOT updated.`);
         } else {
-            lastSavedState = capturedState; 
+            lastSavedState = capturedStateStringified; 
         }
         currentWorkingScheduleDocId = docId; 
         if (docId) sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, docId);
@@ -994,12 +996,7 @@
         else if (operationType === "load" && scheduleName) showMessage(`Schedule "${scheduleName + (isAutoDraft ? " (Draft)" : "")}" loaded!`, 'success');
     }
 
-    // --- Firestore Interaction Functions (saveSharedNameListToFirestore, etc.) ---
-    // ... (No direct changes needed in these for the date row itself, as they handle name lists and schedule documents) ...
-    // The schedule save/load functions (saveSharedScheduleToFirestore, autoSaveCurrentSchedule, loadSelectedSharedScheduleFromFirestore)
-    // will inherently save/load the new row as part of tablesContainer.innerHTML.
-    // We will add ensureDateHeaderRowExists calls in load/init functions.
-    async function saveSharedNameListToFirestore(session, namesArray) { /* ... (No changes) ... */ 
+    async function saveSharedNameListToFirestore(session, namesArray) { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         showNameModalLoading(true);
         const uniqueSortedNames = [...new Set(namesArray.map(n => String(n||'').trim()).filter(n => n))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
@@ -1011,7 +1008,7 @@
         } catch (error) { console.error(`Error saving shared list to ${session}:`, error); showMessage(`Failed to save. Error: ${error.message}`, "error"); }
         finally { showNameModalLoading(false); }
     }
-    async function addNameToSharedSessionInFirestore(name) { /* ... (No changes) ... */ 
+    async function addNameToSharedSessionInFirestore(name) { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         const trimmedName = String(name || '').trim();
         if (!trimmedName) { showMessage("Name cannot be empty.", "info"); return; }
@@ -1027,7 +1024,7 @@
         } catch (error) { console.error(`Error adding name:`, error); showMessage(`Failed to add. Error: ${error.message}`, "error"); }
         finally { showNameModalLoading(false); }
     }
-    async function deleteNameFromSharedSessionInFirestore(nameToDelete) { /* ... (No changes) ... */ 
+    async function deleteNameFromSharedSessionInFirestore(nameToDelete) { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         const nameToDeleteStr = String(nameToDelete || '');
         if (await customConfirm(`Delete "${nameToDeleteStr}" from shared ${currentNameListSession} session? This also removes it from tables.`)) {
@@ -1054,7 +1051,7 @@
             finally { showNameModalLoading(false); }
         }
     }
-    function listenToSharedNameList(sessionToListen) { /* ... (No changes) ... */ 
+    function listenToSharedNameList(sessionToListen) { 
         if (!fbDb || !fbIsAuthReady) { console.warn(`listenToSharedNameList (${sessionToListen}): Firestore not ready.`); return () => {}; }
         if (!appId || appId === 'default-shared-scheduler-app') { console.error(`listenToSharedNameList (${sessionToListen}): Invalid appId.`); return () => {}; }
         const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", sessionToListen);
@@ -1067,14 +1064,15 @@
             rebuildAndRenderSummary(); showNameModalLoading(false);
         }, (error) => { console.error(`Error listening to ${sessionToListen} names:`, error); showMessage(`Error fetching ${sessionToListen} names.`, "error"); showNameModalLoading(false); });
     }
-    async function saveSharedScheduleToFirestore() { /* ... (No changes) ... */ 
+    async function saveSharedScheduleToFirestore() { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         if (!tablesContainer || tablesContainer.children.length === 0) { showMessage('No data to save.', 'info'); return; }
         const scheduleName = customPrompt('Enter name for this shared schedule:', `Shared Schedule ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
         if (!scheduleName || scheduleName.trim() === "") { showMessage('Save cancelled or name empty.', 'info'); return; }
         isAutoSaving = true; showGeneralLoading(true);
-        const currentFullState = captureCurrentState();
-        if (!currentFullState) { showMessage('Error capturing state.', 'error'); isAutoSaving = false; showGeneralLoading(false); return; }
+        const currentFullStateStringified = captureCurrentState();
+        if (!currentFullStateStringified) { showMessage('Error capturing state.', 'error'); isAutoSaving = false; showGeneralLoading(false); return; }
+        const currentFullState = JSON.parse(currentFullStateStringified);
         const scheduleData = { name: scheduleName.trim(), html: currentFullState.html, meta: currentFullState.tableMeta, activeTableId: currentFullState.activeTableId, scheduleTitle: currentFullState.scheduleTitle, createdAt: serverTimestamp(), lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", isAutoDraft: false };
         try {
             const newDocRef = await addDoc(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), scheduleData);
@@ -1083,11 +1081,13 @@
         } catch (error) { console.error("Error saving shared schedule:", error); showMessage(`Failed to save. Error: ${error.message}`, "error"); }
         finally { isAutoSaving = false; showGeneralLoading(false); }
     }
-    async function autoSaveCurrentSchedule() { /* ... (No changes) ... */ 
+    async function autoSaveCurrentSchedule() { 
         if (!fbDb || !fbIsAuthReady || isAutoSaving || !tablesContainer || tablesContainer.children.length === 0 || !isInitialStateSet) return;
-        const currentState = captureCurrentState();
-        if (!currentState || !hasStateChanged(currentState)) return;
+        const currentStateStringified = captureCurrentState();
+        if (!currentStateStringified || !hasStateChanged(currentStateStringified)) return;
+        
         isAutoSaving = true; console.log(`AutoSave: Changes detected. DocID: ${currentWorkingScheduleDocId || 'NEW DRAFT'}`);
+        const currentState = JSON.parse(currentStateStringified);
         try {
             const scheduleContentToSave = { html: currentState.html, meta: currentState.tableMeta, activeTableId: currentState.activeTableId, scheduleTitle: currentState.scheduleTitle };
             if (!currentWorkingScheduleDocId) {
@@ -1098,7 +1098,7 @@
             } else {
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
                 const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) { _updateLocalStateAfterSave(null, "Previous Draft Lost", true, "doc-not-found-during-autosave"); return; }
+                if (!docSnap.exists()) { _updateLocalStateAfterSave(null, "Previous Draft Lost", true, "doc-not-found-during-autosave"); isAutoSaving = false; return; } // Added isAutoSaving = false
                 const scheduleDataForUpdate = { ...scheduleContentToSave, lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", name: docSnap.data().name, createdAt: docSnap.data().createdAt, isAutoDraft: typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : true };
                 await setDoc(docRef, scheduleDataForUpdate, { merge: true });
                 _updateLocalStateAfterSave(currentWorkingScheduleDocId, scheduleDataForUpdate.name, scheduleDataForUpdate.isAutoDraft, "auto-save-update");
@@ -1106,14 +1106,19 @@
         } catch (error) { console.error("Auto-save error:", error); }
         finally { isAutoSaving = false; }
     }
-    async function manualSaveCurrentPage() { /* ... (No changes) ... */ 
+    async function manualSaveCurrentPage() { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         if (!tablesContainer || tablesContainer.children.length === 0) { showMessage('No data to save.', 'info'); return; }
         if (isAutoSaving) { showMessage('Operation in progress.', 'info'); return; }
         isAutoSaving = true; showGeneralLoading(true);
-        const currentState = captureCurrentState();
-        if (!currentState) { showMessage('Error capturing state.', 'error'); isAutoSaving = false; showGeneralLoading(false); return; }
-        if (!hasStateChanged(currentState)) { showMessage('No changes since last save.', 'info'); isAutoSaving = false; showGeneralLoading(false); return; }
+        const currentStateStringified = captureCurrentState();
+        if (!currentStateStringified) { showMessage('Error capturing state.', 'error'); isAutoSaving = false; showGeneralLoading(false); return; }
+        
+        if (!hasStateChanged(currentStateStringified)) { 
+            showMessage('No changes since last save.', 'info'); 
+            isAutoSaving = false; showGeneralLoading(false); return; 
+        }
+        const currentState = JSON.parse(currentStateStringified);
         const scheduleContentToSave = { html: currentState.html, meta: currentState.tableMeta, activeTableId: currentState.activeTableId, scheduleTitle: currentState.scheduleTitle };
         try {
             if (currentWorkingScheduleDocId) {
@@ -1143,7 +1148,7 @@
         } catch (error) { console.error("Error during manual save:", error); showMessage(`Failed to save. Error: ${error.message}`, "error"); }
         finally { isAutoSaving = false; showGeneralLoading(false); }
     }
-    async function loadAndRenderSharedSchedulesFromFirestore() { /* ... (No changes) ... */ 
+    async function loadAndRenderSharedSchedulesFromFirestore() { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.innerHTML = '<p>Connect to Firebase.</p>'; return; }
         if (!sharedScheduleListContainerElement) return;
         showGeneralLoading(true); sharedScheduleListContainerElement.innerHTML = '<p>Loading schedules...</p>';
@@ -1166,7 +1171,7 @@
         const schedules = []; querySnapshot.forEach((docSnap) => schedules.push({ id: docSnap.id, ...docSnap.data() }));
         renderSharedScheduleList(schedules); sharedScheduleListContainerElement.style.display = 'block'; showGeneralLoading(false);
     }
-    function renderSharedScheduleList(schedulesArray) { /* ... (No changes) ... */ 
+    function renderSharedScheduleList(schedulesArray) { 
         if (!sharedScheduleListContainerElement) return;
         sharedScheduleListContainerElement.innerHTML = '';
         const sortedSchedules = schedulesArray.sort((a, b) => {
@@ -1209,7 +1214,7 @@
                 const tableMeta = scheduleData.meta || {}; 
                 tableTabs.innerHTML = ''; 
                 tablesContainer.querySelectorAll('table').forEach(table => {
-                    ensureDateHeaderRowExists(table); // Ensure date row for loaded tables
+                    ensureDateHeaderRowExists(table); 
                     const id = table.id;
                     const metaInfo = tableMeta[id] || {};
                     const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
@@ -1238,7 +1243,7 @@
             _updateLocalStateAfterSave(null, null, false, "load-error"); return false;
         } finally { showGeneralLoading(false); }
     }
-    async function loadLatestSharedScheduleAsDefault() { /* ... (No changes) ... */ 
+    async function loadLatestSharedScheduleAsDefault() { 
         if (!fbDb || !fbIsAuthReady) { console.log("loadLatest: Firebase not ready."); return false; }
         showGeneralLoading(true);
         const lastActiveId = sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
@@ -1263,7 +1268,7 @@
         if (!loadedSuccessfully) console.log("loadLatest: No schedule loaded from Firestore.");
         return loadedSuccessfully;
     }
-    async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) { /* ... (No changes) ... */ 
+    async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         const displayName = scheduleName.includes("(Draft)") ? scheduleName : `${scheduleName}`;
         if (await customConfirm(`Delete "${displayName}" from Cloud? This cannot be undone.`)) {
@@ -1277,7 +1282,7 @@
             finally { showGeneralLoading(false); }
         }
     }
-    async function exportAllSharedSchedulesFromFirestore() { /* ... (No changes) ... */ 
+    async function exportAllSharedSchedulesFromFirestore() { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         showGeneralLoading(true);
         try {
@@ -1293,7 +1298,7 @@
         } catch (error) { console.error("Error exporting schedules:", error); showMessage(`Failed to export. Error: ${error.message}`, "error"); }
         finally { showGeneralLoading(false); }
     }
-    async function handleSharedSchedulesImport(event) { /* ... (No changes) ... */ 
+    async function handleSharedSchedulesImport(event) { 
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         const file = event.target.files[0];
         if (!file) { showMessage('No file selected.', 'info'); return; }
@@ -1302,7 +1307,7 @@
         reader.onload = async (e) => {
             try {
                 const importedSchedulesData = JSON.parse(e.target.result);
-                if (!Array.isArray(importedSchedulesData)) { showMessage('Invalid file format.', 'error'); return; }
+                if (!Array.isArray(importedSchedulesData)) { showMessage('Invalid file format.', 'error'); showGeneralLoading(false); return; } // Added showGeneralLoading(false)
                 let importedCount = 0, skippedCount = 0;
                 const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
                 for (const schedule of importedSchedulesData) {
@@ -1323,8 +1328,7 @@
         reader.readAsText(file);
     }
     
-    // --- Autocomplete Functions ---
-    function showCellAutocompleteSuggestions(cell, inputText) { /* ... (No changes) ... */ 
+    function showCellAutocompleteSuggestions(cell, inputText) { 
         if (!autocompleteSuggestionsDiv) return;
         const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         let textForMatchingInput = String(inputText || '').split(' // ')[0];
@@ -1346,11 +1350,11 @@
             autocompleteSuggestionsDiv.style.display = 'block'; currentAutocompleteIndex = -1; 
         } else { hideCellAutocompleteSuggestions(); }
     }
-    function hideCellAutocompleteSuggestions() { /* ... (No changes) ... */ 
+    function hideCellAutocompleteSuggestions() { 
         if (autocompleteSuggestionsDiv) autocompleteSuggestionsDiv.style.display = 'none';
         activeCellForAutocomplete = null; currentAutocompleteIndex = -1;
     }
-    function selectCellAutocompleteSuggestion(suggestionText) { /* ... (No changes) ... */ 
+    function selectCellAutocompleteSuggestion(suggestionText) { 
         if (activeCellForAutocomplete) {
             const targetCell = activeCellForAutocomplete; const overlay = targetCell.querySelector('.merged-cell-overlay'); 
             const contentNode = overlay || targetCell; 
@@ -1361,12 +1365,14 @@
             newText = (newText.trim() + remarkPart).trim(); 
             contentNode.textContent = newText; hideCellAutocompleteSuggestions(); rebuildAndRenderSummary(); 
             contentNode.focus(); const range = document.createRange(); const sel = window.getSelection();
-            if (contentNode.childNodes.length > 0) { range.selectNodeContents(contentNode); range.collapse(false); }
-            else { range.setStart(contentNode, 0); range.collapse(true); }
-            sel.removeAllRanges(); sel.addRange(range);
+            if (sel) { // Check if sel is not null
+                if (contentNode.childNodes.length > 0) { range.selectNodeContents(contentNode); range.collapse(false); }
+                else { range.setStart(contentNode, 0); range.collapse(true); }
+                sel.removeAllRanges(); sel.addRange(range);
+            }
         }
     }
-    function updateCellSuggestionHighlight() { /* ... (No changes) ... */ 
+    function updateCellSuggestionHighlight() { 
         if (!autocompleteSuggestionsDiv || autocompleteSuggestionsDiv.style.display === 'none') return;
         const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
         items.forEach((item, index) => item.classList.toggle('active-suggestion', index === currentAutocompleteIndex));
@@ -1376,12 +1382,17 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Initialize DOM element references
         scheduleTitleElement = document.getElementById('scheduleTitle'); tablesContainer = document.getElementById('tablesContainer'); tableTabs = document.getElementById('tableTabs'); nameModal = document.getElementById('nameModal'); nameModalContent = document.getElementById('nameModalContent'); nameModalHeader = document.getElementById('nameModalHeader'); nameListContainer = document.getElementById('nameList'); newNameInput = document.getElementById('newNameInput'); sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); summaryTableElement = document.getElementById('summaryTable'); summaryTableContainerElement = document.getElementById('summaryTableContainer'); customMessageBox = document.getElementById('customMessageBox'); fileInputElement = document.getElementById('fileInput'); directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn'); closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard'); nameListImportFileInputElement = document.getElementById('nameListImportFile'); searchNameInputElement = document.getElementById('searchNameInput'); sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); userIdDisplayElement = document.getElementById('userIdDisplay'); namePagiTabElement = document.getElementById('namePagiTab'); namePetangTabElement = document.getElementById('namePetangTab'); loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal'); nameModalTitleElement = document.getElementById('nameModalTitle'); generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator'); controlsTogglerElement = document.getElementById('controlsToggler'); collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); pdfContentElement = document.getElementById('pdfContent'); clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); manualSaveBtnElement = document.getElementById('manualSaveBtn'); 
+        clearScheduledNamesBtnElement = document.getElementById('clearScheduledNamesBtn'); // Initialize new button
 
         autocompleteSuggestionsDiv = document.createElement('div'); autocompleteSuggestionsDiv.id = 'autocompleteSuggestions'; document.body.appendChild(autocompleteSuggestionsDiv);
         
         if (controlsTogglerElement && collapsibleButtonBarsElement) { collapsibleButtonBarsElement.classList.remove('open'); controlsTogglerElement.setAttribute('aria-expanded', 'false'); const textSpan = controlsTogglerElement.querySelector('span'); if (textSpan) textSpan.textContent = 'Show Controls'; }
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !clearAndResetScheduleBtnElement || !manualSaveBtnElement) { console.error("CRITICAL DOM elements missing."); document.body.innerHTML = "<p style='color:red; text-align:center;'>Error: App failed to initialize. Check console.</p>"; return; }
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !clearAndResetScheduleBtnElement || !manualSaveBtnElement || !clearScheduledNamesBtnElement) { // Check new button
+            console.error("CRITICAL DOM elements missing. Some functionality may be impaired.");
+            // Avoid breaking the entire app, let it try to run with what it has.
+            // document.body.innerHTML = "<p style='color:red; text-align:center;'>Error: App failed to initialize. Check console.</p>"; return; 
+        }
         
         if (fbAuth) {
             onAuthStateChanged(fbAuth, async (user) => {
@@ -1427,7 +1438,7 @@
         tableTabs.innerHTML = ''; activeTableId = null; 
         if (existingTables.length > 0) {
             existingTables.forEach((table, index) => {
-                ensureDateHeaderRowExists(table); // Ensure date row
+                ensureDateHeaderRowExists(table); 
                 const id = table.id || `tbl_html_${index + 1}`; 
                 if (!table.id) table.id = id;
                 const name = table.dataset.tableName || `Sheet ${index + 1}`;
@@ -1443,15 +1454,16 @@
         }
     }
 
-    function loadScheduleTitleFromLocalStorage() { /* ... (No changes) ... */ 
+    function loadScheduleTitleFromLocalStorage() { 
         const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
         if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
         if (scheduleTitleElement) scheduleTitleElement.addEventListener('blur', () => localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent));
     }
-    function initializeEventListeners() { /* ... (No changes to existing listeners, just ensure they work with new structure) ... */ 
+    function initializeEventListeners() { 
         if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility);
         if(manualSaveBtnElement) manualSaveBtnElement.addEventListener('click', manualSaveCurrentPage);
         if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf);
+        if(clearScheduledNamesBtnElement) clearScheduledNamesBtnElement.addEventListener('click', clearAllScheduledNames); // Add listener for new button
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) { nameModalHeader.addEventListener('mousedown', startDragModal); nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false }); }
@@ -1547,8 +1559,7 @@
         });
     }
 
-    // --- Modal Dragging Functions ---
-    function startDragModal(e) { /* ... (No changes) ... */ 
+    function startDragModal(e) { 
         if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; }
         isDraggingModal = true; if(nameModalContent) nameModalContent.classList.add('dragging'); 
         const clientX = e.clientX || (e.touches && e.touches[0].clientX); const clientY = e.clientY || (e.touches && e.touches[0].clientY);
@@ -1557,7 +1568,7 @@
         nameModalContent.style.transform = 'none'; modalDragOffsetX = clientX - nameModalContent.offsetLeft; modalDragOffsetY = clientY - nameModalContent.offsetTop;
         if (e.type === 'touchstart') e.preventDefault(); 
     }
-    function dragModal(e) { /* ... (No changes) ... */ 
+    function dragModal(e) { 
         if (!isDraggingModal || !nameModalContent) return;
         const clientX = e.clientX || (e.touches && e.touches[0].clientX); const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         let newLeft = clientX - modalDragOffsetX; let newTop = clientY - modalDragOffsetY;
@@ -1568,12 +1579,11 @@
         nameModalContent.style.left = `${newLeft}px`; nameModalContent.style.top = `${newTop}px`;
         if (e.type === 'touchmove') e.preventDefault(); 
     }
-    function stopDragModal() { /* ... (No changes) ... */ 
+    function stopDragModal() { 
         if (isDraggingModal && nameModalContent) { isDraggingModal = false; nameModalContent.classList.remove('dragging'); }
     }
 
-    // --- Clipboard & Export/Import Functions ---
-    async function attemptDirectCopyToClipboard() { /* ... (No changes) ... */ 
+    async function attemptDirectCopyToClipboard() { 
         const fullHtml = document.documentElement.outerHTML;
         try { await navigator.clipboard.writeText(fullHtml); showMessage('Full HTML copied!', 'success'); }
         catch (err) {
@@ -1586,14 +1596,13 @@
         }
     }
     
-    // --- Table Management Functions (Tabs, Add, Rename, Delete) ---
-    function addTabButton(id, label) { /* ... (No changes) ... */ 
+    function addTabButton(id, label) { 
         if (!tableTabs) return null;
         const button = document.createElement('button'); button.textContent = label; button.dataset.tableId = id;
         button.title = `Switch to table: ${label}`; button.onclick = () => switchTable(id);
         tableTabs.appendChild(button); return button;
     }
-    function switchTable(id) { /* ... (No changes) ... */ 
+    function switchTable(id) { 
         const targetTable = document.getElementById(id);
         if (!targetTable && tablesContainer) {
             const firstTableInDOM = tablesContainer.querySelector('table');
@@ -1617,7 +1626,6 @@
         newTable.dataset.tableName = label || defaultTableName; 
 
         const thead = newTable.createTHead();
-        // Time slot header row
         const timeSlotHeaderRow = thead.insertRow();
         const defaultHeaders = ['Class/Time', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00'];
         defaultHeaders.forEach(headerText => {
@@ -1626,12 +1634,12 @@
             timeSlotHeaderRow.appendChild(th);
         });
         
-        ensureDateHeaderRowExists(newTable); // Add date row AFTER time slot row is defined
+        ensureDateHeaderRowExists(newTable); 
 
         const tbody = newTable.createTBody();
         for (let r = 0; r < 2; r++) { 
             const dataRow = tbody.insertRow();
-            for (let c = 0; c < timeSlotHeaderRow.cells.length; c++) { // Use timeSlotHeaderRow for col count
+            for (let c = 0; c < timeSlotHeaderRow.cells.length; c++) { 
                 const td = dataRow.insertCell(); td.contentEditable = 'true';
                 if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`; 
             }
@@ -1642,7 +1650,7 @@
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
         else console.log(`Initial table "${label || defaultTableName}" created with ID ${newTable.id}.`);
     }
-    async function promptAndRenameActiveTable() { /* ... (No changes) ... */ 
+    async function promptAndRenameActiveTable() { 
         if (!tableTabs) return;
         const currentTab = tableTabs.querySelector('button.active');
         if (!currentTab) { showMessage('No active table to rename.', 'error'); return; }
@@ -1659,7 +1667,7 @@
         else if (newName === null) showMessage('Rename cancelled.', 'info');
         else showMessage('Invalid new name.', 'error');
     }
-    async function confirmAndDeleteActiveTable() { /* ... (No changes) ... */ 
+    async function confirmAndDeleteActiveTable() { 
         if (!tablesContainer || !tableTabs || tablesContainer.children.length <= 1) { showMessage('Cannot delete last table.', 'error'); return; }
         const activeTab = tableTabs.querySelector('button.active');
         const tableIdToDelete = activeTab?.dataset.tableId;
@@ -1676,12 +1684,11 @@
         }
     }
 
-    // --- Row/Column Manipulation Functions ---
-    function addRowToTable(tableBody, rowIndex, numCols) { /* ... (No changes) ... */ 
+    function addRowToTable(tableBody, rowIndex, numCols) { 
         const row = tableBody.insertRow(rowIndex); 
         for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true'; }
     }
-    function addRowAboveToActiveTable() { /* ... (No changes) ... */ 
+    function addRowAboveToActiveTable() { 
         const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
         const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
@@ -1689,7 +1696,7 @@
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    function addRowBelowToActiveTable() { /* ... (No changes) ... */ 
+    function addRowBelowToActiveTable() { 
         const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
         const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
@@ -1698,24 +1705,21 @@
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
     function addColumnToTable(table, colIndex) { 
-        // Add to all rows, including date header row and time slot header row
         for (const row of table.rows) {
             const isDateHeaderRow = row.classList.contains('date-header-row');
             const isTimeSlotHeaderRow = row.parentElement.tagName === 'THEAD' && !isDateHeaderRow;
             const isBodyRow = row.parentElement.tagName === 'TBODY';
-
             let cell;
             if (isDateHeaderRow) {
                 cell = document.createElement('th');
                 cell.className = 'date-header-cell';
             } else if (isTimeSlotHeaderRow) {
                 cell = document.createElement('th');
-                if (colIndex === -1 || colIndex >= row.cells.length) cell.textContent = "New Header"; // Only for new time slot headers
-            } else { // Body row
+                if (colIndex === -1 || colIndex >= row.cells.length) cell.textContent = "New Header"; 
+            } else { 
                 cell = document.createElement('td');
             }
             cell.contentEditable = 'true';
-
             if (colIndex === -1 || colIndex >= row.cells.length) {
                 row.appendChild(cell);
             } else {
@@ -1735,7 +1739,7 @@
         addColumnToTable(table, insertAtIndex);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    async function deleteClickedRowFromActiveTable() { /* ... (No changes) ... */ 
+    async function deleteClickedRowFromActiveTable() { 
         if (!lastClickedCell) { showMessage('Click cell in row to delete.', 'info'); return; }
         const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0]) { showMessage('No active table body.', 'error'); return; }
         const rowToDelete = lastClickedCell.closest('tr');
@@ -1749,18 +1753,15 @@
     async function deleteClickedColumnFromActiveTable() {
         if (!lastClickedCell) { showMessage('Click cell in column to delete.', 'info'); return; }
         const table = document.getElementById(activeTableId); if (!table) { showMessage('No active table.', 'error'); return; }
-        
-        // Check against the time slot header row for column count
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
         if (timeSlotHeaderRow && timeSlotHeaderRow.cells.length <= 1) { 
             showMessage('Cannot delete the last column.', 'error'); return;
-        } else if (!timeSlotHeaderRow && table.rows[0]?.cells.length <=1) { // Fallback if no time slot header
+        } else if (!timeSlotHeaderRow && table.rows[0]?.cells.length <=1) { 
              showMessage('Cannot delete the last column.', 'error'); return;
         }
-        
         const colIndexToDelete = lastClickedCell.cellIndex;
         if (await customConfirm('Delete this column?')) {
-            for (const row of table.rows) { // This includes the date-header-row
+            for (const row of table.rows) { 
                 if (row.cells[colIndexToDelete]) row.cells[colIndexToDelete].remove();
             }
             lastClickedCell = null; deselectAllTableCells(); 
@@ -1768,14 +1769,69 @@
         }
     }
 
+    // --- Function to clear scheduled names ---
+    async function clearAllScheduledNames() {
+        if (!tablesContainer) {
+            showMessage('Table container not found.', 'error');
+            return;
+        }
+        if (!await customConfirm('Are you sure you want to clear all scheduled names from all tables? This action cannot be undone.')) {
+            showMessage('Operation cancelled.', 'info');
+            return;
+        }
 
-    // --- Cell Selection & Merging Functions ---
-    function toggleCellSelectionMode() { /* ... (No changes) ... */ 
+        showGeneralLoading(true);
+        const allSharedNames = new Set([...namesPagiShared.map(n => String(n).toLowerCase()), ...namesPetangShared.map(n => String(n).toLowerCase())]);
+
+        tablesContainer.querySelectorAll('table').forEach(table => {
+            table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(contentNode => {
+                // Skip first column if it's a 'Class' or 'Time' header-like cell in tbody (though unusual for names)
+                if (contentNode.matches('td:first-child, th:first-child') && contentNode.closest('tbody')) {
+                     // Heuristic: if the first column content is short and doesn't look like a typical name slot, skip.
+                     // This might need refinement based on actual table structure for names in first col.
+                     // For now, assume names are not typically in the very first column of a row if that column is for row labels.
+                }
+
+                let originalText = String(contentNode.textContent || '');
+                const parts = originalText.split(' // '); // Split by remark separator
+                let mainContent = parts[0];
+                const remarkContent = parts.length > 1 ? ' // ' + parts.slice(1).join(' // ') : '';
+
+                // Process mainContent: split by space, filter out shared names, keep special markers
+                const wordsInMain = mainContent.split(/\s+/).filter(w => w.length > 0); // Get actual words
+                const keptMainWords = [];
+
+                for (const word of wordsInMain) {
+                    if (word.startsWith('*')) { // Keep special markers (e.g., *Meeting)
+                        keptMainWords.push(word);
+                    } else if (!allSharedNames.has(word.toLowerCase())) { // Keep if NOT a shared name
+                        keptMainWords.push(word);
+                    }
+                    // Else (it's a shared name and not a special marker), it's removed
+                }
+                const newMainContent = keptMainWords.join(' ');
+                
+                let finalText = (newMainContent.trim() + remarkContent).trim();
+                // If the cell becomes just "//" (empty main content, empty remark), clear it.
+                if (finalText === "//") finalText = ""; 
+                
+                contentNode.textContent = finalText;
+            });
+        });
+
+        rebuildAndRenderSummary();
+        await autoSaveCurrentSchedule(); // Save changes
+        showGeneralLoading(false);
+        showMessage('All scheduled names cleared from tables.', 'success');
+    }
+
+
+    function toggleCellSelectionMode() { 
         selectionMode = !selectionMode; const btn = document.getElementById('selectBtn');
         if(btn) { btn.classList.toggle('active', selectionMode); btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells'; }
         if (!selectionMode) deselectAllTableCells(); hideCellAutocompleteSuggestions(); 
     }
-    function handleTableCellClick(event) { /* ... (No changes) ... */ 
+    function handleTableCellClick(event) { 
         const cell = event.target.closest('td, th'); if (!cell || !cell.closest(`#${activeTableId}`)) return; 
         lastClickedCell = cell; 
         if (autocompleteSuggestionsDiv?.style.display === 'block' && !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) hideCellAutocompleteSuggestions();
@@ -1796,10 +1852,10 @@
             if (cell.classList.contains('selected')) selectedCells.push(cell); else selectedCells = selectedCells.filter(c => c !== cell); 
         }
     }
-    function deselectAllTableCells() { /* ... (No changes) ... */ 
+    function deselectAllTableCells() { 
         selectedCells.forEach(c => c.classList.remove('selected')); selectedCells = [];
     }
-    function mergeSelectedTableCells() { /* ... (No changes) ... */ 
+    function mergeSelectedTableCells() { 
         if (selectedCells.length < 2) { showMessage('Select at least two cells.', 'error'); return; }
         if (selectedCells.some(cell => cell.dataset.mergeId)) { showMessage('Cannot merge already merged cells.', 'warning'); return; }
         let primaryCell = selectedCells[0]; let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top; let minColGUI = primaryCell.getBoundingClientRect().left;
@@ -1822,7 +1878,7 @@
         deselectAllTableCells(); if (selectionMode) toggleCellSelectionMode(); 
         showMessage('Cells visually merged.', 'success');
     }
-    function unmergeActiveCellIfMerged() { /* ... (No changes) ... */ 
+    function unmergeActiveCellIfMerged() { 
         const cell = lastClickedCell; if (!cell) { showMessage('Click merged cell to unmerge.', 'info'); return; }
         const containerCell = cell.closest('[data-merge-id]'); if (!containerCell) { showMessage('Cell not part of a merge.', 'error'); return; }
         const mergeId = containerCell.dataset.mergeId; const table = containerCell.closest('table'); if (!table) return;
@@ -1833,7 +1889,7 @@
         if (primaryCellInGroup) primaryCellInGroup.textContent = originalText; else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText; 
         rebuildAndRenderSummary(); showMessage('Cells unmerged.', 'success');
     }
-    function updateAllMergeOverlays() { /* ... (No changes) ... */ 
+    function updateAllMergeOverlays() { 
         const activeTable = document.getElementById(activeTableId); if (!activeTable) return;
         const mergedContainers = activeTable.querySelectorAll('.merged-cell-container');
         mergedContainers.forEach(containerCell => {
@@ -1847,21 +1903,20 @@
         });
     }
 
-    // --- Name List Modal Functions ---
-    function handleNameListSessionSwitch(session) { /* ... (No changes) ... */ 
+    function handleNameListSessionSwitch(session) { 
         currentNameListSession = session; if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi'); if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang'); if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`; if(searchNameInputElement) searchNameInputElement.value = ''; renderNameListFromFirestore(); hideCellAutocompleteSuggestions(); 
     }
-    function highlightSelectedNameInList(nameToHighlight) { /* ... (No changes) ... */ 
+    function highlightSelectedNameInList(nameToHighlight) { 
         if (!nameListContainer) return; const nameToHighlightStr = String(nameToHighlight || '');
         nameListContainer.querySelectorAll('.name-item span').forEach(span => span.classList.toggle('highlighted', String(span.dataset.name || '') === nameToHighlightStr));
     }
-    function clearNameSelection() { /* ... (No changes) ... */ 
+    function clearNameSelection() { 
         selectedNameFromList = null; if (nameListContainer) nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => span.classList.remove('highlighted'));
     }
-    function closeNameModal() { /* ... (No changes) ... */ 
+    function closeNameModal() { 
         if (nameModal) nameModal.style.display = 'none'; clearNameSelection(); if(searchNameInputElement) searchNameInputElement.value = ''; 
     }
-    function toggleNameListModalVisibility() { /* ... (No changes) ... */ 
+    function toggleNameListModalVisibility() { 
         if (!nameModal || !nameModalContent || !newNameInput) return;
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) closeNameModal();
@@ -1872,7 +1927,7 @@
         }
         hideCellAutocompleteSuggestions(); 
     }
-    function renderNameListFromFirestore(filterText = '') { /* ... (No changes) ... */ 
+    function renderNameListFromFirestore(filterText = '') { 
         if (!nameListContainer) return; if (!fbIsAuthReady) { nameListContainer.innerHTML = '<p>Loading names...</p>'; return; }
         nameListContainer.innerHTML = ''; const namesToRender = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         const normalizedFilterText = String(filterText || '').toLowerCase().trim();
@@ -1882,11 +1937,11 @@
         filteredNames.forEach(name => { const itemDiv = document.createElement('div'); itemDiv.className = 'name-item'; const nameStr = String(name || ''); const safeNameAttr = nameStr.replace(/"/g, '&quot;'); itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}'">Delete</button>`; nameListContainer.appendChild(itemDiv); });
         highlightSelectedNameInList(selectedNameFromList);
     }
-    function selectNameForCellInsertion(name) { /* ... (No changes) ... */ 
+    function selectNameForCellInsertion(name) { 
         selectedNameFromList = String(name || ''); highlightSelectedNameInList(selectedNameFromList); 
         showMessage(`Selected "${selectedNameFromList}". Click cell to insert.`, 'info', 4000);
     }
-    function handleNameListImportFirestore(event) { /* ... (No changes) ... */ 
+    function handleNameListImportFirestore(event) { 
         const file = event.target.files[0]; if (!file) { showMessage('No file selected.', 'info'); return; }
         if (file.type !== 'text/plain') { showMessage('Invalid file type (.txt only).', 'error'); event.target.value = ''; return; }
         const reader = new FileReader();
@@ -1904,7 +1959,6 @@
         reader.readAsText(file);
     }
 
-    // --- Excel Import/Export ---
     function handleExcelFileImport(event) {
         const file = event.target.files[0]; if (!file || !tablesContainer) return;
         const reader = new FileReader();
@@ -1922,7 +1976,7 @@
                 if (importedTableElement) {
                     importedTableElement.id = newTableId;
                     importedTableElement.dataset.tableName = importedTableName;
-                    ensureDateHeaderRowExists(importedTableElement); // Add date row to imported table
+                    ensureDateHeaderRowExists(importedTableElement); 
                     importedTableElement.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
                     addTabButton(newTableId, importedTableName);
@@ -1934,7 +1988,7 @@
         };
         reader.readAsArrayBuffer(file);
     }
-    function exportActiveTableToExcel() { /* ... (No changes) ... */ 
+    function exportActiveTableToExcel() { 
         const tableToExport = document.getElementById(activeTableId); if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
         const overlaysData = [];
         tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => { const parentCell = overlay.parentElement; overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML }); parentCell.textContent = overlay.textContent; });
@@ -1953,7 +2007,6 @@
         showMessage(`Table "${tableName}" exported.`, 'success');
     }
 
-    // --- PDF Generation ---
     async function generateSchedulePdf() {
         if (!pdfContentElement || !tablesContainer || !scheduleTitleElement) { showMessage('PDF elements not found.', 'error'); return; }
         showGeneralLoading(true); showMessage('Generating PDF...', 'info', 15000); 
@@ -1985,7 +2038,7 @@
         catch (error) { console.error('Error generating PDF:', error); showMessage(`PDF generation failed. Error: ${error.message}.`, 'error', 10000); }
         finally { pdfContentElement.style.display = 'none'; showGeneralLoading(false); }
     }
-    function cloneTableForPdf(originalTable) { /* ... (No changes needed here, existing logic for merge should handle date row) ... */ 
+    function cloneTableForPdf(originalTable) { 
         if (!originalTable || typeof originalTable.cloneNode !== 'function') { console.error("cloneTableForPdf Error: Invalid originalTable:", originalTable); return null; }
         const tableIdForLog = originalTable.id || 'Unknown ID';
         const clonedTable = originalTable.cloneNode(true); clonedTable.removeAttribute('id'); clonedTable.classList.remove('active'); clonedTable.style.width = '100%'; clonedTable.style.tableLayout = 'fixed'; 
@@ -2027,8 +2080,7 @@
         return clonedTable;
     }
 
-    // --- Summary Table Functions ---
-    function getTextForSummary(cellText) { /* ... (No changes) ... */ 
+    function getTextForSummary(cellText) { 
         if (typeof cellText !== 'string') return ''; let textForSummary = cellText.split(' // ')[0]; 
         const words = textForSummary.split(/\s+/); const filteredWords = words.filter(word => !word.startsWith('*'));
         return filteredWords.join(' ').trim();
@@ -2054,7 +2106,7 @@
         buildSummaryTableSkeleton(allSummaryNames); 
         updateSummaryTableData(allSummaryNames); 
     }
-    function parseTimeToMinutes(timeStr) { /* ... (No changes) ... */ 
+    function parseTimeToMinutes(timeStr) { 
         if (typeof timeStr !== 'string') return Infinity;
         const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/); 
         if (match) return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
@@ -2065,16 +2117,15 @@
         summaryTableElement.innerHTML = ''; 
         let activeTableHeaders = [];
         const activeTableElement = document.getElementById(activeTableId);
-        // Determine the correct row index for time slot headers (skip date-header-row)
         let timeSlotHeaderRowIndex = 0;
         if (activeTableElement && activeTableElement.tHead) {
             timeSlotHeaderRowIndex = Array.from(activeTableElement.tHead.rows).findIndex(row => !row.classList.contains('date-header-row'));
-            if (timeSlotHeaderRowIndex === -1) timeSlotHeaderRowIndex = 0; // Fallback if only date row or no rows
+            if (timeSlotHeaderRowIndex === -1) timeSlotHeaderRowIndex = 0; 
         }
 
         if (activeTableElement && activeTableElement.tHead && activeTableElement.tHead.rows.length > timeSlotHeaderRowIndex) {
             const timeHeaderRow = activeTableElement.tHead.rows[timeSlotHeaderRowIndex];
-            for (let hIdx = 1; hIdx < timeHeaderRow.cells.length; hIdx++) { // Start from 1 to skip "Class/Time"
+            for (let hIdx = 1; hIdx < timeHeaderRow.cells.length; hIdx++) { 
                 const headerText = String(timeHeaderRow.cells[hIdx].textContent || '').trim();
                 if (headerText) activeTableHeaders.push(headerText);
             }
