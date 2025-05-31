@@ -14,14 +14,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 10px; /* Reduced body padding for smaller screens */
             box-sizing: border-box;
+            min-height: 100vh;
         }
         .main-container {
             width: 100%;
             max-width: 1400px;
             background-color: #ffffff;
-            padding: 25px;
+            padding: 20px; /* Adjusted padding */
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0,0,0,0.08);
             box-sizing: border-box;
@@ -31,8 +32,8 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        #scheduleTitle { /* This is "Jadual Anjal" */
-            font-size: 2.2em;
+        #scheduleTitle { 
+            font-size: 2em; /* Slightly adjusted */
             color: #0056b3;
             border-bottom: 2px solid #0056b3;
             padding-bottom: 10px;
@@ -41,34 +42,78 @@
             text-align: center;
             font-size: 0.9em;
             color: #555;
-            margin-bottom: 20px;
+            margin-bottom: 15px; 
             min-height: 1.2em;
+            word-break: break-all; /* Ensure UserID wraps if too long */
         }
 
-        #controlsToggler {
+        /* --- Top Action Buttons Bar --- */
+        #topActionButtonsBar {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 15px;
-            font-size: 1em;
+            flex-wrap: wrap; /* Allow buttons to wrap */
+            gap: 8px; 
+            align-items: stretch; /* Make buttons same height */
+            justify-content: center; 
+            margin-bottom: 20px; 
+            width: 100%;
+        }
+
+        .top-action-btn {
+            padding: 10px 15px; /* Consistent padding */
+            font-size: 0.9em; 
             font-weight: 500;
-            border-radius: 6px;
+            border-radius: 8px; /* More rounded */
             cursor: pointer;
-            border: 1px solid #007bff;
-            background-color: #007bff;
-            color: white;
-            margin-bottom: 15px;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-            width: auto;
+            border: 1px solid transparent; /* Transparent border initially */
+            color: #ffffff; /* White text for better contrast on gradient */
+            transition: all 0.25s ease-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center; /* Center content within button */
+            gap: 8px; 
+            white-space: nowrap; 
+            flex-grow: 1; /* Allow buttons to grow */
+            flex-basis: 150px; /* Minimum base width before wrapping */
+            text-align: center;
         }
-        #controlsToggler:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
+
+        #controlsToggler.top-action-btn {
+            background-image: linear-gradient(to right, #007bff 0%, #0056b3 100%);
         }
+        #controlsToggler.top-action-btn:hover {
+            background-image: linear-gradient(to right, #0069d9 0%, #004085 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+
+        #manualSaveBtn.top-action-btn {
+            background-image: linear-gradient(to right, #17a2b8 0%, #117a8b 100%);
+        }
+        #manualSaveBtn.top-action-btn:hover {
+            background-image: linear-gradient(to right, #138496 0%, #0c6270 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+
+        #downloadPdfBtn.top-action-btn {
+             background-image: linear-gradient(to right, #28a745 0%, #1e7e34 100%);
+        }
+        #downloadPdfBtn.top-action-btn:hover {
+             background-image: linear-gradient(to right, #218838 0%, #155724 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+        
+        .top-action-btn:active {
+            transform: translateY(0px);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
         #controlsToggler .toggler-icon {
             transition: transform 0.3s ease-out;
-            width: 20px;
-            height: 20px;
+            width: 18px; 
+            height: 18px;
         }
         #controlsToggler[aria-expanded="false"] .toggler-icon {
             transform: rotate(180deg);
@@ -76,12 +121,15 @@
          #controlsToggler[aria-expanded="true"] .toggler-icon {
             transform: rotate(0deg);
         }
+
+        /* --- Collapsible Button Bars --- */
         #collapsibleButtonBars {
-            max-height: 1000px;
+            max-height: 1000px; /* Sufficiently large for content */
             overflow: hidden;
             transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out, padding-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out;
             padding-top: 5px;
             padding-bottom: 5px;
+            width: 100%; 
         }
         #collapsibleButtonBars:not(.open) {
             max-height: 0;
@@ -89,6 +137,82 @@
             padding-bottom: 0;
             margin-top: 0;
         }
+
+        .bar {
+            display: flex;
+            flex-wrap: wrap; /* Ensure buttons wrap */
+            gap: 8px; /* Consistent gap */
+            margin-bottom: 15px; /* Spacing between bars */
+            align-items: stretch; /* Make buttons in a row same height */
+            justify-content: center;
+        }
+        /* General style for buttons within .bar */
+        .bar button {
+            padding: 10px 15px; /* Consistent padding */
+            font-size: 0.9em;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid #ced4da;
+            background-color: #f8f9fa; /* Light base color */
+            color: #212529; /* Dark text for readability */
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex-grow: 1; /* Allow buttons to grow and fill space */
+            flex-basis: 120px; /* Minimum base width, adjust as needed */
+            text-align: center;
+            min-width: 100px; /* Ensure buttons have a minimum tap target size */
+        }
+        .bar button:hover {
+            border-color: #adb5bd;
+            background-color: #e9ecef;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
+        .bar button:active {
+            transform: translateY(0px);
+            background-color: #dee2e6;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+        }
+
+        /* Specific button theme colors (can be gradients too) */
+        #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #4e555b;}
+        #excelBtnTrigger, #importExcelBtn, #importNameListBtn, .input-group button { background-color: #28a745; color: white; border-color: #23923d;}
+        #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #0069d9;}
+        #loadSharedScheduleBtn { background-color: #ffc107; color: #212529; border-color: #e0a800;}
+        #clearAndResetScheduleBtn, #nameListBtn { background-color: #fd7e14; color: white; border-color: #e66a04;}
+        #selectBtn { background-color: #17a2b8; color: white; border-color: #117a8b;}
+        #selectBtn.active { background-color: #e66a04; border-color: #d05f03;} /* Match clear button color */
+        #mergeBtn { background-color: #6f42c1; color: white; border-color: #5d37a2;}
+        #unmergeBtn { background-color: #e83e8c; color: white; border-color: #d9307b;}
+        #addTableBtn { background-color: #20c997; color: white; border-color: #1aa87f;}
+        #renameTableBtn, #deselectBtn { background-color: #6c757d; color: white; border-color: #5a6268;}
+        #deleteTableBtn, #rowColManipulationBar button.delete-btn { background-color: #dc3545; color: white; border-color: #c82333;}
+        #exportSharedSchedulesBtn { background-color: #4e54c8; color: white; border-color: #3b40a0;}
+        #importSharedSchedulesBtn { background-color: #8f94fb; color: white; border-color: #7076f9;}
+        
+        /* Hover for themed buttons */
+        #directCopyFullHtmlBtn:hover { background-color: #434a50; }
+        #excelBtnTrigger:hover, #importExcelBtn:hover, #importNameListBtn:hover, .input-group button:hover { background-color: #1e7e34; }
+        #saveSharedScheduleBtn:hover { background-color: #0056b3; }
+        #loadSharedScheduleBtn:hover { background-color: #d39e00; }
+        #clearAndResetScheduleBtn:hover, #nameListBtn:hover { background-color: #d05f03; }
+        #selectBtn:hover { background-color: #0f6674; }
+        #selectBtn.active:hover { background-color: #c25202;}
+        #mergeBtn:hover { background-color: #563299; }
+        #unmergeBtn:hover { background-color: #d9307b; }
+        #addTableBtn:hover { background-color: #178d6f; }
+        #renameTableBtn:hover, #deselectBtn:hover { background-color: #545b62; }
+        #deleteTableBtn:hover, #rowColManipulationBar button.delete-btn:hover { background-color: #b21f2d; }
+        #exportSharedSchedulesBtn:hover { background-color: #3b40a0; }
+        #importSharedSchedulesBtn:hover { background-color: #7076f9; }
+
+
+        #rowColManipulationBar button { padding: 8px 12px; font-size: 0.85em; } /* Slightly smaller for this specific bar */
 
         table {
             border-collapse: collapse;
@@ -115,11 +239,12 @@
         }
         th, td {
             border: 1px solid #dee2e6;
-            padding: 12px 15px;
+            padding: 10px 12px; /* Adjusted padding */
             text-align: center;
-            min-width: 100px;
+            min-width: 90px; /* Adjusted min-width */
             box-sizing: border-box;
             position: relative;
+            font-size: 0.9em; /* Slightly smaller table font */
         }
         table th {
             background-color: #f8f9fa;
@@ -129,123 +254,60 @@
         }
         #tablesContainer > table > thead > tr > th {
             font-weight: bold;
-            background-color: lightgrey;
+            background-color: #e9ecef; /* Lighter grey */
             color: #343a40;
         }
         #tablesContainer > table > thead > tr > th:first-child,
         #tablesContainer > table > tbody > tr > td:first-child,
         #tablesContainer > table > tbody > tr > th:first-child {
             font-weight: bold;
-            background-color: aliceblue;
+            background-color: #e6f7ff; /* Lighter aliceblue */
             color: #1c1e21;
         }
         #summaryTable > thead > tr > th {
             font-weight: bold;
-            background-color: lightgrey;
+            background-color: #e9ecef;
             color: #212529;
         }
         #summaryTable > thead > tr > th:first-child,
         #summaryTable > tbody > tr > td:first-child {
             font-weight: bold;
-            background-color: aliceblue;
+            background-color: #e6f7ff;
             color: #1c1e21;
         }
         td.selected, th.selected {
             outline: 3px solid #007bff;
-            background-color: #dbeafe;
+            background-color: #d1e7fd; /* Lighter selection */
         }
-        .bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
-            justify-content: center;
-        }
-        .bar button, .table-tabs button, .name-session-tabs button {
-            padding: 10px 18px;
-            font-size: 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 1px solid #ced4da;
-            background-color: #fff;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        .bar button:hover, .table-tabs button:hover, .name-session-tabs button:hover {
-            background-color: #f8f9fa;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-        .bar button:active, .table-tabs button:active, .name-session-tabs button:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        #rowColManipulationBar button {
-            background-image: linear-gradient(to bottom, #ffffff 0%, #f1f3f5 100%);
-            border: 1px solid #ced4da;
-            color: #343a40;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.2);
-            padding: 8px 14px;
-        }
-        #rowColManipulationBar button:hover {
-            background-image: linear-gradient(to bottom, #e9ecef 0%, #dee2e6 100%);
-            border-color: #adb5bd;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
-        }
-         #rowColManipulationBar button.delete-btn {
-            background-image: linear-gradient(to bottom, #f8d7da 0%, #f1c6cb 100%);
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
-        #rowColManipulationBar button.delete-btn:hover {
-            background-image: linear-gradient(to bottom, #f5c6cb 0%, #ebaeb3 100%);
-            border-color: #f1b0b7;
-        }
-        #directCopyFullHtmlBtn { background-color: #545b62; color: white; border-color: #545b62;}
-        #excelBtnTrigger, #importExcelBtn { background-color: #28a745; color: white; border-color: #28a745;}
-        #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #007bff;}
-        #manualSaveBtn { background-color: #17a2b8; color: white; border-color: #17a2b8; } /* Style for manual save */
-        #loadSharedScheduleBtn { background-color: #ffc107; color: #212529; border-color: #ffc107;}
-        #clearAndResetScheduleBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
-        #selectBtn { background-color: #17a2b8; color: white; border-color: #17a2b8;}
-        #selectBtn.active { background-color: #fd7e14; border-color: #fd7e14;}
-        #mergeBtn { background-color: #6f42c1; color: white; border-color: #6f42c1;}
-        #unmergeBtn { background-color: #e83e8c; color: white; border-color: #e83e8c;}
-        #addTableBtn { background-color: #20c997; color: white; border-color: #20c997;}
-        #renameTableBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
-        #deleteTableBtn { background-color: #dc3545; color: white; border-color: #dc3545;}
-        #nameListBtn { background-color: #fd7e14; color: white; border-color: #fd7e14;}
-        #deselectBtn { background-color: #6c757d; color: white; border-color: #6c757d;}
-        #exportSharedSchedulesBtn { background-color: #4e54c8; color: white; border-color: #4e54c8;}
-        #importSharedSchedulesBtn { background-color: #8f94fb; color: white; border-color: #8f94fb;}
-        #downloadPdfBtn { background-color: #dc3545; color: white; border-color: #dc3545;}
+        
         .table-tabs {
             margin-bottom: 15px;
             border-bottom: 2px solid #007bff;
             padding-bottom: 0;
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Allow tabs to wrap */
             gap: 5px;
         }
         .table-tabs button {
             background-color: transparent;
             border: none;
-            border-bottom: 2px solid transparent;
+            border-bottom: 3px solid transparent; /* Thicker indicator */
             border-radius: 6px 6px 0 0;
             color: #0056b3;
             font-weight: 500;
             padding: 10px 15px;
+            transition: all 0.2s ease;
         }
         .table-tabs button.active {
-            background-color: #007bff;
+            background-color: #007bff; /* More distinct active tab */
             color: white;
-            border-color: #007bff;
+            border-color: #0056b3; /* Darker border for active tab */
         }
+        .table-tabs button:hover:not(.active) {
+            background-color: #e9f5ff;
+            color: #004494;
+        }
+
         .name-session-tabs {
             margin-bottom: 20px;
             border-bottom: 2px solid #dee2e6;
@@ -258,21 +320,27 @@
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
             border-bottom: none;
-            margin-bottom: -2px;
+            margin-bottom: -2px; /* Overlap border */
             padding: 10px 15px;
             font-size: 1em;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6; /* Ensure bottom border is there initially */
         }
         .name-session-tabs button.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff #007bff #fff;
+            background-color: #ffffff; /* White background for active tab */
+            color: #007bff;
+            border-color: #dee2e6 #dee2e6 #ffffff; /* Top and side borders, bottom transparent */
+            border-bottom: 1px solid #ffffff; /* Make bottom border white to blend */
             font-weight: bold;
+            position: relative;
+            z-index: 1; /* Bring active tab forward */
         }
         #summaryTable td {
             background-color: #fff9e6;
         }
         #summaryTable > tbody > tr > td:first-child {
-             background-color: aliceblue !important;
+             background-color: #e6f7ff !important;
         }
         .highlight-conflict {
             background-color: #f8d7da !important;
@@ -280,7 +348,7 @@
             color: #721c24 !important;
         }
         #summaryTable > tbody > tr > td.highlight-conflict:first-child {
-            background-color: aliceblue !important;
+            background-color: #e6f7ff !important; /* Keep first col color */
             color: #721c24 !important;
         }
         .modal {
@@ -347,7 +415,7 @@
         #newNameInput, #searchNameInput {
             padding: 10px;
             margin-right: 8px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1;
-            width: calc(100% - 120px);
+            width: calc(100% - 120px); /* Adjust if button size changes */
             box-sizing: border-box;
         }
          #searchNameInput {
@@ -361,23 +429,21 @@
             margin-bottom: 15px;
             width: 100%;
         }
-        .input-group button, #importNameListBtn {
-            background-color: #28a745;
-            color: white; border-color: #28a745; padding: 10px 15px;
-            font-size: 1em; border-radius: 5px; cursor: pointer; flex-shrink: 0;
-            transition: background-color 0.2s;
+        .input-group button {
+            /* Style inherited from .bar button, specific overrides if needed */
+            padding: 10px 15px; /* Ensure consistent padding */
         }
-        .input-group button:hover, #importNameListBtn:hover { background-color: #218838; }
         #importNameListBtn {
             margin-top: 10px;
             width: 100%;
+            /* Style inherited from .bar button */
         }
         #nameList {
             margin-top:15px;
             max-height:250px;
             overflow-y:auto;
         }
-        @media (min-width: 480px) {
+        @media (min-width: 480px) { /* For wider name list display */
             #nameList {
                 column-count: 2;
                 column-gap: 20px;
@@ -411,11 +477,11 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.85);
             display: flex; align-items: center; justify-content: center;
-            z-index: 10;
+            z-index: 10; /* Ensure it's above modal content for name list */
             border-radius: 10px;
         }
         #generalLoadingIndicator {
-            position: fixed;
+            position: fixed; /* Full screen loading */
             z-index: 3000;
             border-radius: 0;
         }
@@ -475,7 +541,6 @@
             page-break-inside: avoid !important; 
             padding-bottom: 10mm; 
             box-sizing: border-box;
-            /* border: 1px dashed #eee; */ /* Debugging border */
             margin-bottom: 5mm; 
         }
          #pdfContent .pdf-page-wrapper:not(:first-child) {
@@ -544,6 +609,65 @@
             width: 100%;
             box-sizing: border-box;
         }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+            }
+            #scheduleTitle {
+                font-size: 1.8em;
+            }
+            h3 {
+                font-size: 1.1em;
+            }
+            .top-action-btn {
+                font-size: 0.85em;
+                padding: 8px 12px;
+                flex-basis: 120px; /* Allow more wrapping on smaller screens */
+            }
+            .bar button {
+                font-size: 0.85em;
+                padding: 8px 12px;
+                flex-basis: 100px; /* Allow more wrapping */
+            }
+            th, td {
+                padding: 8px 10px;
+                min-width: 70px;
+                font-size: 0.85em;
+            }
+            .table-tabs button, .name-session-tabs button {
+                padding: 8px 10px;
+                font-size: 0.9em;
+            }
+        }
+        @media (max-width: 480px) {
+            body { padding: 5px; }
+            .main-container { padding: 10px; }
+            #scheduleTitle { font-size: 1.5em; }
+            .top-action-btn { 
+                font-size: 0.8em; 
+                padding: 6px 10px; 
+                gap: 4px;
+                flex-basis: calc(50% - 4px); /* Aim for two buttons per row if possible */
+            }
+            #controlsToggler .toggler-icon { width: 16px; height: 16px; }
+             .bar button {
+                font-size: 0.8em;
+                padding: 6px 10px;
+                gap: 4px;
+                flex-basis: calc(50% - 4px);
+            }
+            th, td {
+                padding: 6px 8px;
+                min-width: 60px;
+                font-size: 0.8em;
+            }
+             #nameList { /* Single column for name list on very small screens */
+                column-count: 1;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -551,49 +675,49 @@
     <h2 contenteditable="true" id="scheduleTitle">Jadual Anjal</h2>
     <div id="userIdDisplay">User ID: Loading...</div>
 
-    <button id="controlsToggler" aria-expanded="false" aria-controls="collapsibleButtonBars" title="Toggle button controls visibility">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
-        <span>Show Controls</span>
-    </button>
+    <div id="topActionButtonsBar">
+        <button id="controlsToggler" class="top-action-btn" aria-expanded="false" aria-controls="collapsibleButtonBars" title="Toggle button controls visibility">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggler-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            <span>Show Controls</span>
+        </button>
+        <button id="manualSaveBtn" class="top-action-btn" title="Manually save current page state to Cloud">💾 Save Page</button> <button id="downloadPdfBtn" class="top-action-btn" title="Download schedule tables as PDF">📄 PDF</button> </div>
 
     <div id="collapsibleButtonBars">
         <div class="bar">
-            <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy Full HTML (Direct)</button>
-            <button id="downloadPdfBtn" title="Download schedule tables as PDF">📄 Download PDF</button> 
+            <button id="directCopyFullHtmlBtn" title="Copy the entire page's HTML to clipboard">📋 Copy HTML</button>
         </div>
         <div class="bar">
-            <button id="excelBtnTrigger" title="Export the currently active table to an Excel file">💾 Export Active Table to Excel</button>
-            <button id="importExcelBtn" title="Import data from an Excel file into a new table">📂 Import from Excel</button>
+            <button id="excelBtnTrigger" title="Export the currently active table to an Excel file">💾 Export Excel</button>
+            <button id="importExcelBtn" title="Import data from an Excel file into a new table">📂 Import Excel</button>
             <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
         </div>
         <div class="bar">
-            <button id="saveSharedScheduleBtn" title="Save current schedule to the shared Cloud space">💠 Save Shared Schedule</button>
-            <button id="loadSharedScheduleBtn" title="Show list of shared schedules from Cloud to load">☁️ Load Shared Schedule</button>
-            <button id="exportSharedSchedulesBtn" title="Export all shared schedules from Cloud to a JSON file">📤 Export All Shared Schedules</button>
-            <button id="importSharedSchedulesBtn" title="Import schedules from a JSON file to the shared Cloud space">📥 Import Shared Schedules</button>
+            <button id="saveSharedScheduleBtn" title="Save current schedule to the shared Cloud space">💠 Save Shared</button>
+            <button id="loadSharedScheduleBtn" title="Show list of shared schedules from Cloud to load">☁️ Load Shared</button>
+            <button id="exportSharedSchedulesBtn" title="Export all shared schedules from Cloud to a JSON file">📤 Export All</button>
+            <button id="importSharedSchedulesBtn" title="Import schedules from a JSON file to the shared Cloud space">📥 Import All</button>
             <input type="file" id="sharedScheduleImportFile" accept=".json" style="display:none;">
-            <button id="clearAndResetScheduleBtn" title="Clear all data and start a new schedule">🧹 Clear & New Schedule</button>
+            <button id="clearAndResetScheduleBtn" title="Clear all data and start a new schedule">🧹 Clear & New</button>
         </div>
         <div class="bar">
             <button id="selectBtn" title="Toggle cell selection mode on/off">✨ Select Cells</button>
-            <button id="mergeBtn" title="Merge the currently selected cells">🔗 Merge Cells</button>
-            <button id="deselectBtn" title="Clear current cell selection">🚫 Deselect All</button>
-            <button id="unmergeBtn" title="Unmerge the cell that was last clicked if it's part of a merge">💔 Unmerge Cell</button>
+            <button id="mergeBtn" title="Merge the currently selected cells">🔗 Merge</button>
+            <button id="deselectBtn" title="Clear current cell selection">🚫 Deselect</button>
+            <button id="unmergeBtn" title="Unmerge the cell that was last clicked if it's part of a merge">💔 Unmerge</button>
         </div>
         <div class="bar">
-            <button id="manualSaveBtn" title="Manually save current page state to Cloud">💾 Save Current Page</button>
-            <button id="addTableBtn" title="Add a new, empty table/sheet">➕ Add New Table</button>
-            <button id="renameTableBtn" title="Rename the currently active table/sheet">📝 Rename Active Table</button>
-            <button id="deleteTableBtn" title="Delete the currently active table/sheet">❌ Delete Active Table</button>
-            <button id="nameListBtn" title="Open a dialog to manage the shared list of names (Firestore)">👥 Manage Shared Names</button>
+            <button id="addTableBtn" title="Add a new, empty table/sheet">➕ Add Table</button>
+            <button id="renameTableBtn" title="Rename the currently active table/sheet">📝 Rename Table</button>
+            <button id="deleteTableBtn" title="Delete the currently active table/sheet">❌ Delete Table</button>
+            <button id="nameListBtn" title="Open a dialog to manage the shared list of names (Firestore)">👥 Names</button>
         </div>
         <div class="bar" id="rowColManipulationBar">
-            <button id="addRowAboveBtn" title="Add a new row above the currently selected/clicked row">⬆️ Add Row Above</button>
-            <button id="addRowBelowBtn" title="Add a new row below the currently selected/clicked row">⬇️ Add Row Below</button>
-            <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Add Column Left</button>
-            <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Add Column Right</button>
-            <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Delete Row</button>
-            <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Delete Column</button>
+            <button id="addRowAboveBtn" title="Add a new row above the currently selected/clicked row">⬆️ Row Above</button>
+            <button id="addRowBelowBtn" title="Add a new row below the currently selected/clicked row">⬇️ Row Below</button>
+            <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Col Left</button>
+            <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Col Right</button>
+            <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Del Row</button>
+            <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Del Col</button>
         </div>
     </div>
     <div id="sharedScheduleListContainer" style="display:none;"></div>
@@ -813,7 +937,7 @@
         sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, 
         loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, 
         controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement, 
-        clearAndResetScheduleBtnElement, manualSaveBtnElement; // Added manualSaveBtnElement
+        clearAndResetScheduleBtnElement, manualSaveBtnElement; 
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
@@ -921,7 +1045,7 @@
 
     function hasStateChanged(currentState) {
         if (!isInitialStateSet || !lastSavedState) { // If no previous state, it has changed
-             console.log("hasStateChanged: No lastSavedState or initial state not set, assuming changes.");
+             // console.log("hasStateChanged: No lastSavedState or initial state not set, assuming changes.");
             return true;
         }
         if (!currentState) { // If current state can't be captured, assume no change to prevent erroneous saves
@@ -931,19 +1055,19 @@
         
         // Compare HTML content of tablesContainer
         if (currentState.html !== lastSavedState.html) {
-            console.log("hasStateChanged: HTML content differs.");
+            // console.log("hasStateChanged: HTML content differs.");
             return true;
         }
         
         // Compare schedule title
         if (currentState.scheduleTitle !== lastSavedState.scheduleTitle) {
-            console.log("hasStateChanged: Schedule title differs.");
+            // console.log("hasStateChanged: Schedule title differs.");
             return true;
         }
         
         // Compare active table ID
         if (currentState.activeTableId !== lastSavedState.activeTableId) {
-            console.log("hasStateChanged: Active table ID differs.");
+            // console.log("hasStateChanged: Active table ID differs.");
             return true;
         }
         
@@ -952,7 +1076,7 @@
         const savedTablesKeys = Object.keys(lastSavedState.tableMeta);
         
         if (currentTablesKeys.length !== savedTablesKeys.length) {
-            console.log("hasStateChanged: Number of tables differs.");
+            // console.log("hasStateChanged: Number of tables differs.");
             return true;
         }
         
@@ -961,19 +1085,19 @@
             const savedMeta = lastSavedState.tableMeta[tableId];
             
             if (!savedMeta) { // New table added
-                console.log(`hasStateChanged: Table ${tableId} is new.`);
+                // console.log(`hasStateChanged: Table ${tableId} is new.`);
                 return true;
             }
             if (currentMeta.name !== savedMeta.name) {
-                console.log(`hasStateChanged: Table ${tableId} name differs.`);
+                // console.log(`hasStateChanged: Table ${tableId} name differs.`);
                 return true;
             }
             if (currentMeta.rowCount !== savedMeta.rowCount) {
-                 console.log(`hasStateChanged: Table ${tableId} row count differs.`);
+                //  console.log(`hasStateChanged: Table ${tableId} row count differs.`);
                 return true;
             }
             if (currentMeta.colCount !== savedMeta.colCount) {
-                console.log(`hasStateChanged: Table ${tableId} column count differs.`);
+                // console.log(`hasStateChanged: Table ${tableId} column count differs.`);
                 return true;
             }
             // Add more detailed checks if necessary (e.g., specific cell content for critical cells)
@@ -1950,13 +2074,13 @@
         downloadPdfButtonElement = document.getElementById('downloadPdfBtn');
         pdfContentElement = document.getElementById('pdfContent');
         clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); 
-        manualSaveBtnElement = document.getElementById('manualSaveBtn'); // Get new button
+        manualSaveBtnElement = document.getElementById('manualSaveBtn'); 
 
         autocompleteSuggestionsDiv = document.createElement('div');
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions';
         document.body.appendChild(autocompleteSuggestionsDiv);
         
-        // Initial state of controls toggler
+        // Initial state of controls toggler (now in top bar)
         if (controlsTogglerElement && collapsibleButtonBarsElement) {
             collapsibleButtonBarsElement.classList.remove('open'); 
             controlsTogglerElement.setAttribute('aria-expanded', 'false');
@@ -2116,9 +2240,13 @@
     }
 
     function initializeEventListeners() {
+        // Top action buttons (already referenced)
         if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility);
-        if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
+        if(manualSaveBtnElement) manualSaveBtnElement.addEventListener('click', manualSaveCurrentPage);
         if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf);
+        
+        // Other buttons in collapsible bar
+        if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) { 
@@ -2135,7 +2263,6 @@
         if(fileInputElement) fileInputElement.addEventListener('change', handleExcelFileImport);
 
         document.getElementById('saveSharedScheduleBtn')?.addEventListener('click', saveSharedScheduleToFirestore);
-        document.getElementById('manualSaveBtn')?.addEventListener('click', manualSaveCurrentPage); // Listener for new button
         document.getElementById('loadSharedScheduleBtn')?.addEventListener('click', loadAndRenderSharedSchedulesFromFirestore);
         document.getElementById('exportSharedSchedulesBtn')?.addEventListener('click', exportAllSharedSchedulesFromFirestore);
         document.getElementById('importSharedSchedulesBtn')?.addEventListener('click', () => sharedScheduleImportFileInputElement?.click());
