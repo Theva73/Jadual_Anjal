@@ -462,20 +462,20 @@
 
         /* PDF Specific Styles */
         #pdfContent {
-            padding: 5mm; /* Add some base padding to the PDF content area */
+            padding: 5mm; 
             background-color: #fff;
             color: #333;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Arial', sans-serif; 
             box-sizing: border-box;
             width: 100%; 
             display: none; 
         }
         #pdfContent .pdf-page-wrapper {
             page-break-inside: avoid !important; 
-            padding-bottom: 10mm; /* Space for footnote */
+            padding-bottom: 10mm; 
             box-sizing: border-box;
-            border: 1px dashed #eee; /* For debugging page wrapper boundaries */
-            margin-bottom: 5mm; /* Space between wrappers if they somehow don't break page */
+            /* border: 1px dashed #eee; */ /* Debugging border */
+            margin-bottom: 5mm; 
         }
          #pdfContent .pdf-page-wrapper:not(:first-child) {
              page-break-before: always !important; 
@@ -487,7 +487,7 @@
             text-align: center;
             color: #000; 
             margin-bottom: 5mm; 
-            font-size: 14pt; /* Using points for PDF */
+            font-size: 14pt; 
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
         }
@@ -507,12 +507,12 @@
             box-shadow: none;
             background-color: #fff;
             table-layout: fixed !important; 
-            font-size: 7pt; /* Further reduced font size for table content */
+            font-size: 7pt; 
             page-break-inside: avoid !important; 
         }
         #pdfContent th, #pdfContent td {
-            border: 0.5pt solid #333 !important; /* Thinner but visible borders */
-            padding: 1mm 1.5mm; /* Padding in mm */
+            border: 0.5pt solid #333 !important; 
+            padding: 1mm 1.5mm; 
             text-align: center;
             word-wrap: break-word; 
             overflow-wrap: break-word;
@@ -542,11 +542,10 @@
             border-top: 0.5pt solid #ccc;
             width: 100%;
             box-sizing: border-box;
-            position: absolute; /* Try to position at bottom of wrapper */
-            bottom: 2mm; /* Distance from bottom of wrapper */
-            left:0; /* Align to left of wrapper */
-            right: 5mm; /* Align to right padding of wrapper */
-
+            /* position: absolute; Removed for simpler flow, rely on wrapper padding */
+            /* bottom: 2mm; */
+            /* left:0; */
+            /* right: 5mm; */
         }
     </style>
 </head>
@@ -792,10 +791,10 @@
     let currentAutocompleteIndex = -1;
     let currentWorkingScheduleDocId = null; 
     let autoSaveIntervalId = null;
-    const AUTO_SAVE_INTERVAL = 60000; 
-    let lastSavedHTMLContent = null; 
-    let isAutoSaving = false; // Developer's lock variable
-    let lastSavedContentHash = null; // Developer's hash variable
+    const AUTO_SAVE_INTERVAL = 60000; // 60 seconds
+    let lastSavedHTMLContent = null; // For basic change detection if hash isn't used or as fallback
+    let isAutoSaving = false; 
+    let lastSavedContentHash = null; 
 
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement, clearAndResetScheduleBtnElement;
 
@@ -876,31 +875,29 @@
         }
     }
     
-    // Developer's calculateContentHash function
     function calculateContentHash() {
-        if (!tablesContainer) return 0; // Handle case where tablesContainer might not be ready
+        if (!tablesContainer) return 0; 
         const content = tablesContainer.innerHTML;
         let hash = 0;
+        if (content.length === 0) return hash;
         for (let i = 0; i < content.length; i++) {
-            hash = ((hash << 5) - hash) + content.charCodeAt(i);
+            const char = content.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
             hash |= 0; // Convert to 32bit integer
         }
         return hash;
     }
 
-    // Modified _updateLocalStateAfterSave incorporating developer's suggestions
+    // Developer's modified _updateLocalStateAfterSave
     function _updateLocalStateAfterSave(docId, savedHtml, scheduleName, isAutoDraft, operationType) {
-        currentWorkingScheduleDocId = docId; // Can be null if resetting
-        lastSavedHTMLContent = savedHtml;   // Can be null if resetting
-        lastSavedContentHash = calculateContentHash(); // Update hash based on the NEW savedHtml
+        currentWorkingScheduleDocId = docId;
+        lastSavedHTMLContent = savedHtml; // Still useful for quick checks or if hash is problematic
+        lastSavedContentHash = calculateContentHash(); // Update hash based on the NEW savedHtml (current state of tablesContainer)
 
         if (docId) {
             sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, docId);
         } else {
-            // If docId is null (e.g., after reset), remove it from session storage.
-            // Also ensure currentWorkingScheduleDocId is indeed null.
             sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
-            currentWorkingScheduleDocId = null; 
         }
 
         const timestamp = new Date().toLocaleTimeString();
@@ -912,15 +909,8 @@
         } else if (operationType === "load" && scheduleName) {
             const displayName = scheduleName + (isAutoDraft ? " (Draft)" : "");
             showMessage(`Shared schedule "${displayName}" loaded from Cloud!`, 'success');
-        } else if (operationType === "auto-draft-created" && scheduleName) {
-            // Auto-draft creation can be less intrusive, maybe just a console log or a very subtle UI hint if desired
-            console.log(`Auto-draft created: "${scheduleName}" (ID: ${docId})`);
-            // showMessage(`Draft auto-created: "${scheduleName}"`, 'info', 2000); // Optional: if user feedback is desired
-        } else if (operationType === "auto-save-update" && scheduleName) {
-            // Auto-save updates should ideally be silent to the user unless an error occurs
-            console.log(`Auto-saved update to "${scheduleName || 'current schedule'}" (ID: ${docId})`);
-            // showMessage(`Auto-saved to "${scheduleName || 'current schedule'}"`, 'success', 1500); // Keep this silent as per dev snippet
         }
+        // Auto-draft creation and auto-save updates are silent as per developer's snippet.
     }
 
 
@@ -1076,6 +1066,7 @@
         });
     }
 
+    // Explicit Save function
     async function saveSharedScheduleToFirestore() {
         if (!fbDb || !fbIsAuthReady) {
             showMessage("Firebase not ready. Cannot save shared schedule.", "error"); return;
@@ -1090,7 +1081,7 @@
         
         isAutoSaving = true; // Prevent auto-save during explicit save
         showGeneralLoading(true);
-        const allTablesData = tablesContainer.innerHTML; 
+        const currentHTML = tablesContainer.innerHTML; 
         const allTableMeta = {}; 
         tablesContainer.querySelectorAll('table').forEach(table => {
             allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
@@ -1098,7 +1089,7 @@
 
         const scheduleData = {
             name: scheduleName.trim(),
-            html: allTablesData,
+            html: currentHTML,
             meta: allTableMeta,
             activeTableId: activeTableId,
             createdAt: serverTimestamp(),
@@ -1111,7 +1102,8 @@
             const sharedSchedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
             console.log(`Explicit Save: Attempting to save schedule "${scheduleData.name}"...`);
             const newDocRef = await addDoc(sharedSchedulesCollectionRef, scheduleData);
-            _updateLocalStateAfterSave(newDocRef.id, allTablesData, scheduleData.name, false, "explicit-save");
+            // Call centralized state update after successful save
+            _updateLocalStateAfterSave(newDocRef.id, currentHTML, scheduleData.name, false, "explicit-save");
             
             if (sharedScheduleListContainerElement && sharedScheduleListContainerElement.style.display === 'block') {
                 await loadAndRenderSharedSchedulesFromFirestore();
@@ -1120,7 +1112,7 @@
             console.error("Error saving shared schedule to Firestore:", error);
             showMessage(`Failed to save shared schedule. Error: ${error.message}`, "error");
         } finally {
-            isAutoSaving = false;
+            isAutoSaving = false; // Release lock
             showGeneralLoading(false);
         }
     }
@@ -1131,8 +1123,8 @@
             // console.log("AutoSave: Firebase not ready.");
             return; 
         }
-        if (isAutoSaving) { // Developer's lock
-            // console.log("AutoSave: Already in progress, skipping.");
+        if (isAutoSaving) { 
+            // console.log("AutoSave: Save already in progress, skipping.");
             return;
         }
         if (!tablesContainer || tablesContainer.children.length === 0) { 
@@ -1142,27 +1134,27 @@
 
         const currentHash = calculateContentHash();
         if (currentHash === lastSavedContentHash) {
-            // console.log(`AutoSave: No changes detected (hash match ${currentHash}). Current doc ID: ${currentWorkingScheduleDocId}`);
+            // console.log(`AutoSave: No changes detected (hash match ${currentHash}). Current doc ID: ${currentWorkingScheduleDocId || 'None'}`);
             return;
         }
 
         isAutoSaving = true;
-        // showGeneralLoading(true); // Developer's snippet shows this, can be intrusive for auto-save. Consider removing for silent auto-save.
-        console.log(`AutoSave: Hash mismatch (current: ${currentHash}, last: ${lastSavedContentHash}). Content changed. Proceeding with save.`);
+        // showGeneralLoading(true); // Developer's snippet shows this. Kept it commented for silent auto-save.
+        console.log(`AutoSave: Hash mismatch (current: ${currentHash}, last: ${lastSavedContentHash || 'None'}). Content changed. Proceeding with save. DocID: ${currentWorkingScheduleDocId || 'NEW DRAFT'}`);
 
         try {
-            const currentHTML = tablesContainer.innerHTML;
+            const currentHTML = tablesContainer.innerHTML; // Capture HTML again inside try, just in case
             const allTableMeta = {};
             tablesContainer.querySelectorAll('table').forEach(table => {
                 allTableMeta[table.id] = { name: table.dataset.tableName || table.id };
             });
 
-            if (!currentWorkingScheduleDocId) {
+            if (!currentWorkingScheduleDocId) { 
                 console.log("AutoSave: No currentWorkingScheduleDocId. Creating new auto-draft.");
                 const scheduleName = `Autosaved Draft (${fbUserId ? fbUserId.substring(0, 5) : 'anon'}...) - ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], {hour12: false, hour: '2-digit', minute: '2-digit'})}`;
                 const scheduleData = {
                     name: scheduleName,
-                    html: currentHTML,
+                    html: currentHTML, 
                     meta: allTableMeta,
                     activeTableId: activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1',
                     createdAt: serverTimestamp(),
@@ -1177,52 +1169,44 @@
                 );
                 _updateLocalStateAfterSave(newDocRef.id, currentHTML, scheduleName, true, "auto-draft-created");
                 console.log(`AutoSave (New Draft): Successfully saved to new doc ID: ${newDocRef.id}.`);
-                // No showMessage here as per developer's _updateLocalStateAfterSave for auto operations
-            } else {
-                // Handle existing documents
+            
+            } else { 
                 console.log(`AutoSave (Update): Attempting to update doc ID: ${currentWorkingScheduleDocId}.`);
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
-                const docSnap = await getDoc(docRef);
+                const docSnap = await getDoc(docRef); 
                 
                 if (!docSnap.exists()) {
                     console.warn(`AutoSave (Update): Document ${currentWorkingScheduleDocId} not found, creating new one instead.`);
-                    currentWorkingScheduleDocId = null; // Reset, so next call creates a new one
-                    lastSavedContentHash = null; // Force re-evaluation
-                    isAutoSaving = false; // Release lock before recursive call
-                    // showGeneralLoading(false); // Release loader before recursive call
-                    await autoSaveCurrentSchedule(); // Retry, will now go into the new document path
-                    return; // Exit this attempt
+                    _updateLocalStateAfterSave(null, null, null, false, "doc-not-found-during-autosave"); // Reset state
+                    // isAutoSaving will be false in finally. Next cycle will create new draft.
+                    return; 
                 }
 
                 const scheduleDataForUpdate = {
-                    html: currentHTML,
+                    html: currentHTML, 
                     meta: allTableMeta,
                     activeTableId: activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1',
                     lastUpdatedAt: serverTimestamp(),
                     lastUpdatedBy: fbUserId || "anonymous",
-                    // Preserve existing name, createdAt, isAutoDraft status
-                    name: docSnap.data().name,
-                    createdAt: docSnap.data().createdAt,
-                    isAutoDraft: typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : false
+                    name: docSnap.data().name, 
+                    createdAt: docSnap.data().createdAt, 
+                    isAutoDraft: typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : false 
                 };
                 
                 await setDoc(docRef, scheduleDataForUpdate, { merge: true });
                 _updateLocalStateAfterSave(currentWorkingScheduleDocId, currentHTML, scheduleDataForUpdate.name, scheduleDataForUpdate.isAutoDraft, "auto-save-update");
                 console.log(`AutoSave (Update): Successfully updated doc ID: ${currentWorkingScheduleDocId}.`);
-                // No showMessage here as per developer's _updateLocalStateAfterSave for auto operations
             }
         } catch (error) {
             console.error("Auto-save error:", error);
-            if (error.code === 'resource-exhausted' || error.message.includes('quota')) {
+            if (error.code === 'resource-exhausted' || error.message.toLowerCase().includes('quota')) {
                 console.warn("Firestore quota exceeded or similar issue, skipping auto-save for this cycle.");
-                // Optionally inform user less intrusively if this persists
             } else {
-                // For other errors, it might be good to inform the user as it's unexpected
                 showMessage(`Auto-save failed: ${error.message}`, "error", 4000);
             }
         } finally {
             isAutoSaving = false;
-            // showGeneralLoading(false); // Match the showGeneralLoading(true) if used
+            // showGeneralLoading(false); // Match if used at the start
         }
     }
 
@@ -1439,7 +1423,7 @@
 
         if (!loadedSuccessfully) {
             console.log("loadLatestDefault: No schedule loaded from Firestore. Initial state will be set by setupInitialTableState.");
-            // _updateLocalStateAfterSave(null, null, null, false, "no-default-loaded"); // This will be handled by setupInitialTableState
+            // _updateLocalStateAfterSave(null, null, null, false, "no-default-loaded"); // This is handled by setupInitialTableState's aftermath
         }
         return loadedSuccessfully;
     }
@@ -1760,7 +1744,13 @@
                     }
                     // Initialize hash after content is definitively set (either loaded or default)
                     lastSavedContentHash = calculateContentHash(); 
-                    console.log("DOMContentLoaded: Initial lastSavedContentHash:", lastSavedContentHash);
+                    // Ensure lastSavedHTMLContent is also in sync with the initial hash.
+                    // If loadedDefault was true, _updateLocalStateAfterSave set both.
+                    // If !loadedDefault, setupInitialTableState set DOM, now sync HTML content string.
+                    if (!lastSavedHTMLContent && tablesContainer) { // If not set by a load operation
+                        lastSavedHTMLContent = tablesContainer.innerHTML;
+                    }
+                    console.log("DOMContentLoaded: Initial lastSavedContentHash set to:", lastSavedContentHash, "from HTML length:", lastSavedHTMLContent ? lastSavedHTMLContent.length : 0);
                     
                     rebuildAndRenderSummary(); 
 
@@ -1785,7 +1775,8 @@
                         showMessage(`Firebase Auth failed. Cloud features may not work. Error: ${error.message}`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
                         setupInitialTableState();
-                        lastSavedContentHash = calculateContentHash(); // Hash after setup
+                        lastSavedContentHash = calculateContentHash(); 
+                        if (tablesContainer) lastSavedHTMLContent = tablesContainer.innerHTML;
                         rebuildAndRenderSummary();
                     }
                 }
@@ -1795,7 +1786,8 @@
              console.error("Firebase Auth: fbAuth object is not available. Firebase did not initialize correctly.");
              showMessage("Critical Error: Firebase Auth service could not be initialized. Cloud features are disabled.", "error", 10000);
              setupInitialTableState(); 
-             lastSavedContentHash = calculateContentHash(); // Hash after setup
+             lastSavedContentHash = calculateContentHash(); 
+             if (tablesContainer) lastSavedHTMLContent = tablesContainer.innerHTML;
              rebuildAndRenderSummary();
         }
 
@@ -1810,9 +1802,8 @@
         
         tableTabs.innerHTML = ''; 
         activeTableId = null; 
-        // currentWorkingScheduleDocId and lastSavedHTMLContent are NOT reset here directly.
-        // They are managed by loadLatestSharedScheduleAsDefault or by the first auto-save attempt.
-        // lastSavedContentHash will be set after tables are populated.
+        // Do not touch currentWorkingScheduleDocId, lastSavedHTMLContent, or lastSavedContentHash here.
+        // They are managed by the calling context (DOMContentLoaded or reset button).
 
         if (existingTables.length > 0) {
             console.log("setupInitialTableState: Found existing tables in HTML. Setting them up.");
@@ -1837,20 +1828,9 @@
             addNewTable(true); 
         }
         
-        // Set lastSavedHTMLContent to the current state of tablesContainer AFTER setup.
-        // This establishes the baseline if no Firestore document was loaded.
-        // lastSavedContentHash will be set in DOMContentLoaded after this.
-        lastSavedHTMLContent = tablesContainer.innerHTML;
-        console.log("setupInitialTableState: lastSavedHTMLContent initialized based on current table structure. Length:", lastSavedHTMLContent.length);
-
-
-        if (!activeTableId && tablesContainer.querySelector('table')) {
-            activeTableId = tablesContainer.querySelector('table').id;
-            switchTable(activeTableId);
-            console.warn("setupInitialTableState: Fallback to first table in DOM as active.");
-        } else if (!activeTableId) {
-            console.error("setupInitialTableState: Critical error, no active table could be established.");
-        }
+        console.log("setupInitialTableState: DOM updated with initial/default tables.");
+        // The calling function (DOMContentLoaded or reset handler) is responsible for updating
+        // lastSavedHTMLContent and lastSavedContentHash after this function completes.
     }
 
     function loadScheduleTitleFromLocalStorage() {
@@ -1909,13 +1889,11 @@
                 activeTableId = null;
                 
                 addNewTable(true); // Add a new blank table. This calls switchTable.
-                const newBlankHTML = tablesContainer.innerHTML; // Capture the HTML of the new blank table
+                const newBlankHTML = tablesContainer.innerHTML; 
                 
-                // Reset state *after* new table structure is in place
-                _updateLocalStateAfterSave(null, newBlankHTML, "New Schedule (Reset)", false, "reset-all");
-                // Note: _updateLocalStateAfterSave already handles sessionStorage.removeItem for null docId
+                _updateLocalStateAfterSave(null, newBlankHTML, "New Schedule (Reset)", false, "reset-all"); 
                 
-                console.log("Clear & New: State reset. lastSavedHTMLContent and hash updated to new blank table.");
+                console.log("Clear & New: State reset. lastSavedContentHash and HTML updated to new blank table.");
                 
                 rebuildAndRenderSummary(); 
                 showMessage('All content cleared. New schedule started.', 'success');
@@ -2194,12 +2172,12 @@
 
         if (!isInitial) {
             showMessage(`Table "${label || defaultTableName}" added.`, 'success');
+            // Content changed, auto-save (via hash change) will handle it.
         } else {
             console.log(`Initial table "${label || defaultTableName}" created with ID ${newTable.id}.`);
+            // For truly initial setup where no prior content/hash exists,
+            // DOMContentLoaded will set the initial hash.
         }
-        // Update lastSavedHTMLContent and hash if this is a significant structural change (e.g., first table)
-        // This is now primarily handled by setupInitialTableState or the reset button logic for initial states.
-        // For subsequent adds, auto-save will detect the change.
     }
 
     async function promptAndRenameActiveTable() {
@@ -2225,6 +2203,7 @@
             currentTab.textContent = trimmedNewName; currentTab.title = `Switch to table: ${trimmedNewName}`;
             tableElement.dataset.tableName = trimmedNewName; 
             showMessage(`Table renamed to "${trimmedNewName}".`, 'success');
+            // Content (dataset) changed, auto-save (via hash change) will handle it.
         } else if (newName && newName.trim() === oldName) {
             showMessage('Name unchanged.', 'info');
         } else if (newName === null) { 
@@ -2258,6 +2237,7 @@
                 addNewTable(true); 
             }
             showMessage(`Table "${tableName}" deleted.`, 'success');
+            // Content changed, auto-save (via hash change) will handle it.
         }
     }
 
@@ -2688,9 +2668,9 @@
                     addTabButton(newTableId, importedTableName);
                     switchTable(newTableId); 
                     showMessage('Excel data imported!', 'success');
-                    // After import, content has changed, update hash
-                    lastSavedContentHash = calculateContentHash();
-                    console.log("Excel Import: lastSavedContentHash updated.");
+                    lastSavedContentHash = calculateContentHash(); // Update hash after import
+                    lastSavedHTMLContent = tablesContainer.innerHTML;
+                    console.log("Excel Import: lastSavedContentHash and HTML updated.");
                 } else showMessage('Could not parse table from Excel.', 'error');
             } catch (error) { showMessage('Error processing Excel file.', 'error'); console.error("Excel import error:", error); }
             finally { event.target.value = ''; } 
@@ -2807,11 +2787,11 @@
         pdfContentElement.style.display = 'block'; 
 
         const pdfOptions = {
-            margin: [5, 5, 5, 5], // Margins in mm [top, left, bottom, right]
+            margin: [5, 5, 5, 5], 
             filename: `${(scheduleTitleElement.textContent || 'schedule').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete.pdf`,
-            image: { type: 'jpeg', quality: 0.95 }, // Slightly higher quality
+            image: { type: 'jpeg', quality: 0.95 }, 
             html2canvas: {
-                scale: 2, // Increased scale for better resolution
+                scale: 2, 
                 useCORS: true,
                 logging: false, 
                 scrollX: 0, 
