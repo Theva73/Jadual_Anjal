@@ -105,7 +105,6 @@
             transform: translateY(-1px);
         }
         
-        /* New Button Style */
         #clearScheduledNamesBtn.top-action-btn {
             background-image: linear-gradient(to right, #6f42c1 0%, #563d7c 100%); /* Purple gradient */
         }
@@ -528,19 +527,18 @@
             .main-container { padding: 15px; }
             #scheduleTitle { font-size: 1.8em; }
             h3 { font-size: 1.1em; }
-            .top-action-btn { font-size: 0.85em; padding: 8px 12px; flex-basis: calc(25% - 6px); } /* Adjusted for 4 buttons */
+            .top-action-btn { font-size: 0.85em; padding: 8px 12px; flex-basis: calc(25% - 6px); } 
             .bar button { font-size: 0.85em; padding: 8px 12px; flex-basis: 100px; }
             th, td { padding: 8px 10px; min-width: 70px; font-size: 0.85em; }
             .table-tabs button, .name-session-tabs button { padding: 8px 10px; font-size: 0.9em; }
         }
-        @media (max-width: 600px) { /* Added breakpoint for better button wrapping */
+        @media (max-width: 600px) { 
              .top-action-btn { flex-basis: calc(50% - 4px); }
         }
         @media (max-width: 480px) {
             body { padding: 5px; }
             .main-container { padding: 10px; }
             #scheduleTitle { font-size: 1.5em; }
-            /* .top-action-btn already handled by max-width: 600px for 2x2 layout */
             #controlsToggler .toggler-icon { width: 16px; height: 16px; }
              .bar button { font-size: 0.8em; padding: 6px 10px; gap: 4px; flex-basis: calc(50% - 4px); }
             th, td { padding: 6px 8px; min-width: 60px; font-size: 0.8em; }
@@ -566,9 +564,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             <span>PDF</span>
         </button>
-        <button id="clearScheduledNamesBtn" class="top-action-btn" title="Clear all scheduled names from tables">
+        <button id="clearScheduledNamesBtn" class="top-action-btn" title="Clear scheduled names from the ACTIVE table">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="8" x2="22" y2="13"></line><line x1="22" y1="8" x2="17" y2="13"></line></svg>
-            <span>Clear Names</span>
+            <span>Clear Names (Active Table)</span>
         </button>
     </div>
 
@@ -781,9 +779,6 @@
     
     if (firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4" || firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.apiKey.includes("AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4")) {
         console.warn("Firebase Auth: Update Firebase API Key if you see this in production.");
-        // Avoid fatal error, let app try to continue, but log prominently.
-        // const userIdDisplayError = document.getElementById('userIdDisplay');
-        // if (userIdDisplayError) userIdDisplayError.textContent = "User ID: Firebase API Key Error!";
     }
     
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app');
@@ -842,12 +837,12 @@
         sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, 
         loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, 
         controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement, 
-        clearAndResetScheduleBtnElement, manualSaveBtnElement, clearScheduledNamesBtnElement; // Added clearScheduledNamesBtnElement
+        clearAndResetScheduleBtnElement, manualSaveBtnElement, clearScheduledNamesBtnElement; 
 
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
         if (!customMessageBox) {
-            customMessageBox = document.getElementById('customMessageBox'); // Fallback if not initialized
+            customMessageBox = document.getElementById('customMessageBox'); 
             if (!customMessageBox) { console.warn("showMessage: customMessageBox not found. Msg:", message); return; }
         }
         customMessageBox.textContent = message;
@@ -895,13 +890,6 @@
         controlsTogglerElement.setAttribute('aria-expanded', isOpen.toString());
         const textSpan = controlsTogglerElement.querySelector('span');
         if (textSpan) textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
-        // Ensure icon rotation works correctly
-        const icon = controlsTogglerElement.querySelector('.toggler-icon');
-        if (icon) {
-            // This part might be redundant if CSS handles it, but can be explicit
-            // if (isOpen) icon.style.transform = 'rotate(0deg)';
-            // else icon.style.transform = 'rotate(180deg)';
-        }
     }
 
     function showNameModalLoading(isLoading) {
@@ -970,11 +958,11 @@
                 colCount: table.rows[0]?.cells.length || 0
             };
         });
-        return JSON.stringify(state); // Stringify for simpler comparison
+        return JSON.stringify(state); 
     }
 
     function hasStateChanged(currentStateStringified) { 
-        if (!isInitialStateSet || !lastSavedState) return true; // lastSavedState is also stringified
+        if (!isInitialStateSet || !lastSavedState) return true; 
         if (!currentStateStringified) return false;
         return currentStateStringified !== lastSavedState;
     }
@@ -1098,7 +1086,7 @@
             } else {
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
                 const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) { _updateLocalStateAfterSave(null, "Previous Draft Lost", true, "doc-not-found-during-autosave"); isAutoSaving = false; return; } // Added isAutoSaving = false
+                if (!docSnap.exists()) { _updateLocalStateAfterSave(null, "Previous Draft Lost", true, "doc-not-found-during-autosave"); isAutoSaving = false; return; } 
                 const scheduleDataForUpdate = { ...scheduleContentToSave, lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", name: docSnap.data().name, createdAt: docSnap.data().createdAt, isAutoDraft: typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : true };
                 await setDoc(docRef, scheduleDataForUpdate, { merge: true });
                 _updateLocalStateAfterSave(currentWorkingScheduleDocId, scheduleDataForUpdate.name, scheduleDataForUpdate.isAutoDraft, "auto-save-update");
@@ -1307,7 +1295,7 @@
         reader.onload = async (e) => {
             try {
                 const importedSchedulesData = JSON.parse(e.target.result);
-                if (!Array.isArray(importedSchedulesData)) { showMessage('Invalid file format.', 'error'); showGeneralLoading(false); return; } // Added showGeneralLoading(false)
+                if (!Array.isArray(importedSchedulesData)) { showMessage('Invalid file format.', 'error'); showGeneralLoading(false); return; } 
                 let importedCount = 0, skippedCount = 0;
                 const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
                 for (const schedule of importedSchedulesData) {
@@ -1365,7 +1353,7 @@
             newText = (newText.trim() + remarkPart).trim(); 
             contentNode.textContent = newText; hideCellAutocompleteSuggestions(); rebuildAndRenderSummary(); 
             contentNode.focus(); const range = document.createRange(); const sel = window.getSelection();
-            if (sel) { // Check if sel is not null
+            if (sel) { 
                 if (contentNode.childNodes.length > 0) { range.selectNodeContents(contentNode); range.collapse(false); }
                 else { range.setStart(contentNode, 0); range.collapse(true); }
                 sel.removeAllRanges(); sel.addRange(range);
@@ -1380,18 +1368,15 @@
 
     // --- DOMContentLoaded: Main Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize DOM element references
         scheduleTitleElement = document.getElementById('scheduleTitle'); tablesContainer = document.getElementById('tablesContainer'); tableTabs = document.getElementById('tableTabs'); nameModal = document.getElementById('nameModal'); nameModalContent = document.getElementById('nameModalContent'); nameModalHeader = document.getElementById('nameModalHeader'); nameListContainer = document.getElementById('nameList'); newNameInput = document.getElementById('newNameInput'); sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); summaryTableElement = document.getElementById('summaryTable'); summaryTableContainerElement = document.getElementById('summaryTableContainer'); customMessageBox = document.getElementById('customMessageBox'); fileInputElement = document.getElementById('fileInput'); directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn'); closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard'); nameListImportFileInputElement = document.getElementById('nameListImportFile'); searchNameInputElement = document.getElementById('searchNameInput'); sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); userIdDisplayElement = document.getElementById('userIdDisplay'); namePagiTabElement = document.getElementById('namePagiTab'); namePetangTabElement = document.getElementById('namePetangTab'); loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal'); nameModalTitleElement = document.getElementById('nameModalTitle'); generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator'); controlsTogglerElement = document.getElementById('controlsToggler'); collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); pdfContentElement = document.getElementById('pdfContent'); clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); manualSaveBtnElement = document.getElementById('manualSaveBtn'); 
-        clearScheduledNamesBtnElement = document.getElementById('clearScheduledNamesBtn'); // Initialize new button
+        clearScheduledNamesBtnElement = document.getElementById('clearScheduledNamesBtn'); 
 
         autocompleteSuggestionsDiv = document.createElement('div'); autocompleteSuggestionsDiv.id = 'autocompleteSuggestions'; document.body.appendChild(autocompleteSuggestionsDiv);
         
         if (controlsTogglerElement && collapsibleButtonBarsElement) { collapsibleButtonBarsElement.classList.remove('open'); controlsTogglerElement.setAttribute('aria-expanded', 'false'); const textSpan = controlsTogglerElement.querySelector('span'); if (textSpan) textSpan.textContent = 'Show Controls'; }
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !clearAndResetScheduleBtnElement || !manualSaveBtnElement || !clearScheduledNamesBtnElement) { // Check new button
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !clearAndResetScheduleBtnElement || !manualSaveBtnElement || !clearScheduledNamesBtnElement) { 
             console.error("CRITICAL DOM elements missing. Some functionality may be impaired.");
-            // Avoid breaking the entire app, let it try to run with what it has.
-            // document.body.innerHTML = "<p style='color:red; text-align:center;'>Error: App failed to initialize. Check console.</p>"; return; 
         }
         
         if (fbAuth) {
@@ -1463,7 +1448,7 @@
         if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility);
         if(manualSaveBtnElement) manualSaveBtnElement.addEventListener('click', manualSaveCurrentPage);
         if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf);
-        if(clearScheduledNamesBtnElement) clearScheduledNamesBtnElement.addEventListener('click', clearAllScheduledNames); // Add listener for new button
+        if(clearScheduledNamesBtnElement) clearScheduledNamesBtnElement.addEventListener('click', clearScheduledNamesFromActiveTable); // Updated function call
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) { nameModalHeader.addEventListener('mousedown', startDragModal); nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false }); }
@@ -1484,7 +1469,7 @@
             else if (targetButton) { const scheduleId = targetButton.dataset.scheduleId; const scheduleNameElement = targetButton.parentElement.querySelector('span[data-schedule-id]'); const scheduleName = scheduleNameElement ? scheduleNameElement.textContent.split(' (by')[0] : 'this schedule'; await confirmAndDeleteSharedScheduleFromFirestore(scheduleId, scheduleName); }
         });
         if(clearAndResetScheduleBtnElement) clearAndResetScheduleBtnElement.addEventListener('click', async () => {
-            if (await customConfirm("Clear everything and start new schedule?")) {
+            if (await customConfirm("Clear everything and start new schedule? This will affect the current view only and does not delete saved Cloud schedules.")) {
                 tablesContainer.innerHTML = ''; tableTabs.innerHTML = ''; activeTableId = null;
                 if (scheduleTitleElement) scheduleTitleElement.textContent = "Jadual Anjal"; 
                 localStorage.removeItem(SCHEDULE_TITLE_KEY); addNewTable(true); 
@@ -1769,60 +1754,65 @@
         }
     }
 
-    // --- Function to clear scheduled names ---
-    async function clearAllScheduledNames() {
-        if (!tablesContainer) {
-            showMessage('Table container not found.', 'error');
+    // --- Function to clear scheduled names from the ACTIVE table ---
+    async function clearScheduledNamesFromActiveTable() {
+        const activeTableElement = document.getElementById(activeTableId);
+        if (!activeTableElement) {
+            showMessage('No active table selected to clear names from.', 'error');
             return;
         }
-        if (!await customConfirm('Are you sure you want to clear all scheduled names from all tables? This action cannot be undone.')) {
+
+        const activeTableName = activeTableElement.dataset.tableName || activeTableId;
+        if (!await customConfirm(`Are you sure you want to clear scheduled names from table "${activeTableName}"? This will only affect this table and cannot be undone.`)) {
             showMessage('Operation cancelled.', 'info');
             return;
         }
 
         showGeneralLoading(true);
-        const allSharedNames = new Set([...namesPagiShared.map(n => String(n).toLowerCase()), ...namesPetangShared.map(n => String(n).toLowerCase())]);
+        // Combined list of all known shared names for checking (case-insensitive)
+        const allSharedNamesLowerCase = new Set([...namesPagiShared.map(n => String(n).toLowerCase()), ...namesPetangShared.map(n => String(n).toLowerCase())]);
 
-        tablesContainer.querySelectorAll('table').forEach(table => {
-            table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(contentNode => {
-                // Skip first column if it's a 'Class' or 'Time' header-like cell in tbody (though unusual for names)
-                if (contentNode.matches('td:first-child, th:first-child') && contentNode.closest('tbody')) {
-                     // Heuristic: if the first column content is short and doesn't look like a typical name slot, skip.
-                     // This might need refinement based on actual table structure for names in first col.
-                     // For now, assume names are not typically in the very first column of a row if that column is for row labels.
+        // Process only the active table's tbody cells and merged cell overlays within tbody
+        activeTableElement.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(contentNode => {
+            // Determine the actual cell element if contentNode is an overlay
+            const actualCellElement = contentNode.classList.contains('merged-cell-overlay') ? contentNode.parentElement : contentNode;
+
+            // Skip first column cells in tbody if they are typical row headers (like "5S1", "Class A")
+            // This is a heuristic: if it's the first cell and its content doesn't look like a schedulable name.
+            if (actualCellElement.cellIndex === 0 && actualCellElement.closest('tbody')) {
+                // If the content of the first cell IS a shared name, it WILL be cleared by the logic below.
+                // This check is more about not unnecessarily processing cells that are structurally headers.
+            }
+
+            let originalText = String(contentNode.textContent || '');
+            const parts = originalText.split(' // '); // Split by remark separator
+            let mainContent = parts[0];
+            const remarkContent = parts.length > 1 ? ' // ' + parts.slice(1).join(' // ') : '';
+
+            const wordsInMain = mainContent.split(/\s+/).filter(w => w.length > 0); // Get actual words
+            const keptMainWords = [];
+
+            for (const word of wordsInMain) {
+                // Preserve words starting with '*' (special markers like *Meeting)
+                // Preserve words that are NOT in the allSharedNamesLowerCase list (these are subjects, other notes)
+                if (word.startsWith('*') || !allSharedNamesLowerCase.has(word.toLowerCase())) {
+                    keptMainWords.push(word);
                 }
-
-                let originalText = String(contentNode.textContent || '');
-                const parts = originalText.split(' // '); // Split by remark separator
-                let mainContent = parts[0];
-                const remarkContent = parts.length > 1 ? ' // ' + parts.slice(1).join(' // ') : '';
-
-                // Process mainContent: split by space, filter out shared names, keep special markers
-                const wordsInMain = mainContent.split(/\s+/).filter(w => w.length > 0); // Get actual words
-                const keptMainWords = [];
-
-                for (const word of wordsInMain) {
-                    if (word.startsWith('*')) { // Keep special markers (e.g., *Meeting)
-                        keptMainWords.push(word);
-                    } else if (!allSharedNames.has(word.toLowerCase())) { // Keep if NOT a shared name
-                        keptMainWords.push(word);
-                    }
-                    // Else (it's a shared name and not a special marker), it's removed
-                }
-                const newMainContent = keptMainWords.join(' ');
-                
-                let finalText = (newMainContent.trim() + remarkContent).trim();
-                // If the cell becomes just "//" (empty main content, empty remark), clear it.
-                if (finalText === "//") finalText = ""; 
-                
-                contentNode.textContent = finalText;
-            });
+                // Else (it's a shared name and not a special marker), it's removed.
+            }
+            const newMainContent = keptMainWords.join(' ');
+            
+            let finalText = (newMainContent.trim() + remarkContent).trim();
+            // If the cell becomes just "//" (empty main content, but remark separator was present), clear it to empty string.
+            if (finalText === "//" && newMainContent.trim() === "") finalText = ""; 
+            
+            contentNode.textContent = finalText;
         });
 
         rebuildAndRenderSummary();
-        await autoSaveCurrentSchedule(); // Save changes
+        await autoSaveCurrentSchedule(); // Save changes to the current working schedule
         showGeneralLoading(false);
-        showMessage('All scheduled names cleared from tables.', 'success');
+        showMessage(`Scheduled names cleared from table "${activeTableName}".`, 'success');
     }
 
 
