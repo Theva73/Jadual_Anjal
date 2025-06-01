@@ -193,7 +193,7 @@
         #excelBtnTrigger, #importExcelBtn, #importNameListBtn, .input-group button { background-color: #28a745; color: white; border-color: #23923d;}
         #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #0069d9;}
         #loadSharedScheduleBtn { background-color: #ffc107; color: #212529; border-color: #e0a800;}
-        #restoreBackupBtn { background-color: #fd7e0f; color: white; border-color: #df6e0d; } /* Restore button style */
+        #restoreBackupBtn { background-color: #fd7e0f; color: white; border-color: #df6e0d; } 
         #clearAndResetScheduleBtn, #nameListBtn { background-color: #fd7e14; color: white; border-color: #e66a04;}
         #selectBtn { background-color: #17a2b8; color: white; border-color: #117a8b;}
         #selectBtn.active { background-color: #e66a04; border-color: #d05f03;}
@@ -396,25 +396,25 @@
             border-radius: 8px; background-color: #f8f9fa;
             max-height: 300px; overflow-y: auto;
         }
-        .shared-schedule-item, .backup-schedule-item { /* Combined styles */
-            display: flex; flex-direction: column; /* Stack info vertically */
+        .shared-schedule-item, .backup-schedule-item { 
+            display: flex; flex-direction: column; 
             padding: 10px 8px; border-bottom: 1px solid #e9ecef;
         }
         .shared-schedule-item:last-child, .backup-schedule-item:last-child { border-bottom: none; }
 
-        .schedule-item-main-line { /* For name and delete button */
+        .schedule-item-main-line { 
             display: flex; justify-content: space-between; align-items: center; width: 100%;
         }
-        .schedule-item-main-line span { /* Name span */
+        .schedule-item-main-line span { 
             cursor: pointer; color: #007bff; flex-grow: 1; margin-right: 10px;
             font-weight: 500;
         }
         .schedule-item-main-line span:hover { text-decoration: underline; }
-        .schedule-item-main-line button { /* Delete button */
+        .schedule-item-main-line button { 
             background-color: #dc3545; color: white; border: none; border-radius: 5px;
             padding: 6px 12px; font-size: 0.9em; flex-shrink: 0;
         }
-        .schedule-item-details { /* For date and original name */
+        .schedule-item-details { 
             font-size: 0.8em; color: #6c757d; margin-top: 4px;
             display: flex; flex-direction: column;
             gap: 2px;
@@ -460,7 +460,7 @@
             overflow: hidden; box-sizing: border-box; z-index: 5;
         }
         .subsumed-cell { visibility: hidden; }
-        #loadingIndicatorModal, #generalLoadingIndicator {
+        #loadingIndicatorModal, #generalLoadingIndicator, #loadingIndicatorRestoreModal { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.85);
             display: flex; align-items: center; justify-content: center;
@@ -642,8 +642,7 @@
                 <h3 id="restoreBackupModalTitle">Restore Schedule from Backup</h3>
                 <button type="button" class="modal-close-btn" id="closeRestoreBackupModalBtn" title="Close restore backup">×</button>
             </div>
-            <div id="restoreBackupListContainer">
-                </div>
+            <div id="restoreBackupListContainer"></div>
             <div id="loadingIndicatorRestoreModal" style="display:none;"><div class="spinner"></div></div>
         </div>
     </div>
@@ -1054,17 +1053,17 @@
         }
 
         const backupScheduleData = {
-            name: `${liveScheduleNameForBackup} - Backup`, // Backup name convention
+            name: `${liveScheduleNameForBackup} - Backup`, 
             html: liveScheduleParsedState.html,
             meta: liveScheduleParsedState.tableMeta,
             activeTableId: liveScheduleParsedState.activeTableId,
             scheduleTitle: liveScheduleParsedState.scheduleTitle,
-            lastUpdatedAt: serverTimestamp(), // Timestamp of this backup action
+            lastUpdatedAt: serverTimestamp(), 
             lastUpdatedBy: fbUserId || "anonymous",
             isAutoDraft: isOriginalAutoDraft, 
-            isBackup: true, // Flag to identify as backup
-            originalDocId: liveDocId, // Link to the live document
-            originalDocName: liveScheduleNameForBackup // Store original name for display in restore list
+            isBackup: true, 
+            originalDocId: liveDocId, 
+            originalDocName: liveScheduleNameForBackup 
         };
 
         try {
@@ -1076,7 +1075,7 @@
 
             if (!querySnapshot.empty) {
                 const backupDocRef = querySnapshot.docs[0].ref;
-                backupScheduleData.createdAt = querySnapshot.docs[0].data().createdAt || serverTimestamp(); // Preserve original backup creation time
+                backupScheduleData.createdAt = querySnapshot.docs[0].data().createdAt || serverTimestamp(); 
                 await updateDoc(backupDocRef, backupScheduleData);
                 console.log(`Backup updated for originalDocId: ${liveDocId}`);
             } else {
@@ -1314,7 +1313,7 @@
         });
         if (!sortedSchedules || sortedSchedules.length === 0) { sharedScheduleListContainerElement.innerHTML = '<p>No shared schedules saved yet.</p>'; return; }
         sortedSchedules.forEach(schedule => {
-            const itemDiv = document.createElement('div'); itemDiv.className = 'shared-schedule-item'; // Use existing class for similar styling
+            const itemDiv = document.createElement('div'); itemDiv.className = 'shared-schedule-item';
             
             const mainLineDiv = document.createElement('div'); mainLineDiv.className = 'schedule-item-main-line';
             
@@ -1432,7 +1431,7 @@
             let candidates = [];
             try {
                 const qPrimary = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                                    where("isBackup", "!=", true), // Ensure we only consider non-backups
+                                    where("isBackup", "!=", true), 
                                     orderBy("lastUpdatedAt", "desc"),
                                     limit(MAX_CANDIDATES_TO_CHECK));
                 const primarySnapshot = await getDocs(qPrimary);
@@ -1440,7 +1439,7 @@
             } catch (error) {
                 console.warn("loadLatest (lastUpdatedAt query failed, trying createdAt):", error);
                 const qFallback = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                                        where("isBackup", "!=", true), // Ensure we only consider non-backups
+                                        where("isBackup", "!=", true), 
                                         orderBy("createdAt", "desc"),
                                         limit(MAX_CANDIDATES_TO_CHECK * 2)); 
                 const fallbackSnapshot = await getDocs(qFallback);
@@ -1599,34 +1598,49 @@
             restoreBackupModalContentElement.style.top = 'auto'; 
             restoreBackupModalContentElement.style.transform = 'none';
             restoreBackupModalElement.style.display = 'flex';
-            loadAndRenderBackupSchedulesFromFirestore(); // Load backups when modal is opened
+            loadAndRenderBackupSchedulesFromFirestore(); 
         }
     }
 
     async function loadAndRenderBackupSchedulesFromFirestore() {
         if (!fbDb || !fbIsAuthReady) {
+            console.error("loadAndRenderBackupSchedulesFromFirestore: Firebase not ready."); // More specific log
             showMessage("Firebase not ready for backup list.", "error");
             if (restoreBackupListContainerElement) restoreBackupListContainerElement.innerHTML = '<p>Connect to Firebase to see backups.</p>';
             return;
         }
-        if (!restoreBackupListContainerElement) return;
+        if (!restoreBackupListContainerElement) {
+            console.error("loadAndRenderBackupSchedulesFromFirestore: restoreBackupListContainerElement not found.");
+            return;
+        }
 
         showRestoreBackupModalLoading(true);
         restoreBackupListContainerElement.innerHTML = '<p>Loading backups...</p>';
         try {
-            const q = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                            where("isBackup", "==", true),
-                            orderBy("lastUpdatedAt", "desc")); // Show most recent backups first
-            const querySnapshot = await getDocs(q);
+            // Fetch ALL documents from the collection first
+            const allSchedulesSnapshot = await getDocs(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"));
+            
             const backupSchedules = [];
-            querySnapshot.forEach((docSnap) => {
-                backupSchedules.push({ id: docSnap.id, ...docSnap.data() });
+            allSchedulesSnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                // Client-side filtering for backups
+                if (data.isBackup === true) {
+                    backupSchedules.push({ id: docSnap.id, ...data });
+                }
             });
+
+            // Sort client-side by lastUpdatedAt descending (most recent first)
+            backupSchedules.sort((a, b) => {
+                const dateA = a.lastUpdatedAt?.toDate ? a.lastUpdatedAt.toDate() : (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0));
+                const dateB = b.lastUpdatedAt?.toDate ? b.lastUpdatedAt.toDate() : (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0));
+                return dateB - dateA; 
+            });
+
             renderBackupScheduleList(backupSchedules);
         } catch (error) {
             console.error("Error loading backup schedules:", error);
             showMessage(`Failed to load backups. Error: ${error.message}`, "error");
-            restoreBackupListContainerElement.innerHTML = `<p>Error loading backups. Check console.</p>`;
+            if (restoreBackupListContainerElement) restoreBackupListContainerElement.innerHTML = `<p>Error loading backups. Check console.</p>`;
         } finally {
             showRestoreBackupModalLoading(false);
         }
@@ -1641,25 +1655,21 @@
             return;
         }
 
-        // No need to sort again if already ordered by Firestore query
         backupSchedulesArray.forEach(backup => {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'backup-schedule-item'; // Use a distinct class or reuse shared-schedule-item if styling is identical
+            itemDiv.className = 'backup-schedule-item'; 
 
             const mainLineDiv = document.createElement('div');
             mainLineDiv.className = 'schedule-item-main-line';
 
             const nameSpan = document.createElement('span');
-            nameSpan.dataset.backupId = backup.id; // Store backup ID
-            nameSpan.dataset.originalDocId = backup.originalDocId; // Store original document ID
+            nameSpan.dataset.backupId = backup.id; 
+            nameSpan.dataset.originalDocId = backup.originalDocId; 
             const displayName = backup.name || `Backup for ${backup.originalDocName || 'Unknown Original'}`;
             nameSpan.title = `Restore from: ${displayName}`;
             nameSpan.textContent = displayName;
             mainLineDiv.appendChild(nameSpan);
             
-            // No delete button for individual backups from this list for now, to keep it simple.
-            // Deletion of backups is tied to deletion of the original schedule.
-
             itemDiv.appendChild(mainLineDiv);
 
             const detailsDiv = document.createElement('div');
@@ -1712,7 +1722,6 @@
 
                 if (typeof backupData.scheduleTitle === 'string') {
                     scheduleTitleElement.textContent = backupData.scheduleTitle;
-                    // Do not update SCHEDULE_TITLE_KEY in localStorage yet, only on actual save.
                 }
                 tablesContainer.innerHTML = backupData.html;
                 const tableMeta = backupData.meta || {};
@@ -1735,9 +1744,6 @@
                     addNewTable(true);
                 }
                 
-                // Set currentWorkingScheduleDocId to the ID of the ORIGINAL document.
-                // This means "Save Page" will try to save over the original live file.
-                // "Save Shared" will still create a new file.
                 _updateLocalStateAfterSave(backupData.originalDocId || null, backupData.name, backupData.isAutoDraft, "restore-from-backup");
                 
                 if (restoreBackupModalElement) restoreBackupModalElement.style.display = 'none';
@@ -1808,11 +1814,8 @@
 
     // --- DOMContentLoaded: Main Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Standard elements
         scheduleTitleElement = document.getElementById('scheduleTitle'); tablesContainer = document.getElementById('tablesContainer'); tableTabs = document.getElementById('tableTabs'); nameModal = document.getElementById('nameModal'); nameModalContent = document.getElementById('nameModalContent'); nameModalHeader = document.getElementById('nameModalHeader'); nameListContainer = document.getElementById('nameList'); newNameInput = document.getElementById('newNameInput'); sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); summaryTableElement = document.getElementById('summaryTable'); summaryTableContainerElement = document.getElementById('summaryTableContainer'); customMessageBox = document.getElementById('customMessageBox'); fileInputElement = document.getElementById('fileInput'); directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn'); closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard'); nameListImportFileInputElement = document.getElementById('nameListImportFile'); searchNameInputElement = document.getElementById('searchNameInput'); sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); userIdDisplayElement = document.getElementById('userIdDisplay'); namePagiTabElement = document.getElementById('namePagiTab'); namePetangTabElement = document.getElementById('namePetangTab'); loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal'); nameModalTitleElement = document.getElementById('nameModalTitle'); generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator'); controlsTogglerElement = document.getElementById('controlsToggler'); collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); pdfContentElement = document.getElementById('pdfContent'); clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); manualSaveBtnElement = document.getElementById('manualSaveBtn'); 
         clearScheduledNamesBtnElement = document.getElementById('clearScheduledNamesBtn'); 
-
-        // New elements for Restore Backup feature
         restoreBackupBtnElement = document.getElementById('restoreBackupBtn');
         restoreBackupModalElement = document.getElementById('restoreBackupModal');
         restoreBackupModalContentElement = document.getElementById('restoreBackupModalContent');
@@ -1821,12 +1824,10 @@
         restoreBackupListContainerElement = document.getElementById('restoreBackupListContainer');
         loadingIndicatorRestoreModalElement = document.getElementById('loadingIndicatorRestoreModal');
 
-
         autocompleteSuggestionsDiv = document.createElement('div'); autocompleteSuggestionsDiv.id = 'autocompleteSuggestions'; document.body.appendChild(autocompleteSuggestionsDiv);
         
         if (controlsTogglerElement && collapsibleButtonBarsElement) { collapsibleButtonBarsElement.classList.remove('open'); controlsTogglerElement.setAttribute('aria-expanded', 'false'); const textSpan = controlsTogglerElement.querySelector('span'); if (textSpan) textSpan.textContent = 'Show Controls'; }
 
-        // Check for critical elements
         if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !clearAndResetScheduleBtnElement || !manualSaveBtnElement || !clearScheduledNamesBtnElement || !restoreBackupBtnElement || !restoreBackupModalElement || !closeRestoreBackupModalBtnElement || !restoreBackupListContainerElement || !loadingIndicatorRestoreModalElement ) { 
             console.error("CRITICAL DOM elements missing. Some functionality may be impaired.");
         }
@@ -1908,16 +1909,17 @@
         if (scheduleTitleElement) scheduleTitleElement.addEventListener('blur', () => localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent));
     }
     function initializeEventListeners() { 
-        // Standard Listeners
         if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility);
         if(manualSaveBtnElement) manualSaveBtnElement.addEventListener('click', manualSaveCurrentPage);
         if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf);
         if(clearScheduledNamesBtnElement) clearScheduledNamesBtnElement.addEventListener('click', clearScheduledNamesFromActiveTable);
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
-        if(nameModalHeader) { nameModalHeader.addEventListener('mousedown', startDragModal); nameModalHeader.addEventListener('touchstart', startDragModal, { passive: false }); }
-        document.addEventListener('mousemove', dragModal); document.addEventListener('mouseup', stopDragModal);
-        document.addEventListener('touchmove', dragModal, { passive: false }); document.addEventListener('touchend', stopDragModal);
+        if(nameModalHeader) { nameModalHeader.addEventListener('mousedown', (e) => startDragModal(e, nameModalContent)); nameModalHeader.addEventListener('touchstart', (e) => startDragModal(e, nameModalContent), { passive: false }); }
+        document.addEventListener('mousemove', (e) => dragModal(e, document.querySelector('.modal-content.dragging'))); 
+        document.addEventListener('mouseup', (e) => stopDragModal(e, document.querySelector('.modal-content.dragging')));
+        document.addEventListener('touchmove', (e) => dragModal(e, document.querySelector('.modal-content.dragging')), { passive: false }); 
+        document.addEventListener('touchend', (e) => stopDragModal(e, document.querySelector('.modal-content.dragging')));
         document.getElementById('excelBtnTrigger')?.addEventListener('click', exportActiveTableToExcel);
         document.getElementById('importExcelBtn')?.addEventListener('click', () => fileInputElement?.click());
         if(fileInputElement) fileInputElement.addEventListener('change', handleExcelFileImport);
@@ -2007,25 +2009,22 @@
             }
         });
 
-        // New Listeners for Restore Backup
         if(restoreBackupBtnElement) restoreBackupBtnElement.addEventListener('click', toggleRestoreBackupModalVisibility);
         if(closeRestoreBackupModalBtnElement) closeRestoreBackupModalBtnElement.addEventListener('click', toggleRestoreBackupModalVisibility);
         if(restoreBackupListContainerElement) restoreBackupListContainerElement.addEventListener('click', async (e) => {
             const targetSpan = e.target.closest('.backup-schedule-item .schedule-item-main-line span[data-backup-id]');
             if (targetSpan) {
                 const backupId = targetSpan.dataset.backupId;
-                // const originalDocId = targetSpan.dataset.originalDocId; // Available if needed
                 await loadSelectedBackupIntoView(backupId);
             }
         });
-        if (restoreBackupModalHeaderElement) { // Make restore modal draggable
+        if (restoreBackupModalHeaderElement) { 
             restoreBackupModalHeaderElement.addEventListener('mousedown', (e) => startDragModal(e, restoreBackupModalContentElement));
             restoreBackupModalHeaderElement.addEventListener('touchstart', (e) => startDragModal(e, restoreBackupModalContentElement), { passive: false });
         }
     }
 
-    // Modified startDragModal to accept the modal content element
-    function startDragModal(e, modalContentEl = nameModalContent) { // Default to nameModalContent for backward compatibility
+    function startDragModal(e, modalContentEl = nameModalContent) { 
         if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; }
         isDraggingModal = true; 
         if(modalContentEl) modalContentEl.classList.add('dragging'); 
@@ -2040,9 +2039,8 @@
         modalDragOffsetY = clientY - modalContentEl.offsetTop;
         if (e.type === 'touchstart') e.preventDefault(); 
     }
-    // Modified dragModal to accept the modal content element
     function dragModal(e, modalContentEl = nameModalContent) {
-        if (!isDraggingModal || !modalContentEl) return;
+        if (!isDraggingModal || !modalContentEl || !modalContentEl.classList.contains('dragging')) return;
         const clientX = e.clientX || (e.touches && e.touches[0].clientX); 
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
         let newLeft = clientX - modalDragOffsetX; 
@@ -2058,14 +2056,12 @@
         modalContentEl.style.top = `${newTop}px`;
         if (e.type === 'touchmove') e.preventDefault(); 
     }
-    // Modified stopDragModal to accept the modal content element
     function stopDragModal(e, modalContentEl = nameModalContent) { 
-        if (isDraggingModal && modalContentEl) { 
+        if (isDraggingModal && modalContentEl && modalContentEl.classList.contains('dragging')) { 
             isDraggingModal = false; 
             modalContentEl.classList.remove('dragging'); 
         }
     }
-
 
     async function attemptDirectCopyToClipboard() { 
         const fullHtml = document.documentElement.outerHTML;
