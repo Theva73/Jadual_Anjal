@@ -52,7 +52,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            align-items: stretch; 
+            align-items: stretch;
             justify-content: center;
             margin-bottom: 20px;
             width: 100%;
@@ -73,10 +73,10 @@
             justify-content: center;
             gap: 8px;
             white-space: nowrap;
-            flex-grow: 1; 
-            flex-basis: 150px; 
+            flex-grow: 1;
+            flex-basis: 150px;
             text-align: center;
-            min-height: 40px; 
+            min-height: 40px;
             box-sizing: border-box;
         }
 
@@ -193,7 +193,7 @@
         #excelBtnTrigger, #importExcelBtn, #importNameListBtn, .input-group button { background-color: #28a745; color: white; border-color: #23923d;}
         #saveSharedScheduleBtn { background-color: #007bff; color: white; border-color: #0069d9;}
         #loadSharedScheduleBtn { background-color: #ffc107; color: #212529; border-color: #e0a800;}
-        #restoreBackupBtn { background-color: #fd7e0f; color: white; border-color: #df6e0d; } 
+        #restoreBackupBtn { background-color: #fd7e0f; color: white; border-color: #df6e0d; }
         #clearAndResetScheduleBtn, #nameListBtn { background-color: #fd7e14; color: white; border-color: #e66a04;}
         #selectBtn { background-color: #17a2b8; color: white; border-color: #117a8b;}
         #selectBtn.active { background-color: #e66a04; border-color: #d05f03;}
@@ -214,7 +214,7 @@
         #selectBtn:hover { background-color: #0f6674; }
         #selectBtn.active:hover { background-color: #c25202;}
         #mergeBtn:hover { background-color: #563299; }
-        #unmergeBtn:hover { background-color: #d9307b; } 
+        #unmergeBtn:hover { background-color: #d9307b; }
         #addTableBtn:hover { background-color: #178d6f; }
         #renameTableBtn:hover, #deselectBtn:hover { background-color: #545b62; }
         #deleteTableBtn:hover, #rowColManipulationBar button.delete-btn:hover { background-color: #b21f2d; }
@@ -250,7 +250,7 @@
             position: relative;
             font-size: 0.9em;
         }
-        table th { 
+        table th {
             background-color: #f8f9fa;
             color: #343a40;
             font-weight: 600;
@@ -263,22 +263,22 @@
         }
         #tablesContainer > table > thead > tr:not(.date-header-row) > th:first-child,
         #tablesContainer > table > tbody > tr > td:first-child,
-        #tablesContainer > table > tbody > tr > th:first-child { 
+        #tablesContainer > table > tbody > tr > th:first-child {
             font-weight: bold;
-            background-color: #e6f7ff; 
+            background-color: #e6f7ff;
             color: #1c1e21;
         }
 
         #tablesContainer > table > thead > tr.date-header-row > th.date-header-cell {
             font-weight: bold;
-            background-color: #cce0ff; 
+            background-color: #cce0ff;
             color: #1c1e21;
-            white-space: normal; 
+            white-space: normal;
         }
         #tablesContainer > table > thead > tr.date-header-row > th.date-header-cell.merged-cell-container .merged-cell-overlay {
-            background-color: #cce0ff; 
-            font-weight: bold; 
-            color: #1c1e21; 
+            background-color: #cce0ff;
+            font-weight: bold;
+            color: #1c1e21;
         }
 
 
@@ -396,25 +396,25 @@
             border-radius: 8px; background-color: #f8f9fa;
             max-height: 300px; overflow-y: auto;
         }
-        .shared-schedule-item, .backup-schedule-item { 
-            display: flex; flex-direction: column; 
+        .shared-schedule-item, .backup-schedule-item {
+            display: flex; flex-direction: column;
             padding: 10px 8px; border-bottom: 1px solid #e9ecef;
         }
         .shared-schedule-item:last-child, .backup-schedule-item:last-child { border-bottom: none; }
 
-        .schedule-item-main-line { 
+        .schedule-item-main-line {
             display: flex; justify-content: space-between; align-items: center; width: 100%;
         }
-        .schedule-item-main-line span { 
+        .schedule-item-main-line span {
             cursor: pointer; color: #007bff; flex-grow: 1; margin-right: 10px;
             font-weight: 500;
         }
         .schedule-item-main-line span:hover { text-decoration: underline; }
-        .schedule-item-main-line button { 
+        .schedule-item-main-line button {
             background-color: #dc3545; color: white; border: none; border-radius: 5px;
             padding: 6px 12px; font-size: 0.9em; flex-shrink: 0;
         }
-        .schedule-item-details { 
+        .schedule-item-details {
             font-size: 0.8em; color: #6c757d; margin-top: 4px;
             display: flex; flex-direction: column;
             gap: 2px;
@@ -454,13 +454,13 @@
         .merged-cell-overlay {
             position: absolute; top: 0; left: 0;
             width: var(--merged-width); height: var(--merged-height);
-            background-color: rgba(240, 248, 255, 0.95); 
+            background-color: rgba(240, 248, 255, 0.95);
             font-style: italic; border: 1px solid #add8e6;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; box-sizing: border-box; z-index: 5;
         }
         .subsumed-cell { visibility: hidden; }
-        #loadingIndicatorModal, #generalLoadingIndicator, #loadingIndicatorRestoreModal { 
+        #loadingIndicatorModal, #generalLoadingIndicator, #loadingIndicatorRestoreModal {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(255, 255, 255, 0.85);
             display: flex; align-items: center; justify-content: center;
@@ -521,14 +521,14 @@
             text-align: center; word-wrap: break-word; overflow-wrap: break-word;
             background-color: #fff !important; page-break-inside: avoid !important;
         }
-        #pdfContent th { 
+        #pdfContent th {
             background-color: #f0f0f0 !important; color: #000; font-weight: bold;
         }
         #pdfContent table thead tr.date-header-row th.date-header-cell {
-            background-color: #b8d6ff !important; 
+            background-color: #b8d6ff !important;
             font-weight: bold !important;
             color: #000 !important;
-            white-space: normal !important; 
+            white-space: normal !important;
         }
         #pdfContent table thead tr:not(.date-header-row) th:first-child,
         #pdfContent table tbody tr td:first-child {
@@ -545,19 +545,19 @@
             .main-container { padding: 15px; }
             #scheduleTitle { font-size: 1.8em; }
             h3 { font-size: 1.1em; }
-            .top-action-btn { 
-                font-size: 0.85em; 
-                padding: 8px 12px; 
+            .top-action-btn {
+                font-size: 0.85em;
+                padding: 8px 12px;
                 flex-basis: calc(25% - 6px);
-                min-width: 0; 
-            } 
+                min-width: 0;
+            }
             .bar button { font-size: 0.85em; padding: 8px 12px; flex-basis: 100px; }
             th, td { padding: 8px 10px; min-width: 70px; font-size: 0.85em; }
             .table-tabs button, .name-session-tabs button { padding: 8px 10px; font-size: 0.9em; }
         }
-        @media (max-width: 600px) { 
-             .top-action-btn { 
-                flex-basis: calc(50% - 4px); 
+        @media (max-width: 600px) {
+             .top-action-btn {
+                flex-basis: calc(50% - 4px);
             }
         }
         @media (max-width: 480px) {
@@ -737,7 +737,7 @@
 
     // --- User-provided Firebase Config (Fallback) ---
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4", 
+      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
       storageBucket: "jadual-3f0aa.firebasestorage.app",
@@ -790,15 +790,15 @@
     const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
     const LAST_ACTIVE_SCHEDULE_ID_KEY = `last_active_schedule_id_${appId}`;
     
-    let activeTableId = 'tbl_1'; 
-    let tableCount = 1; 
+    let activeTableId = 'tbl_1';
+    let tableCount = 1;
     let selectionMode = false;
     let selectedCells = [];
-    let lastClickedCell = null; 
-    let selectedNameFromList = null; 
-    let currentNameListSession = 'pagi'; 
-    let namesPagiShared = []; 
-    let namesPetangShared = []; 
+    let lastClickedCell = null;
+    let selectedNameFromList = null;
+    let currentNameListSession = 'pagi';
+    let namesPagiShared = [];
+    let namesPetangShared = [];
     let isDraggingModal = false;
     let modalDragOffsetX, modalDragOffsetY;
     let autocompleteSuggestionsDiv = null;
@@ -807,19 +807,19 @@
     
     let currentWorkingScheduleDocId = null;
     let autoSaveIntervalId = null;
-    const AUTO_SAVE_INTERVAL = 60000; 
+    const AUTO_SAVE_INTERVAL = 60000;
     let isAutoSaving = false;
     let lastSavedState = null;
     let isInitialStateSet = false;
 
     // --- DOM Element References ---
-    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader, 
-        nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement, 
-        summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement, 
-        closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement, 
-        sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement, 
-        loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement, 
-        controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement, 
+    let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader,
+        nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement,
+        summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement,
+        closeNameModalButtonStandardElement, nameListImportFileInputElement, searchNameInputElement,
+        sharedScheduleImportFileInputElement, userIdDisplayElement, namePagiTabElement, namePetangTabElement,
+        loadingIndicatorModalElement, nameModalTitleElement, generalLoadingIndicatorElement,
+        controlsTogglerElement, collapsibleButtonBarsElement, downloadPdfButtonElement, pdfContentElement,
         clearAndResetScheduleBtnElement, manualSaveBtnElement, clearScheduledNamesBtnElement,
         restoreBackupBtnElement, restoreBackupModalElement, restoreBackupModalContentElement,
         restoreBackupModalHeaderElement, closeRestoreBackupModalBtnElement, restoreBackupListContainerElement,
@@ -829,11 +829,11 @@
     // --- Utility Functions ---
     function showMessage(message, type = 'info', duration = 3000) {
         if (!customMessageBox) {
-            customMessageBox = document.getElementById('customMessageBox'); 
+            customMessageBox = document.getElementById('customMessageBox');
             if (!customMessageBox) { console.warn("showMessage: customMessageBox not found. Msg:", message); return; }
         }
         customMessageBox.textContent = message;
-        customMessageBox.className = `custom-message-box ${type}`; 
+        customMessageBox.className = `custom-message-box ${type}`;
         customMessageBox.style.display = 'block';
         setTimeout(() => { if (customMessageBox) customMessageBox.style.display = 'none'; }, duration);
     }
@@ -844,7 +844,7 @@
         return new Promise((resolve) => {
             const confirmModalId = 'customConfirmModal';
             let existingModal = document.getElementById(confirmModalId);
-            if (existingModal) existingModal.remove(); 
+            if (existingModal) existingModal.remove();
             const modal = document.createElement('div');
             modal.id = confirmModalId;
             modal.style.cssText = `display: flex; position: fixed; z-index: 2001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;`;
@@ -896,7 +896,7 @@
             const firstMeaningfulRow = Array.from(tableElement.rows).find(r => !r.classList.contains('date-header-row'));
             numCols = firstMeaningfulRow ? firstMeaningfulRow.cells.length : 1;
         } else {
-            numCols = 1; 
+            numCols = 1;
         }
         let dateRow = tableElement.tHead.querySelector('tr.date-header-row');
         if (!dateRow) {
@@ -930,10 +930,10 @@
         }
     }
 
-    function captureCurrentState() { 
+    function captureCurrentState() {
         if (!tablesContainer || !scheduleTitleElement) {
             console.warn("captureCurrentState: Critical elements (tablesContainer or scheduleTitleElement) not found. Returning null.");
-            return null; 
+            return null;
         }
         const state = {
             html: tablesContainer.innerHTML,
@@ -948,23 +948,23 @@
                 colCount: table.rows[0]?.cells.length || 0
             };
         });
-        return JSON.stringify(state); 
+        return JSON.stringify(state);
     }
 
-    function hasStateChanged(currentStateStringified) { 
-        if (!isInitialStateSet || !lastSavedState) return true; 
-        if (!currentStateStringified) return false; 
+    function hasStateChanged(currentStateStringified) {
+        if (!isInitialStateSet || !lastSavedState) return true;
+        if (!currentStateStringified) return false;
         return currentStateStringified !== lastSavedState;
     }
 
-    function _updateLocalStateAfterSave(docId, scheduleName, isAutoDraft, operationType) { 
-        const capturedStateStringified = captureCurrentState(); 
+    function _updateLocalStateAfterSave(docId, scheduleName, isAutoDraft, operationType) {
+        const capturedStateStringified = captureCurrentState();
         if (!capturedStateStringified) {
             console.error(`_updateLocalStateAfterSave (${operationType}): Failed to capture current state. Local state NOT updated.`);
         } else {
-            lastSavedState = capturedStateStringified; 
+            lastSavedState = capturedStateStringified;
         }
-        currentWorkingScheduleDocId = docId; 
+        currentWorkingScheduleDocId = docId;
         if (docId) sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, docId);
         else sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
         const timestamp = new Date().toLocaleTimeString();
@@ -976,7 +976,7 @@
     }
 
     // --- Firestore Interaction Functions (Shared Names) ---
-    async function saveSharedNameListToFirestore(session, namesArray) { 
+    async function saveSharedNameListToFirestore(session, namesArray) {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         showNameModalLoading(true);
         const uniqueSortedNames = [...new Set(namesArray.map(n => String(n||'').trim()).filter(n => n))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
@@ -988,7 +988,7 @@
         } catch (error) { console.error(`Error saving shared list to ${session}:`, error); showMessage(`Failed to save. Error: ${error.message}`, "error"); }
         finally { showNameModalLoading(false); }
     }
-    async function addNameToSharedSessionInFirestore(name) { 
+    async function addNameToSharedSessionInFirestore(name) {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         const trimmedName = String(name || '').trim();
         if (!trimmedName) { showMessage("Name cannot be empty.", "info"); return; }
@@ -1004,7 +1004,7 @@
         } catch (error) { console.error(`Error adding name:`, error); showMessage(`Failed to add. Error: ${error.message}`, "error"); }
         finally { showNameModalLoading(false); }
     }
-    async function deleteNameFromSharedSessionInFirestore(nameToDelete) { 
+    async function deleteNameFromSharedSessionInFirestore(nameToDelete) {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         const nameToDeleteStr = String(nameToDelete || '');
         if (await customConfirm(`Delete "${nameToDeleteStr}" from shared ${currentNameListSession} session? This also removes it from tables.`)) {
@@ -1017,7 +1017,7 @@
                 await setDoc(docRef, { names: updatedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
                 tablesContainer.querySelectorAll('table').forEach(table => {
                     table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
-                        const cellText = cell.textContent.trim(); const parts = cellText.split(' // '); 
+                        const cellText = cell.textContent.trim(); const parts = cellText.split(' // ');
                         let mainContent = parts[0]; const remarkContent = parts.length > 1 ? ` // ${parts.slice(1).join(' // ')}` : '';
                         const wordsInMain = mainContent.split(/\s+/);
                         const newWordsInMain = wordsInMain.filter(word => !(word === nameToDeleteStr || (word.startsWith('*') && mainContent.includes(nameToDeleteStr) && mainContent.includes(word.substring(1)))));
@@ -1025,13 +1025,13 @@
                         cell.textContent = (newMainContent || remarkContent) ? (newMainContent + remarkContent).trim() : '';
                     });
                 });
-                rebuildAndRenderSummary(); 
-                if (selectedNameFromList === nameToDeleteStr) clearNameSelection(); 
+                rebuildAndRenderSummary();
+                if (selectedNameFromList === nameToDeleteStr) clearNameSelection();
             } catch (error) { console.error(`Error deleting name:`, error); showMessage(`Failed to delete. Error: ${error.message}`, "error"); }
             finally { showNameModalLoading(false); }
         }
     }
-    function listenToSharedNameList(sessionToListen) { 
+    function listenToSharedNameList(sessionToListen) {
         if (!fbDb || !fbIsAuthReady) { console.warn(`listenToSharedNameList (${sessionToListen}): Firestore not ready.`); return () => {}; }
         if (!appId || appId === 'default-shared-scheduler-app') { console.error(`listenToSharedNameList (${sessionToListen}): Invalid appId.`); return () => {}; }
         const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", sessionToListen);
@@ -1053,17 +1053,17 @@
         }
 
         const backupScheduleData = {
-            name: `${liveScheduleNameForBackup} - Backup`, 
+            name: `${liveScheduleNameForBackup} - Backup`,
             html: liveScheduleParsedState.html,
             meta: liveScheduleParsedState.tableMeta,
             activeTableId: liveScheduleParsedState.activeTableId,
             scheduleTitle: liveScheduleParsedState.scheduleTitle,
-            lastUpdatedAt: serverTimestamp(), 
+            lastUpdatedAt: serverTimestamp(),
             lastUpdatedBy: fbUserId || "anonymous",
-            isAutoDraft: isOriginalAutoDraft, 
-            isBackup: true, 
-            originalDocId: liveDocId, 
-            originalDocName: liveScheduleNameForBackup 
+            isAutoDraft: isOriginalAutoDraft,
+            isBackup: true,
+            originalDocId: liveDocId,
+            originalDocName: liveScheduleNameForBackup
         };
 
         try {
@@ -1075,7 +1075,7 @@
 
             if (!querySnapshot.empty) {
                 const backupDocRef = querySnapshot.docs[0].ref;
-                backupScheduleData.createdAt = querySnapshot.docs[0].data().createdAt || serverTimestamp(); 
+                backupScheduleData.createdAt = querySnapshot.docs[0].data().createdAt || serverTimestamp();
                 await updateDoc(backupDocRef, backupScheduleData);
                 console.log(`Backup updated for originalDocId: ${liveDocId}`);
             } else {
@@ -1090,7 +1090,7 @@
         }
     }
 
-    async function saveSharedScheduleToFirestore() { 
+    async function saveSharedScheduleToFirestore() {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         if (!tablesContainer || tablesContainer.children.length === 0) { showMessage('No data to save.', 'info'); return; }
         const scheduleNameInput = customPrompt('Enter name for this shared schedule:', `Shared Schedule ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
@@ -1102,17 +1102,17 @@
         if (!currentFullStateStringified) { showMessage('Error capturing state.', 'error'); isAutoSaving = false; showGeneralLoading(false); return; }
         
         const currentFullState = JSON.parse(currentFullStateStringified);
-        const scheduleData = { 
-            name: scheduleName, 
-            html: currentFullState.html, 
-            meta: currentFullState.tableMeta, 
-            activeTableId: currentFullState.activeTableId, 
-            scheduleTitle: currentFullState.scheduleTitle, 
-            createdAt: serverTimestamp(), 
-            lastUpdatedAt: serverTimestamp(), 
-            lastUpdatedBy: fbUserId || "anonymous", 
+        const scheduleData = {
+            name: scheduleName,
+            html: currentFullState.html,
+            meta: currentFullState.tableMeta,
+            activeTableId: currentFullState.activeTableId,
+            scheduleTitle: currentFullState.scheduleTitle,
+            createdAt: serverTimestamp(),
+            lastUpdatedAt: serverTimestamp(),
+            lastUpdatedBy: fbUserId || "anonymous",
             isAutoDraft: false,
-            isBackup: false 
+            isBackup: false
         };
 
         try {
@@ -1124,29 +1124,29 @@
         finally { isAutoSaving = false; showGeneralLoading(false); }
     }
 
-    async function autoSaveCurrentSchedule() { 
+    async function autoSaveCurrentSchedule() {
         if (!fbDb || !fbIsAuthReady || isAutoSaving || !tablesContainer || tablesContainer.children.length === 0 || !isInitialStateSet) return;
         
         const currentStateStringified = captureCurrentState();
-        if (currentStateStringified === null) { 
+        if (currentStateStringified === null) {
             console.warn("AutoSave: Failed to capture current state. Skipping auto-save cycle.");
-            return; 
+            return;
         }
-        if (!hasStateChanged(currentStateStringified)) { 
+        if (!hasStateChanged(currentStateStringified)) {
             return;
         }
         
-        isAutoSaving = true; 
+        isAutoSaving = true;
         console.log(`AutoSave: Changes detected. DocID: ${currentWorkingScheduleDocId || 'NEW DRAFT'}`);
         
         try {
-            const currentState = JSON.parse(currentStateStringified); 
-            const scheduleContentToSave = { 
-                html: currentState.html, 
-                meta: currentState.tableMeta, 
-                activeTableId: currentState.activeTableId, 
+            const currentState = JSON.parse(currentStateStringified);
+            const scheduleContentToSave = {
+                html: currentState.html,
+                meta: currentState.tableMeta,
+                activeTableId: currentState.activeTableId,
                 scheduleTitle: currentState.scheduleTitle,
-                isBackup: false 
+                isBackup: false
             };
 
             let savedDocId = currentWorkingScheduleDocId;
@@ -1162,14 +1162,14 @@
             } else {
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
                 const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) { 
-                    _updateLocalStateAfterSave(null, "Previous Draft Lost", true, "doc-not-found-during-autosave"); 
-                    isAutoSaving = false; 
-                    currentWorkingScheduleDocId = null; 
-                    return; 
-                } 
+                if (!docSnap.exists()) {
+                    _updateLocalStateAfterSave(null, "Previous Draft Lost", true, "doc-not-found-during-autosave");
+                    isAutoSaving = false;
+                    currentWorkingScheduleDocId = null;
+                    return;
+                }
                 savedScheduleName = docSnap.data().name;
-                savedIsAutoDraft = typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : true; 
+                savedIsAutoDraft = typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : true;
                 const scheduleDataForUpdate = { ...scheduleContentToSave, name: savedScheduleName, createdAt: docSnap.data().createdAt, lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", isAutoDraft: savedIsAutoDraft };
                 await setDoc(docRef, scheduleDataForUpdate, { merge: true });
                 _updateLocalStateAfterSave(currentWorkingScheduleDocId, savedScheduleName, savedIsAutoDraft, "auto-save-update");
@@ -1178,36 +1178,36 @@
                  await _saveBackupForSchedule(savedDocId, currentState, savedScheduleName, savedIsAutoDraft);
             }
 
-        } catch (error) { 
-            console.error("Auto-save error:", error); 
+        } catch (error) {
+            console.error("Auto-save error:", error);
         }
         finally { isAutoSaving = false; }
     }
 
-    async function manualSaveCurrentPage() { 
+    async function manualSaveCurrentPage() {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         if (!tablesContainer || tablesContainer.children.length === 0) { showMessage('No data to save.', 'info'); return; }
         if (isAutoSaving) { showMessage('Operation in progress.', 'info'); return; }
         
         showGeneralLoading(true);
-        isAutoSaving = true; 
+        isAutoSaving = true;
         const currentStateStringified = captureCurrentState();
 
-        if (!currentStateStringified) { 
-            showMessage('Error capturing state for save.', 'error'); 
-            isAutoSaving = false; 
-            showGeneralLoading(false); 
-            return; 
+        if (!currentStateStringified) {
+            showMessage('Error capturing state for save.', 'error');
+            isAutoSaving = false;
+            showGeneralLoading(false);
+            return;
         }
         
         try {
             const currentState = JSON.parse(currentStateStringified);
-            const scheduleContentToSave = { 
-                html: currentState.html, 
-                meta: currentState.tableMeta, 
-                activeTableId: currentState.activeTableId, 
+            const scheduleContentToSave = {
+                html: currentState.html,
+                meta: currentState.tableMeta,
+                activeTableId: currentState.activeTableId,
                 scheduleTitle: currentState.scheduleTitle,
-                isBackup: false 
+                isBackup: false
             };
             
             let savedDocId = currentWorkingScheduleDocId;
@@ -1217,23 +1217,23 @@
             if (currentWorkingScheduleDocId) {
                 const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
                 const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) { 
-                    showMessage(`Error: Previous doc (ID: ${currentWorkingScheduleDocId}) not found. Use "Save Shared" or this will create new.`, "warning", 7000); 
-                    currentWorkingScheduleDocId = null; 
-                    _updateLocalStateAfterSave(null, "Previous Doc Lost", false, "manual-save-doc-not-found"); 
+                if (!docSnap.exists()) {
+                    showMessage(`Error: Previous doc (ID: ${currentWorkingScheduleDocId}) not found. Use "Save Shared" or this will create new.`, "warning", 7000);
+                    currentWorkingScheduleDocId = null;
+                    _updateLocalStateAfterSave(null, "Previous Doc Lost", false, "manual-save-doc-not-found");
                 } else {
-                    let currentScheduleName = docSnap.data().name; 
+                    let currentScheduleName = docSnap.data().name;
                     let currentIsAutoDraft = typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : false;
-                    if (currentIsAutoDraft) { 
+                    if (currentIsAutoDraft) {
                         const newNamePrompt = customPrompt(`This is an autosaved draft ("${currentScheduleName}"). Enter a new name to save it permanently, or cancel to update the draft.`, currentScheduleName.replace(/Autosaved Draft /i, "").replace(/\([\w\s.-]+\)\s*-\s*\d{1,2}\/\d{1,2}\/\d{4}.*/i, "").trim());
                         if (newNamePrompt && newNamePrompt.trim() !== "") {
                             finalScheduleName = newNamePrompt.trim();
-                            finalIsAutoDraft = false; 
-                        } else { 
+                            finalIsAutoDraft = false;
+                        } else {
                             finalScheduleName = currentScheduleName;
                             finalIsAutoDraft = true;
                         }
-                    } else { 
+                    } else {
                         finalScheduleName = currentScheduleName;
                         finalIsAutoDraft = false;
                     }
@@ -1241,19 +1241,19 @@
                     await setDoc(docRef, scheduleDataForUpdate, { merge: true });
                     _updateLocalStateAfterSave(currentWorkingScheduleDocId, finalScheduleName, finalIsAutoDraft, "manual-save");
                     await _saveBackupForSchedule(currentWorkingScheduleDocId, currentState, finalScheduleName, finalIsAutoDraft);
-                    if (sharedScheduleListContainerElement?.style.display === 'block') await loadAndRenderSharedSchedulesFromFirestore(); 
-                    isAutoSaving = false; showGeneralLoading(false); return; 
+                    if (sharedScheduleListContainerElement?.style.display === 'block') await loadAndRenderSharedSchedulesFromFirestore();
+                    isAutoSaving = false; showGeneralLoading(false); return;
                 }
             }
             
             const defaultNewName = `My Schedule - ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
             const scheduleNameInput = customPrompt('Enter name for new schedule:', defaultNewName);
-            if (!scheduleNameInput || scheduleNameInput.trim() === "") { 
-                showMessage('Save cancelled or name empty.', 'info'); 
-                isAutoSaving = false; showGeneralLoading(false); return; 
+            if (!scheduleNameInput || scheduleNameInput.trim() === "") {
+                showMessage('Save cancelled or name empty.', 'info');
+                isAutoSaving = false; showGeneralLoading(false); return;
             }
             finalScheduleName = scheduleNameInput.trim();
-            finalIsAutoDraft = false; 
+            finalIsAutoDraft = false;
             const scheduleData = { name: finalScheduleName, ...scheduleContentToSave, createdAt: serverTimestamp(), lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", isAutoDraft: finalIsAutoDraft };
             const newDocRef = await addDoc(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), scheduleData);
             savedDocId = newDocRef.id;
@@ -1265,37 +1265,37 @@
         finally { isAutoSaving = false; showGeneralLoading(false); }
     }
 
-    async function loadAndRenderSharedSchedulesFromFirestore() { 
+    async function loadAndRenderSharedSchedulesFromFirestore() {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.innerHTML = '<p>Connect to Firebase.</p>'; return; }
         if (!sharedScheduleListContainerElement) return;
-        showGeneralLoading(true); 
+        showGeneralLoading(true);
         sharedScheduleListContainerElement.innerHTML = '<p>Loading schedules...</p>';
         try {
             let querySnapshot;
             try {
-                let q = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), 
-                              orderBy("lastUpdatedAt", "desc")); 
+                let q = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
+                              orderBy("lastUpdatedAt", "desc"));
                 querySnapshot = await getDocs(q);
             } catch (error) {
                 console.warn("Error loading schedules (lastUpdatedAt order failed, trying createdAt):", error);
                 if (error.message.toLowerCase().includes("index")) showMessage("Loading (fallback sort)...", "info", 4000);
                 else showMessage("Error loading. Trying fallback...", "info", 4000);
-                let qFallback = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), 
+                let qFallback = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
                                       orderBy("createdAt", "desc"));
                 querySnapshot = await getDocs(qFallback);
             }
 
-            const schedules = []; 
+            const schedules = [];
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
-                if (data.isBackup !== true) { 
+                if (data.isBackup !== true) {
                     schedules.push({ id: docSnap.id, ...data });
                 }
             });
-            renderSharedScheduleList(schedules); 
-            sharedScheduleListContainerElement.style.display = 'block'; 
+            renderSharedScheduleList(schedules);
+            sharedScheduleListContainerElement.style.display = 'block';
         } catch (finalError) {
-             console.error("Error loading schedules (final attempt):", finalError); 
+             console.error("Error loading schedules (final attempt):", finalError);
              showMessage(`Failed to load schedules. Error: ${finalError.message}`, "error");
              sharedScheduleListContainerElement.innerHTML = `<p>Error loading schedules. Check console.</p>`;
         } finally {
@@ -1303,13 +1303,13 @@
         }
     }
 
-    function renderSharedScheduleList(schedulesArray) { 
+    function renderSharedScheduleList(schedulesArray) {
         if (!sharedScheduleListContainerElement) return;
         sharedScheduleListContainerElement.innerHTML = '';
         const sortedSchedules = schedulesArray.sort((a, b) => {
             const dateA = a.lastUpdatedAt?.toDate ? a.lastUpdatedAt.toDate() : (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0));
             const dateB = b.lastUpdatedAt?.toDate ? b.lastUpdatedAt.toDate() : (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0));
-            return dateB - dateA; 
+            return dateB - dateA;
         });
         if (!sortedSchedules || sortedSchedules.length === 0) { sharedScheduleListContainerElement.innerHTML = '<p>No shared schedules saved yet.</p>'; return; }
         sortedSchedules.forEach(schedule => {
@@ -1322,7 +1322,7 @@
             else if (schedule.createdAt?.toDate) dateToShow = `Created: ${schedule.createdAt.toDate().toLocaleString()}`;
             
             const updatedByText = schedule.lastUpdatedBy ? ` (by ${schedule.lastUpdatedBy.substring(0,8)}...)` : '';
-            const draftSuffix = schedule.isAutoDraft ? " (Draft)" : ""; 
+            const draftSuffix = schedule.isAutoDraft ? " (Draft)" : "";
             const displayName = `${schedule.name}${draftSuffix}`;
 
             const nameSpan = document.createElement('span');
@@ -1351,6 +1351,7 @@
         });
     }
 
+    // INJECTED FUNCTION FROM Fixes_04.txt
     async function loadSelectedSharedScheduleFromFirestore(scheduleDocId, isDefaultLoad = false) {
         if (!fbDb || !fbIsAuthReady) {
             if (!isDefaultLoad) showMessage("Firebase not ready.", "error");
@@ -1358,7 +1359,8 @@
             return false;
         }
         if (!tablesContainer || !tableTabs || !scheduleTitleElement) {
-            console.error("loadSelected: Critical DOM elements missing."); return false;
+            console.error("loadSelected: Critical DOM elements missing.");
+            return false;
         }
         showGeneralLoading(true);
         try {
@@ -1369,7 +1371,7 @@
                 if (scheduleData.isBackup === true) {
                     console.warn(`loadSelected: Attempted to load a backup document (ID: ${scheduleDocId}). Operation aborted.`);
                     if (!isDefaultLoad) showMessage("Cannot load a backup file directly from this list. Use 'Restore Backup'.", "error");
-                     _updateLocalStateAfterSave(null, null, false, "attempted-backup-load"); 
+                    _updateLocalStateAfterSave(null, null, false, "attempted-backup-load");
                     if (scheduleDocId === sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY)) sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
                     return false;
                 }
@@ -1378,70 +1380,85 @@
                     scheduleTitleElement.textContent = scheduleData.scheduleTitle;
                     localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleData.scheduleTitle);
                 }
-                tablesContainer.innerHTML = scheduleData.html; 
-                const tableMeta = scheduleData.meta || {}; 
-                tableTabs.innerHTML = ''; 
+                tablesContainer.innerHTML = scheduleData.html;
+                const tableMeta = scheduleData.meta || {};
+                tableTabs.innerHTML = '';
                 tablesContainer.querySelectorAll('table').forEach(table => {
-                    ensureDateHeaderRowExists(table); 
+                    ensureDateHeaderRowExists(table);
                     const id = table.id;
                     const metaInfo = tableMeta[id] || {};
-                    const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
-                    table.dataset.tableName = name; 
-                    addTabButton(id, name); 
+                    const name = metaInfo.name || `Sheet ${tableTabs.children.length + 1}`;
+                    table.dataset.tableName = name;
+                    addTabButton(id, name);
                     table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                 });
                 activeTableId = scheduleData.activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1';
-                if (document.getElementById(activeTableId)) switchTable(activeTableId); 
+                if (document.getElementById(activeTableId)) switchTable(activeTableId);
                 else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id);
                 else { console.warn("Loaded schedule has no tables. Adding new."); addNewTable(true); }
                 _updateLocalStateAfterSave(scheduleDocId, scheduleData.name, scheduleData.isAutoDraft, "load");
                 if (isDefaultLoad) console.log(`Default/Session schedule "${scheduleData.name}" loaded.`);
-                if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.style.display = 'none'; 
-                rebuildAndRenderSummary(); updateAllMergeOverlays(); return true;
+                if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.style.display = 'none';
+                rebuildAndRenderSummary();
+                updateAllMergeOverlays();
+                return true;
             } else {
                 console.warn(`loadSelected: Doc ID "${scheduleDocId}" not found.`);
                 if (!isDefaultLoad) showMessage(`Schedule ID "${scheduleDocId}" not found.`, "error");
-                _updateLocalStateAfterSave(null, null, false, "doc-not-found-on-load"); 
+                _updateLocalStateAfterSave(null, null, false, "doc-not-found-on-load");
                 if (scheduleDocId === sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY)) sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
                 return false;
             }
         } catch (error) {
             console.error(`loadSelected: Error loading schedule ID ${scheduleDocId}:`, error);
             if (!isDefaultLoad) showMessage(`Failed to load. Error: ${error.message}`, "error");
-            _updateLocalStateAfterSave(null, null, false, "load-error"); return false;
-        } finally { showGeneralLoading(false); }
+            _updateLocalStateAfterSave(null, null, false, "load-error");
+            return false;
+        } finally {
+            showGeneralLoading(false);
+        }
     }
 
-    async function loadLatestSharedScheduleAsDefault() { 
-        if (!fbDb || !fbIsAuthReady) { console.log("loadLatest: Firebase not ready."); return false; }
+    // INJECTED FUNCTION FROM Fixes_04.txt
+    async function loadLatestSharedScheduleAsDefault() {
+        if (!fbDb || !fbIsAuthReady) {
+            console.log("loadLatest: Firebase not ready.");
+            return false;
+        }
         showGeneralLoading(true);
         let loadedSuccessfully = false;
 
         try {
             const lastActiveIdFromSession = sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
             if (lastActiveIdFromSession) {
+                console.log(`loadLatest: Attempting to load last active schedule (ID: ${lastActiveIdFromSession})`);
                 const loadedFromSession = await loadSelectedSharedScheduleFromFirestore(lastActiveIdFromSession, true);
-                if (loadedFromSession) { 
-                    showGeneralLoading(false); 
-                    return true; 
+                if (loadedFromSession) {
+                    console.log("loadLatest: Successfully loaded last active schedule");
+                    showGeneralLoading(false);
+                    return true;
+                } else {
+                    console.warn(`loadLatest: Failed to load last active schedule (ID: ${lastActiveIdFromSession})`);
                 }
             }
-            
-            const MAX_CANDIDATES_TO_CHECK = 5; 
+
+            const MAX_CANDIDATES_TO_CHECK = 5;
             let candidates = [];
             try {
+                console.log("loadLatest: Querying Firestore for latest schedules");
                 const qPrimary = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                                    where("isBackup", "!=", true), 
-                                    orderBy("lastUpdatedAt", "desc"),
-                                    limit(MAX_CANDIDATES_TO_CHECK));
+                    where("isBackup", "!=", true),
+                    orderBy("lastUpdatedAt", "desc"),
+                    limit(MAX_CANDIDATES_TO_CHECK));
                 const primarySnapshot = await getDocs(qPrimary);
                 primarySnapshot.forEach(docSnap => candidates.push(docSnap));
+                console.log(`loadLatest: Found ${candidates.length} candidate schedules`);
             } catch (error) {
                 console.warn("loadLatest (lastUpdatedAt query failed, trying createdAt):", error);
                 const qFallback = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                                        where("isBackup", "!=", true), 
-                                        orderBy("createdAt", "desc"),
-                                        limit(MAX_CANDIDATES_TO_CHECK * 2)); 
+                    where("isBackup", "!=", true),
+                    orderBy("createdAt", "desc"),
+                    limit(MAX_CANDIDATES_TO_CHECK * 2));
                 const fallbackSnapshot = await getDocs(qFallback);
                 const fallbackCandidates = [];
                 fallbackSnapshot.forEach(docSnap => fallbackCandidates.push(docSnap));
@@ -1453,24 +1470,55 @@
                     const dateB = b.data().lastUpdatedAt?.toDate ? b.data().lastUpdatedAt.toDate() : new Date(0);
                     return dateB - dateA;
                 });
-                candidates = candidates.slice(0, MAX_CANDIDATES_TO_CHECK); 
+                candidates = candidates.slice(0, MAX_CANDIDATES_TO_CHECK);
+                console.log(`loadLatest: Found ${candidates.length} fallback candidate schedules`);
             }
 
-            for (const docSnap of candidates) { 
+            for (const docSnap of candidates) {
+                console.log(`loadLatest: Trying to load schedule ${docSnap.id}`);
                 loadedSuccessfully = await loadSelectedSharedScheduleFromFirestore(docSnap.id, true);
-                if (loadedSuccessfully) break; 
+                if (loadedSuccessfully) {
+                    console.log("loadLatest: Successfully loaded schedule");
+                    break;
+                } else {
+                    console.warn(`loadLatest: Failed to load schedule ${docSnap.id}`);
+                }
+            }
+
+            if (!loadedSuccessfully) {
+                console.log("loadLatest: No suitable non-backup schedule loaded from Firestore.");
+                // showMessage('No saved schedule found. Starting with a new schedule.', 'info', 5000); // Keep this commented or conditional
             }
 
         } catch (finalError) {
             console.error("loadLatest (outer try):", finalError);
-        } finally { 
-            showGeneralLoading(false); 
+            // showMessage('Error loading saved schedule. Starting with a new one.', 'error', 5000); // Keep this commented or conditional
+        } finally {
+            showGeneralLoading(false);
         }
-        if (!loadedSuccessfully) console.log("loadLatest: No suitable non-backup schedule loaded from Firestore.");
+        
+        if (!loadedSuccessfully) {
+            console.log("loadLatest: Fallback - Setting up initial table state as no schedule was loaded.");
+            setupInitialTableState(); // This will ensure the default HTML template table is active
+            lastSavedState = captureCurrentState();
+            isInitialStateSet = true;
+            if (lastSavedState === null) {
+                console.error("CRITICAL: Initial state capture failed after fallback.");
+                showMessage("Error: Could not capture initial state.", "error", 7000);
+            }
+            rebuildAndRenderSummary();
+             // Only show message if it's truly a fresh start, not just a load failure of a specific doc
+            if (!sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY) && candidates.length === 0) {
+                 showMessage('No saved schedule found. Starting with a new schedule.', 'info', 5000);
+            } else if (candidates.length > 0) {
+                 showMessage('Could not load latest schedule. Displaying default. Try "Load Shared".', 'warning', 7000);
+            }
+        }
+        
         return loadedSuccessfully;
     }
     
-    async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) { 
+    async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         const displayName = scheduleName.includes("(Draft)") ? scheduleName : `${scheduleName}`;
         if (await customConfirm(`Delete "${displayName}" from Cloud? This cannot be undone. (Associated backup will also be deleted)`)) {
@@ -1489,32 +1537,32 @@
 
                 if (currentWorkingScheduleDocId === scheduleDocId) _updateLocalStateAfterSave(null, null, false, "deleted-current");
                 showMessage(`Schedule "${scheduleName}" and its backup deleted.`, 'success');
-                await loadAndRenderSharedSchedulesFromFirestore(); 
+                await loadAndRenderSharedSchedulesFromFirestore();
             } catch (error) { console.error("Error deleting schedule and/or its backup:", error); showMessage(`Failed to delete. Error: ${error.message}`, "error"); }
             finally { showGeneralLoading(false); }
         }
     }
-    async function exportAllSharedSchedulesFromFirestore() { 
+    async function exportAllSharedSchedulesFromFirestore() {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         showGeneralLoading(true);
         try {
-            const q = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), 
-                            where("isBackup", "!=", true), 
-                            orderBy("createdAt", "desc")); 
+            const q = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
+                            where("isBackup", "!=", true),
+                            orderBy("createdAt", "desc"));
             const querySnapshot = await getDocs(q); const schedulesToExport = [];
-            querySnapshot.forEach((docSnap) => { 
-                const data = docSnap.data(); 
-                schedulesToExport.push({ 
-                    name: data.name, 
-                    html: data.html, 
-                    meta: data.meta, 
-                    activeTableId: data.activeTableId, 
-                    scheduleTitle: data.scheduleTitle || null, 
-                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null, 
-                    lastUpdatedAt: data.lastUpdatedAt?.toDate ? data.lastUpdatedAt.toDate().toISOString() : null, 
-                    lastUpdatedBy: data.lastUpdatedBy || null, 
-                    isAutoDraft: typeof data.isAutoDraft === 'boolean' ? data.isAutoDraft : undefined 
-                }); 
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                schedulesToExport.push({
+                    name: data.name,
+                    html: data.html,
+                    meta: data.meta,
+                    activeTableId: data.activeTableId,
+                    scheduleTitle: data.scheduleTitle || null,
+                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
+                    lastUpdatedAt: data.lastUpdatedAt?.toDate ? data.lastUpdatedAt.toDate().toISOString() : null,
+                    lastUpdatedBy: data.lastUpdatedBy || null,
+                    isAutoDraft: typeof data.isAutoDraft === 'boolean' ? data.isAutoDraft : undefined
+                });
             });
             if (schedulesToExport.length === 0) { showMessage('No (non-backup) schedules to export.', 'info'); showGeneralLoading(false); return; }
             const blob = new Blob([JSON.stringify(schedulesToExport, null, 2)], { type: 'application/json' });
@@ -1525,46 +1573,46 @@
         } catch (error) { console.error("Error exporting schedules:", error); showMessage(`Failed to export. Error: ${error.message}`, "error"); }
         finally { showGeneralLoading(false); }
     }
-    async function handleSharedSchedulesImport(event) { 
+    async function handleSharedSchedulesImport(event) {
         if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
         const file = event.target.files[0];
         if (!file) { showMessage('No file selected.', 'info'); return; }
         if (file.type !== 'application/json') { showMessage('Invalid file type (.json only).', 'error'); event.target.value = ''; return; }
-        showGeneralLoading(true); 
+        showGeneralLoading(true);
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
                 const importedSchedulesData = JSON.parse(e.target.result);
-                if (!Array.isArray(importedSchedulesData)) { showMessage('Invalid file format.', 'error'); return; } 
+                if (!Array.isArray(importedSchedulesData)) { showMessage('Invalid file format.', 'error'); return; }
                 let importedCount = 0, skippedCount = 0;
                 const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
                 for (const schedule of importedSchedulesData) {
                     if (schedule && typeof schedule.name === 'string' && typeof schedule.html === 'string' && typeof schedule.meta === 'object' && (typeof schedule.activeTableId === 'string' || schedule.activeTableId === null)) {
                         const q = query(schedulesCollectionRef, where("name", "==", schedule.name), where("isBackup", "!=", true));
                         const existingSnapshot = await getDocs(q);
-                        if (!existingSnapshot.empty) { 
-                            if (await customConfirm(`Schedule "${schedule.name}" exists. Overwrite? (Old backup will be removed if you overwrite)`)) { 
+                        if (!existingSnapshot.empty) {
+                            if (await customConfirm(`Schedule "${schedule.name}" exists. Overwrite? (Old backup will be removed if you overwrite)`)) {
                                 for(const docToDel of existingSnapshot.docs) {
                                     const oldBackupQuery = query(schedulesCollectionRef, where("isBackup", "==", true), where("originalDocId", "==", docToDel.id));
                                     const oldBackupSnapshot = await getDocs(oldBackupQuery);
                                     oldBackupSnapshot.forEach(async oldBackupDoc => await deleteDoc(oldBackupDoc.ref));
                                     await deleteDoc(docToDel.ref);
                                 }
-                            } else { 
-                                skippedCount++; continue; 
+                            } else {
+                                skippedCount++; continue;
                             }
                         }
-                        const newLiveScheduleData = { 
-                            name: schedule.name, 
-                            html: schedule.html, 
-                            meta: schedule.meta, 
-                            activeTableId: schedule.activeTableId, 
-                            scheduleTitle: schedule.scheduleTitle || schedule.name, 
-                            createdAt: schedule.createdAt ? new Date(schedule.createdAt) : serverTimestamp(), 
-                            lastUpdatedAt: schedule.lastUpdatedAt ? new Date(schedule.lastUpdatedAt) : serverTimestamp(), 
-                            lastUpdatedBy: schedule.lastUpdatedBy || fbUserId || "anonymous", 
+                        const newLiveScheduleData = {
+                            name: schedule.name,
+                            html: schedule.html,
+                            meta: schedule.meta,
+                            activeTableId: schedule.activeTableId,
+                            scheduleTitle: schedule.scheduleTitle || schedule.name,
+                            createdAt: schedule.createdAt ? new Date(schedule.createdAt) : serverTimestamp(),
+                            lastUpdatedAt: schedule.lastUpdatedAt ? new Date(schedule.lastUpdatedAt) : serverTimestamp(),
+                            lastUpdatedBy: schedule.lastUpdatedBy || fbUserId || "anonymous",
                             isAutoDraft: typeof schedule.isAutoDraft === 'boolean' ? schedule.isAutoDraft : false,
-                            isBackup: false 
+                            isBackup: false
                         };
                         const newLiveDocRef = await addDoc(schedulesCollectionRef, newLiveScheduleData);
                         const importedStateForBackup = {
@@ -1593,12 +1641,12 @@
         if (isDisplayed) {
             restoreBackupModalElement.style.display = 'none';
         } else {
-            restoreBackupModalContentElement.style.position = 'relative'; 
-            restoreBackupModalContentElement.style.left = 'auto'; 
-            restoreBackupModalContentElement.style.top = 'auto'; 
+            restoreBackupModalContentElement.style.position = 'relative';
+            restoreBackupModalContentElement.style.left = 'auto';
+            restoreBackupModalContentElement.style.top = 'auto';
             restoreBackupModalContentElement.style.transform = 'none';
             restoreBackupModalElement.style.display = 'flex';
-            loadAndRenderBackupSchedulesFromFirestore(); 
+            loadAndRenderBackupSchedulesFromFirestore();
         }
     }
 
@@ -1633,7 +1681,7 @@
             backupSchedules.sort((a, b) => {
                 const dateA = a.lastUpdatedAt?.toDate ? a.lastUpdatedAt.toDate() : (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0));
                 const dateB = b.lastUpdatedAt?.toDate ? b.lastUpdatedAt.toDate() : (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0));
-                return dateB - dateA; 
+                return dateB - dateA;
             });
 
             renderBackupScheduleList(backupSchedules);
@@ -1657,14 +1705,14 @@
 
         backupSchedulesArray.forEach(backup => {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'backup-schedule-item'; 
+            itemDiv.className = 'backup-schedule-item';
 
             const mainLineDiv = document.createElement('div');
             mainLineDiv.className = 'schedule-item-main-line';
 
             const nameSpan = document.createElement('span');
-            nameSpan.dataset.backupId = backup.id; 
-            nameSpan.dataset.originalDocId = backup.originalDocId; 
+            nameSpan.dataset.backupId = backup.id;
+            nameSpan.dataset.originalDocId = backup.originalDocId;
             const displayName = backup.name || `Backup for ${backup.originalDocName || 'Unknown Original'}`;
             nameSpan.title = `Restore from: ${displayName}`;
             nameSpan.textContent = displayName;
@@ -1762,17 +1810,17 @@
         }
     }
     
-    function showCellAutocompleteSuggestions(cell, inputText) { 
+    function showCellAutocompleteSuggestions(cell, inputText) {
         if (!autocompleteSuggestionsDiv) return;
         const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         let textForMatchingInput = String(inputText || '').split(' // ')[0];
-        const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*')); 
-        const textForMatching = wordsForMatching.join(' ').toLowerCase().trim(); 
+        const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*'));
+        const textForMatching = wordsForMatching.join(' ').toLowerCase().trim();
         if (!textForMatching) { hideCellAutocompleteSuggestions(); return; }
         const filteredSuggestions = namesForAutocomplete.filter(name => { const nameStr = String(name || '').toLowerCase().trim(); return nameStr.startsWith(textForMatching) && nameStr !== textForMatching; });
         if (filteredSuggestions.length > 0) {
-            activeCellForAutocomplete = cell; autocompleteSuggestionsDiv.innerHTML = ''; 
-            filteredSuggestions.slice(0, 10).forEach(suggestion => { 
+            activeCellForAutocomplete = cell; autocompleteSuggestionsDiv.innerHTML = '';
+            filteredSuggestions.slice(0, 10).forEach(suggestion => {
                 const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = suggestion;
                 item.addEventListener('mousedown', (e) => { e.preventDefault(); selectCellAutocompleteSuggestion(suggestion); });
                 autocompleteSuggestionsDiv.appendChild(item);
@@ -1781,32 +1829,32 @@
             autocompleteSuggestionsDiv.style.left = `${cellRect.left + window.scrollX}px`;
             autocompleteSuggestionsDiv.style.top = `${cellRect.bottom + window.scrollY}px`;
             autocompleteSuggestionsDiv.style.minWidth = `${cellRect.width}px`;
-            autocompleteSuggestionsDiv.style.display = 'block'; currentAutocompleteIndex = -1; 
+            autocompleteSuggestionsDiv.style.display = 'block'; currentAutocompleteIndex = -1;
         } else { hideCellAutocompleteSuggestions(); }
     }
-    function hideCellAutocompleteSuggestions() { 
+    function hideCellAutocompleteSuggestions() {
         if (autocompleteSuggestionsDiv) autocompleteSuggestionsDiv.style.display = 'none';
         activeCellForAutocomplete = null; currentAutocompleteIndex = -1;
     }
-    function selectCellAutocompleteSuggestion(suggestionText) { 
+    function selectCellAutocompleteSuggestion(suggestionText) {
         if (activeCellForAutocomplete) {
-            const targetCell = activeCellForAutocomplete; const overlay = targetCell.querySelector('.merged-cell-overlay'); 
-            const contentNode = overlay || targetCell; 
+            const targetCell = activeCellForAutocomplete; const overlay = targetCell.querySelector('.merged-cell-overlay');
+            const contentNode = overlay || targetCell;
             const currentFullText = contentNode.textContent; const remarkPart = currentFullText.includes(' // ') ? currentFullText.substring(currentFullText.indexOf(' // ')) : '';
             const contentBeforeRemark = currentFullText.split(' // ')[0];
             const starWordsBeforeRemark = contentBeforeRemark.split(/\s+/).filter(word => word.startsWith('*')).join(' ');
             let newText = suggestionText; if (starWordsBeforeRemark) newText += ' ' + starWordsBeforeRemark;
-            newText = (newText.trim() + remarkPart).trim(); 
-            contentNode.textContent = newText; hideCellAutocompleteSuggestions(); rebuildAndRenderSummary(); 
+            newText = (newText.trim() + remarkPart).trim();
+            contentNode.textContent = newText; hideCellAutocompleteSuggestions(); rebuildAndRenderSummary();
             contentNode.focus(); const range = document.createRange(); const sel = window.getSelection();
-            if (sel) { 
+            if (sel) {
                 if (contentNode.childNodes.length > 0) { range.selectNodeContents(contentNode); range.collapse(false); }
                 else { range.setStart(contentNode, 0); range.collapse(true); }
                 sel.removeAllRanges(); sel.addRange(range);
             }
         }
     }
-    function updateCellSuggestionHighlight() { 
+    function updateCellSuggestionHighlight() {
         if (!autocompleteSuggestionsDiv || autocompleteSuggestionsDiv.style.display === 'none') return;
         const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
         items.forEach((item, index) => item.classList.toggle('active-suggestion', index === currentAutocompleteIndex));
@@ -1814,8 +1862,8 @@
 
     // --- DOMContentLoaded: Main Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
-        scheduleTitleElement = document.getElementById('scheduleTitle'); tablesContainer = document.getElementById('tablesContainer'); tableTabs = document.getElementById('tableTabs'); nameModal = document.getElementById('nameModal'); nameModalContent = document.getElementById('nameModalContent'); nameModalHeader = document.getElementById('nameModalHeader'); nameListContainer = document.getElementById('nameList'); newNameInput = document.getElementById('newNameInput'); sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); summaryTableElement = document.getElementById('summaryTable'); summaryTableContainerElement = document.getElementById('summaryTableContainer'); customMessageBox = document.getElementById('customMessageBox'); fileInputElement = document.getElementById('fileInput'); directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn'); closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard'); nameListImportFileInputElement = document.getElementById('nameListImportFile'); searchNameInputElement = document.getElementById('searchNameInput'); sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); userIdDisplayElement = document.getElementById('userIdDisplay'); namePagiTabElement = document.getElementById('namePagiTab'); namePetangTabElement = document.getElementById('namePetangTab'); loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal'); nameModalTitleElement = document.getElementById('nameModalTitle'); generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator'); controlsTogglerElement = document.getElementById('controlsToggler'); collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); pdfContentElement = document.getElementById('pdfContent'); clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); manualSaveBtnElement = document.getElementById('manualSaveBtn'); 
-        clearScheduledNamesBtnElement = document.getElementById('clearScheduledNamesBtn'); 
+        scheduleTitleElement = document.getElementById('scheduleTitle'); tablesContainer = document.getElementById('tablesContainer'); tableTabs = document.getElementById('tableTabs'); nameModal = document.getElementById('nameModal'); nameModalContent = document.getElementById('nameModalContent'); nameModalHeader = document.getElementById('nameModalHeader'); nameListContainer = document.getElementById('nameList'); newNameInput = document.getElementById('newNameInput'); sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); summaryTableElement = document.getElementById('summaryTable'); summaryTableContainerElement = document.getElementById('summaryTableContainer'); customMessageBox = document.getElementById('customMessageBox'); fileInputElement = document.getElementById('fileInput'); directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn'); closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard'); nameListImportFileInputElement = document.getElementById('nameListImportFile'); searchNameInputElement = document.getElementById('searchNameInput'); sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); userIdDisplayElement = document.getElementById('userIdDisplay'); namePagiTabElement = document.getElementById('namePagiTab'); namePetangTabElement = document.getElementById('namePetangTab'); loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal'); nameModalTitleElement = document.getElementById('nameModalTitle'); generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator'); controlsTogglerElement = document.getElementById('controlsToggler'); collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); pdfContentElement = document.getElementById('pdfContent'); clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); manualSaveBtnElement = document.getElementById('manualSaveBtn');
+        clearScheduledNamesBtnElement = document.getElementById('clearScheduledNamesBtn');
         restoreBackupBtnElement = document.getElementById('restoreBackupBtn');
         restoreBackupModalElement = document.getElementById('restoreBackupModal');
         restoreBackupModalContentElement = document.getElementById('restoreBackupModalContent');
@@ -1828,7 +1876,7 @@
         
         if (controlsTogglerElement && collapsibleButtonBarsElement) { collapsibleButtonBarsElement.classList.remove('open'); controlsTogglerElement.setAttribute('aria-expanded', 'false'); const textSpan = controlsTogglerElement.querySelector('span'); if (textSpan) textSpan.textContent = 'Show Controls'; }
 
-        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !clearAndResetScheduleBtnElement || !manualSaveBtnElement || !clearScheduledNamesBtnElement || !restoreBackupBtnElement || !restoreBackupModalElement || !closeRestoreBackupModalBtnElement || !restoreBackupListContainerElement || !loadingIndicatorRestoreModalElement ) { 
+        if (!tablesContainer || !tableTabs || !nameModal || !summaryTableElement || !scheduleTitleElement || !sharedScheduleListContainerElement || !generalLoadingIndicatorElement || !summaryTableContainerElement || !controlsTogglerElement || !collapsibleButtonBarsElement || !downloadPdfButtonElement || !pdfContentElement || !clearAndResetScheduleBtnElement || !manualSaveBtnElement || !clearScheduledNamesBtnElement || !restoreBackupBtnElement || !restoreBackupModalElement || !closeRestoreBackupModalBtnElement || !restoreBackupListContainerElement || !loadingIndicatorRestoreModalElement ) {
             console.error("CRITICAL DOM elements missing. Some functionality may be impaired.");
         }
         
@@ -1840,17 +1888,12 @@
                     unsubscribePagiShared = listenToSharedNameList('pagi'); unsubscribePetangShared = listenToSharedNameList('petang');
                     if (nameModal?.style.display === 'flex' && searchNameInputElement) renderNameListFromFirestore(searchNameInputElement.value);
                     
-                    const loadedDefault = await loadLatestSharedScheduleAsDefault();
-                    if (!loadedDefault) {
-                        setupInitialTableState(); 
-                    }
+                    // This function now contains detailed logging
+                    await loadLatestSharedScheduleAsDefault();
+                    // Note: setupInitialTableState, lastSavedState capture, and rebuildAndRenderSummary
+                    // are now handled within loadLatestSharedScheduleAsDefault if no schedule is loaded.
                     
-                    lastSavedState = captureCurrentState(); 
-                    isInitialStateSet = true;
-                    if (lastSavedState === null) { console.error("CRITICAL: Initial state capture failed."); showMessage("Error: Could not capture initial state.", "error", 7000); }
-                    
-                    rebuildAndRenderSummary(); 
-                    if (autoSaveIntervalId) clearInterval(autoSaveIntervalId); 
+                    if (autoSaveIntervalId) clearInterval(autoSaveIntervalId);
                     autoSaveIntervalId = setInterval(autoSaveCurrentSchedule, AUTO_SAVE_INTERVAL);
                 } else {
                     fbIsAuthReady = false; fbUserId = null; if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Authenticating...";
@@ -1860,8 +1903,10 @@
                     } catch (error) {
                         console.error("Firebase Auth: Error during sign-in:", error); showMessage(`Firebase Auth failed. Error: ${error.message}`, "error", 7000);
                         if(userIdDisplayElement) userIdDisplayElement.textContent = `User ID: Auth Error`;
-                        setupInitialTableState(); 
-                        lastSavedState = captureCurrentState(); 
+                        // Fallback to setting up initial state if auth fails catastrophically before onAuthStateChanged can run loadLatest
+                        console.log("Auth Error: Setting up initial table state as fallback.");
+                        setupInitialTableState();
+                        lastSavedState = captureCurrentState();
                         isInitialStateSet = true;
                         if (lastSavedState === null) console.error("CRITICAL: Initial state capture failed after auth failure.");
                         rebuildAndRenderSummary();
@@ -1871,44 +1916,109 @@
         } else {
              if(userIdDisplayElement) userIdDisplayElement.textContent = "User ID: Firebase Auth Not Initialized";
              console.error("Firebase Auth: fbAuth object not available."); showMessage("Critical Error: Firebase Auth service not initialized.", "error", 10000);
-             setupInitialTableState(); 
-             lastSavedState = captureCurrentState(); 
+             console.log("Firebase Init Error: Setting up initial table state as fallback.");
+             setupInitialTableState();
+             lastSavedState = captureCurrentState();
              isInitialStateSet = true;
              if (lastSavedState === null) console.error("CRITICAL: Initial state capture failed due to Firebase init error.");
              rebuildAndRenderSummary();
         }
-        loadScheduleTitleFromLocalStorage(); initializeEventListeners(); 
+        loadScheduleTitleFromLocalStorage(); initializeEventListeners();
         handleNameListSessionSwitch('pagi');
     });
 
     function setupInitialTableState() {
         const existingTables = tablesContainer.querySelectorAll('table');
-        tableTabs.innerHTML = ''; activeTableId = null; 
-        if (existingTables.length > 0) {
-            existingTables.forEach((table, index) => {
-                ensureDateHeaderRowExists(table); 
-                const id = table.id || `tbl_html_${index + 1}`; 
-                if (!table.id) table.id = id;
-                const name = table.dataset.tableName || `Sheet ${index + 1}`;
-                table.dataset.tableName = name; 
-                addTabButton(id, name);
-                if (index === 0) activeTableId = id;
-                table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
-            });
-            if (activeTableId) switchTable(activeTableId);
-            else if (existingTables[0]) switchTable(existingTables[0].id);
+        // If tablesContainer already has content (e.g., from a failed load that didn't clear it),
+        // ensure the default template isn't appended again.
+        // The goal is to ensure tbl_1 (the default template) is present and active if nothing else loaded.
+        if (tablesContainer.querySelector('#tbl_1')) {
+            console.log("setupInitialTableState: Default table 'tbl_1' already exists.");
+            activeTableId = 'tbl_1';
         } else {
-            addNewTable(true); 
+             console.log("setupInitialTableState: No 'tbl_1'. Re-creating default table structure in tablesContainer.");
+            // This part is tricky because the default HTML is already in tablesContainer.
+            // We want to ensure it's the *only* thing if all loads fail.
+            // For now, if loadLatestSharedScheduleAsDefault fails, it should leave the original HTML template as is.
+            // This function's main role is to set up tabs for whatever is in tablesContainer.
+            // If tablesContainer is empty (which it shouldn't be if the original HTML has tbl_1), then add.
+            if (existingTables.length === 0 && tablesContainer.innerHTML.trim() === '') {
+                console.warn("setupInitialTableState: tablesContainer was empty. This is unexpected. Adding a new default table.");
+                 // Manually create the default table if it's somehow gone
+                const defaultTableHTML = `
+                    <table id="tbl_1" class="active" data-table-name="Kelas 3 & 5">
+                        <thead>
+                            <tr class="date-header-row">
+                                <th class="date-header-cell" contenteditable="true">Thursday, 22 May 2025</th><th class="date-header-cell" contenteditable="true"></th><th class="date-header-cell" contenteditable="true"></th>
+                                <th class="date-header-cell date-header-cell merged-cell-container" contenteditable="true" data-merge-id="date_rehat_tbl1_col4"><div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 40px;" contenteditable="true">DAY INFO</div></th>
+                                <th class="date-header-cell subsumed-cell" contenteditable="true" data-merge-id="date_rehat_tbl1_col4"></th> <th class="date-header-cell" contenteditable="true"></th><th class="date-header-cell" contenteditable="true"></th>
+                            </tr>
+                            <tr>
+                                <th contenteditable="true">Class</th><th contenteditable="true">08:00</th><th contenteditable="true">09:00</th><th contenteditable="true">10:00</th>
+                                <th contenteditable="true" data-merge-id="rehat_tbl1_col4" class="merged-cell-container"><div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true">REHAT</div></th>
+                                <th contenteditable="true" data-merge-id="rehat_tbl1_col4" class="subsumed-cell">11:00</th> <th contenteditable="true">12:00</th><th contenteditable="true">13:00</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td contenteditable="true">5S1</td><td contenteditable="true"></td><td contenteditable="true">JAMES *ReportDue // Sick leave</td><td contenteditable="true"></td>
+                                <td contenteditable="true" data-merge-id="rehat_tbl1_col4_row1" class="merged-cell-container"><div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div></td>
+                                <td contenteditable="true" data-merge-id="rehat_tbl1_col4_row1" class="subsumed-cell"></td> <td contenteditable="true"></td><td contenteditable="true"></td>
+                            </tr>
+                            <tr>
+                                <td contenteditable="true">5S2</td><td contenteditable="true">*SpecialAssembly</td><td contenteditable="true"></td><td contenteditable="true">LILY</td>
+                                <td contenteditable="true" data-merge-id="rehat_tbl1_col4_row2" class="merged-cell-container"><div class="merged-cell-overlay" style="--merged-width: 200px; --merged-height: 50px;" contenteditable="true"></div></td>
+                                <td contenteditable="true" data-merge-id="rehat_tbl1_col4_row2" class="subsumed-cell"></td> <td contenteditable="true"></td><td contenteditable="true"></td>
+                            </tr>
+                        </tbody>
+                    </table>`;
+                tablesContainer.innerHTML = defaultTableHTML;
+                activeTableId = 'tbl_1';
+            } else if (existingTables.length > 0 && !tablesContainer.querySelector('table.active')) {
+                 // If there are tables but none are active, activate the first one.
+                activeTableId = existingTables[0].id;
+            } else if (existingTables.length > 0 && tablesContainer.querySelector('table.active')) {
+                // A table is already active, respect that.
+                activeTableId = tablesContainer.querySelector('table.active').id;
+            } else {
+                // Fallback if tablesContainer has non-table content or some other weird state.
+                // This ensures tbl_1 from the original HTML is the reference.
+                activeTableId = 'tbl_1';
+            }
         }
-        tableCount = Math.max(1, tablesContainer.querySelectorAll('table').length);
+
+        tableTabs.innerHTML = '';
+        // Re-scan tablesContainer after potential modification or just to be sure
+        const currentTablesInDOM = tablesContainer.querySelectorAll('table');
+        currentTablesInDOM.forEach((table, index) => {
+            ensureDateHeaderRowExists(table);
+            const id = table.id || `tbl_dom_${index + 1}`; // Ensure ID if missing
+            if (!table.id) table.id = id;
+            const name = table.dataset.tableName || `Sheet ${index + 1}`;
+            table.dataset.tableName = name;
+            addTabButton(id, name);
+            table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
+        });
+
+        if (activeTableId && document.getElementById(activeTableId)) {
+            switchTable(activeTableId);
+        } else if (currentTablesInDOM.length > 0) {
+            switchTable(currentTablesInDOM[0].id);
+        } else {
+            // This case should ideally not be reached if tbl_1 is always in the initial HTML
+            console.error("setupInitialTableState: No tables found in DOM to activate after setup.");
+        }
+        tableCount = Math.max(1, currentTablesInDOM.length);
+        console.log(`setupInitialTableState: Final activeTableId is ${activeTableId}. tableCount is ${tableCount}.`);
     }
 
-    function loadScheduleTitleFromLocalStorage() { 
+
+    function loadScheduleTitleFromLocalStorage() {
         const savedTitle = localStorage.getItem(SCHEDULE_TITLE_KEY);
         if (savedTitle && scheduleTitleElement) scheduleTitleElement.textContent = savedTitle;
         if (scheduleTitleElement) scheduleTitleElement.addEventListener('blur', () => localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleTitleElement.textContent));
     }
-    function initializeEventListeners() { 
+    function initializeEventListeners() {
         if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility);
         if(manualSaveBtnElement) manualSaveBtnElement.addEventListener('click', manualSaveCurrentPage);
         if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf);
@@ -1916,9 +2026,9 @@
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) { nameModalHeader.addEventListener('mousedown', (e) => startDragModal(e, nameModalContent)); nameModalHeader.addEventListener('touchstart', (e) => startDragModal(e, nameModalContent), { passive: false }); }
-        document.addEventListener('mousemove', (e) => dragModal(e, document.querySelector('.modal-content.dragging'))); 
+        document.addEventListener('mousemove', (e) => dragModal(e, document.querySelector('.modal-content.dragging')));
         document.addEventListener('mouseup', (e) => stopDragModal(e, document.querySelector('.modal-content.dragging')));
-        document.addEventListener('touchmove', (e) => dragModal(e, document.querySelector('.modal-content.dragging')), { passive: false }); 
+        document.addEventListener('touchmove', (e) => dragModal(e, document.querySelector('.modal-content.dragging')), { passive: false });
         document.addEventListener('touchend', (e) => stopDragModal(e, document.querySelector('.modal-content.dragging')));
         document.getElementById('excelBtnTrigger')?.addEventListener('click', exportActiveTableToExcel);
         document.getElementById('importExcelBtn')?.addEventListener('click', () => fileInputElement?.click());
@@ -1937,9 +2047,9 @@
         if(clearAndResetScheduleBtnElement) clearAndResetScheduleBtnElement.addEventListener('click', async () => {
             if (await customConfirm("Clear everything and start new schedule? This will affect the current view only and does not delete saved Cloud schedules or their backups.")) {
                 tablesContainer.innerHTML = ''; tableTabs.innerHTML = ''; activeTableId = null;
-                if (scheduleTitleElement) scheduleTitleElement.textContent = "Jadual Anjal"; 
-                localStorage.removeItem(SCHEDULE_TITLE_KEY); addNewTable(true); 
-                _updateLocalStateAfterSave(null, "New Schedule (Reset)", false, "reset-all"); 
+                if (scheduleTitleElement) scheduleTitleElement.textContent = "Jadual Anjal";
+                localStorage.removeItem(SCHEDULE_TITLE_KEY); addNewTable(true);
+                _updateLocalStateAfterSave(null, "New Schedule (Reset)", false, "reset-all");
                 rebuildAndRenderSummary(); showMessage('Content cleared. New schedule started.', 'success');
             }
         });
@@ -1974,7 +2084,7 @@
             tablesContainer.addEventListener('input', (e) => {
                 const cell = e.target; const targetElement = cell.classList.contains('merged-cell-overlay') ? cell.parentElement : cell;
                 if (targetElement && (targetElement.tagName === 'TD' || (targetElement.tagName === 'TH' && targetElement.closest('tbody')) || targetElement.classList.contains('date-header-cell')) && targetElement.isContentEditable !== false) {
-                    const text = cell.textContent; 
+                    const text = cell.textContent;
                     const isTimeSlotHeaderCell = targetElement.tagName === 'TH' && targetElement.closest('thead tr:not(.date-header-row)');
                     const isFirstColumnClassHeader = targetElement.closest('table')?.querySelector('thead tr:not(.date-header-row) th:first-child')?.textContent?.toLowerCase() === 'class' && targetElement.cellIndex === 0 && !targetElement.classList.contains('date-header-cell');
                     if (!isTimeSlotHeaderCell && !isFirstColumnClassHeader && !targetElement.classList.contains('date-header-cell')) showCellAutocompleteSuggestions(targetElement, text);
@@ -1984,15 +2094,15 @@
             tablesContainer.addEventListener('blur', (e) => {
                 const cell = e.target; const targetElement = cell.classList.contains('merged-cell-overlay') ? cell.parentElement : cell;
                 if (targetElement && (targetElement.tagName === 'TD' || targetElement.tagName === 'TH' || cell.classList.contains('merged-cell-overlay')) && targetElement.isContentEditable !== false) {
-                    setTimeout(rebuildAndRenderSummary, 0); 
-                    setTimeout(() => { if (autocompleteSuggestionsDiv?.style.display === 'block' && !autocompleteSuggestionsDiv.contains(document.activeElement) && activeCellForAutocomplete !== document.activeElement && (!activeCellForAutocomplete || activeCellForAutocomplete.querySelector('.merged-cell-overlay') !== document.activeElement)) hideCellAutocompleteSuggestions(); }, 150); 
+                    setTimeout(rebuildAndRenderSummary, 0);
+                    setTimeout(() => { if (autocompleteSuggestionsDiv?.style.display === 'block' && !autocompleteSuggestionsDiv.contains(document.activeElement) && activeCellForAutocomplete !== document.activeElement && (!activeCellForAutocomplete || activeCellForAutocomplete.querySelector('.merged-cell-overlay') !== document.activeElement)) hideCellAutocompleteSuggestions(); }, 150);
                 }
             }, true);
         }
         window.addEventListener('resize', () => { updateAllMergeOverlays(); hideCellAutocompleteSuggestions(); });
         document.addEventListener('keydown', (e) => {
             if (autocompleteSuggestionsDiv?.style.display === 'block' && activeCellForAutocomplete) {
-                const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item'); if (items.length === 0 && e.key !== 'Escape') return; 
+                const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item'); if (items.length === 0 && e.key !== 'Escape') return;
                 if (e.key === 'ArrowDown') { e.preventDefault(); currentAutocompleteIndex = (currentAutocompleteIndex + 1) % items.length; updateCellSuggestionHighlight(); }
                 else if (e.key === 'ArrowUp') { e.preventDefault(); currentAutocompleteIndex = (currentAutocompleteIndex - 1 + items.length) % items.length; updateCellSuggestionHighlight(); }
                 else if (e.key === 'Enter') { e.preventDefault(); if (currentAutocompleteIndex >= 0 && currentAutocompleteIndex < items.length) selectCellAutocompleteSuggestion(items[currentAutocompleteIndex].textContent); else { hideCellAutocompleteSuggestions(); if(activeCellForAutocomplete) activeCellForAutocomplete.blur(); }}
@@ -2018,57 +2128,57 @@
                 await loadSelectedBackupIntoView(backupId);
             }
         });
-        if (restoreBackupModalHeaderElement) { 
+        if (restoreBackupModalHeaderElement) {
             restoreBackupModalHeaderElement.addEventListener('mousedown', (e) => startDragModal(e, restoreBackupModalContentElement));
             restoreBackupModalHeaderElement.addEventListener('touchstart', (e) => startDragModal(e, restoreBackupModalContentElement), { passive: false });
         }
     }
 
-    function startDragModal(e, modalContentEl = nameModalContent) { 
+    function startDragModal(e, modalContentEl = nameModalContent) {
         if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; }
-        isDraggingModal = true; 
-        if(modalContentEl) modalContentEl.classList.add('dragging'); 
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX); 
+        isDraggingModal = true;
+        if(modalContentEl) modalContentEl.classList.add('dragging');
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        const rect = modalContentEl.getBoundingClientRect(); 
-        modalContentEl.style.position = 'fixed'; 
-        modalContentEl.style.left = `${rect.left}px`; 
+        const rect = modalContentEl.getBoundingClientRect();
+        modalContentEl.style.position = 'fixed';
+        modalContentEl.style.left = `${rect.left}px`;
         modalContentEl.style.top = `${rect.top}px`;
-        modalContentEl.style.transform = 'none'; 
-        modalDragOffsetX = clientX - modalContentEl.offsetLeft; 
+        modalContentEl.style.transform = 'none';
+        modalDragOffsetX = clientX - modalContentEl.offsetLeft;
         modalDragOffsetY = clientY - modalContentEl.offsetTop;
-        if (e.type === 'touchstart') e.preventDefault(); 
+        if (e.type === 'touchstart') e.preventDefault();
     }
     function dragModal(e, modalContentEl = nameModalContent) {
         if (!isDraggingModal || !modalContentEl || !modalContentEl.classList.contains('dragging')) return;
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX); 
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        let newLeft = clientX - modalDragOffsetX; 
+        let newLeft = clientX - modalDragOffsetX;
         let newTop = clientY - modalDragOffsetY;
-        const modalRect = modalContentEl.getBoundingClientRect(); 
-        const viewportWidth = window.innerWidth; 
+        const modalRect = modalContentEl.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        if (newLeft < 0) newLeft = 0; 
+        if (newLeft < 0) newLeft = 0;
         if (newTop < 0) newTop = 0;
         if (newLeft + modalRect.width > viewportWidth) newLeft = viewportWidth - modalRect.width;
         if (newTop + modalRect.height > viewportHeight) newTop = viewportHeight - modalRect.height;
-        modalContentEl.style.left = `${newLeft}px`; 
+        modalContentEl.style.left = `${newLeft}px`;
         modalContentEl.style.top = `${newTop}px`;
-        if (e.type === 'touchmove') e.preventDefault(); 
+        if (e.type === 'touchmove') e.preventDefault();
     }
-    function stopDragModal(e, modalContentEl = nameModalContent) { 
-        if (isDraggingModal && modalContentEl && modalContentEl.classList.contains('dragging')) { 
-            isDraggingModal = false; 
-            modalContentEl.classList.remove('dragging'); 
+    function stopDragModal(e, modalContentEl = nameModalContent) {
+        if (isDraggingModal && modalContentEl && modalContentEl.classList.contains('dragging')) {
+            isDraggingModal = false;
+            modalContentEl.classList.remove('dragging');
         }
     }
 
-    async function attemptDirectCopyToClipboard() { 
+    async function attemptDirectCopyToClipboard() {
         const fullHtml = document.documentElement.outerHTML;
         try { await navigator.clipboard.writeText(fullHtml); showMessage('Full HTML copied!', 'success'); }
         catch (err) {
             console.warn('Direct copy failed, trying fallback:', err); const textarea = document.createElement('textarea');
-            textarea.value = fullHtml; textarea.style.position = 'fixed'; textarea.style.left = '-9999px'; 
+            textarea.value = fullHtml; textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
             document.body.appendChild(textarea); textarea.select();
             try { const success = document.execCommand('copy'); if (success) showMessage('Full HTML copied! (fallback)', 'success'); else showMessage('Copy failed (execCommand).', 'error', 5000); }
             catch (execErr) { console.error('execCommand copy failed:', execErr); showMessage('Copy failed completely.', 'error', 5000); }
@@ -2076,13 +2186,13 @@
         }
     }
     
-    function addTabButton(id, label) { 
+    function addTabButton(id, label) {
         if (!tableTabs) return null;
         const button = document.createElement('button'); button.textContent = label; button.dataset.tableId = id;
         button.title = `Switch to table: ${label}`; button.onclick = () => switchTable(id);
         tableTabs.appendChild(button); return button;
     }
-    function switchTable(id) { 
+    function switchTable(id) {
         const targetTable = document.getElementById(id);
         if (!targetTable && tablesContainer) {
             const firstTableInDOM = tablesContainer.querySelector('table');
@@ -2092,18 +2202,18 @@
         activeTableId = id;
         if(tablesContainer) tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
         if(tableTabs) tableTabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tableId === id));
-        deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays(); hideCellAutocompleteSuggestions(); 
+        deselectAllTableCells(); rebuildAndRenderSummary(); updateAllMergeOverlays(); hideCellAutocompleteSuggestions();
     }
     function addNewTable(isInitial = false) {
         if (!tablesContainer || !tableTabs) { console.error("addNewTable: Critical DOM elements missing."); return; }
-        tableCount++; 
+        tableCount++;
         const defaultTableName = `Schedule ${tableTabs.children.length + 1}`;
         const label = isInitial ? defaultTableName : customPrompt('Enter new table name:', defaultTableName);
         if (!label && !isInitial) { showMessage('Table creation cancelled.', 'info'); return; }
 
         const newTable = document.createElement('table');
-        newTable.id = `tbl_${Date.now()}_${tableCount}`; 
-        newTable.dataset.tableName = label || defaultTableName; 
+        newTable.id = `tbl_${Date.now()}_${tableCount}`;
+        newTable.dataset.tableName = label || defaultTableName;
 
         const thead = newTable.createTHead();
         const timeSlotHeaderRow = thead.insertRow();
@@ -2114,23 +2224,23 @@
             timeSlotHeaderRow.appendChild(th);
         });
         
-        ensureDateHeaderRowExists(newTable); 
+        ensureDateHeaderRowExists(newTable);
 
         const tbody = newTable.createTBody();
-        for (let r = 0; r < 2; r++) { 
+        for (let r = 0; r < 2; r++) {
             const dataRow = tbody.insertRow();
-            for (let c = 0; c < timeSlotHeaderRow.cells.length; c++) { 
+            for (let c = 0; c < timeSlotHeaderRow.cells.length; c++) {
                 const td = dataRow.insertCell(); td.contentEditable = 'true';
-                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`; 
+                if (c === 0) td.textContent = `Sample Class ${String.fromCharCode(65 + r)}`;
             }
         }
         tablesContainer.appendChild(newTable);
         addTabButton(newTable.id, label || defaultTableName);
-        switchTable(newTable.id); 
+        switchTable(newTable.id);
         if (!isInitial) showMessage(`Table "${label || defaultTableName}" added.`, 'success');
         else console.log(`Initial table "${label || defaultTableName}" created with ID ${newTable.id}.`);
     }
-    async function promptAndRenameActiveTable() { 
+    async function promptAndRenameActiveTable() {
         if (!tableTabs) return;
         const currentTab = tableTabs.querySelector('button.active');
         if (!currentTab) { showMessage('No active table to rename.', 'error'); return; }
@@ -2147,16 +2257,16 @@
         else if (newName === null) showMessage('Rename cancelled.', 'info');
         else showMessage('Invalid new name.', 'error');
     }
-    async function confirmAndDeleteActiveTable() { 
+    async function confirmAndDeleteActiveTable() {
         if (!tablesContainer || !tableTabs || tablesContainer.children.length <= 1) { showMessage('Cannot delete last table.', 'error'); return; }
         const activeTab = tableTabs.querySelector('button.active');
         const tableIdToDelete = activeTab?.dataset.tableId;
         const tableElement = tableIdToDelete ? document.getElementById(tableIdToDelete) : null;
         const tableName = tableElement?.dataset.tableName || activeTab?.textContent || 'the active table';
         if (await customConfirm(`Delete table "${tableName}"?`)) {
-            if (tableElement) tableElement.remove(); 
-            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove(); 
-            activeTab?.remove(); 
+            if (tableElement) tableElement.remove();
+            else if (document.getElementById(activeTableId)) document.getElementById(activeTableId).remove();
+            activeTab?.remove();
             const firstRemainingTab = tableTabs.querySelector('button');
             if (firstRemainingTab) { const nextActiveId = firstRemainingTab.dataset.tableId || firstRemainingTab.getAttribute('onclick').match(/'(tbl_.*?)'/)[1]; switchTable(nextActiveId); }
             else { activeTableId = null; addNewTable(true); }
@@ -2164,11 +2274,11 @@
         }
     }
 
-    function addRowToTable(tableBody, rowIndex, numCols) { 
-        const row = tableBody.insertRow(rowIndex); 
+    function addRowToTable(tableBody, rowIndex, numCols) {
+        const row = tableBody.insertRow(rowIndex);
         for (let i = 0; i < numCols; i++) { const cell = row.insertCell(); cell.contentEditable = 'true'; }
     }
-    function addRowAboveToActiveTable() { 
+    function addRowAboveToActiveTable() {
         const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
         const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
@@ -2176,7 +2286,7 @@
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    function addRowBelowToActiveTable() { 
+    function addRowBelowToActiveTable() {
         const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
         const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
@@ -2184,7 +2294,7 @@
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    function addColumnToTable(table, colIndex) { 
+    function addColumnToTable(table, colIndex) {
         for (const row of table.rows) {
             const isDateHeaderRow = row.classList.contains('date-header-row');
             const isTimeSlotHeaderRow = row.parentElement.tagName === 'THEAD' && !isDateHeaderRow;
@@ -2195,8 +2305,8 @@
                 cell.className = 'date-header-cell';
             } else if (isTimeSlotHeaderRow) {
                 cell = document.createElement('th');
-                if (colIndex === -1 || colIndex >= row.cells.length) cell.textContent = "New Header"; 
-            } else { 
+                if (colIndex === -1 || colIndex >= row.cells.length) cell.textContent = "New Header";
+            } else {
                 cell = document.createElement('td');
             }
             cell.contentEditable = 'true';
@@ -2219,14 +2329,14 @@
         addColumnToTable(table, insertAtIndex);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
-    async function deleteClickedRowFromActiveTable() { 
+    async function deleteClickedRowFromActiveTable() {
         if (!lastClickedCell) { showMessage('Click cell in row to delete.', 'info'); return; }
         const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0]) { showMessage('No active table body.', 'error'); return; }
         const rowToDelete = lastClickedCell.closest('tr');
         if (!rowToDelete || rowToDelete.parentElement.tagName !== 'TBODY') { showMessage('Cannot delete header. Click data row.', 'error'); return; }
         if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete last data row.', 'error'); return; }
         if (await customConfirm('Delete this row?')) {
-            rowToDelete.remove(); lastClickedCell = null; deselectAllTableCells(); 
+            rowToDelete.remove(); lastClickedCell = null; deselectAllTableCells();
             rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Row deleted.', 'success');
         }
     }
@@ -2234,17 +2344,17 @@
         if (!lastClickedCell) { showMessage('Click cell in column to delete.', 'info'); return; }
         const table = document.getElementById(activeTableId); if (!table) { showMessage('No active table.', 'error'); return; }
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
-        if (timeSlotHeaderRow && timeSlotHeaderRow.cells.length <= 1) { 
+        if (timeSlotHeaderRow && timeSlotHeaderRow.cells.length <= 1) {
             showMessage('Cannot delete the last column.', 'error'); return;
-        } else if (!timeSlotHeaderRow && table.rows[0]?.cells.length <=1) { 
+        } else if (!timeSlotHeaderRow && table.rows[0]?.cells.length <=1) {
              showMessage('Cannot delete the last column.', 'error'); return;
         }
         const colIndexToDelete = lastClickedCell.cellIndex;
         if (await customConfirm('Delete this column?')) {
-            for (const row of table.rows) { 
+            for (const row of table.rows) {
                 if (row.cells[colIndexToDelete]) row.cells[colIndexToDelete].remove();
             }
-            lastClickedCell = null; deselectAllTableCells(); 
+            lastClickedCell = null; deselectAllTableCells();
             rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Column deleted.', 'success');
         }
     }
@@ -2262,11 +2372,11 @@
             return;
         }
 
-        showGeneralLoading(true); 
+        showGeneralLoading(true);
         try {
             const allSharedNamesLowerCase = new Set([...namesPagiShared.map(n => String(n).toLowerCase()), ...namesPetangShared.map(n => String(n).toLowerCase())]);
             activeTableElement.querySelectorAll('tbody td, tbody th').forEach(cellElement => {
-                if (cellElement.hasAttribute('data-merge-id')) { return; } 
+                if (cellElement.hasAttribute('data-merge-id')) { return; }
                 let originalText = String(cellElement.textContent || '');
                 const parts = originalText.split(' // ');
                 let mainContent = parts[0];
@@ -2284,22 +2394,22 @@
             console.error(`Error clearing names from table "${activeTableName}":`, error);
             showMessage(`Error clearing names: ${error.message}`, 'error');
         } finally {
-            showGeneralLoading(false); 
+            showGeneralLoading(false);
         }
     }
 
-    function toggleCellSelectionMode() { 
+    function toggleCellSelectionMode() {
         selectionMode = !selectionMode; const btn = document.getElementById('selectBtn');
         if(btn) { btn.classList.toggle('active', selectionMode); btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells'; }
-        if (!selectionMode) deselectAllTableCells(); hideCellAutocompleteSuggestions(); 
+        if (!selectionMode) deselectAllTableCells(); hideCellAutocompleteSuggestions();
     }
-    function handleTableCellClick(event) { 
-        const cell = event.target.closest('td, th'); if (!cell || !cell.closest(`#${activeTableId}`)) return; 
-        lastClickedCell = cell; 
+    function handleTableCellClick(event) {
+        const cell = event.target.closest('td, th'); if (!cell || !cell.closest(`#${activeTableId}`)) return;
+        lastClickedCell = cell;
         if (autocompleteSuggestionsDiv?.style.display === 'block' && !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) hideCellAutocompleteSuggestions();
         if (selectedNameFromList) {
             if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
-                const overlay = cell.querySelector('.merged-cell-overlay'); const contentNode = overlay || cell; 
+                const overlay = cell.querySelector('.merged-cell-overlay'); const contentNode = overlay || cell;
                 const currentCellText = contentNode.textContent; const remarkPart = currentCellText.includes(' // ') ? currentCellText.substring(currentCellText.indexOf(' // ')) : '';
                 const contentBeforeRemark = currentCellText.split(' // ')[0]; const starWords = contentBeforeRemark.split(/\s+/).filter(w => w.startsWith('*')).join(' ');
                 let newText = selectedNameFromList; if (starWords) newText += ' ' + starWords;
@@ -2310,14 +2420,14 @@
         }
         if (selectionMode) {
             if (cell.classList.contains('subsumed-cell') || (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) { showMessage('Cannot select subsumed or mix merge groups.', 'warning'); return; }
-            cell.classList.toggle('selected'); 
-            if (cell.classList.contains('selected')) selectedCells.push(cell); else selectedCells = selectedCells.filter(c => c !== cell); 
+            cell.classList.toggle('selected');
+            if (cell.classList.contains('selected')) selectedCells.push(cell); else selectedCells = selectedCells.filter(c => c !== cell);
         }
     }
-    function deselectAllTableCells() { 
+    function deselectAllTableCells() {
         selectedCells.forEach(c => c.classList.remove('selected')); selectedCells = [];
     }
-    function mergeSelectedTableCells() { 
+    function mergeSelectedTableCells() {
         if (selectedCells.length < 2) { showMessage('Select at least two cells.', 'error'); return; }
         if (selectedCells.some(cell => cell.dataset.mergeId)) { showMessage('Cannot merge already merged cells.', 'warning'); return; }
         let primaryCell = selectedCells[0]; let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top; let minColGUI = primaryCell.getBoundingClientRect().left;
@@ -2325,22 +2435,22 @@
         let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
         selectedCells.forEach(cell => { const rect = cell.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
         const totalWidth = maxRight - minLeft; const totalHeight = maxBottom - minTop;
-        const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; 
+        const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const overlay = document.createElement('div'); overlay.className = 'merged-cell-overlay';
         overlay.textContent = primaryCell.textContent; overlay.contentEditable = 'true';
         overlay.style.setProperty('--merged-width', `${totalWidth}px`); overlay.style.setProperty('--merged-height', `${totalHeight}px`);
-        overlay.addEventListener('blur', () => rebuildAndRenderSummary()); 
-        overlay.addEventListener('input', (e) => { 
-            const text = e.target.textContent; const parentCellForOverlay = e.target.parentElement; 
+        overlay.addEventListener('blur', () => rebuildAndRenderSummary());
+        overlay.addEventListener('input', (e) => {
+            const text = e.target.textContent; const parentCellForOverlay = e.target.parentElement;
             if (parentCellForOverlay && (parentCellForOverlay.cellIndex > 0 || parentCellForOverlay.closest('table')?.querySelector('thead tr:not(.date-header-row) th:first-child')?.textContent?.toLowerCase() !== 'class') && !parentCellForOverlay.classList.contains('date-header-cell')) showCellAutocompleteSuggestions(parentCellForOverlay, text); else hideCellAutocompleteSuggestions();
         });
-        primaryCell.innerHTML = ''; primaryCell.appendChild(overlay); 
+        primaryCell.innerHTML = ''; primaryCell.appendChild(overlay);
         primaryCell.classList.add('merged-cell-container'); primaryCell.setAttribute('data-merge-id', mergeId);
         selectedCells.forEach(cell => { if (cell !== primaryCell) { cell.textContent = ''; cell.classList.add('subsumed-cell'); cell.setAttribute('data-merge-id', mergeId); } });
-        deselectAllTableCells(); if (selectionMode) toggleCellSelectionMode(); 
+        deselectAllTableCells(); if (selectionMode) toggleCellSelectionMode();
         showMessage('Cells visually merged.', 'success');
     }
-    function unmergeActiveCellIfMerged() { 
+    function unmergeActiveCellIfMerged() {
         const cell = lastClickedCell; if (!cell) { showMessage('Click merged cell to unmerge.', 'info'); return; }
         const containerCell = cell.closest('[data-merge-id]'); if (!containerCell) { showMessage('Cell not part of a merge.', 'error'); return; }
         const mergeId = containerCell.dataset.mergeId; const table = containerCell.closest('table'); if (!table) return;
@@ -2348,48 +2458,48 @@
         const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
         if (primaryCellInGroup) { const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay'); if (overlay) originalText = overlay.textContent; else originalText = primaryCellInGroup.textContent; }
         cellsInGroup.forEach(c => { c.removeAttribute('data-merge-id'); c.classList.remove('merged-cell-container', 'subsumed-cell'); const overlayChild = c.querySelector('.merged-cell-overlay'); if (overlayChild) overlayChild.remove(); c.innerHTML = ''; });
-        if (primaryCellInGroup) primaryCellInGroup.textContent = originalText; else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText; 
+        if (primaryCellInGroup) primaryCellInGroup.textContent = originalText; else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText;
         rebuildAndRenderSummary(); showMessage('Cells unmerged.', 'success');
     }
-    function updateAllMergeOverlays() { 
+    function updateAllMergeOverlays() {
         const activeTable = document.getElementById(activeTableId); if (!activeTable) return;
         const mergedContainers = activeTable.querySelectorAll('.merged-cell-container');
         mergedContainers.forEach(containerCell => {
             const mergeId = containerCell.dataset.mergeId; if (!mergeId) return;
             const overlay = containerCell.querySelector('.merged-cell-overlay'); if (!overlay) return;
-            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`)); if (cellsInGroup.length === 0) return; 
+            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`)); if (cellsInGroup.length === 0) return;
             let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
             cellsInGroup.forEach(cellInvolved => { const rect = cellInvolved.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
-            if (minLeft === Infinity) return; 
+            if (minLeft === Infinity) return;
             overlay.style.setProperty('--merged-width', `${maxRight - minLeft}px`); overlay.style.setProperty('--merged-height', `${maxBottom - minTop}px`);
         });
     }
 
-    function handleNameListSessionSwitch(session) { 
-        currentNameListSession = session; if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi'); if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang'); if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`; if(searchNameInputElement) searchNameInputElement.value = ''; renderNameListFromFirestore(); hideCellAutocompleteSuggestions(); 
+    function handleNameListSessionSwitch(session) {
+        currentNameListSession = session; if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi'); if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang'); if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`; if(searchNameInputElement) searchNameInputElement.value = ''; renderNameListFromFirestore(); hideCellAutocompleteSuggestions();
     }
-    function highlightSelectedNameInList(nameToHighlight) { 
+    function highlightSelectedNameInList(nameToHighlight) {
         if (!nameListContainer) return; const nameToHighlightStr = String(nameToHighlight || '');
         nameListContainer.querySelectorAll('.name-item span').forEach(span => span.classList.toggle('highlighted', String(span.dataset.name || '') === nameToHighlightStr));
     }
-    function clearNameSelection() { 
+    function clearNameSelection() {
         selectedNameFromList = null; if (nameListContainer) nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => span.classList.remove('highlighted'));
     }
-    function closeNameModal() { 
-        if (nameModal) nameModal.style.display = 'none'; clearNameSelection(); if(searchNameInputElement) searchNameInputElement.value = ''; 
+    function closeNameModal() {
+        if (nameModal) nameModal.style.display = 'none'; clearNameSelection(); if(searchNameInputElement) searchNameInputElement.value = '';
     }
-    function toggleNameListModalVisibility() { 
+    function toggleNameListModalVisibility() {
         if (!nameModal || !nameModalContent || !newNameInput) return;
         const isDisplayed = nameModal.style.display === 'flex';
         if (isDisplayed) closeNameModal();
         else {
-            nameModalContent.style.position = 'relative'; nameModalContent.style.left = 'auto'; nameModalContent.style.top = 'auto'; nameModalContent.style.transform = 'none'; 
-            nameModal.style.display = 'flex'; if(searchNameInputElement) searchNameInputElement.value = ''; 
-            handleNameListSessionSwitch(currentNameListSession); if(newNameInput) newNameInput.focus(); clearNameSelection(); 
+            nameModalContent.style.position = 'relative'; nameModalContent.style.left = 'auto'; nameModalContent.style.top = 'auto'; nameModalContent.style.transform = 'none';
+            nameModal.style.display = 'flex'; if(searchNameInputElement) searchNameInputElement.value = '';
+            handleNameListSessionSwitch(currentNameListSession); if(newNameInput) newNameInput.focus(); clearNameSelection();
         }
-        hideCellAutocompleteSuggestions(); 
+        hideCellAutocompleteSuggestions();
     }
-    function renderNameListFromFirestore(filterText = '') { 
+    function renderNameListFromFirestore(filterText = '') {
         if (!nameListContainer) return; if (!fbIsAuthReady) { nameListContainer.innerHTML = '<p>Loading names...</p>'; return; }
         nameListContainer.innerHTML = ''; const namesToRender = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         const normalizedFilterText = String(filterText || '').toLowerCase().trim();
@@ -2399,11 +2509,11 @@
         filteredNames.forEach(name => { const itemDiv = document.createElement('div'); itemDiv.className = 'name-item'; const nameStr = String(name || ''); const safeNameAttr = nameStr.replace(/"/g, '&quot;'); itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}'">Delete</button>`; nameListContainer.appendChild(itemDiv); });
         highlightSelectedNameInList(selectedNameFromList);
     }
-    function selectNameForCellInsertion(name) { 
-        selectedNameFromList = String(name || ''); highlightSelectedNameInList(selectedNameFromList); 
+    function selectNameForCellInsertion(name) {
+        selectedNameFromList = String(name || ''); highlightSelectedNameInList(selectedNameFromList);
         showMessage(`Selected "${selectedNameFromList}". Click cell to insert.`, 'info', 4000);
     }
-    function handleNameListImportFirestore(event) { 
+    function handleNameListImportFirestore(event) {
         const file = event.target.files[0]; if (!file) { showMessage('No file selected.', 'info'); return; }
         if (file.type !== 'text/plain') { showMessage('Invalid file type (.txt only).', 'error'); event.target.value = ''; return; }
         const reader = new FileReader();
@@ -2413,7 +2523,7 @@
                 if (importedNames.length === 0) { showMessage('No names in file.', 'info'); return; }
                 const currentSessionNames = (currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared).map(n => String(n||'').trim());
                 const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
-                await saveSharedNameListToFirestore(currentNameListSession, combinedNames); 
+                await saveSharedNameListToFirestore(currentNameListSession, combinedNames);
             } catch (error) { showMessage('Error processing name list file.', 'error'); }
             finally { event.target.value = ''; }
         };
@@ -2427,22 +2537,22 @@
         reader.onload = (e) => {
             try {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const sheetName = workbook.SheetNames[0]; 
+                const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); 
-                tableCount++; 
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false });
+                tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
-                const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`; 
+                const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
                 const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
                 const importedTableElement = tempDiv.querySelector('table');
                 if (importedTableElement) {
                     importedTableElement.id = newTableId;
                     importedTableElement.dataset.tableName = importedTableName;
-                    ensureDateHeaderRowExists(importedTableElement); 
+                    ensureDateHeaderRowExists(importedTableElement);
                     importedTableElement.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
                     tablesContainer.appendChild(importedTableElement);
                     addTabButton(newTableId, importedTableName);
-                    switchTable(newTableId); 
+                    switchTable(newTableId);
                     showMessage('Excel data imported!', 'success');
                 } else showMessage('Could not parse table from Excel.', 'error');
             } catch (error) { showMessage('Error processing Excel file.', 'error'); console.error("Excel import error:", error); }
@@ -2450,17 +2560,17 @@
         };
         reader.readAsArrayBuffer(file);
     }
-    function exportActiveTableToExcel() { 
+    function exportActiveTableToExcel() {
         const tableToExport = document.getElementById(activeTableId); if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
         const overlaysData = [];
         tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => { const parentCell = overlay.parentElement; overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML }); parentCell.textContent = overlay.textContent; });
         const tableName = tableToExport.dataset.tableName || activeTableId;
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
-        XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`); 
+        XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
         overlaysData.forEach(data => {
             data.parent.innerHTML = data.originalHTML;
             const newOverlay = data.parent.querySelector('.merged-cell-overlay');
-            if (newOverlay) { 
+            if (newOverlay) {
                 newOverlay.addEventListener('blur', () => rebuildAndRenderSummary());
                 newOverlay.addEventListener('input', (e) => { const text = e.target.textContent; const parentCellForOverlay = e.target.parentElement; if (parentCellForOverlay && (parentCellForOverlay.cellIndex > 0 || parentCellForOverlay.closest('table')?.querySelector('thead tr:not(.date-header-row) th:first-child')?.textContent?.toLowerCase() !== 'class') && !parentCellForOverlay.classList.contains('date-header-cell')) showCellAutocompleteSuggestions(parentCellForOverlay, text); else hideCellAutocompleteSuggestions(); });
             }
@@ -2471,9 +2581,9 @@
 
     async function generateSchedulePdf() {
         if (!pdfContentElement || !tablesContainer || !scheduleTitleElement) { showMessage('PDF elements not found.', 'error'); return; }
-        showGeneralLoading(true); showMessage('Generating PDF...', 'info', 15000); 
-        pdfContentElement.innerHTML = ''; 
-        const tablesToPrint = tablesContainer.querySelectorAll('table'); 
+        showGeneralLoading(true); showMessage('Generating PDF...', 'info', 15000);
+        pdfContentElement.innerHTML = '';
+        const tablesToPrint = tablesContainer.querySelectorAll('table');
         const numTables = tablesToPrint.length;
         if (numTables === 0) {
             const pageWrapper = document.createElement('div'); pageWrapper.className = 'pdf-page-wrapper';
@@ -2488,7 +2598,7 @@
                 if (index === 0) { const mainTitleText = scheduleTitleElement.textContent || 'Weekly Schedule'; const mainTitleH2 = document.createElement('h2'); mainTitleH2.textContent = mainTitleText; pageWrapper.appendChild(mainTitleH2); }
                 const tableId = tableElement.id; const tableName = tableElement.dataset.tableName || tableId || `Table ${index + 1}`;
                 const tableTitleH3 = document.createElement('h3'); tableTitleH3.textContent = tableName; pageWrapper.appendChild(tableTitleH3);
-                const clonedTable = cloneTableForPdf(tableElement); 
+                const clonedTable = cloneTableForPdf(tableElement);
                 if (clonedTable) pageWrapper.appendChild(clonedTable); else { const errorMsg = document.createElement('p'); errorMsg.textContent = `Error: Table "${tableName}" could not be generated.`; pageWrapper.appendChild(errorMsg); }
                 const footnoteDiv = document.createElement('div'); footnoteDiv.className = 'pdf-footnote'; const today = new Date(); const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }; footnoteDiv.textContent = `Generated: ${today.toLocaleDateString(undefined, dateOptions)}`; pageWrapper.appendChild(footnoteDiv);
                 pdfContentElement.appendChild(pageWrapper);
@@ -2500,10 +2610,10 @@
         catch (error) { console.error('Error generating PDF:', error); showMessage(`PDF generation failed. Error: ${error.message}.`, 'error', 10000); }
         finally { pdfContentElement.style.display = 'none'; showGeneralLoading(false); }
     }
-    function cloneTableForPdf(originalTable) { 
+    function cloneTableForPdf(originalTable) {
         if (!originalTable || typeof originalTable.cloneNode !== 'function') { console.error("cloneTableForPdf Error: Invalid originalTable:", originalTable); return null; }
         const tableIdForLog = originalTable.id || 'Unknown ID';
-        const clonedTable = originalTable.cloneNode(true); clonedTable.removeAttribute('id'); clonedTable.classList.remove('active'); clonedTable.style.width = '100%'; clonedTable.style.tableLayout = 'fixed'; 
+        const clonedTable = originalTable.cloneNode(true); clonedTable.removeAttribute('id'); clonedTable.classList.remove('active'); clonedTable.style.width = '100%'; clonedTable.style.tableLayout = 'fixed';
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => el.removeAttribute('contenteditable'));
         const mergeGroups = {};
         Array.from(originalTable.rows).forEach((originalRow, rowIndex) => {
@@ -2542,22 +2652,22 @@
         return clonedTable;
     }
 
-    function getTextForSummary(cellText) { 
-        if (typeof cellText !== 'string') return ''; let textForSummary = cellText.split(' // ')[0]; 
+    function getTextForSummary(cellText) {
+        if (typeof cellText !== 'string') return ''; let textForSummary = cellText.split(' // ')[0];
         const words = textForSummary.split(/\s+/); const filteredWords = words.filter(word => !word.startsWith('*'));
         return filteredWords.join(' ').trim();
     }
     function rebuildAndRenderSummary() {
-        const scheduledNames = new Set(); 
+        const scheduledNames = new Set();
         if (tablesContainer) {
-            tablesContainer.querySelectorAll('table').forEach(scheduleTable => { 
-                if (!scheduleTable.tBodies[0]) return; 
+            tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
+                if (!scheduleTable.tBodies[0]) return;
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        if (cellIndex > 0) { 
+                        if (cellIndex > 0) {
                             const overlay = cell.querySelector('.merged-cell-overlay');
                             const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
-                            const actualNameForSummary = getTextForSummary(nameFromCell); 
+                            const actualNameForSummary = getTextForSummary(nameFromCell);
                             if (actualNameForSummary) scheduledNames.add(actualNameForSummary);
                         }
                     });
@@ -2565,29 +2675,29 @@
             });
         }
         const allSummaryNames = [...scheduledNames].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
-        buildSummaryTableSkeleton(allSummaryNames); 
-        updateSummaryTableData(allSummaryNames); 
+        buildSummaryTableSkeleton(allSummaryNames);
+        updateSummaryTableData(allSummaryNames);
     }
-    function parseTimeToMinutes(timeStr) { 
+    function parseTimeToMinutes(timeStr) {
         if (typeof timeStr !== 'string') return Infinity;
-        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/); 
+        const match = timeStr.match(/^(\d{1,2})\s*[:.]\s*(\d{2})/);
         if (match) return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
         return Infinity;
     }
     function buildSummaryTableSkeleton(allAvailableNames) {
         if (!summaryTableElement) { console.error("buildSummaryTableSkeleton: summaryTableElement not found."); return; }
-        summaryTableElement.innerHTML = ''; 
+        summaryTableElement.innerHTML = '';
         let activeTableHeaders = [];
         const activeTableElement = document.getElementById(activeTableId);
         let timeSlotHeaderRowIndex = 0;
         if (activeTableElement && activeTableElement.tHead) {
             timeSlotHeaderRowIndex = Array.from(activeTableElement.tHead.rows).findIndex(row => !row.classList.contains('date-header-row'));
-            if (timeSlotHeaderRowIndex === -1) timeSlotHeaderRowIndex = 0; 
+            if (timeSlotHeaderRowIndex === -1) timeSlotHeaderRowIndex = 0;
         }
 
         if (activeTableElement && activeTableElement.tHead && activeTableElement.tHead.rows.length > timeSlotHeaderRowIndex) {
             const timeHeaderRow = activeTableElement.tHead.rows[timeSlotHeaderRowIndex];
-            for (let hIdx = 1; hIdx < timeHeaderRow.cells.length; hIdx++) { 
+            for (let hIdx = 1; hIdx < timeHeaderRow.cells.length; hIdx++) {
                 const headerText = String(timeHeaderRow.cells[hIdx].textContent || '').trim();
                 if (headerText) activeTableHeaders.push(headerText);
             }
@@ -2610,8 +2720,8 @@
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                          const scheduleCell = scheduleDataRow.cells[cellIdx];
                          let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
-                         let entryInScheduleCellForRule = getTextForSummary(entryInScheduleCellFull); 
-                         if (specialNamesForRule.includes(entryInScheduleCellForRule)) { 
+                         let entryInScheduleCellForRule = getTextForSummary(entryInScheduleCellFull);
+                         if (specialNamesForRule.includes(entryInScheduleCellForRule)) {
                             const headerText = currentScheduleTableHeaders[cellIdx];
                             if (headerText && headerText.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) { laulisahRuleRequiresSpecialSlot = true; return; }
                          }
@@ -2623,7 +2733,7 @@
         let combinedHeaders = new Set(activeTableHeaders);
         if (laulisahRuleRequiresSpecialSlot) combinedHeaders.add(targetSlotForSpecialNamesRule);
         let sortedUniqueHeaders = Array.from(combinedHeaders).sort((a, b) => { const timeA = parseTimeToMinutes(a); const timeB = parseTimeToMinutes(b); if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB; if (timeA !== Infinity) return -1; if (timeB !== Infinity) return 1; return String(a).localeCompare(String(b)); });
-        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedUniqueHeaders]; 
+        const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedUniqueHeaders];
         const thead = summaryTableElement.createTHead(); const headerRowForSummary = thead.insertRow();
         finalSummaryColumnHeaders.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRowForSummary.appendChild(th); });
         const tbody = summaryTableElement.createTBody();
@@ -2653,12 +2763,12 @@
                     for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; cellIdx++) {
                         const scheduleCell = scheduleDataRow.cells[cellIdx];
                         let entryInScheduleCellFull = String(scheduleCell.querySelector('.merged-cell-overlay')?.textContent || scheduleCell.textContent||'').trim();
-                        let actualEntryForSummary = getTextForSummary(entryInScheduleCellFull); 
+                        let actualEntryForSummary = getTextForSummary(entryInScheduleCellFull);
                         if (actualEntryForSummary) {
                             let scheduleColumnHeaderForThisCell = scheduleHeaders[cellIdx]; if (!scheduleColumnHeaderForThisCell) continue;
-                            let summaryColumnToUse = scheduleColumnHeaderForThisCell; 
+                            let summaryColumnToUse = scheduleColumnHeaderForThisCell;
                             const specialNamesForRule = ["LAU", "LISAH"]; const targetSlotForSpecialNamesRule = "10.15-10.30"; const sourceSlotToShiftRule = "10.30-12.00";
-                            if (specialNamesForRule.includes(actualEntryForSummary) && scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) summaryColumnToUse = targetSlotForSpecialNamesRule; 
+                            if (specialNamesForRule.includes(actualEntryForSummary) && scheduleColumnHeaderForThisCell.replace(/\s/g, "").replace(/:/g,".") === sourceSlotToShiftRule.replace(/\s/g, "").replace(/:/g,".")) summaryColumnToUse = targetSlotForSpecialNamesRule;
                             const targetSummaryRow = Array.from(summaryBody.rows).find(sr => String(sr.cells[0]?.textContent||'') === actualEntryForSummary);
                             if (targetSummaryRow?.cells.length > 1) {
                                 const normalizedSummaryColumnToUse = summaryColumnToUse.replace(/\s/g, "").replace(/:/g,".");
