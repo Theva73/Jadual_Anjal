@@ -654,7 +654,6 @@
 
     <div class="bar table-tabs" id="tableTabs"></div>
     <div id="tablesContainer">
-        <!-- Example Table Structure (initial content) -->
         <table id="tbl_1" class="active" data-table-name="Kelas 3 & 5">
             <thead>
                 <tr class="date-header-row">
@@ -952,52 +951,6 @@
         }
     }
     
-    function processNameBlockForSummary(summaryRow, name, blockData, normalizedSummaryHeaders) {
-        if (!blockData || blockData.length === 0) return;
-    
-        let firstOriginalHeader = blockData[0].header;
-        let lastOriginalHeader = blockData[blockData.length - 1].header; // Header of the last cell in the original contiguous block
-        const classIdentifiersInBlock = [...new Set(blockData.map(b => b.classId))].sort().join(', ');
-    
-        const specialNamesForRule = ["LAU", "LISAH"];
-        const targetSlotForSpecialNamesRule = "10.15-10.30";
-        const sourceSlotForRule = "10.30-12.00";
-    
-        const isLauLisahSourceBlock = specialNamesForRule.some(sn => name.toUpperCase() === sn) &&
-                                   normalizeHeaderForLookup(firstOriginalHeader) === normalizeHeaderForLookup(sourceSlotForRule) &&
-                                   normalizeHeaderForLookup(lastOriginalHeader) === normalizeHeaderForLookup(sourceSlotForRule);
-    
-        if (isLauLisahSourceBlock) {
-            firstOriginalHeader = targetSlotForSpecialNamesRule;
-            lastOriginalHeader = targetSlotForSpecialNamesRule;
-        }
-    
-        const summaryStartColIdx = normalizedSummaryHeaders.indexOf(normalizeHeaderForLookup(firstOriginalHeader));
-        const summaryEndColIdx = normalizedSummaryHeaders.indexOf(normalizeHeaderForLookup(lastOriginalHeader));
-    
-        if (summaryStartColIdx > 0 && summaryEndColIdx >= summaryStartColIdx) {
-            const summaryCellToUpdate = summaryRow.cells[summaryStartColIdx];
-            if (!summaryCellToUpdate) return;
-    
-            let tempClasses = summaryCellToUpdate.dataset.tempClasses ? summaryCellToUpdate.dataset.tempClasses.split(',') : [];
-            classIdentifiersInBlock.split(',').forEach(cls => {
-                const trimmedCls = cls.trim();
-                if (trimmedCls && !tempClasses.includes(trimmedCls)) { // Ensure not adding empty strings
-                    tempClasses.push(trimmedCls);
-                }
-            });
-            summaryCellToUpdate.dataset.tempClasses = tempClasses.filter(tc => tc).sort().join(','); // Filter out empty strings before join
-            
-            const colspanRequired = summaryEndColIdx - summaryStartColIdx + 1;
-            if (colspanRequired > 0) {
-                // Check if this cell is already part of a wider span from a previous block for the same name
-                // This is tricky. For now, let the latest processed block define the span for this starting cell.
-                // A more sophisticated approach might be needed if blocks for the same name can interleave in complex ways across tables.
-                summaryCellToUpdate.colSpan = colspanRequired;
-            }
-        }
-    }
-
     function updateSummaryTableData(allAvailableNames) {
         if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) {
             console.warn("updateSummaryTableData: Summary table structure not ready.");
@@ -1007,9 +960,10 @@
         const summaryHeaderCells = Array.from(summaryTableElement.tHead.rows[0].cells);
         const summaryTableDisplayHeaders = summaryHeaderCells.map(th => String(th.textContent||'').trim());
         const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(normalizeHeaderForLookup);
-
+    
+        // Reset summary table content before repopulating
         Array.from(summaryBody.rows).forEach(summaryRow => {
-            for (let i = 1; i < summaryRow.cells.length; i++) { 
+            for (let i = 1; i < summaryRow.cells.length; i++) { // Skip name cell
                 const cell = summaryRow.cells[i];
                 cell.textContent = '';
                 cell.removeAttribute('colspan');
@@ -1019,67 +973,138 @@
                 cell.removeAttribute('data-temp-classes');
             }
         });
-
+    
         allAvailableNames.forEach(name => {
             const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === name);
             if (!targetSummaryRow) return;
-
+    
             tablesContainer.querySelectorAll('table').forEach(scheduleTable => {
                 if (!scheduleTable.tHead || !scheduleTable.tBodies[0]) return;
                 const timeSlotHeaderRow = Array.from(scheduleTable.tHead.rows).find(row => !row.classList.contains('date-header-row'));
                 if (!timeSlotHeaderRow) return;
                 const scheduleHeaders = Array.from(timeSlotHeaderRow.cells).map(th => String(th.textContent||'').trim());
-
+    
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(scheduleDataRow => {
                     const classIdentifier = String(scheduleDataRow.cells[0]?.textContent||'').trim();
                     if (!classIdentifier) return;
-
-                    let currentBlock = []; 
-                    for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; /* cellIdx incremented carefully */) {
-                        const scheduleCell = scheduleDataRow.cells[cellIdx];
-                        const originalCellColspan = parseInt(scheduleCell.getAttribute('colspan') || '1');
+    
+                    let currentOriginalCellIndex = 1; // Start after the class/time column
+                    while (currentOriginalCellIndex < scheduleDataRow.cells.length) {
+                        const scheduleCell = scheduleDataRow.cells[currentOriginalCellIndex];
+                        if (!scheduleCell) { currentOriginalCellIndex++; continue; }
+    
                         const overlay = scheduleCell.querySelector('.merged-cell-overlay');
                         const entryFullName = overlay ? overlay.textContent : scheduleCell.textContent;
                         const entryNameForSummary = getTextForSummary(entryFullName);
-
-                        let headersForThisCell = [];
-                        for (let k = 0; k < originalCellColspan && (cellIdx + k) < scheduleHeaders.length; k++) {
-                            headersForThisCell.push(scheduleHeaders[cellIdx + k]);
-                        }
-
-                        if (entryNameForSummary.toUpperCase().includes(name.toUpperCase()) && headersForThisCell.length > 0) {
-                            headersForThisCell.forEach(h => {
-                                currentBlock.push({ header: h, classId: classIdentifier, name: entryNameForSummary });
+    
+                        let firstOriginalHeaderInBlock = null;
+                        let lastOriginalHeaderInBlock = null;
+                        let numCellsSpannedInOriginal = 0;
+    
+                        const mergeId = scheduleCell.dataset.mergeId;
+                        if (mergeId && scheduleCell.classList.contains('merged-cell-container')) {
+                            // This is the primary cell of a UI-created merge group
+                            let minColIndexOfMergeGroup = currentOriginalCellIndex;
+                            let maxColIndexOfMergeGroup = currentOriginalCellIndex;
+                            // Find all cells in this row belonging to this mergeId
+                            scheduleDataRow.querySelectorAll(`[data-merge-id="${mergeId}"]`).forEach(cellInGroup => {
+                                minColIndexOfMergeGroup = Math.min(minColIndexOfMergeGroup, cellInGroup.cellIndex);
+                                maxColIndexOfMergeGroup = Math.max(maxColIndexOfMergeGroup, cellInGroup.cellIndex);
                             });
-                            cellIdx += originalCellColspan; 
-                        } else {
-                            if (currentBlock.length > 0) {
-                                processNameBlockForSummary(targetSummaryRow, name, currentBlock, normalizedSummaryHeadersForLookup);
-                                currentBlock = []; 
+                            if (minColIndexOfMergeGroup < scheduleHeaders.length) firstOriginalHeaderInBlock = scheduleHeaders[minColIndexOfMergeGroup];
+                            if (maxColIndexOfMergeGroup < scheduleHeaders.length) lastOriginalHeaderInBlock = scheduleHeaders[maxColIndexOfMergeGroup];
+                            numCellsSpannedInOriginal = maxColIndexOfMergeGroup - minColIndexOfMergeGroup + 1;
+                             // Ensure we process from the actual start of the merge group if currentOriginalCellIndex wasn't it
+                            if(currentOriginalCellIndex > minColIndexOfMergeGroup) {
+                                // This means we encountered a subsumed cell first, which shouldn't happen if iterating correctly.
+                                // However, as a safeguard, or if logic changes, this ensures we use the true start.
+                                currentOriginalCellIndex = minColIndexOfMergeGroup;
+                                firstOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex]; // Re-assign
                             }
-                            cellIdx += originalCellColspan; 
+
+                        } else if (scheduleCell.hasAttribute('colspan') && !mergeId) { // HTML colspan (not a UI merge)
+                            const cellColspan = parseInt(scheduleCell.getAttribute('colspan') || '1');
+                            firstOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex];
+                            if (currentOriginalCellIndex + cellColspan - 1 < scheduleHeaders.length) {
+                                lastOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex + cellColspan - 1];
+                            } else if (scheduleHeaders.length > 0) {
+                                lastOriginalHeaderInBlock = scheduleHeaders[scheduleHeaders.length - 1];
+                            }
+                            numCellsSpannedInOriginal = cellColspan;
+                        } else if (!mergeId) { // Simple, non-merged cell
+                            firstOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex];
+                            lastOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex];
+                            numCellsSpannedInOriginal = 1;
+                        } else { // Subsumed cell of a UI merge, already handled by advancing past the group
+                            currentOriginalCellIndex++;
+                            continue;
                         }
-                    }
-                    if (currentBlock.length > 0) { // Process any remaining block at the end of the row
-                        processNameBlockForSummary(targetSummaryRow, name, currentBlock, normalizedSummaryHeadersForLookup);
+    
+                        if (entryNameForSummary.toUpperCase().includes(name.toUpperCase()) && firstOriginalHeaderInBlock && lastOriginalHeaderInBlock) {
+                            const specialNamesForRule = ["LAU", "LISAH"];
+                            const targetSlotForSpecialNamesRule = "10.15-10.30";
+                            const sourceSlotForRule = "10.30-12.00";
+                            
+                            let blockIsEntirelySourceSlot = true;
+                            let tempCurrentHeaderIndex = scheduleHeaders.indexOf(firstOriginalHeaderInBlock);
+                            const tempEndHeaderIndex = scheduleHeaders.indexOf(lastOriginalHeaderInBlock);
+                    
+                            if (tempCurrentHeaderIndex !== -1 && tempEndHeaderIndex !== -1) {
+                                for (let hLoopIdx = tempCurrentHeaderIndex; hLoopIdx <= tempEndHeaderIndex; hLoopIdx++) {
+                                    if (normalizeHeaderForLookup(scheduleHeaders[hLoopIdx]) !== normalizeHeaderForLookup(sourceSlotForRule)) {
+                                        blockIsEntirelySourceSlot = false;
+                                        break;
+                                    }
+                                }
+                            } else { blockIsEntirelySourceSlot = false; }
+                            
+                            const isLauLisahSpecialCase = specialNamesForRule.some(sn => name.toUpperCase() === sn) && blockIsEntirelySourceSlot;
+    
+                            if (isLauLisahSpecialCase) {
+                                firstOriginalHeaderInBlock = targetSlotForSpecialNamesRule;
+                                lastOriginalHeaderInBlock = targetSlotForSpecialNamesRule;
+                            }
+    
+                            const summaryStartColIdx = normalizedSummaryHeadersForLookup.indexOf(normalizeHeaderForLookup(firstOriginalHeaderInBlock));
+                            const summaryEndColIdx = normalizedSummaryHeadersForLookup.indexOf(normalizeHeaderForLookup(lastOriginalHeaderInBlock));
+    
+                            if (summaryStartColIdx > 0 && summaryEndColIdx >= summaryStartColIdx) {
+                                const summaryCellToUpdate = targetSummaryRow.cells[summaryStartColIdx];
+                                if (summaryCellToUpdate) {
+                                    let tempClasses = summaryCellToUpdate.dataset.tempClasses ? summaryCellToUpdate.dataset.tempClasses.split(',') : [];
+                                    if (!tempClasses.includes(classIdentifier)) {
+                                        tempClasses.push(classIdentifier);
+                                    }
+                                    summaryCellToUpdate.dataset.tempClasses = tempClasses.filter(tc => tc).sort().join(',');
+                                    
+                                    const colspanRequired = summaryEndColIdx - summaryStartColIdx + 1;
+                                    const currentSummaryColspan = parseInt(summaryCellToUpdate.getAttribute('colspan') || '1');
+                                    if (colspanRequired > currentSummaryColspan) {
+                                        summaryCellToUpdate.colSpan = colspanRequired;
+                                    }
+                                }
+                            }
+                        }
+                        currentOriginalCellIndex += numCellsSpannedInOriginal;
                     }
                 });
             });
         });
-
+    
+        // Second pass: set text content, apply styles, and hide subsumed cells
         Array.from(summaryBody.rows).forEach(summaryRow => {
-            for (let j = 1; j < summaryRow.cells.length; ) {
+            for (let j = 1; j < summaryRow.cells.length; ) { // Start from 1 to skip name column
                 const currentCell = summaryRow.cells[j];
                 if (!currentCell) { j++; continue; } 
-
+    
                 if (currentCell.dataset.tempClasses) {
-                    currentCell.textContent = currentCell.dataset.tempClasses.split(',').filter(c => c).sort().join(', '); // Filter empty and sort
+                    currentCell.textContent = currentCell.dataset.tempClasses.split(',').filter(c => c).sort().join(', ');
                     currentCell.removeAttribute('data-temp-classes');
                     if (currentCell.textContent.includes(',')) {
                         currentCell.classList.add('highlight-conflict');
                     }
                 }
-
+    
                 const currentCellColspan = parseInt(currentCell.getAttribute('colspan') || '1');
                 if (currentCellColspan > 1) {
                     currentCell.classList.add('summary-merged-cell'); 
@@ -1375,7 +1400,6 @@
         }
     }
 
-    // --- Modal Drag Functions ---
     function startDragModal(e, modalContentEl = nameModalContent) {
         if (e.target.closest('.modal-close-btn')) { isDraggingModal = false; return; }
         isDraggingModal = true;
@@ -1418,8 +1442,6 @@
         }
     }
 
-
-    // --- Clipboard & Table Management ---
     async function attemptDirectCopyToClipboard() {
         const fullHtml = document.documentElement.outerHTML;
         try { await navigator.clipboard.writeText(fullHtml); showMessage('Full HTML copied!', 'success'); }
@@ -1574,28 +1596,18 @@
         return row;
     }
     function addRowAboveToActiveTable() {
-        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) { showMessage("No active table or table body found.", "error"); return; }
+        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
         const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
-        if (numCols === 0) { showMessage("Cannot add row: table has no columns.", "error"); return; }
-        
-        let insertAtIndex = 0; 
-        if (lastClickedCell && lastClickedCell.closest('tbody')) {
-            insertAtIndex = lastClickedCell.parentElement.rowIndex; 
-        }
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex : 0;
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
     function addRowBelowToActiveTable() {
-        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) { showMessage("No active table or table body found.", "error"); return; }
+        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0] || table.rows.length === 0) return;
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
         const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
-        if (numCols === 0) { showMessage("Cannot add row: table has no columns.", "error"); return; }
-
-        let insertAtIndex = -1; 
-        if (lastClickedCell && lastClickedCell.closest('tbody')) {
-            insertAtIndex = lastClickedCell.parentElement.rowIndex + 1;
-        }
+        let insertAtIndex = (lastClickedCell && lastClickedCell.closest('tbody') && lastClickedCell.parentElement.rowIndex >= 0) ? lastClickedCell.parentElement.rowIndex + 1 : -1;
         addRowToTable(table.tBodies[0], insertAtIndex, numCols);
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
@@ -1624,64 +1636,47 @@
         }
     }
     function addColumnLeftToActiveTable() {
-        const table = document.getElementById(activeTableId); if (!table) { showMessage("No active table.", "error"); return; }
-        let insertAtIndex = 0; 
-        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
-            insertAtIndex = lastClickedCell.cellIndex;
-        }
+        const table = document.getElementById(activeTableId); if (!table) return;
+        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex : 0;
         addColumnToTable(table, insertAtIndex);
         ensureDateHeaderRowExists(table); 
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
     function addColumnRightToActiveTable() {
-        const table = document.getElementById(activeTableId); if (!table) { showMessage("No active table.", "error"); return; }
-        let insertAtIndex = -1; 
-        if (lastClickedCell && lastClickedCell.cellIndex >= 0) {
-            insertAtIndex = lastClickedCell.cellIndex + 1;
-        }
+        const table = document.getElementById(activeTableId); if (!table) return;
+        let insertAtIndex = (lastClickedCell && lastClickedCell.cellIndex >= 0) ? lastClickedCell.cellIndex + 1 : -1;
         addColumnToTable(table, insertAtIndex);
         ensureDateHeaderRowExists(table); 
         rebuildAndRenderSummary(); updateAllMergeOverlays();
     }
     async function deleteClickedRowFromActiveTable() {
-        if (!lastClickedCell) { showMessage('Click a cell in the row you want to delete.', 'info'); return; }
-        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0]) { showMessage('No active table body found.', 'error'); return; }
+        if (!lastClickedCell) { showMessage('Click cell in row to delete.', 'info'); return; }
+        const table = document.getElementById(activeTableId); if (!table || !table.tBodies[0]) { showMessage('No active table body.', 'error'); return; }
         const rowToDelete = lastClickedCell.closest('tr');
-        
-        if (!rowToDelete || rowToDelete.parentElement.tagName !== 'TBODY') { showMessage('Cannot delete header rows. Click a cell in a data row.', 'error'); return; }
-        if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete the last data row in the table.', 'error'); return; }
-        
-        if (await customConfirm('Are you sure you want to delete this row?')) {
-            rowToDelete.remove(); 
-            lastClickedCell = null; 
-            deselectAllTableCells(); 
-            rebuildAndRenderSummary(); 
-            updateAllMergeOverlays(); 
-            showMessage('Row deleted.', 'success');
+        if (!rowToDelete || rowToDelete.parentElement.tagName !== 'TBODY') { showMessage('Cannot delete header. Click data row.', 'error'); return; }
+        if (table.tBodies[0].rows.length <= 1) { showMessage('Cannot delete last data row.', 'error'); return; }
+        if (await customConfirm('Delete this row?')) {
+            rowToDelete.remove(); lastClickedCell = null; deselectAllTableCells();
+            rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Row deleted.', 'success');
         }
     }
     async function deleteClickedColumnFromActiveTable() {
-        if (!lastClickedCell) { showMessage('Click a cell in the column you want to delete.', 'info'); return; }
-        const table = document.getElementById(activeTableId); if (!table) { showMessage('No active table found.', 'error'); return; }
-        
+        if (!lastClickedCell) { showMessage('Click cell in column to delete.', 'info'); return; }
+        const table = document.getElementById(activeTableId); if (!table) { showMessage('No active table.', 'error'); return; }
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
         if (timeSlotHeaderRow && timeSlotHeaderRow.cells.length <= 1) {
-            showMessage('Cannot delete the last column of the table.', 'error'); return;
-        } else if (!timeSlotHeaderRow && table.rows[0]?.cells.length <=1) { 
+            showMessage('Cannot delete the last column.', 'error'); return;
+        } else if (!timeSlotHeaderRow && table.rows[0]?.cells.length <=1) {
              showMessage('Cannot delete the last column.', 'error'); return;
         }
-
         const colIndexToDelete = lastClickedCell.cellIndex;
-        if (await customConfirm('Are you sure you want to delete this column?')) {
+        if (await customConfirm('Delete this column?')) {
             for (const row of table.rows) {
                 if (row.cells[colIndexToDelete]) row.cells[colIndexToDelete].remove();
             }
-            lastClickedCell = null; 
-            deselectAllTableCells();
+            lastClickedCell = null; deselectAllTableCells();
             ensureDateHeaderRowExists(table); 
-            rebuildAndRenderSummary(); 
-            updateAllMergeOverlays(); 
-            showMessage('Column deleted.', 'success');
+            rebuildAndRenderSummary(); updateAllMergeOverlays(); showMessage('Column deleted.', 'success');
         }
     }
 
@@ -1693,7 +1688,7 @@
         }
 
         const activeTableName = activeTableElement.dataset.tableName || activeTableId;
-        if (!await customConfirm(`Are you sure you want to clear scheduled names from table "${activeTableName}"? Merged cells with specific content (like 'REHAT') will be retained. This cannot be undone for other cells.`)) {
+        if (!await customConfirm(`Are you sure you want to clear scheduled names from table "${activeTableName}"? Merged cells will be retained. This cannot be undone for other cells.`)) {
             showMessage('Operation cancelled.', 'info');
             return;
         }
@@ -1701,39 +1696,21 @@
         showGeneralLoading(true);
         try {
             const allSharedNamesLowerCase = new Set([...namesPagiShared.map(n => String(n).toLowerCase()), ...namesPetangShared.map(n => String(n).toLowerCase())]);
-            
             activeTableElement.querySelectorAll('tbody td, tbody th').forEach(cellElement => {
-                const overlay = cellElement.querySelector('.merged-cell-overlay');
-                if (overlay && overlay.textContent.toUpperCase() === 'REHAT') { 
-                    return; 
-                }
-                if (cellElement.classList.contains('subsumed-cell') && cellElement.dataset.mergeId) {
-                    const primaryContainer = activeTableElement.querySelector(`.merged-cell-container[data-merge-id="${cellElement.dataset.mergeId}"] .merged-cell-overlay`);
-                    if (primaryContainer && primaryContainer.textContent.toUpperCase() === 'REHAT') {
-                        return;
-                    }
-                }
-
-                let originalText = String( (overlay ? overlay.textContent : cellElement.textContent) || '');
+                if (cellElement.hasAttribute('data-merge-id')) { return; }
+                let originalText = String(cellElement.textContent || '');
                 const parts = originalText.split(' // ');
                 let mainContent = parts[0];
                 const remarkContent = parts.length > 1 ? ' // ' + parts.slice(1).join(' // ') : '';
-                
                 const wordsInMain = mainContent.split(/\s+/).filter(w => w.length > 0);
-                const keptMainWords = wordsInMain.filter(word => {
-                    const cleanWord = word.startsWith('*') ? word.substring(1) : word;
-                    return word.startsWith('*') || !allSharedNamesLowerCase.has(cleanWord.toLowerCase());
-                });
-                
+                const keptMainWords = wordsInMain.filter(word => word.startsWith('*') || !allSharedNamesLowerCase.has(word.toLowerCase()));
                 const newMainContent = keptMainWords.join(' ');
                 let finalText = (newMainContent.trim() + remarkContent).trim();
                 if (finalText === "//" && newMainContent.trim() === "") { finalText = ""; }
-                
-                if (overlay) overlay.textContent = finalText;
-                else cellElement.textContent = finalText;
+                cellElement.textContent = finalText;
             });
             rebuildAndRenderSummary();
-            showMessage(`Scheduled names cleared from table "${activeTableName}" (structural merges like 'REHAT' retained).`, 'success', 4000);
+            showMessage(`Scheduled names cleared from table "${activeTableName}" (merged cells retained).`, 'success');
         } catch (error) {
             console.error(`Error clearing names from table "${activeTableName}":`, error);
             showMessage(`Error clearing names: ${error.message}`, 'error');
@@ -1742,8 +1719,6 @@
         }
     }
 
-
-    // --- Cell Selection & Merging ---
     function toggleCellSelectionMode() {
         selectionMode = !selectionMode; const btn = document.getElementById('selectBtn');
         if(btn) { btn.classList.toggle('active', selectionMode); btn.textContent = selectionMode ? '✨ Selecting...' : '✨ Select Cells'; }
@@ -1753,33 +1728,19 @@
         const cell = event.target.closest('td, th'); if (!cell || !cell.closest(`#${activeTableId}`)) return;
         lastClickedCell = cell;
         if (autocompleteSuggestionsDiv?.style.display === 'block' && !autocompleteSuggestionsDiv.contains(event.target) && activeCellForAutocomplete !== cell) hideCellAutocompleteSuggestions();
-        if (selectedNameFromList) { 
-            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) { 
-                const overlay = cell.querySelector('.merged-cell-overlay'); 
-                const contentNode = overlay || cell; 
-                
-                const currentCellText = contentNode.textContent;
-                const remarkPart = currentCellText.includes(' // ') ? currentCellText.substring(currentCellText.indexOf(' // ')) : '';
-                const contentBeforeRemark = currentCellText.split(' // ')[0];
-                const starWords = contentBeforeRemark.split(/\s+/).filter(w => w.startsWith('*')).join(' '); 
-
-                let newText = selectedNameFromList;
-                if (starWords) { 
-                    newText += ' ' + starWords;
-                }
-                newText = (newText.trim() + remarkPart).trim(); 
-                
-                contentNode.textContent = newText;
-                rebuildAndRenderSummary(); 
-                showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500); 
-                clearNameSelection(); 
-            } else {
-                showMessage('Click an editable data cell (not header) to insert the name.', 'info');
-            }
-            return; 
+        if (selectedNameFromList) {
+            if (cell.tagName === 'TD' || (cell.tagName === 'TH' && cell.closest('tbody'))) {
+                const overlay = cell.querySelector('.merged-cell-overlay'); const contentNode = overlay || cell;
+                const currentCellText = contentNode.textContent; const remarkPart = currentCellText.includes(' // ') ? currentCellText.substring(currentCellText.indexOf(' // ')) : '';
+                const contentBeforeRemark = currentCellText.split(' // ')[0]; const starWords = contentBeforeRemark.split(/\s+/).filter(w => w.startsWith('*')).join(' ');
+                let newText = selectedNameFromList; if (starWords) newText += ' ' + starWords;
+                newText = (newText.trim() + remarkPart).trim(); contentNode.textContent = newText;
+                rebuildAndRenderSummary(); showMessage(`Inserted "${selectedNameFromList}".`, 'success', 2500); clearNameSelection();
+            } else showMessage('Click editable data cell to insert.', 'info');
+            return;
         }
-        if (selectionMode) { 
-            if (cell.classList.contains('subsumed-cell') || (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) { showMessage('Cannot select subsumed cells or mix different merge groups.', 'warning'); return; }
+        if (selectionMode) {
+            if (cell.classList.contains('subsumed-cell') || (cell.classList.contains('merged-cell-container') && selectedCells.some(sc => sc !== cell && sc.dataset.mergeId !== cell.dataset.mergeId))) { showMessage('Cannot select subsumed or mix merge groups.', 'warning'); return; }
             cell.classList.toggle('selected');
             if (cell.classList.contains('selected')) selectedCells.push(cell); else selectedCells = selectedCells.filter(c => c !== cell);
         }
@@ -1788,496 +1749,226 @@
         selectedCells.forEach(c => c.classList.remove('selected')); selectedCells = [];
     }
     function mergeSelectedTableCells() {
-        if (selectedCells.length < 2) { showMessage('Select at least two cells to merge.', 'error'); return; }
-        if (selectedCells.some(cell => cell.dataset.mergeId)) { showMessage('Cannot merge cells that are already part of another merge.', 'warning'); deselectAllTableCells(); return; }
-        
-        let primaryCell = selectedCells[0]; 
-        let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top; 
-        let minColGUI = primaryCell.getBoundingClientRect().left;
-        selectedCells.forEach(cell => { 
-            const cellRowRect = cell.parentElement.getBoundingClientRect(); 
-            const cellRect = cell.getBoundingClientRect(); 
-            if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) { 
-                primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left; 
-            } 
-        });
-        
+        if (selectedCells.length < 2) { showMessage('Select at least two cells.', 'error'); return; }
+        if (selectedCells.some(cell => cell.dataset.mergeId)) { showMessage('Cannot merge already merged cells.', 'warning'); return; }
+        let primaryCell = selectedCells[0]; let minRowGUI = primaryCell.parentElement.getBoundingClientRect().top; let minColGUI = primaryCell.getBoundingClientRect().left;
+        selectedCells.forEach(cell => { const cellRowRect = cell.parentElement.getBoundingClientRect(); const cellRect = cell.getBoundingClientRect(); if (cellRowRect.top < minRowGUI || (cellRowRect.top === minRowGUI && cellRect.left < minColGUI)) { primaryCell = cell; minRowGUI = cellRowRect.top; minColGUI = cellRect.left; } });
         let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
-        selectedCells.forEach(cell => { 
-            const rect = cell.getBoundingClientRect(); 
-            minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); 
-            minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); 
-        });
+        selectedCells.forEach(cell => { const rect = cell.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
         const totalWidth = maxRight - minLeft; const totalHeight = maxBottom - minTop;
-        
         const mergeId = `merge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const overlay = document.createElement('div'); 
-        overlay.className = 'merged-cell-overlay';
-        overlay.textContent = primaryCell.textContent; 
-        overlay.contentEditable = 'true';
-        overlay.style.setProperty('--merged-width', `${totalWidth}px`); 
-        overlay.style.setProperty('--merged-height', `${totalHeight}px`);
-        
+        const overlay = document.createElement('div'); overlay.className = 'merged-cell-overlay';
+        overlay.textContent = primaryCell.textContent; overlay.contentEditable = 'true';
+        overlay.style.setProperty('--merged-width', `${totalWidth}px`); overlay.style.setProperty('--merged-height', `${totalHeight}px`);
         overlay.addEventListener('blur', () => rebuildAndRenderSummary());
         overlay.addEventListener('input', (e) => {
-            const text = e.target.textContent; 
-            const parentCellForOverlay = e.target.parentElement; 
-            if (parentCellForOverlay && (parentCellForOverlay.tagName === 'TD' || (parentCellForOverlay.tagName === 'TH' && parentCellForOverlay.closest('tbody'))) && !parentCellForOverlay.classList.contains('date-header-cell')) {
-                 showCellAutocompleteSuggestions(parentCellForOverlay, text); 
-            } else { 
-                hideCellAutocompleteSuggestions(); 
-            }
+            const text = e.target.textContent; const parentCellForOverlay = e.target.parentElement;
+            if (parentCellForOverlay && (parentCellForOverlay.cellIndex > 0 || parentCellForOverlay.closest('table')?.querySelector('thead tr:not(.date-header-row) th:first-child')?.textContent?.toLowerCase() !== 'class') && !parentCellForOverlay.classList.contains('date-header-cell')) showCellAutocompleteSuggestions(parentCellForOverlay, text); else hideCellAutocompleteSuggestions();
         });
-        
-        primaryCell.innerHTML = ''; 
-        primaryCell.appendChild(overlay);
-        primaryCell.classList.add('merged-cell-container'); 
-        primaryCell.setAttribute('data-merge-id', mergeId);
-        
-        selectedCells.forEach(cell => { 
-            if (cell !== primaryCell) { 
-                cell.textContent = ''; 
-                cell.classList.add('subsumed-cell'); 
-                cell.setAttribute('data-merge-id', mergeId); 
-            } 
-        });
-        
-        deselectAllTableCells(); 
-        if (selectionMode) toggleCellSelectionMode(); 
+        primaryCell.innerHTML = ''; primaryCell.appendChild(overlay);
+        primaryCell.classList.add('merged-cell-container'); primaryCell.setAttribute('data-merge-id', mergeId);
+        selectedCells.forEach(cell => { if (cell !== primaryCell) { cell.textContent = ''; cell.classList.add('subsumed-cell'); cell.setAttribute('data-merge-id', mergeId); } });
+        deselectAllTableCells(); if (selectionMode) toggleCellSelectionMode();
         showMessage('Cells visually merged.', 'success');
-        rebuildAndRenderSummary(); 
     }
     function unmergeActiveCellIfMerged() {
-        const cell = lastClickedCell; 
-        if (!cell) { showMessage('Click a merged cell to unmerge.', 'info'); return; }
-        
-        const containerCell = cell.closest('[data-merge-id]'); 
-        if (!containerCell) { showMessage('The clicked cell is not part of a merge.', 'error'); return; }
-        
-        const mergeId = containerCell.dataset.mergeId; 
-        const table = containerCell.closest('table'); 
-        if (!table) { console.error("Unmerge: Table not found for cell."); return; }
-        
-        const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`); 
-        let originalText = '';
-        
+        const cell = lastClickedCell; if (!cell) { showMessage('Click merged cell to unmerge.', 'info'); return; }
+        const containerCell = cell.closest('[data-merge-id]'); if (!containerCell) { showMessage('Cell not part of a merge.', 'error'); return; }
+        const mergeId = containerCell.dataset.mergeId; const table = containerCell.closest('table'); if (!table) return;
+        const cellsInGroup = table.querySelectorAll(`[data-merge-id="${mergeId}"]`); let originalText = '';
         const primaryCellInGroup = Array.from(cellsInGroup).find(c => c.classList.contains('merged-cell-container'));
-        if (primaryCellInGroup) { 
-            const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay'); 
-            if (overlay) originalText = overlay.textContent; 
-            else originalText = primaryCellInGroup.textContent; 
-        } else if (cellsInGroup.length > 0) { 
-            originalText = cellsInGroup[0].textContent;
-        }
-        
-        cellsInGroup.forEach(c => { 
-            c.removeAttribute('data-merge-id'); 
-            c.classList.remove('merged-cell-container', 'subsumed-cell'); 
-            const overlayChild = c.querySelector('.merged-cell-overlay'); 
-            if (overlayChild) overlayChild.remove(); 
-            c.innerHTML = ''; 
-        });
-        
-        if (primaryCellInGroup) primaryCellInGroup.textContent = originalText; 
-        else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText;
-        
-        rebuildAndRenderSummary(); 
-        showMessage('Cells unmerged.', 'success');
+        if (primaryCellInGroup) { const overlay = primaryCellInGroup.querySelector('.merged-cell-overlay'); if (overlay) originalText = overlay.textContent; else originalText = primaryCellInGroup.textContent; }
+        cellsInGroup.forEach(c => { c.removeAttribute('data-merge-id'); c.classList.remove('merged-cell-container', 'subsumed-cell'); const overlayChild = c.querySelector('.merged-cell-overlay'); if (overlayChild) overlayChild.remove(); c.innerHTML = ''; });
+        if (primaryCellInGroup) primaryCellInGroup.textContent = originalText; else if (cellsInGroup.length > 0) cellsInGroup[0].textContent = originalText;
+        rebuildAndRenderSummary(); showMessage('Cells unmerged.', 'success');
     }
-    function updateAllMergeOverlays() { 
+    function updateAllMergeOverlays() {
         const activeTable = document.getElementById(activeTableId); if (!activeTable) return;
         const mergedContainers = activeTable.querySelectorAll('.merged-cell-container');
         mergedContainers.forEach(containerCell => {
             const mergeId = containerCell.dataset.mergeId; if (!mergeId) return;
             const overlay = containerCell.querySelector('.merged-cell-overlay'); if (!overlay) return;
-            
-            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`)); 
-            if (cellsInGroup.length === 0) return; 
-            
+            const cellsInGroup = Array.from(activeTable.querySelectorAll(`[data-merge-id="${mergeId}"]`)); if (cellsInGroup.length === 0) return;
             let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity, maxBottom = -Infinity;
-            cellsInGroup.forEach(cellInvolved => { 
-                const rect = cellInvolved.getBoundingClientRect(); 
-                minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); 
-                minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); 
-            });
-            
-            if (minLeft === Infinity) return; 
-            overlay.style.setProperty('--merged-width', `${maxRight - minLeft}px`);
-            overlay.style.setProperty('--merged-height', `${maxBottom - minTop}px`);
+            cellsInGroup.forEach(cellInvolved => { const rect = cellInvolved.getBoundingClientRect(); minLeft = Math.min(minLeft, rect.left); maxRight = Math.max(maxRight, rect.right); minTop = Math.min(minTop, rect.top); maxBottom = Math.max(maxBottom, rect.bottom); });
+            if (minLeft === Infinity) return;
+            overlay.style.setProperty('--merged-width', `${maxRight - minLeft}px`); overlay.style.setProperty('--merged-height', `${maxBottom - minTop}px`);
         });
     }
 
-
-    // --- Name List Management ---
     function handleNameListSessionSwitch(session) {
-        currentNameListSession = session; 
-        if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi'); 
-        if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang'); 
-        if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`; 
-        if(searchNameInputElement) searchNameInputElement.value = ''; 
-        renderNameListFromFirestore(); 
-        hideCellAutocompleteSuggestions(); 
+        currentNameListSession = session; if(namePagiTabElement) namePagiTabElement.classList.toggle('active', session === 'pagi'); if(namePetangTabElement) namePetangTabElement.classList.toggle('active', session === 'petang'); if(nameModalTitleElement) nameModalTitleElement.textContent = `Shared Name List Manager (${session === 'pagi' ? 'Pagi' : 'Petang'})`; if(searchNameInputElement) searchNameInputElement.value = ''; renderNameListFromFirestore(); hideCellAutocompleteSuggestions();
     }
     function highlightSelectedNameInList(nameToHighlight) {
-        if (!nameListContainer) return; 
-        const nameToHighlightStr = String(nameToHighlight || '');
-        nameListContainer.querySelectorAll('.name-item span').forEach(span => 
-            span.classList.toggle('highlighted', String(span.dataset.name || '') === nameToHighlightStr)
-        );
+        if (!nameListContainer) return; const nameToHighlightStr = String(nameToHighlight || '');
+        nameListContainer.querySelectorAll('.name-item span').forEach(span => span.classList.toggle('highlighted', String(span.dataset.name || '') === nameToHighlightStr));
     }
     function clearNameSelection() {
-        selectedNameFromList = null; 
-        if (nameListContainer) nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => span.classList.remove('highlighted'));
+        selectedNameFromList = null; if (nameListContainer) nameListContainer.querySelectorAll('.name-item span.highlighted').forEach(span => span.classList.remove('highlighted'));
     }
     function closeNameModal() {
-        if (nameModal) nameModal.style.display = 'none'; 
-        clearNameSelection(); 
-        if(searchNameInputElement) searchNameInputElement.value = ''; 
+        if (nameModal) nameModal.style.display = 'none'; clearNameSelection(); if(searchNameInputElement) searchNameInputElement.value = '';
     }
     function toggleNameListModalVisibility() {
         if (!nameModal || !nameModalContent || !newNameInput) return;
         const isDisplayed = nameModal.style.display === 'flex';
-        if (isDisplayed) {
-            closeNameModal();
-        } else {
-            nameModalContent.style.position = 'relative'; 
-            nameModalContent.style.left = 'auto';
-            nameModalContent.style.top = 'auto';
-            nameModalContent.style.transform = 'none';
-            nameModal.style.display = 'flex'; 
-            if(searchNameInputElement) searchNameInputElement.value = ''; 
-            handleNameListSessionSwitch(currentNameListSession); 
-            if(newNameInput) newNameInput.focus(); 
-            clearNameSelection(); 
+        if (isDisplayed) closeNameModal();
+        else {
+            nameModalContent.style.position = 'relative'; nameModalContent.style.left = 'auto'; nameModalContent.style.top = 'auto'; nameModalContent.style.transform = 'none';
+            nameModal.style.display = 'flex'; if(searchNameInputElement) searchNameInputElement.value = '';
+            handleNameListSessionSwitch(currentNameListSession); if(newNameInput) newNameInput.focus(); clearNameSelection();
         }
-        hideCellAutocompleteSuggestions(); 
+        hideCellAutocompleteSuggestions();
     }
     function renderNameListFromFirestore(filterText = '') {
-        if (!nameListContainer) return; 
-        if (!fbIsAuthReady && fbDb) { 
-             nameListContainer.innerHTML = '<p>Authenticating to load names...</p>'; 
-             return; 
-        } else if (!fbDb) {
-            nameListContainer.innerHTML = '<p>Firebase not initialized.</p>';
-            return;
-        }
-        nameListContainer.innerHTML = ''; 
-        const namesToRender = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
+        if (!nameListContainer) return; if (!fbIsAuthReady) { nameListContainer.innerHTML = '<p>Loading names...</p>'; return; }
+        nameListContainer.innerHTML = ''; const namesToRender = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
         const normalizedFilterText = String(filterText || '').toLowerCase().trim();
-
-        if (!Array.isArray(namesToRender)) { 
-            nameListContainer.innerHTML = '<p>Error: Name list is invalid or not loaded.</p>'; 
-            console.error("renderNameListFromFirestore: namesToRender is not an array.", namesToRender);
-            return; 
-        }
+        if (!Array.isArray(namesToRender)) { nameListContainer.innerHTML = '<p>Error: Name list invalid.</p>'; return; }
         const filteredNames = namesToRender.filter(name => String(name || '').toLowerCase().trim().includes(normalizedFilterText));
-        
-        if (filteredNames.length === 0) { 
-            nameListContainer.innerHTML = `<p>${normalizedFilterText ? 'No names match your search.' : `No names found in the ${currentNameListSession} session list.`}</p>`; 
-            return; 
-        }
-        filteredNames.forEach(name => { 
-            const itemDiv = document.createElement('div'); 
-            itemDiv.className = 'name-item'; 
-            const nameStr = String(name || ''); 
-            const safeNameAttr = nameStr.replace(/"/g, '&quot;'); 
-            itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}' for insertion">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}' from shared list">Delete</button>`; 
-            nameListContainer.appendChild(itemDiv); 
-        });
-        highlightSelectedNameInList(selectedNameFromList); 
+        if (filteredNames.length === 0) { nameListContainer.innerHTML = `<p>${normalizedFilterText ? 'No names match.' : `No names in ${currentNameListSession} session.`}</p>`; return; }
+        filteredNames.forEach(name => { const itemDiv = document.createElement('div'); itemDiv.className = 'name-item'; const nameStr = String(name || ''); const safeNameAttr = nameStr.replace(/"/g, '&quot;'); itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}'">Delete</button>`; nameListContainer.appendChild(itemDiv); });
+        highlightSelectedNameInList(selectedNameFromList);
     }
     function selectNameForCellInsertion(name) {
-        selectedNameFromList = String(name || ''); 
-        highlightSelectedNameInList(selectedNameFromList);
-        showMessage(`Selected "${selectedNameFromList}". Click a data cell in the schedule to insert.`, 'info', 4000);
+        selectedNameFromList = String(name || ''); highlightSelectedNameInList(selectedNameFromList);
+        showMessage(`Selected "${selectedNameFromList}". Click cell to insert.`, 'info', 4000);
     }
-    function handleNameListImportFirestore(event) { 
-        const file = event.target.files[0]; 
-        if (!file) { showMessage('No file selected for import.', 'info'); return; }
-        if (file.type !== 'text/plain') { showMessage('Invalid file type. Please select a .txt file.', 'error'); event.target.value = ''; return; }
-        
+    function handleNameListImportFirestore(event) {
+        const file = event.target.files[0]; if (!file) { showMessage('No file selected.', 'info'); return; }
+        if (file.type !== 'text/plain') { showMessage('Invalid file type (.txt only).', 'error'); event.target.value = ''; return; }
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                const importedNames = e.target.result.split(/\r?\n/) 
-                                          .map(n => String(n||'').trim()) 
-                                          .filter(n => n); 
-                if (importedNames.length === 0) { showMessage('No valid names found in the selected file.', 'info'); return; }
-                
+                const importedNames = e.target.result.split(/\r?\n/).map(n => String(n||'').trim()).filter(n => n);
+                if (importedNames.length === 0) { showMessage('No names in file.', 'info'); return; }
                 const currentSessionNames = (currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared).map(n => String(n||'').trim());
-                const combinedNamesSet = new Set(currentSessionNames.map(n => n.toLowerCase()));
-                const newNamesToAdd = [];
-                importedNames.forEach(importedName => {
-                    if (!combinedNamesSet.has(importedName.toLowerCase())) {
-                        newNamesToAdd.push(importedName); 
-                        combinedNamesSet.add(importedName.toLowerCase()); 
-                    }
-                });
-                const finalNamesArray = [...currentSessionNames, ...newNamesToAdd]; 
-                
-                await saveSharedNameListToFirestore(currentNameListSession, finalNamesArray);
-                showMessage(`${newNamesToAdd.length} new names imported to ${currentNameListSession} session.`, 'success');
-            } catch (error) { 
-                console.error("Error processing name list file:", error);
-                showMessage('Error processing the name list file.', 'error'); 
-            }
-            finally { event.target.value = ''; } 
+                const combinedNames = [...new Set([...currentSessionNames, ...importedNames])];
+                await saveSharedNameListToFirestore(currentNameListSession, combinedNames);
+            } catch (error) { showMessage('Error processing name list file.', 'error'); }
+            finally { event.target.value = ''; }
         };
-        reader.onerror = () => { showMessage('Failed to read the name list file.', 'error'); event.target.value = ''; };
+        reader.onerror = () => { showMessage('Failed to read name list file.', 'error'); event.target.value = ''; };
         reader.readAsText(file);
     }
 
-
-    // --- Excel Import/Export ---
     function handleExcelFileImport(event) {
         const file = event.target.files[0]; if (!file || !tablesContainer) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true }); 
-                const sheetName = workbook.SheetNames[0]; 
+                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
-                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false }); 
-                
+                const htmlTableString = XLSX.utils.sheet_to_html(worksheet, { raw: false });
                 tableCount++;
                 const newTableId = `tbl_imported_${Date.now()}_${tableCount}`;
-                const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported Sheet ${tableCount}`;
-                
+                const importedTableName = file.name.replace(/\.xlsx?$/i, '') || `Imported ${tableCount}`;
                 const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlTableString;
                 const importedTableElement = tempDiv.querySelector('table');
-                
                 if (importedTableElement) {
                     importedTableElement.id = newTableId;
                     importedTableElement.dataset.tableName = importedTableName;
-                    ensureDateHeaderRowExists(importedTableElement); 
+                    ensureDateHeaderRowExists(importedTableElement);
                     importedTableElement.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
-                    
                     tablesContainer.appendChild(importedTableElement);
                     addTabButton(newTableId, importedTableName);
-                    switchTable(newTableId); 
-                    showMessage(`Excel data from sheet "${sheetName}" imported successfully!`, 'success');
-                } else {
-                    showMessage('Could not parse a valid table structure from the Excel file.', 'error');
-                }
-            } catch (error) { 
-                showMessage('Error processing the Excel file. It might be corrupted or in an unsupported format.', 'error'); 
-                console.error("Excel import error:", error); 
-            }
-            finally { event.target.value = ''; } 
+                    switchTable(newTableId);
+                    showMessage('Excel data imported!', 'success');
+                } else showMessage('Could not parse table from Excel.', 'error');
+            } catch (error) { showMessage('Error processing Excel file.', 'error'); console.error("Excel import error:", error); }
+            finally { event.target.value = ''; }
         };
         reader.readAsArrayBuffer(file);
     }
     function exportActiveTableToExcel() {
-        const tableToExport = document.getElementById(activeTableId); 
-        if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
-        
+        const tableToExport = document.getElementById(activeTableId); if (!tableToExport) { showMessage('No active table to export.', 'error'); return; }
         const overlaysData = [];
-        tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => { 
-            const parentCell = overlay.parentElement; 
-            overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML }); 
-            parentCell.textContent = overlay.textContent; 
-        });
-        
+        tableToExport.querySelectorAll('.merged-cell-overlay').forEach(overlay => { const parentCell = overlay.parentElement; overlaysData.push({ parent: parentCell, originalHTML: parentCell.innerHTML }); parentCell.textContent = overlay.textContent; });
         const tableName = tableToExport.dataset.tableName || activeTableId;
         const wb = XLSX.utils.table_to_book(tableToExport, { sheet: tableName });
         XLSX.writeFile(wb, `${tableName}_${new Date().toISOString().split('T')[0]}.xlsx`);
-        
         overlaysData.forEach(data => {
             data.parent.innerHTML = data.originalHTML;
             const newOverlay = data.parent.querySelector('.merged-cell-overlay');
             if (newOverlay) {
                 newOverlay.addEventListener('blur', () => rebuildAndRenderSummary());
-                newOverlay.addEventListener('input', (e) => { 
-                    const text = e.target.textContent; 
-                    const parentCellForOverlay = e.target.parentElement; 
-                    if (parentCellForOverlay && (parentCellForOverlay.tagName === 'TD' || (parentCellForOverlay.tagName === 'TH' && parentCellForOverlay.closest('tbody'))) && !parentCellForOverlay.classList.contains('date-header-cell')) {
-                        showCellAutocompleteSuggestions(parentCellForOverlay, text); 
-                    } else { 
-                        hideCellAutocompleteSuggestions(); 
-                    }
-                });
+                newOverlay.addEventListener('input', (e) => { const text = e.target.textContent; const parentCellForOverlay = e.target.parentElement; if (parentCellForOverlay && (parentCellForOverlay.cellIndex > 0 || parentCellForOverlay.closest('table')?.querySelector('thead tr:not(.date-header-row) th:first-child')?.textContent?.toLowerCase() !== 'class') && !parentCellForOverlay.classList.contains('date-header-cell')) showCellAutocompleteSuggestions(parentCellForOverlay, text); else hideCellAutocompleteSuggestions(); });
             }
         });
-        if(overlaysData.length > 0) updateAllMergeOverlays(); 
-        
-        showMessage(`Table "${tableName}" exported to Excel.`, 'success');
+        if(overlaysData.length > 0) updateAllMergeOverlays();
+        showMessage(`Table "${tableName}" exported.`, 'success');
     }
 
-    // --- PDF Generation ---
     async function generateSchedulePdf() {
-        if (!pdfContentElement || !tablesContainer || !scheduleTitleElement) { showMessage('PDF generation elements not found in the DOM.', 'error'); return; }
-        showGeneralLoading(true); showMessage('Generating PDF, please wait...', 'info', 15000); 
-        pdfContentElement.innerHTML = ''; 
-
+        if (!pdfContentElement || !tablesContainer || !scheduleTitleElement) { showMessage('PDF elements not found.', 'error'); return; }
+        showGeneralLoading(true); showMessage('Generating PDF...', 'info', 15000);
+        pdfContentElement.innerHTML = '';
         const tablesToPrint = tablesContainer.querySelectorAll('table');
         const numTables = tablesToPrint.length;
-
-        if (numTables === 0) { 
+        if (numTables === 0) {
             const pageWrapper = document.createElement('div'); pageWrapper.className = 'pdf-page-wrapper';
             const mainTitleText = scheduleTitleElement.textContent || 'Weekly Schedule';
             const mainTitleH2 = document.createElement('h2'); mainTitleH2.textContent = mainTitleText; pageWrapper.appendChild(mainTitleH2);
-            const noTablesMessage = document.createElement('p'); noTablesMessage.textContent = "No tables available to print."; noTablesMessage.style.textAlign = "center"; pageWrapper.appendChild(noTablesMessage);
+            const noTablesMessage = document.createElement('p'); noTablesMessage.textContent = "No tables available."; noTablesMessage.style.textAlign = "center"; pageWrapper.appendChild(noTablesMessage);
             const footnoteDiv = document.createElement('div'); footnoteDiv.className = 'pdf-footnote'; const today = new Date(); const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }; footnoteDiv.textContent = `Generated: ${today.toLocaleDateString(undefined, dateOptions)}`; pageWrapper.appendChild(footnoteDiv);
             pdfContentElement.appendChild(pageWrapper);
         } else {
             tablesToPrint.forEach((tableElement, index) => {
                 const pageWrapper = document.createElement('div'); pageWrapper.className = 'pdf-page-wrapper';
-                if (index === 0) { 
-                    const mainTitleText = scheduleTitleElement.textContent || 'Weekly Schedule'; 
-                    const mainTitleH2 = document.createElement('h2'); mainTitleH2.textContent = mainTitleText; 
-                    pageWrapper.appendChild(mainTitleH2); 
-                }
-                const tableId = tableElement.id; 
-                const tableName = tableElement.dataset.tableName || tableId || `Table ${index + 1}`;
-                const tableTitleH3 = document.createElement('h3'); tableTitleH3.textContent = tableName; 
-                pageWrapper.appendChild(tableTitleH3);
-                
-                const clonedTable = cloneTableForPdf(tableElement); 
-                if (clonedTable) pageWrapper.appendChild(clonedTable); 
-                else { const errorMsg = document.createElement('p'); errorMsg.textContent = `Error: Table "${tableName}" could not be generated for PDF.`; pageWrapper.appendChild(errorMsg); }
-                
-                const footnoteDiv = document.createElement('div'); footnoteDiv.className = 'pdf-footnote'; 
-                const today = new Date(); const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }; 
-                footnoteDiv.textContent = `Generated: ${today.toLocaleDateString(undefined, dateOptions)}`; 
-                pageWrapper.appendChild(footnoteDiv);
+                if (index === 0) { const mainTitleText = scheduleTitleElement.textContent || 'Weekly Schedule'; const mainTitleH2 = document.createElement('h2'); mainTitleH2.textContent = mainTitleText; pageWrapper.appendChild(mainTitleH2); }
+                const tableId = tableElement.id; const tableName = tableElement.dataset.tableName || tableId || `Table ${index + 1}`;
+                const tableTitleH3 = document.createElement('h3'); tableTitleH3.textContent = tableName; pageWrapper.appendChild(tableTitleH3);
+                const clonedTable = cloneTableForPdf(tableElement);
+                if (clonedTable) pageWrapper.appendChild(clonedTable); else { const errorMsg = document.createElement('p'); errorMsg.textContent = `Error: Table "${tableName}" could not be generated.`; pageWrapper.appendChild(errorMsg); }
+                const footnoteDiv = document.createElement('div'); footnoteDiv.className = 'pdf-footnote'; const today = new Date(); const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }; footnoteDiv.textContent = `Generated: ${today.toLocaleDateString(undefined, dateOptions)}`; pageWrapper.appendChild(footnoteDiv);
                 pdfContentElement.appendChild(pageWrapper);
             });
         }
-
-        pdfContentElement.style.display = 'block'; 
-
-        const pdfOptions = { 
-            margin: [5, 5, 5, 5], 
-            filename: `${(scheduleTitleElement.textContent || 'schedule').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete.pdf`, 
-            image: { type: 'jpeg', quality: 0.95 }, 
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                logging: false, 
-                scrollX: 0, 
-                scrollY: -window.scrollY, 
-                windowWidth: pdfContentElement.scrollWidth, 
-                windowHeight: pdfContentElement.scrollHeight,
-                removeContainer: true 
-            }, 
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-            pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-wrapper:not(:first-child)', avoid: ['h2', 'h3', 'table', 'tr', 'thead', 'tbody', '.pdf-footnote'] } 
-        };
-        
-        try { 
-            await html2pdf().from(pdfContentElement).set(pdfOptions).save(); 
-            showMessage('PDF downloaded successfully!', 'success'); 
-        }
-        catch (error) { 
-            console.error('Error generating PDF:', error); 
-            showMessage(`PDF generation failed. Error: ${error.message}. Check console for details.`, 'error', 10000); 
-        }
-        finally { 
-            pdfContentElement.style.display = 'none'; 
-            showGeneralLoading(false); 
-        }
+        pdfContentElement.style.display = 'block';
+        const pdfOptions = { margin: [5, 5, 5, 5], filename: `${(scheduleTitleElement.textContent || 'schedule').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_complete.pdf`, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: -window.scrollY, windowWidth: pdfContentElement.scrollWidth, windowHeight: pdfContentElement.scrollHeight, removeContainer: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-wrapper:not(:first-child)', avoid: ['h2', 'h3', 'table', 'tr', 'thead', 'tbody', '.pdf-footnote'] } };
+        try { await html2pdf().from(pdfContentElement).set(pdfOptions).save(); showMessage('PDF downloaded!', 'success'); }
+        catch (error) { console.error('Error generating PDF:', error); showMessage(`PDF generation failed. Error: ${error.message}.`, 'error', 10000); }
+        finally { pdfContentElement.style.display = 'none'; showGeneralLoading(false); }
     }
     function cloneTableForPdf(originalTable) {
-        if (!originalTable || typeof originalTable.cloneNode !== 'function') { console.error("cloneTableForPdf Error: Invalid originalTable provided:", originalTable); return null; }
-        const tableIdForLog = originalTable.id || 'Unknown Table ID';
-        
-        const clonedTable = originalTable.cloneNode(true); 
-        clonedTable.removeAttribute('id'); 
-        clonedTable.classList.remove('active'); 
-        clonedTable.style.width = '100%'; 
-        clonedTable.style.tableLayout = 'fixed'; 
-        clonedTable.style.fontSize = '7pt'; 
-
+        if (!originalTable || typeof originalTable.cloneNode !== 'function') { console.error("cloneTableForPdf Error: Invalid originalTable:", originalTable); return null; }
+        const tableIdForLog = originalTable.id || 'Unknown ID';
+        const clonedTable = originalTable.cloneNode(true); clonedTable.removeAttribute('id'); clonedTable.classList.remove('active'); clonedTable.style.width = '100%'; clonedTable.style.tableLayout = 'fixed';
         clonedTable.querySelectorAll('[contenteditable="true"]').forEach(el => el.removeAttribute('contenteditable'));
-
-        const mergeGroups = {}; 
-        
+        const mergeGroups = {};
         Array.from(originalTable.rows).forEach((originalRow, rowIndex) => {
             Array.from(originalRow.cells).forEach((originalCell, colIndex) => {
-                const mergeId = originalCell.dataset.mergeId; 
-                if (!mergeId) return; 
-
-                if (!mergeGroups[mergeId]) {
-                    mergeGroups[mergeId] = { 
-                        minRow: rowIndex, maxRow: rowIndex, 
-                        minCol: colIndex, maxCol: colIndex, 
-                        primaryCellOriginal: null, 
-                        allOriginalCellsInGroup: [] 
-                    };
-                }
-                const group = mergeGroups[mergeId];
-                group.allOriginalCellsInGroup.push(originalCell);
+                const mergeId = originalCell.dataset.mergeId; if (!mergeId) return;
+                if (!mergeGroups[mergeId]) { mergeGroups[mergeId] = { minRow: rowIndex, maxRow: rowIndex, minCol: colIndex, maxCol: colIndex, primaryCellOriginal: null, allOriginalCellsInGroup: [] }; }
+                const group = mergeGroups[mergeId]; group.allOriginalCellsInGroup.push(originalCell);
                 group.minRow = Math.min(group.minRow, rowIndex); group.maxRow = Math.max(group.maxRow, rowIndex);
                 group.minCol = Math.min(group.minCol, colIndex); group.maxCol = Math.max(group.maxCol, colIndex);
-                
-                if (originalCell.classList.contains('merged-cell-container')) {
-                    group.primaryCellOriginal = originalCell;
-                }
+                if (originalCell.classList.contains('merged-cell-container')) group.primaryCellOriginal = originalCell;
             });
         });
-
         for (const mergeId in mergeGroups) {
-            const group = mergeGroups[mergeId];
-            if (!group.primaryCellOriginal) { 
-                console.warn(`cloneTableForPdf (${tableIdForLog}): No primary cell found for mergeId: ${mergeId}. Skipping this merge for PDF.`); 
-                continue; 
-            }
-
-            const rowSpan = group.maxRow - group.minRow + 1;
-            const colSpan = group.maxCol - group.minCol + 1;
-
+            const group = mergeGroups[mergeId]; if (!group.primaryCellOriginal) { console.warn(`cloneTableForPdf (${tableIdForLog}): No primary cell for mergeId: ${mergeId}.`); continue; }
+            const rowSpan = group.maxRow - group.minRow + 1; const colSpan = group.maxCol - group.minCol + 1;
             let primaryCellOriginalRowIndex = -1, primaryCellOriginalColIndex = -1;
-            for(let rIdx = 0; rIdx < originalTable.rows.length; rIdx++) {
-                const cIdx = Array.from(originalTable.rows[rIdx].cells).indexOf(group.primaryCellOriginal);
-                if (cIdx !== -1) {
-                    primaryCellOriginalRowIndex = rIdx;
-                    primaryCellOriginalColIndex = cIdx;
-                    break;
-                }
-            }
-            
-            if (primaryCellOriginalRowIndex === -1 || primaryCellOriginalColIndex === -1) {
-                console.warn(`cloneTableForPdf (${tableIdForLog}): Could not find original primary cell's indices for mergeId ${mergeId}. Skipping PDF merge.`);
-                continue;
-            }
-
+            Array.from(originalTable.rows).forEach((r, rIdx) => Array.from(r.cells).forEach((c, cIdx) => { if (c === group.primaryCellOriginal) { primaryCellOriginalRowIndex = rIdx; primaryCellOriginalColIndex = cIdx; }}));
+            if (primaryCellOriginalRowIndex === -1 || primaryCellOriginalColIndex === -1) { console.warn(`cloneTableForPdf (${tableIdForLog}): Could not find original primary cell's indices for mergeId ${mergeId}.`); continue; }
             const clonedPrimaryCell = clonedTable.rows[primaryCellOriginalRowIndex]?.cells[primaryCellOriginalColIndex];
-            
             if (clonedPrimaryCell) {
                 const overlayOriginal = group.primaryCellOriginal.querySelector('.merged-cell-overlay');
-                clonedPrimaryCell.textContent = overlayOriginal ? overlayOriginal.textContent : group.primaryCellOriginal.textContent; 
-                
-                const overlayCloned = clonedPrimaryCell.querySelector('.merged-cell-overlay'); 
-                if (overlayCloned) overlayCloned.remove();
-                clonedPrimaryCell.classList.remove('merged-cell-container'); 
-
-                if (rowSpan > 1) clonedPrimaryCell.rowSpan = rowSpan;
-                if (colSpan > 1) clonedPrimaryCell.colSpan = colSpan;
-
+                clonedPrimaryCell.textContent = overlayOriginal ? overlayOriginal.textContent : group.primaryCellOriginal.textContent;
+                const overlayCloned = clonedPrimaryCell.querySelector('.merged-cell-overlay'); if (overlayCloned) overlayCloned.remove();
+                clonedPrimaryCell.classList.remove('merged-cell-container');
+                if (rowSpan > 1) clonedPrimaryCell.rowSpan = rowSpan; if (colSpan > 1) clonedPrimaryCell.colSpan = colSpan;
                 const cellsToRemoveFromClonedTable = [];
                 group.allOriginalCellsInGroup.forEach(originalSubsumedCell => {
-                    if (originalSubsumedCell === group.primaryCellOriginal) return; 
-
+                    if (originalSubsumedCell === group.primaryCellOriginal) return;
                     let subsumedOriginalRowIndex = -1, subsumedOriginalColIndex = -1;
-                    for(let rIdx = 0; rIdx < originalTable.rows.length; rIdx++) {
-                        const cIdx = Array.from(originalTable.rows[rIdx].cells).indexOf(originalSubsumedCell);
-                        if (cIdx !== -1) {
-                            subsumedOriginalRowIndex = rIdx;
-                            subsumedOriginalColIndex = cIdx;
-                            break;
-                        }
-                    }
-                    if (subsumedOriginalRowIndex !== -1 && subsumedOriginalColIndex !== -1) {
-                        const clonedSubsumedCell = clonedTable.rows[subsumedOriginalRowIndex]?.cells[subsumedOriginalColIndex];
-                        if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) {
-                             cellsToRemoveFromClonedTable.push(clonedSubsumedCell);
-                        }
-                    }
+                     Array.from(originalTable.rows).forEach((r, rIdx) => Array.from(r.cells).forEach((c, cIdx) => { if (c === originalSubsumedCell) { subsumedOriginalRowIndex = rIdx; subsumedOriginalColIndex = cIdx; }}));
+                    if (subsumedOriginalRowIndex !== -1 && subsumedOriginalColIndex !== -1) { const clonedSubsumedCell = clonedTable.rows[subsumedOriginalRowIndex]?.cells[subsumedOriginalColIndex]; if (clonedSubsumedCell && clonedSubsumedCell !== clonedPrimaryCell) cellsToRemoveFromClonedTable.push(clonedSubsumedCell); }
                 });
                 cellsToRemoveFromClonedTable.forEach(cell => cell.remove());
-            } else {
-                console.warn(`cloneTableForPdf (${tableIdForLog}): Cloned primary cell not found for mergeId: ${mergeId}. PDF merge might be incorrect.`);
-            }
+            } else console.warn(`cloneTableForPdf (${tableIdForLog}): Cloned primary cell not found for mergeId: ${mergeId}.`);
         }
         return clonedTable;
     }
