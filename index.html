@@ -742,42 +742,37 @@
     import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs, getDoc, deleteDoc, updateDoc, query, serverTimestamp, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- User-provided Firebase Config (Fallback) ---
-    // This configuration is used if __firebase_config is not injected by the environment.
     const userProvidedFirebaseConfig = {
-      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4", // Replace with your actual API key if not using injected config
+      apiKey: "AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4",
       authDomain: "jadual-3f0aa.firebaseapp.com",
       projectId: "jadual-3f0aa",
-      storageBucket: "jadual-3f0aa.firebasestorage.app", // Corrected to firebasestorage.app
+      storageBucket: "jadual-3f0aa.firebasestorage.app",
       messagingSenderId: "496526436851",
       appId: "1:496526436851:web:78ff48b28bfc8c31f14a86"
     };
 
     // --- Firebase Initialization ---
     let firebaseConfig;
-    // Check if a Firebase config is injected by the environment
     if (typeof __firebase_config !== 'undefined' && __firebase_config !== null && __firebase_config.trim() !== '') {
         try {
             firebaseConfig = JSON.parse(__firebase_config);
             console.log("Using injected Firebase config (__firebase_config).");
         } catch (e) {
-            console.error("Error parsing injected __firebase_config. Falling back to userProvidedFirebaseConfig. Error:", e);
+            console.error("Error parsing injected __firebase_config. Falling back. Error:", e);
             firebaseConfig = userProvidedFirebaseConfig;
         }
     } else {
-        // If no config is injected, use the hardcoded fallback.
         firebaseConfig = userProvidedFirebaseConfig;
-        console.log("Using userProvidedFirebaseConfig defined in the script.");
+        console.log("Using Firebase config defined in the script.");
     }
     
-    // Warning for placeholder API keys if not using an injected key
     if (firebaseConfig.apiKey === "AIzaSyEXAMPLE-API-KEYdQquIEx4" || firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.apiKey.includes("AIzaSyBgvyb95-jujtCC2HPiHXLdYMJgQquIEx4")) {
-        console.warn("Firebase Auth: The current API key appears to be a placeholder. If you are not using an injected Firebase configuration, please update the API key in the script.");
+        console.warn("Firebase Auth: Update Firebase API Key if you see this in production.");
     }
     
-    // Determine the app ID to use for Firestore paths
     const appId = typeof __app_id !== 'undefined' ? __app_id : (firebaseConfig.appId || 'default-shared-scheduler-app');
     if (typeof __app_id === 'undefined') {
-        console.warn("Firebase Auth: __app_id is not defined. Using App ID from Firebase config or a default value for Firestore paths.");
+        console.warn("Firebase Auth: __app_id is not defined. Using App ID from Firebase config or default.");
     }
 
     let fbApp, fbAuth, fbDb;
@@ -801,30 +796,29 @@
     const SCHEDULE_TITLE_KEY = `shared_jadual_title_${appId}`;
     const LAST_ACTIVE_SCHEDULE_ID_KEY = `last_active_schedule_id_${appId}`;
     
-    let activeTableId = 'tbl_1'; // Default active table
-    let tableCount = 1; // Counter for new tables
-    let selectionMode = false; // Flag for cell selection mode
-    let selectedCells = []; // Array to store selected cells for merging
-    let lastClickedCell = null; // Reference to the last clicked cell in a table
-    let selectedNameFromList = null; // Name selected from the shared name list modal
-    let currentNameListSession = 'pagi'; // Current active session for name list ('pagi' or 'petang')
-    let namesPagiShared = []; // Array for 'pagi' shared names
-    let namesPetangShared = []; // Array for 'petang' shared names
-    let isDraggingModal = false; // Flag for modal dragging state
-    let modalDragOffsetX, modalDragOffsetY; // Offsets for modal dragging
-    let autocompleteSuggestionsDiv = null; // Div for autocomplete suggestions
-    let activeCellForAutocomplete = null; // Cell for which autocomplete is active
-    let currentAutocompleteIndex = -1; // Index for navigating autocomplete suggestions
+    let activeTableId = 'tbl_1';
+    let tableCount = 1;
+    let selectionMode = false;
+    let selectedCells = [];
+    let lastClickedCell = null;
+    let selectedNameFromList = null;
+    let currentNameListSession = 'pagi';
+    let namesPagiShared = [];
+    let namesPetangShared = [];
+    let isDraggingModal = false;
+    let modalDragOffsetX, modalDragOffsetY;
+    let autocompleteSuggestionsDiv = null;
+    let activeCellForAutocomplete = null;
+    let currentAutocompleteIndex = -1;
     
-    let currentWorkingScheduleDocId = null; // Firestore document ID of the currently loaded/worked-on schedule
-    let autoSaveIntervalId = null; // Interval ID for auto-saving
-    const AUTO_SAVE_INTERVAL = 60000; // Auto-save interval in milliseconds (1 minute)
-    let isAutoSaving = false; // Flag to prevent concurrent auto-save operations
-    let lastSavedState = null; // Stringified representation of the last saved state for change detection
-    let isInitialStateSet = false; // Flag to indicate if the initial state (loaded or default) has been established
+    let currentWorkingScheduleDocId = null;
+    let autoSaveIntervalId = null;
+    const AUTO_SAVE_INTERVAL = 60000;
+    let isAutoSaving = false;
+    let lastSavedState = null;
+    let isInitialStateSet = false;
 
     // --- DOM Element References ---
-    // (Keep all existing DOM element references as they are essential)
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader,
         nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement,
         summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement,
@@ -957,6 +951,52 @@
             }); 
         }
     }
+    
+    function processNameBlockForSummary(summaryRow, name, blockData, normalizedSummaryHeaders) {
+        if (!blockData || blockData.length === 0) return;
+    
+        let firstOriginalHeader = blockData[0].header;
+        let lastOriginalHeader = blockData[blockData.length - 1].header; // Header of the last cell in the original contiguous block
+        const classIdentifiersInBlock = [...new Set(blockData.map(b => b.classId))].sort().join(', ');
+    
+        const specialNamesForRule = ["LAU", "LISAH"];
+        const targetSlotForSpecialNamesRule = "10.15-10.30";
+        const sourceSlotForRule = "10.30-12.00";
+    
+        const isLauLisahSourceBlock = specialNamesForRule.some(sn => name.toUpperCase() === sn) &&
+                                   normalizeHeaderForLookup(firstOriginalHeader) === normalizeHeaderForLookup(sourceSlotForRule) &&
+                                   normalizeHeaderForLookup(lastOriginalHeader) === normalizeHeaderForLookup(sourceSlotForRule);
+    
+        if (isLauLisahSourceBlock) {
+            firstOriginalHeader = targetSlotForSpecialNamesRule;
+            lastOriginalHeader = targetSlotForSpecialNamesRule;
+        }
+    
+        const summaryStartColIdx = normalizedSummaryHeaders.indexOf(normalizeHeaderForLookup(firstOriginalHeader));
+        const summaryEndColIdx = normalizedSummaryHeaders.indexOf(normalizeHeaderForLookup(lastOriginalHeader));
+    
+        if (summaryStartColIdx > 0 && summaryEndColIdx >= summaryStartColIdx) {
+            const summaryCellToUpdate = summaryRow.cells[summaryStartColIdx];
+            if (!summaryCellToUpdate) return;
+    
+            let tempClasses = summaryCellToUpdate.dataset.tempClasses ? summaryCellToUpdate.dataset.tempClasses.split(',') : [];
+            classIdentifiersInBlock.split(',').forEach(cls => {
+                const trimmedCls = cls.trim();
+                if (trimmedCls && !tempClasses.includes(trimmedCls)) { // Ensure not adding empty strings
+                    tempClasses.push(trimmedCls);
+                }
+            });
+            summaryCellToUpdate.dataset.tempClasses = tempClasses.filter(tc => tc).sort().join(','); // Filter out empty strings before join
+            
+            const colspanRequired = summaryEndColIdx - summaryStartColIdx + 1;
+            if (colspanRequired > 0) {
+                // Check if this cell is already part of a wider span from a previous block for the same name
+                // This is tricky. For now, let the latest processed block define the span for this starting cell.
+                // A more sophisticated approach might be needed if blocks for the same name can interleave in complex ways across tables.
+                summaryCellToUpdate.colSpan = colspanRequired;
+            }
+        }
+    }
 
     function updateSummaryTableData(allAvailableNames) {
         if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) {
@@ -994,69 +1034,34 @@
                     const classIdentifier = String(scheduleDataRow.cells[0]?.textContent||'').trim();
                     if (!classIdentifier) return;
 
-                    for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; ) {
+                    let currentBlock = []; 
+                    for (let cellIdx = 1; cellIdx < scheduleDataRow.cells.length; /* cellIdx incremented carefully */) {
                         const scheduleCell = scheduleDataRow.cells[cellIdx];
-                        let currentOriginalHeader = scheduleHeaders[cellIdx];
-                        if (!currentOriginalHeader) { cellIdx++; continue; } 
-
+                        const originalCellColspan = parseInt(scheduleCell.getAttribute('colspan') || '1');
                         const overlay = scheduleCell.querySelector('.merged-cell-overlay');
-                        let actualEntryForSummary = getTextForSummary(overlay ? overlay.textContent : scheduleCell.textContent);
-                        
-                        if (actualEntryForSummary.toUpperCase().includes(name.toUpperCase())) { 
-                            let blockOriginalStartHeader = currentOriginalHeader;
-                            let blockOriginalEndHeader = currentOriginalHeader;
-                            let numCellsInBlockInOriginal = 1;
+                        const entryFullName = overlay ? overlay.textContent : scheduleCell.textContent;
+                        const entryNameForSummary = getTextForSummary(entryFullName);
 
-                            const specialNamesForRule = ["LAU", "LISAH"];
-                            const targetSlotForSpecialNamesRule = "10.15-10.30";
-                            const sourceSlotForRule = "10.30-12.00";
-                            const isLauLisahSpecialCase = specialNamesForRule.some(sn => name.toUpperCase() === sn) &&
-                                                         normalizeHeaderForLookup(currentOriginalHeader) === normalizeHeaderForLookup(sourceSlotForRule);
-
-                            if (isLauLisahSpecialCase) {
-                                blockOriginalStartHeader = targetSlotForSpecialNamesRule;
-                                blockOriginalEndHeader = targetSlotForSpecialNamesRule;
-                            } else {
-                                for (let nextCellIdx = cellIdx + 1; nextCellIdx < scheduleDataRow.cells.length; nextCellIdx++) {
-                                    const nextScheduleCell = scheduleDataRow.cells[nextCellIdx];
-                                    const nextOriginalHeader = scheduleHeaders[nextCellIdx];
-                                    if (!nextOriginalHeader) break; 
-
-                                    const nextOverlay = nextScheduleCell.querySelector('.merged-cell-overlay');
-                                    const nextEntry = getTextForSummary(nextOverlay ? nextOverlay.textContent : nextScheduleCell.textContent);
-                                    
-                                    if (nextEntry.toUpperCase().includes(name.toUpperCase())) {
-                                        blockOriginalEndHeader = nextOriginalHeader;
-                                        numCellsInBlockInOriginal++;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
-
-                            const summaryStartColIdx = normalizedSummaryHeadersForLookup.indexOf(normalizeHeaderForLookup(blockOriginalStartHeader));
-                            const summaryEndColIdx = normalizedSummaryHeadersForLookup.indexOf(normalizeHeaderForLookup(blockOriginalEndHeader));
-
-                            if (summaryStartColIdx > 0 && summaryEndColIdx >= summaryStartColIdx) {
-                                const summaryCellToProcess = targetSummaryRow.cells[summaryStartColIdx];
-                                if (!summaryCellToProcess) { cellIdx += numCellsInBlockInOriginal; continue;}
-
-                                let tempClasses = summaryCellToProcess.dataset.tempClasses ? summaryCellToProcess.dataset.tempClasses.split(',') : [];
-                                if (!tempClasses.includes(classIdentifier)) {
-                                    tempClasses.push(classIdentifier);
-                                }
-                                summaryCellToProcess.dataset.tempClasses = tempClasses.join(',');
-                                
-                                const colspanRequired = summaryEndColIdx - summaryStartColIdx + 1;
-                                const currentColspan = parseInt(summaryCellToProcess.getAttribute('colspan') || '1');
-                                if (colspanRequired > currentColspan) {
-                                    summaryCellToProcess.colSpan = colspanRequired;
-                                }
-                            }
-                            cellIdx += numCellsInBlockInOriginal;
-                        } else {
-                            cellIdx++;
+                        let headersForThisCell = [];
+                        for (let k = 0; k < originalCellColspan && (cellIdx + k) < scheduleHeaders.length; k++) {
+                            headersForThisCell.push(scheduleHeaders[cellIdx + k]);
                         }
+
+                        if (entryNameForSummary.toUpperCase().includes(name.toUpperCase()) && headersForThisCell.length > 0) {
+                            headersForThisCell.forEach(h => {
+                                currentBlock.push({ header: h, classId: classIdentifier, name: entryNameForSummary });
+                            });
+                            cellIdx += originalCellColspan; 
+                        } else {
+                            if (currentBlock.length > 0) {
+                                processNameBlockForSummary(targetSummaryRow, name, currentBlock, normalizedSummaryHeadersForLookup);
+                                currentBlock = []; 
+                            }
+                            cellIdx += originalCellColspan; 
+                        }
+                    }
+                    if (currentBlock.length > 0) { // Process any remaining block at the end of the row
+                        processNameBlockForSummary(targetSummaryRow, name, currentBlock, normalizedSummaryHeadersForLookup);
                     }
                 });
             });
@@ -1068,7 +1073,7 @@
                 if (!currentCell) { j++; continue; } 
 
                 if (currentCell.dataset.tempClasses) {
-                    currentCell.textContent = currentCell.dataset.tempClasses.split(',').sort().join(', ');
+                    currentCell.textContent = currentCell.dataset.tempClasses.split(',').filter(c => c).sort().join(', '); // Filter empty and sort
                     currentCell.removeAttribute('data-temp-classes');
                     if (currentCell.textContent.includes(',')) {
                         currentCell.classList.add('highlight-conflict');
@@ -1097,7 +1102,7 @@
                 if (!scheduleTable.tBodies[0]) return;
                 scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
                     Array.from(row.cells).forEach((cell, cellIndex) => {
-                        if (cellIndex > 0) { // Skip first column (class name)
+                        if (cellIndex > 0) { 
                             const overlay = cell.querySelector('.merged-cell-overlay');
                             const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
                             const actualNameForSummary = getTextForSummary(nameFromCell);
@@ -1114,1124 +1119,7 @@
 
 
     // --- Utility Functions (continued) ---
-    function showMessage(message, type = 'info', duration = 3000) {
-        if (!customMessageBox) {
-            customMessageBox = document.getElementById('customMessageBox');
-            if (!customMessageBox) { console.warn("showMessage: customMessageBox not found. Msg:", message); return; }
-        }
-        customMessageBox.textContent = message;
-        customMessageBox.className = `custom-message-box ${type}`;
-        customMessageBox.style.display = 'block';
-        setTimeout(() => { if (customMessageBox) customMessageBox.style.display = 'none'; }, duration);
-    }
-
-    function customPrompt(message, defaultValue = "") { return prompt(message, defaultValue); }
-
-    function customConfirm(message) {
-        return new Promise((resolve) => {
-            const confirmModalId = 'customConfirmModal';
-            let existingModal = document.getElementById(confirmModalId);
-            if (existingModal) existingModal.remove();
-            const modal = document.createElement('div');
-            modal.id = confirmModalId;
-            modal.style.cssText = `display: flex; position: fixed; z-index: 2001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;`;
-            const modalContent = document.createElement('div');
-            modalContent.style.cssText = `background-color: #fff; padding: 25px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 300px; max-width: 90%;`;
-            const messageP = document.createElement('p');
-            messageP.textContent = message;
-            messageP.style.marginBottom = '20px'; messageP.style.fontSize = '1.1em';
-            const yesButton = document.createElement('button');
-            yesButton.textContent = 'Yes';
-            yesButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #28a745; color: white; border: none; font-size: 1em;`;
-            const noButton = document.createElement('button');
-            noButton.textContent = 'No';
-            noButton.style.cssText = `padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; background-color: #dc3545; color: white; border: none; font-size: 1em;`;
-            const closeModal = (value) => { modal.remove(); resolve(value); };
-            yesButton.onclick = () => closeModal(true);
-            noButton.onclick = () => closeModal(false);
-            modalContent.appendChild(messageP); modalContent.appendChild(yesButton); modalContent.appendChild(noButton);
-            modal.appendChild(modalContent); document.body.appendChild(modal);
-        });
-    }
-    
-    function showGeneralLoading(isLoading) {
-        if (generalLoadingIndicatorElement) generalLoadingIndicatorElement.style.display = isLoading ? 'flex' : 'none';
-    }
-
-    function toggleButtonBarsVisibility() {
-        if (!collapsibleButtonBarsElement || !controlsTogglerElement) return;
-        const isOpen = collapsibleButtonBarsElement.classList.toggle('open');
-        controlsTogglerElement.setAttribute('aria-expanded', isOpen.toString());
-        const textSpan = controlsTogglerElement.querySelector('span');
-        if (textSpan) textSpan.textContent = isOpen ? 'Hide Controls' : 'Show Controls';
-    }
-
-    function showNameModalLoading(isLoading) {
-        if (loadingIndicatorModalElement) loadingIndicatorModalElement.style.display = isLoading ? 'flex' : 'none';
-    }
-    function showRestoreBackupModalLoading(isLoading) {
-        if (loadingIndicatorRestoreModalElement) loadingIndicatorRestoreModalElement.style.display = isLoading ? 'flex' : 'none';
-    }
-    
-    function ensureDateHeaderRowExists(tableElement) {
-        if (!tableElement || !tableElement.tHead) return;
-        let numCols = 0;
-        const timeSlotHeaderRow = Array.from(tableElement.tHead.rows).find(row => !row.classList.contains('date-header-row'));
-        if (timeSlotHeaderRow) {
-            numCols = timeSlotHeaderRow.cells.length;
-        } else if (tableElement.rows.length > 0 && tableElement.rows[0].cells.length > 0) {
-            const firstMeaningfulRow = Array.from(tableElement.rows).find(r => !r.classList.contains('date-header-row'));
-            numCols = firstMeaningfulRow ? firstMeaningfulRow.cells.length : 1;
-        } else {
-            numCols = 1; 
-        }
-        if (numCols === 0 && tableElement.tHead.rows.length > 0) { 
-             const firstRowCells = tableElement.tHead.rows[0].cells.length;
-             if (firstRowCells > 0) numCols = firstRowCells;
-             else numCols = 1; 
-        }
-
-
-        let dateRow = tableElement.tHead.querySelector('tr.date-header-row');
-        if (!dateRow) {
-            dateRow = document.createElement('tr');
-            dateRow.className = 'date-header-row';
-            for (let i = 0; i < numCols; i++) {
-                const th = document.createElement('th');
-                th.className = 'date-header-cell';
-                th.contentEditable = 'true';
-                dateRow.appendChild(th);
-            }
-            if (tableElement.tHead.firstChild) {
-                tableElement.tHead.insertBefore(dateRow, tableElement.tHead.firstChild);
-            } else {
-                tableElement.tHead.appendChild(dateRow);
-            }
-        } else {
-            const currentCellCount = dateRow.cells.length;
-            if (currentCellCount < numCols) {
-                for (let i = currentCellCount; i < numCols; i++) {
-                    const th = document.createElement('th');
-                    th.className = 'date-header-cell';
-                    th.contentEditable = 'true';
-                    dateRow.appendChild(th);
-                }
-            } else if (currentCellCount > numCols && numCols > 0) { 
-                for (let i = currentCellCount - 1; i >= numCols; i--) {
-                    if(dateRow.cells[i]) dateRow.cells[i].remove();
-                }
-            }
-        }
-    }
-
-    function captureCurrentState() {
-        if (!tablesContainer || !scheduleTitleElement) {
-            console.warn("captureCurrentState: Critical elements (tablesContainer or scheduleTitleElement) not found. Returning null.");
-            return null;
-        }
-        const state = {
-            html: tablesContainer.innerHTML,
-            tableMeta: {},
-            activeTableId: activeTableId,
-            scheduleTitle: scheduleTitleElement.textContent || ''
-        };
-        tablesContainer.querySelectorAll('table').forEach(table => {
-            state.tableMeta[table.id] = {
-                name: table.dataset.tableName || table.id,
-                rowCount: table.rows.length,
-                colCount: table.rows[0]?.cells.length || 0
-            };
-        });
-        return JSON.stringify(state);
-    }
-
-    function hasStateChanged(currentStateStringified) {
-        if (!isInitialStateSet || !lastSavedState) return true; 
-        if (!currentStateStringified) return false; 
-        return currentStateStringified !== lastSavedState;
-    }
-
-    function _updateLocalStateAfterSave(docId, scheduleName, isAutoDraft, operationType) {
-        const capturedStateStringified = captureCurrentState();
-        if (!capturedStateStringified) {
-            console.error(`_updateLocalStateAfterSave (${operationType}): Failed to capture current state. Local state NOT updated.`);
-        } else {
-            lastSavedState = capturedStateStringified;
-        }
-        currentWorkingScheduleDocId = docId; 
-        if (docId) sessionStorage.setItem(LAST_ACTIVE_SCHEDULE_ID_KEY, docId);
-        else sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY); 
-        
-        const timestamp = new Date().toLocaleTimeString();
-        console.log(`%cStateUpdate (${operationType}): ID: ${docId || 'N/A'}, Name: "${scheduleName || 'N/A'}", Draft: ${isAutoDraft}. lastSavedState updated. Time: ${timestamp}`, "color: blue; font-weight: bold;");
-
-        if (operationType === "explicit-save" && scheduleName) showMessage(`Shared schedule "${scheduleName}" saved! (ID: ${docId})`, 'success');
-        else if (operationType === "manual-save" && scheduleName) showMessage(`Page "${scheduleName + (isAutoDraft ? " (Draft)" : "")}" saved! (ID: ${docId})`, 'success');
-        else if (operationType === "load" && scheduleName) showMessage(`Schedule "${scheduleName + (isAutoDraft ? " (Draft)" : "")}" loaded!`, 'success');
-        else if (operationType === "restore-from-backup" && scheduleName) showMessage(`Backup "${scheduleName}" loaded into view. Save to make changes permanent.`, 'info', 5000);
-    }
-
-
-    // --- Firestore Interaction Functions (Shared Names) ---
-    async function saveSharedNameListToFirestore(session, namesArray) {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
-        showNameModalLoading(true);
-        const uniqueSortedNames = [...new Set(namesArray.map(n => String(n||'').trim()).filter(n => n))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-        if (!appId || appId === 'default-shared-scheduler-app') { showMessage("Config error: App ID missing.", "error"); showNameModalLoading(false); return; }
-        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", session);
-        try {
-            await setDoc(docRef, { names: uniqueSortedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
-            showMessage(`Shared name list for ${session} updated.`, "success");
-        } catch (error) { console.error(`Error saving shared list to ${session}:`, error); showMessage(`Failed to save. Error: ${error.message}`, "error"); }
-        finally { showNameModalLoading(false); }
-    }
-    async function addNameToSharedSessionInFirestore(name) {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
-        const trimmedName = String(name || '').trim();
-        if (!trimmedName) { showMessage("Name cannot be empty.", "info"); return; }
-        showNameModalLoading(true);
-        const sessionNames = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
-        if (sessionNames.map(n => String(n || '').toLowerCase()).includes(trimmedName.toLowerCase())) { showMessage(`"${trimmedName}" already exists.`, "info"); showNameModalLoading(false); return; }
-        if (!appId || appId === 'default-shared-scheduler-app') { showMessage("Config error: App ID missing.", "error"); showNameModalLoading(false); return; }
-        const updatedNames = [...sessionNames, trimmedName].sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
-        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", currentNameListSession);
-        try {
-            await setDoc(docRef, { names: updatedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
-            if(newNameInput) { newNameInput.value = ''; newNameInput.focus(); }
-        } catch (error) { console.error(`Error adding name:`, error); showMessage(`Failed to add. Error: ${error.message}`, "error"); }
-        finally { showNameModalLoading(false); }
-    }
-    async function deleteNameFromSharedSessionInFirestore(nameToDelete) {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
-        const nameToDeleteStr = String(nameToDelete || '');
-        if (await customConfirm(`Delete "${nameToDeleteStr}" from shared ${currentNameListSession} session? This also removes it from tables.`)) {
-            showNameModalLoading(true);
-            if (!appId || appId === 'default-shared-scheduler-app') { showMessage("Config error: App ID missing.", "error"); showNameModalLoading(false); return; }
-            const currentNames = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
-            const updatedNames = currentNames.filter(name => String(name || '') !== nameToDeleteStr);
-            const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", currentNameListSession);
-            try {
-                await setDoc(docRef, { names: updatedNames, lastUpdatedBy: fbUserId || "anonymous", updatedAt: serverTimestamp() });
-                tablesContainer.querySelectorAll('table').forEach(table => {
-                    table.querySelectorAll('tbody td, tbody th, .merged-cell-overlay').forEach(cell => {
-                        const cellText = cell.textContent.trim(); const parts = cellText.split(' // ');
-                        let mainContent = parts[0]; const remarkContent = parts.length > 1 ? ` // ${parts.slice(1).join(' // ')}` : '';
-                        const wordsInMain = mainContent.split(/\s+/);
-                        const newWordsInMain = wordsInMain.filter(word => {
-                            const cleanWord = word.startsWith('*') ? word.substring(1) : word;
-                            return cleanWord.toLowerCase() !== nameToDeleteStr.toLowerCase();
-                        });
-                        const newMainContent = newWordsInMain.join(' ').trim();
-                        cell.textContent = (newMainContent || remarkContent) ? (newMainContent + remarkContent).trim() : '';
-                    });
-                });
-                rebuildAndRenderSummary();
-                if (selectedNameFromList === nameToDeleteStr) clearNameSelection();
-            } catch (error) { console.error(`Error deleting name:`, error); showMessage(`Failed to delete. Error: ${error.message}`, "error"); }
-            finally { showNameModalLoading(false); }
-        }
-    }
-    function listenToSharedNameList(sessionToListen) {
-        if (!fbDb || !fbIsAuthReady) { console.warn(`listenToSharedNameList (${sessionToListen}): Firestore not ready.`); return () => {}; }
-        if (!appId || appId === 'default-shared-scheduler-app') { console.error(`listenToSharedNameList (${sessionToListen}): Invalid appId.`); return () => {}; }
-        const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedNameLists", sessionToListen);
-        return onSnapshot(docRef, (docSnap) => {
-            showNameModalLoading(true);
-            const namesFromDb = docSnap.exists() ? (docSnap.data().names || []) : [];
-            const sanitizedNames = namesFromDb.map(name => String(name || '').trim()).filter(name => name.length > 0);
-            if (sessionToListen === 'pagi') namesPagiShared = sanitizedNames; else namesPetangShared = sanitizedNames;
-            if (sessionToListen === currentNameListSession && nameModal?.style.display === 'flex' && searchNameInputElement) renderNameListFromFirestore(searchNameInputElement.value);
-            rebuildAndRenderSummary(); showNameModalLoading(false);
-        }, (error) => { console.error(`Error listening to ${sessionToListen} names:`, error); showMessage(`Error fetching ${sessionToListen} names.`, "error"); showNameModalLoading(false); });
-    }
-
-    // --- Firestore Interaction Functions (Schedules & Backups) ---
-    async function _saveBackupForSchedule(liveDocId, liveScheduleParsedState, liveScheduleNameForBackup, isOriginalAutoDraft) {
-        if (!fbDb || !fbIsAuthReady || !liveDocId || !liveScheduleParsedState) {
-            console.warn("Backup: Missing critical data for backup.", { liveDocId, liveScheduleParsedState, fbReady: fbIsAuthReady });
-            return;
-        }
-
-        const backupScheduleData = {
-            name: `${liveScheduleNameForBackup} - Backup`,
-            html: liveScheduleParsedState.html,
-            meta: liveScheduleParsedState.tableMeta,
-            activeTableId: liveScheduleParsedState.activeTableId,
-            scheduleTitle: liveScheduleParsedState.scheduleTitle,
-            lastUpdatedAt: serverTimestamp(),
-            lastUpdatedBy: fbUserId || "anonymous",
-            isAutoDraft: isOriginalAutoDraft,
-            isBackup: true,
-            originalDocId: liveDocId,
-            originalDocName: liveScheduleNameForBackup
-        };
-
-        try {
-            const q = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                where("isBackup", "==", true),
-                where("originalDocId", "==", liveDocId),
-                limit(1));
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
-                const backupDocRef = querySnapshot.docs[0].ref;
-                backupScheduleData.createdAt = querySnapshot.docs[0].data().createdAt || serverTimestamp(); 
-                await updateDoc(backupDocRef, backupScheduleData);
-                console.log(`Backup updated for originalDocId: ${liveDocId}`);
-            } else {
-                const liveDocSnap = await getDoc(doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", liveDocId));
-                backupScheduleData.createdAt = liveDocSnap.exists() && liveDocSnap.data().createdAt ? liveDocSnap.data().createdAt : serverTimestamp();
-                await addDoc(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), backupScheduleData);
-                console.log(`Backup created for originalDocId: ${liveDocId}`);
-            }
-        } catch (error) {
-            console.error("Error during backup operation:", error);
-            showMessage(`Backup failed: ${error.message}`, 'error', 4000);
-        }
-    }
-
-    async function saveSharedScheduleToFirestore() {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
-        if (!tablesContainer || tablesContainer.children.length === 0) { showMessage('No data to save.', 'info'); return; }
-        const scheduleNameInput = customPrompt('Enter name for this shared schedule:', `Shared Schedule ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-        if (!scheduleNameInput || scheduleNameInput.trim() === "") { showMessage('Save cancelled or name empty.', 'info'); return; }
-        
-        const scheduleName = scheduleNameInput.trim();
-        isAutoSaving = true; showGeneralLoading(true); 
-        const currentFullStateStringified = captureCurrentState();
-        if (!currentFullStateStringified) { showMessage('Error capturing state.', 'error'); isAutoSaving = false; showGeneralLoading(false); return; }
-        
-        const currentFullState = JSON.parse(currentFullStateStringified);
-        const scheduleData = {
-            name: scheduleName,
-            html: currentFullState.html,
-            meta: currentFullState.tableMeta,
-            activeTableId: currentFullState.activeTableId,
-            scheduleTitle: currentFullState.scheduleTitle,
-            createdAt: serverTimestamp(), 
-            lastUpdatedAt: serverTimestamp(),
-            lastUpdatedBy: fbUserId || "anonymous",
-            isAutoDraft: false, 
-            isBackup: false
-        };
-
-        try {
-            const newDocRef = await addDoc(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), scheduleData);
-            _updateLocalStateAfterSave(newDocRef.id, scheduleData.name, false, "explicit-save");
-            await _saveBackupForSchedule(newDocRef.id, currentFullState, scheduleData.name, false); 
-            if (sharedScheduleListContainerElement?.style.display === 'block') await loadAndRenderSharedSchedulesFromFirestore(); 
-        } catch (error) { console.error("Error saving shared schedule:", error); showMessage(`Failed to save. Error: ${error.message}`, "error"); }
-        finally { isAutoSaving = false; showGeneralLoading(false); }
-    }
-
-    async function autoSaveCurrentSchedule() {
-        if (!fbDb || !fbIsAuthReady || isAutoSaving || !tablesContainer || tablesContainer.children.length === 0 || !isInitialStateSet) return;
-        
-        const currentStateStringified = captureCurrentState();
-        if (currentStateStringified === null) {
-            console.warn("AutoSave: Failed to capture current state. Skipping auto-save cycle.");
-            return;
-        }
-        if (!hasStateChanged(currentStateStringified)) {
-            return;
-        }
-        
-        isAutoSaving = true; 
-        console.log(`AutoSave: Changes detected. DocID: ${currentWorkingScheduleDocId || 'NEW DRAFT'}`);
-        
-        try {
-            const currentState = JSON.parse(currentStateStringified);
-            const scheduleContentToSave = {
-                html: currentState.html,
-                meta: currentState.tableMeta,
-                activeTableId: currentState.activeTableId,
-                scheduleTitle: currentState.scheduleTitle,
-                isBackup: false 
-            };
-
-            let savedDocId = currentWorkingScheduleDocId;
-            let savedScheduleName = "";
-            let savedIsAutoDraft = true; 
-
-            if (!currentWorkingScheduleDocId) { 
-                savedScheduleName = `Autosaved Draft (${fbUserId ? fbUserId.substring(0, 5) : 'anon'}...) - ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], {hour12: false, hour: '2-digit', minute: '2-digit'})}`;
-                const scheduleData = { name: savedScheduleName, ...scheduleContentToSave, createdAt: serverTimestamp(), lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", isAutoDraft: true };
-                const newDocRef = await addDoc(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), scheduleData);
-                savedDocId = newDocRef.id;
-                _updateLocalStateAfterSave(savedDocId, savedScheduleName, true, "auto-draft-created");
-            } else { 
-                const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
-                const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) { 
-                    console.warn(`AutoSave: Doc ID ${currentWorkingScheduleDocId} not found. Creating new draft.`);
-                    _updateLocalStateAfterSave(null, "Previous Draft Lost", true, "doc-not-found-during-autosave");
-                    currentWorkingScheduleDocId = null; 
-                    isAutoSaving = false;
-                    return; 
-                }
-                savedScheduleName = docSnap.data().name;
-                savedIsAutoDraft = typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : true; 
-                const scheduleDataForUpdate = { ...scheduleContentToSave, name: savedScheduleName, lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", isAutoDraft: savedIsAutoDraft };
-                await updateDoc(docRef, scheduleDataForUpdate); 
-                _updateLocalStateAfterSave(currentWorkingScheduleDocId, savedScheduleName, savedIsAutoDraft, "auto-save-update");
-            }
-            if (savedDocId) {
-                 await _saveBackupForSchedule(savedDocId, currentState, savedScheduleName, savedIsAutoDraft);
-            }
-
-        } catch (error) {
-            console.error("Auto-save error:", error);
-        }
-        finally { isAutoSaving = false; } 
-    }
-
-    async function manualSaveCurrentPage() {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
-        if (!tablesContainer || tablesContainer.children.length === 0) { showMessage('No data to save.', 'info'); return; }
-        if (isAutoSaving) { showMessage('Operation in progress. Please wait.', 'info'); return; } 
-        
-        showGeneralLoading(true);
-        isAutoSaving = true; 
-        const currentStateStringified = captureCurrentState();
-
-        if (!currentStateStringified) {
-            showMessage('Error capturing state for save.', 'error');
-            isAutoSaving = false;
-            showGeneralLoading(false);
-            return;
-        }
-        
-        try {
-            const currentState = JSON.parse(currentStateStringified);
-            const scheduleContentToSave = {
-                html: currentState.html,
-                meta: currentState.tableMeta,
-                activeTableId: currentState.activeTableId,
-                scheduleTitle: currentState.scheduleTitle,
-                isBackup: false
-            };
-            
-            let savedDocId = currentWorkingScheduleDocId;
-            let finalScheduleName = "";
-            let finalIsAutoDraft = false; 
-
-            if (currentWorkingScheduleDocId) { 
-                const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", currentWorkingScheduleDocId);
-                const docSnap = await getDoc(docRef);
-
-                if (!docSnap.exists()) { 
-                    showMessage(`Error: Previously loaded document (ID: ${currentWorkingScheduleDocId}) not found. This save will create a NEW schedule.`, "warning", 7000);
-                    currentWorkingScheduleDocId = null; 
-                    _updateLocalStateAfterSave(null, "Previous Doc Lost", false, "manual-save-doc-not-found"); 
-                    savedDocId = null; 
-                } else { 
-                    let currentScheduleName = docSnap.data().name;
-                    let currentIsAutoDraft = typeof docSnap.data().isAutoDraft === 'boolean' ? docSnap.data().isAutoDraft : false; 
-
-                    if (currentIsAutoDraft) { 
-                        const newNamePrompt = customPrompt(`This is an autosaved draft ("${currentScheduleName}"). Enter a new name to save it permanently (recommended), or cancel to update the draft with its current name.`, currentScheduleName.replace(/Autosaved Draft /i, "").replace(/\([\w\s.-]+\)\s*-\s*\d{1,2}\/\d{1,2}\/\d{4}.*/i, "").trim());
-                        if (newNamePrompt && newNamePrompt.trim() !== "") {
-                            finalScheduleName = newNamePrompt.trim();
-                            finalIsAutoDraft = false; 
-                        } else { 
-                            finalScheduleName = currentScheduleName;
-                            finalIsAutoDraft = true; 
-                        }
-                    } else { 
-                        finalScheduleName = currentScheduleName; 
-                        finalIsAutoDraft = false; 
-                    }
-                    const scheduleDataForUpdate = { ...scheduleContentToSave, name: finalScheduleName, lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", isAutoDraft: finalIsAutoDraft };
-                    await updateDoc(docRef, scheduleDataForUpdate); 
-                    _updateLocalStateAfterSave(currentWorkingScheduleDocId, finalScheduleName, finalIsAutoDraft, "manual-save");
-                    await _saveBackupForSchedule(currentWorkingScheduleDocId, currentState, finalScheduleName, finalIsAutoDraft);
-                    if (sharedScheduleListContainerElement?.style.display === 'block') await loadAndRenderSharedSchedulesFromFirestore();
-                    isAutoSaving = false; showGeneralLoading(false); return; 
-                }
-            }
-            
-            const defaultNewName = `My Schedule - ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-            const scheduleNameInput = customPrompt('Enter name for this new schedule:', defaultNewName);
-            if (!scheduleNameInput || scheduleNameInput.trim() === "") {
-                showMessage('Save cancelled or name empty.', 'info');
-                isAutoSaving = false; showGeneralLoading(false); return;
-            }
-            finalScheduleName = scheduleNameInput.trim();
-            finalIsAutoDraft = false; 
-            const scheduleData = { name: finalScheduleName, ...scheduleContentToSave, createdAt: serverTimestamp(), lastUpdatedAt: serverTimestamp(), lastUpdatedBy: fbUserId || "anonymous", isAutoDraft: finalIsAutoDraft };
-            const newDocRef = await addDoc(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"), scheduleData);
-            savedDocId = newDocRef.id; 
-            _updateLocalStateAfterSave(savedDocId, finalScheduleName, finalIsAutoDraft, "manual-save"); 
-            await _saveBackupForSchedule(savedDocId, currentState, finalScheduleName, finalIsAutoDraft);
-            if (sharedScheduleListContainerElement?.style.display === 'block') await loadAndRenderSharedSchedulesFromFirestore();
-
-        } catch (error) { console.error("Error during manual save:", error); showMessage(`Failed to save. Error: ${error.message}`, "error"); }
-        finally { isAutoSaving = false; showGeneralLoading(false); } 
-    }
-
-    async function loadAndRenderSharedSchedulesFromFirestore() {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.innerHTML = '<p>Connect to Firebase.</p>'; return; }
-        if (!sharedScheduleListContainerElement) return;
-        showGeneralLoading(true);
-        sharedScheduleListContainerElement.innerHTML = '<p>Loading schedules...</p>';
-        try {
-            let querySnapshot;
-            try {
-                let q = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                              where("isBackup", "!=", true), 
-                              orderBy("lastUpdatedAt", "desc"));
-                querySnapshot = await getDocs(q);
-            } catch (error) {
-                console.warn("Error loading schedules (lastUpdatedAt order failed, trying createdAt):", error);
-                if (error.message.toLowerCase().includes("index")) showMessage("Loading (fallback sort)...", "info", 4000);
-                else showMessage("Error loading. Trying fallback...", "info", 4000);
-                let qFallback = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                                      where("isBackup", "!=", true), 
-                                      orderBy("createdAt", "desc"));
-                querySnapshot = await getDocs(qFallback);
-            }
-
-            const schedules = [];
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                if (data.isBackup !== true) {
-                    schedules.push({ id: docSnap.id, ...data });
-                }
-            });
-            renderSharedScheduleList(schedules); 
-            sharedScheduleListContainerElement.style.display = 'block';
-        } catch (finalError) {
-             console.error("Error loading schedules (final attempt):", finalError);
-             showMessage(`Failed to load schedules. Error: ${finalError.message}`, "error");
-             sharedScheduleListContainerElement.innerHTML = `<p>Error loading schedules. Check console.</p>`;
-        } finally {
-            showGeneralLoading(false);
-        }
-    }
-
-    function renderSharedScheduleList(schedulesArray) {
-        if (!sharedScheduleListContainerElement) return;
-        sharedScheduleListContainerElement.innerHTML = '';
-        const sortedSchedules = schedulesArray.sort((a, b) => {
-            const dateA = a.lastUpdatedAt?.toDate ? a.lastUpdatedAt.toDate() : (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0));
-            const dateB = b.lastUpdatedAt?.toDate ? b.lastUpdatedAt.toDate() : (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0));
-            if (dateB - dateA !== 0) return dateB - dateA;
-            const createdA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
-            const createdB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
-            return createdB - createdA;
-        });
-
-        if (!sortedSchedules || sortedSchedules.length === 0) { sharedScheduleListContainerElement.innerHTML = '<p>No shared schedules saved yet.</p>'; return; }
-        
-        sortedSchedules.forEach(schedule => {
-            const itemDiv = document.createElement('div'); itemDiv.className = 'shared-schedule-item';
-            
-            const mainLineDiv = document.createElement('div'); mainLineDiv.className = 'schedule-item-main-line';
-            
-            let dateToShow = 'Date N/A';
-            if (schedule.lastUpdatedAt?.toDate) dateToShow = `Updated: ${schedule.lastUpdatedAt.toDate().toLocaleString()}`;
-            else if (schedule.createdAt?.toDate) dateToShow = `Created: ${schedule.createdAt.toDate().toLocaleString()}`;
-            
-            const updatedByText = schedule.lastUpdatedBy ? ` (by ${schedule.lastUpdatedBy.substring(0,8)}...)` : '';
-            const draftSuffix = schedule.isAutoDraft ? " (Draft)" : "";
-            const displayName = `${schedule.name}${draftSuffix}`;
-
-            const nameSpan = document.createElement('span');
-            nameSpan.dataset.scheduleId = schedule.id;
-            nameSpan.title = `Load: ${displayName}`;
-            nameSpan.textContent = `${displayName}${updatedByText}`;
-            mainLineDiv.appendChild(nameSpan);
-
-            const deleteButton = document.createElement('button');
-            deleteButton.dataset.scheduleId = schedule.id;
-            deleteButton.title = `Delete '${displayName}'`;
-            deleteButton.textContent = 'Delete';
-            mainLineDiv.appendChild(deleteButton);
-            
-            itemDiv.appendChild(mainLineDiv);
-
-            const detailsDiv = document.createElement('div');
-            detailsDiv.className = 'schedule-item-details';
-            const dateSpan = document.createElement('span');
-            dateSpan.className = 'schedule-date';
-            dateSpan.textContent = dateToShow;
-            detailsDiv.appendChild(dateSpan);
-            itemDiv.appendChild(detailsDiv);
-            
-            sharedScheduleListContainerElement.appendChild(itemDiv);
-        });
-    }
-
-    async function loadSelectedSharedScheduleFromFirestore(scheduleDocId, isDefaultLoad = false) {
-        if (!fbDb || !fbIsAuthReady) {
-            if (!isDefaultLoad) showMessage("Firebase not ready.", "error");
-            else console.warn("loadSelected: Firebase not ready for default load.");
-            return false;
-        }
-        if (!tablesContainer || !tableTabs || !scheduleTitleElement) {
-            console.error("loadSelected: Critical DOM elements missing.");
-            return false;
-        }
-        showGeneralLoading(true);
-        try {
-            const docRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const scheduleData = docSnap.data();
-                if (scheduleData.isBackup === true) { 
-                    console.warn(`loadSelected: Attempted to load a backup document (ID: ${scheduleDocId}). Operation aborted.`);
-                    if (!isDefaultLoad) showMessage("Cannot load a backup file directly from this list. Use 'Restore Backup'.", "error");
-                    _updateLocalStateAfterSave(null, null, false, "attempted-backup-load"); 
-                    if (scheduleDocId === sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY)) sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
-                    return false;
-                }
-
-                if (typeof scheduleData.scheduleTitle === 'string') {
-                    scheduleTitleElement.textContent = scheduleData.scheduleTitle;
-                    localStorage.setItem(SCHEDULE_TITLE_KEY, scheduleData.scheduleTitle);
-                }
-                tablesContainer.innerHTML = scheduleData.html;
-                const tableMeta = scheduleData.meta || {};
-                tableTabs.innerHTML = '';
-                tablesContainer.querySelectorAll('table').forEach(table => {
-                    ensureDateHeaderRowExists(table);
-                    const id = table.id;
-                    const metaInfo = tableMeta[id] || {};
-                    const name = metaInfo.name || `Sheet ${tableTabs.children.length + 1}`;
-                    table.dataset.tableName = name;
-                    addTabButton(id, name);
-                    table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
-                });
-                activeTableId = scheduleData.activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1';
-                if (document.getElementById(activeTableId)) switchTable(activeTableId);
-                else if (tablesContainer.querySelector('table')) switchTable(tablesContainer.querySelector('table').id);
-                else { console.warn("Loaded schedule has no tables. Adding new."); addNewTable(true); }
-                
-                _updateLocalStateAfterSave(scheduleDocId, scheduleData.name, scheduleData.isAutoDraft, "load");
-                if (isDefaultLoad) console.log(`Default/Session schedule "${scheduleData.name}" loaded.`);
-                if (sharedScheduleListContainerElement) sharedScheduleListContainerElement.style.display = 'none'; 
-                rebuildAndRenderSummary();
-                updateAllMergeOverlays(); 
-                return true;
-            } else {
-                console.warn(`loadSelected: Doc ID "${scheduleDocId}" not found.`);
-                if (!isDefaultLoad) showMessage(`Schedule ID "${scheduleDocId}" not found.`, "error");
-                _updateLocalStateAfterSave(null, null, false, "doc-not-found-on-load"); 
-                if (scheduleDocId === sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY)) sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
-                return false;
-            }
-        } catch (error) {
-            console.error(`loadSelected: Error loading schedule ID ${scheduleDocId}:`, error);
-            if (!isDefaultLoad) showMessage(`Failed to load. Error: ${error.message}`, "error");
-            _updateLocalStateAfterSave(null, null, false, "load-error"); 
-            return false;
-        } finally {
-            showGeneralLoading(false);
-        }
-    }
-    
-    async function loadLatestSharedScheduleAsDefault() {
-        if (!fbDb || !fbIsAuthReady) {
-            console.log("loadLatest: Firebase not ready.");
-            setupInitialTableState();
-            lastSavedState = captureCurrentState(); 
-            isInitialStateSet = true;
-            if (lastSavedState === null) console.error("CRITICAL: Initial state capture failed (Firebase not ready).");
-            rebuildAndRenderSummary();
-            return false; 
-        }
-        showGeneralLoading(true);
-        let loadedSuccessfully = false;
-
-        try {
-            const lastActiveIdFromSession = sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY);
-            if (lastActiveIdFromSession) {
-                console.log(`loadLatest: Attempting to load last active schedule (ID: ${lastActiveIdFromSession})`);
-                const loadedFromSession = await loadSelectedSharedScheduleFromFirestore(lastActiveIdFromSession, true);
-                if (loadedFromSession) {
-                    console.log("loadLatest: Successfully loaded last active schedule");
-                    showGeneralLoading(false);
-                    isInitialStateSet = true; 
-                    return true;
-                } else {
-                    console.warn(`loadLatest: Failed to load last active schedule (ID: ${lastActiveIdFromSession}). Will try latest from DB.`);
-                    sessionStorage.removeItem(LAST_ACTIVE_SCHEDULE_ID_KEY); 
-                }
-            }
-
-            const MAX_CANDIDATES_TO_CHECK = 5;
-            let candidates = [];
-            try {
-                console.log("loadLatest: Querying Firestore for latest non-backup schedules");
-                const qPrimary = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                    where("isBackup", "!=", true), 
-                    orderBy("lastUpdatedAt", "desc"),
-                    limit(MAX_CANDIDATES_TO_CHECK));
-                const primarySnapshot = await getDocs(qPrimary);
-                primarySnapshot.forEach(docSnap => candidates.push(docSnap));
-                console.log(`loadLatest: Found ${candidates.length} candidate schedules (primary query).`);
-            } catch (error) {
-                console.warn("loadLatest (lastUpdatedAt query failed, trying createdAt):", error);
-                const qFallback = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                    where("isBackup", "!=", true),
-                    orderBy("createdAt", "desc"),
-                    limit(MAX_CANDIDATES_TO_CHECK * 2)); 
-                const fallbackSnapshot = await getDocs(qFallback);
-                const fallbackCandidates = [];
-                fallbackSnapshot.forEach(docSnap => fallbackCandidates.push(docSnap));
-                
-                fallbackCandidates.forEach(fc => {
-                    if (!candidates.find(c => c.id === fc.id)) candidates.push(fc);
-                });
-                candidates.sort((a, b) => { 
-                    const dateA = a.data().lastUpdatedAt?.toDate ? a.data().lastUpdatedAt.toDate() : (a.data().createdAt?.toDate ? a.data().createdAt.toDate() : new Date(0));
-                    const dateB = b.data().lastUpdatedAt?.toDate ? b.data().lastUpdatedAt.toDate() : (b.data().createdAt?.toDate ? b.data().createdAt.toDate() : new Date(0));
-                    return dateB - dateA;
-                });
-                candidates = candidates.slice(0, MAX_CANDIDATES_TO_CHECK); 
-                console.log(`loadLatest: Found ${candidates.length} candidate schedules (after fallback & sort).`);
-            }
-
-            for (const docSnap of candidates) {
-                console.log(`loadLatest: Trying to load schedule ${docSnap.id} ('${docSnap.data().name}')`);
-                loadedSuccessfully = await loadSelectedSharedScheduleFromFirestore(docSnap.id, true);
-                if (loadedSuccessfully) {
-                    console.log("loadLatest: Successfully loaded a schedule from DB candidates.");
-                    break; 
-                } else {
-                    console.warn(`loadLatest: Failed to load schedule ${docSnap.id}. Trying next candidate.`);
-                }
-            }
-
-            if (!loadedSuccessfully) {
-                console.log("loadLatest: No suitable non-backup schedule loaded from Firestore candidates.");
-            }
-
-        } catch (finalError) {
-            console.error("loadLatest (outer try/catch):", finalError);
-        } finally {
-            showGeneralLoading(false);
-        }
-        
-        if (!loadedSuccessfully) {
-            console.log("loadLatest: Fallback - Setting up initial table state as no schedule was loaded from Firebase.");
-            setupInitialTableState(); 
-            lastSavedState = captureCurrentState();
-            isInitialStateSet = true;
-            if (lastSavedState === null) {
-                console.error("CRITICAL: Initial state capture failed after fallback from Firebase load.");
-                showMessage("Error: Could not capture initial state.", "error", 7000);
-            }
-            rebuildAndRenderSummary();
-            const lastActiveIdFromSession = sessionStorage.getItem(LAST_ACTIVE_SCHEDULE_ID_KEY); 
-            if (!lastActiveIdFromSession && candidates.length === 0) { 
-                 showMessage('No saved schedule found. Starting with a new schedule.', 'info', 5000);
-            } else if (candidates.length > 0 || lastActiveIdFromSession) { 
-                 showMessage('Could not load latest schedule. Displaying default. Try "Load Shared".', 'warning', 7000);
-            }
-        } else {
-            isInitialStateSet = true; 
-        }
-        
-        return loadedSuccessfully;
-    }
-    
-    async function confirmAndDeleteSharedScheduleFromFirestore(scheduleDocId, scheduleName) {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
-        const displayName = scheduleName.includes("(Draft)") ? scheduleName : `${scheduleName}`;
-        if (await customConfirm(`Delete "${displayName}" from Cloud? This cannot be undone. (Associated backup will also be deleted)`)) {
-            showGeneralLoading(true);
-            try {
-                await deleteDoc(doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", scheduleDocId));
-                
-                const backupQuery = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                                          where("isBackup", "==", true),
-                                          where("originalDocId", "==", scheduleDocId),
-                                          limit(1)); 
-                const backupSnapshot = await getDocs(backupQuery);
-                if (!backupSnapshot.empty) {
-                    await deleteDoc(backupSnapshot.docs[0].ref);
-                    console.log(`Backup for ${scheduleDocId} also deleted.`);
-                }
-
-                if (currentWorkingScheduleDocId === scheduleDocId) {
-                    _updateLocalStateAfterSave(null, null, false, "deleted-current"); 
-                }
-                showMessage(`Schedule "${scheduleName}" and its backup deleted.`, 'success');
-                await loadAndRenderSharedSchedulesFromFirestore(); 
-            } catch (error) { console.error("Error deleting schedule and/or its backup:", error); showMessage(`Failed to delete. Error: ${error.message}`, "error"); }
-            finally { showGeneralLoading(false); }
-        }
-    }
-    async function exportAllSharedSchedulesFromFirestore() {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
-        showGeneralLoading(true);
-        try {
-            const q = query(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"),
-                            where("isBackup", "!=", true), 
-                            orderBy("createdAt", "desc"));
-            const querySnapshot = await getDocs(q); const schedulesToExport = [];
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                schedulesToExport.push({
-                    name: data.name,
-                    html: data.html,
-                    meta: data.meta,
-                    activeTableId: data.activeTableId,
-                    scheduleTitle: data.scheduleTitle || null,
-                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
-                    lastUpdatedAt: data.lastUpdatedAt?.toDate ? data.lastUpdatedAt.toDate().toISOString() : null,
-                    lastUpdatedBy: data.lastUpdatedBy || null,
-                    isAutoDraft: typeof data.isAutoDraft === 'boolean' ? data.isAutoDraft : undefined 
-                });
-            });
-            if (schedulesToExport.length === 0) { showMessage('No (non-backup) schedules to export.', 'info'); showGeneralLoading(false); return; }
-            const blob = new Blob([JSON.stringify(schedulesToExport, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob); const a = document.createElement('a');
-            a.href = url; a.download = `shared_schedules_${appId}_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-            showMessage('All non-backup schedules exported!', 'success');
-        } catch (error) { console.error("Error exporting schedules:", error); showMessage(`Failed to export. Error: ${error.message}`, "error"); }
-        finally { showGeneralLoading(false); }
-    }
-    async function handleSharedSchedulesImport(event) {
-        if (!fbDb || !fbIsAuthReady) { showMessage("Firebase not ready.", "error"); return; }
-        const file = event.target.files[0];
-        if (!file) { showMessage('No file selected.', 'info'); return; }
-        if (file.type !== 'application/json') { showMessage('Invalid file type (.json only).', 'error'); event.target.value = ''; return; }
-        showGeneralLoading(true);
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const importedSchedulesData = JSON.parse(e.target.result);
-                if (!Array.isArray(importedSchedulesData)) { showMessage('Invalid file format (expected an array of schedules).', 'error'); return; }
-                let importedCount = 0, skippedCount = 0;
-                const schedulesCollectionRef = collection(fbDb, "artifacts", appId, "public/data/sharedSchedules");
-                
-                for (const schedule of importedSchedulesData) {
-                    if (schedule && typeof schedule.name === 'string' && typeof schedule.html === 'string' && typeof schedule.meta === 'object' && (typeof schedule.activeTableId === 'string' || schedule.activeTableId === null)) {
-                        const q = query(schedulesCollectionRef, where("name", "==", schedule.name), where("isBackup", "!=", true));
-                        const existingSnapshot = await getDocs(q);
-                        
-                        if (!existingSnapshot.empty) { 
-                            if (await customConfirm(`Schedule "${schedule.name}" already exists. Overwrite? (The old schedule and its backup will be removed if you overwrite)`)) {
-                                for(const docToDel of existingSnapshot.docs) {
-                                    const oldBackupQuery = query(schedulesCollectionRef, where("isBackup", "==", true), where("originalDocId", "==", docToDel.id));
-                                    const oldBackupSnapshot = await getDocs(oldBackupQuery);
-                                    oldBackupSnapshot.forEach(async oldBackupDoc => await deleteDoc(oldBackupDoc.ref));
-                                    await deleteDoc(docToDel.ref); 
-                                }
-                            } else {
-                                skippedCount++; continue; 
-                            }
-                        }
-                        const newLiveScheduleData = {
-                            name: schedule.name,
-                            html: schedule.html,
-                            meta: schedule.meta,
-                            activeTableId: schedule.activeTableId,
-                            scheduleTitle: schedule.scheduleTitle || schedule.name, 
-                            createdAt: schedule.createdAt ? new Date(schedule.createdAt) : serverTimestamp(), 
-                            lastUpdatedAt: schedule.lastUpdatedAt ? new Date(schedule.lastUpdatedAt) : serverTimestamp(),
-                            lastUpdatedBy: schedule.lastUpdatedBy || fbUserId || "anonymous",
-                            isAutoDraft: typeof schedule.isAutoDraft === 'boolean' ? schedule.isAutoDraft : false, 
-                            isBackup: false 
-                        };
-                        const newLiveDocRef = await addDoc(schedulesCollectionRef, newLiveScheduleData); 
-                        
-                        const importedStateForBackup = {
-                            html: schedule.html,
-                            tableMeta: schedule.meta,
-                            activeTableId: schedule.activeTableId,
-                            scheduleTitle: schedule.scheduleTitle || schedule.name
-                        };
-                        await _saveBackupForSchedule(newLiveDocRef.id, importedStateForBackup, schedule.name, newLiveScheduleData.isAutoDraft);
-                        importedCount++;
-                    } else { console.warn("Skipping invalid schedule object during import:", schedule); skippedCount++; }
-                }
-                showMessage(`Import complete: ${importedCount} schedules imported/overwritten (with new backups), ${skippedCount} skipped.`, 'success', 5000);
-                if (sharedScheduleListContainerElement && (sharedScheduleListContainerElement.style.display === 'block' || importedCount > 0)) {
-                    await loadAndRenderSharedSchedulesFromFirestore();
-                }
-            } catch (error) { console.error("Error processing schedule file:", error); showMessage('Error processing file. Check console for details.', 'error', 5000); }
-            finally { event.target.value = ''; showGeneralLoading(false); } 
-        };
-        reader.onerror = () => { showMessage('Failed to read file.', 'error'); event.target.value = ''; showGeneralLoading(false); };
-        reader.readAsText(file);
-    }
-
-
-    // --- Restore Backup Functions ---
-    function toggleRestoreBackupModalVisibility() {
-        if (!restoreBackupModalElement || !restoreBackupModalContentElement) return;
-        const isDisplayed = restoreBackupModalElement.style.display === 'flex';
-        if (isDisplayed) {
-            restoreBackupModalElement.style.display = 'none';
-        } else {
-            restoreBackupModalContentElement.style.position = 'relative'; 
-            restoreBackupModalContentElement.style.left = 'auto';
-            restoreBackupModalContentElement.style.top = 'auto';
-            restoreBackupModalContentElement.style.transform = 'none';
-            restoreBackupModalElement.style.display = 'flex';
-            loadAndRenderBackupSchedulesFromFirestore();
-        }
-    }
-
-    async function loadAndRenderBackupSchedulesFromFirestore() {
-        if (!fbDb || !fbIsAuthReady) {
-            console.error("loadAndRenderBackupSchedulesFromFirestore: Firebase not ready.");
-            showMessage("Firebase not ready for backup list.", "error");
-            if (restoreBackupListContainerElement) restoreBackupListContainerElement.innerHTML = '<p>Connect to Firebase to see backups.</p>';
-            return;
-        }
-        if (!restoreBackupListContainerElement) {
-            console.error("loadAndRenderBackupSchedulesFromFirestore: restoreBackupListContainerElement not found.");
-            return;
-        }
-
-        showRestoreBackupModalLoading(true);
-        restoreBackupListContainerElement.innerHTML = '<p>Loading backups...</p>';
-        try {
-            const allSchedulesSnapshot = await getDocs(collection(fbDb, "artifacts", appId, "public/data/sharedSchedules"));
-            
-            const backupSchedules = [];
-            allSchedulesSnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                if (data.isBackup === true) {
-                    backupSchedules.push({ id: docSnap.id, ...data });
-                }
-            });
-
-            backupSchedules.sort((a, b) => {
-                const dateA = a.lastUpdatedAt?.toDate ? a.lastUpdatedAt.toDate() : (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0));
-                const dateB = b.lastUpdatedAt?.toDate ? b.lastUpdatedAt.toDate() : (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0));
-                if (dateB - dateA !== 0) return dateB - dateA;
-                const createdA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
-                const createdB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
-                return createdB - createdA;
-            });
-
-            renderBackupScheduleList(backupSchedules);
-        } catch (error) {
-            console.error("Error loading backup schedules:", error);
-            showMessage(`Failed to load backups. Error: ${error.message}`, "error");
-            if (restoreBackupListContainerElement) restoreBackupListContainerElement.innerHTML = `<p>Error loading backups. Check console.</p>`;
-        } finally {
-            showRestoreBackupModalLoading(false);
-        }
-    }
-
-    function renderBackupScheduleList(backupSchedulesArray) {
-        if (!restoreBackupListContainerElement) return;
-        restoreBackupListContainerElement.innerHTML = '';
-
-        if (!backupSchedulesArray || backupSchedulesArray.length === 0) {
-            restoreBackupListContainerElement.innerHTML = '<p>No backups found.</p>';
-            return;
-        }
-
-        backupSchedulesArray.forEach(backup => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'backup-schedule-item';
-
-            const mainLineDiv = document.createElement('div');
-            mainLineDiv.className = 'schedule-item-main-line';
-
-            const nameSpan = document.createElement('span');
-            nameSpan.dataset.backupId = backup.id;
-            nameSpan.dataset.originalDocId = backup.originalDocId; 
-            const displayName = backup.name || `Backup for ${backup.originalDocName || 'Unknown Original'}`;
-            nameSpan.title = `Restore from: ${displayName}`;
-            nameSpan.textContent = displayName;
-            mainLineDiv.appendChild(nameSpan);
-            
-            itemDiv.appendChild(mainLineDiv);
-
-            const detailsDiv = document.createElement('div');
-            detailsDiv.className = 'schedule-item-details';
-
-            if (backup.originalDocName) {
-                const originalNameSpan = document.createElement('span');
-                originalNameSpan.className = 'original-schedule-name';
-                originalNameSpan.textContent = `Original: ${backup.originalDocName}`;
-                detailsDiv.appendChild(originalNameSpan);
-            }
-            
-            let dateToShow = 'Backup Date N/A';
-            if (backup.lastUpdatedAt?.toDate) {
-                dateToShow = `Backup Date: ${backup.lastUpdatedAt.toDate().toLocaleString()}`;
-            } else if (backup.createdAt?.toDate) { 
-                 dateToShow = `Backup Date (created): ${backup.createdAt.toDate().toLocaleString()}`;
-            }
-            const dateSpan = document.createElement('span');
-            dateSpan.className = 'schedule-date';
-            dateSpan.textContent = dateToShow;
-            detailsDiv.appendChild(dateSpan);
-            
-            itemDiv.appendChild(detailsDiv);
-            restoreBackupListContainerElement.appendChild(itemDiv);
-        });
-    }
-
-    async function loadSelectedBackupIntoView(backupDocId) {
-        if (!fbDb || !fbIsAuthReady) {
-            showMessage("Firebase not ready to restore backup.", "error");
-            return;
-        }
-        if (!tablesContainer || !tableTabs || !scheduleTitleElement) {
-            console.error("Restore Backup: Critical DOM elements missing."); return;
-        }
-
-        if (!await customConfirm("Load this backup into the editor? Your current unsaved changes will be lost. This does NOT save the backup over the original yet. Use 'Save Page' or 'Save Shared' after reviewing.")) {
-            showMessage("Restore cancelled.", "info");
-            return;
-        }
-
-        showGeneralLoading(true);
-        try {
-            const backupDocRef = doc(fbDb, "artifacts", appId, "public/data/sharedSchedules", backupDocId);
-            const backupDocSnap = await getDoc(backupDocRef);
-
-            if (backupDocSnap.exists()) {
-                const backupData = backupDocSnap.data();
-                if (backupData.isBackup !== true) {
-                    showMessage("Error: Selected item is not a valid backup.", "error");
-                    showGeneralLoading(false);
-                    return;
-                }
-
-                if (typeof backupData.scheduleTitle === 'string') {
-                    scheduleTitleElement.textContent = backupData.scheduleTitle;
-                }
-                tablesContainer.innerHTML = backupData.html;
-                const tableMeta = backupData.meta || {};
-                tableTabs.innerHTML = '';
-                tablesContainer.querySelectorAll('table').forEach(table => {
-                    ensureDateHeaderRowExists(table);
-                    const id = table.id;
-                    const metaInfo = tableMeta[id] || {};
-                    const name = metaInfo.name || `Table ${tableTabs.children.length + 1}`;
-                    table.dataset.tableName = name;
-                    addTabButton(id, name);
-                    table.querySelectorAll('td, th, .merged-cell-overlay').forEach(cell => cell.contentEditable = 'true');
-                });
-                activeTableId = backupData.activeTableId || tablesContainer.querySelector('table')?.id || 'tbl_1';
-                if (document.getElementById(activeTableId)) {
-                    switchTable(activeTableId);
-                } else if (tablesContainer.querySelector('table')) {
-                    switchTable(tablesContainer.querySelector('table').id);
-                } else {
-                    addNewTable(true); 
-                }
-                
-                _updateLocalStateAfterSave(backupData.originalDocId || null, backupData.name, backupData.isAutoDraft, "restore-from-backup");
-                
-                if (restoreBackupModalElement) restoreBackupModalElement.style.display = 'none';
-                rebuildAndRenderSummary();
-                updateAllMergeOverlays();
-                showMessage(`Backup "${backupData.name}" loaded for review. Use 'Save Page' or 'Save Shared'.`, 'success', 7000);
-
-            } else {
-                showMessage(`Backup ID "${backupDocId}" not found.`, "error");
-            }
-        } catch (error) {
-            console.error(`Error loading backup ID ${backupDocId}:`, error);
-            showMessage(`Failed to load backup. Error: ${error.message}`, "error");
-        } finally {
-            showGeneralLoading(false);
-        }
-    }
-    
-    // --- Autocomplete Functions ---
-    function showCellAutocompleteSuggestions(cell, inputText) {
-        if (!autocompleteSuggestionsDiv) return;
-        const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
-        let textForMatchingInput = String(inputText || '').split(' // ')[0]; 
-        const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*')); 
-        const textForMatching = wordsForMatching.join(' ').toLowerCase().trim(); 
-
-        if (!textForMatching) { hideCellAutocompleteSuggestions(); return; }
-
-        const filteredSuggestions = namesForAutocomplete.filter(name => {
-            const nameStr = String(name || '').toLowerCase().trim();
-            return nameStr.startsWith(textForMatching) && nameStr !== textForMatching;
-        });
-
-        if (filteredSuggestions.length > 0) {
-            activeCellForAutocomplete = cell;
-            autocompleteSuggestionsDiv.innerHTML = '';
-            filteredSuggestions.slice(0, 10).forEach(suggestion => { 
-                const item = document.createElement('div');
-                item.className = 'suggestion-item';
-                item.textContent = suggestion;
-                item.addEventListener('mousedown', (e) => { 
-                    e.preventDefault(); 
-                    selectCellAutocompleteSuggestion(suggestion);
-                });
-                autocompleteSuggestionsDiv.appendChild(item);
-            });
-            const cellRect = cell.getBoundingClientRect();
-            autocompleteSuggestionsDiv.style.left = `${cellRect.left + window.scrollX}px`;
-            autocompleteSuggestionsDiv.style.top = `${cellRect.bottom + window.scrollY}px`;
-            autocompleteSuggestionsDiv.style.minWidth = `${cellRect.width}px`;
-            autocompleteSuggestionsDiv.style.display = 'block';
-            currentAutocompleteIndex = -1; 
-        } else {
-            hideCellAutocompleteSuggestions();
-        }
-    }
-    function hideCellAutocompleteSuggestions() {
-        if (autocompleteSuggestionsDiv) autocompleteSuggestionsDiv.style.display = 'none';
-        activeCellForAutocomplete = null;
-        currentAutocompleteIndex = -1;
-    }
-    function selectCellAutocompleteSuggestion(suggestionText) {
-        if (activeCellForAutocomplete) {
-            const targetCell = activeCellForAutocomplete;
-            const overlay = targetCell.querySelector('.merged-cell-overlay');
-            const contentNode = overlay || targetCell; 
-
-            const currentFullText = contentNode.textContent;
-            const remarkPart = currentFullText.includes(' // ') ? currentFullText.substring(currentFullText.indexOf(' // ')) : '';
-            
-            const contentBeforeRemark = currentFullText.split(' // ')[0];
-            const starWordsBeforeRemark = contentBeforeRemark.split(/\s+/).filter(word => word.startsWith('*')).join(' ');
-
-            let newText = suggestionText;
-            if (starWordsBeforeRemark) {
-                newText += ' ' + starWordsBeforeRemark;
-            }
-            newText = (newText.trim() + remarkPart).trim();
-            
-            contentNode.textContent = newText;
-            hideCellAutocompleteSuggestions();
-            rebuildAndRenderSummary(); 
-
-            contentNode.focus();
-            const range = document.createRange();
-            const sel = window.getSelection();
-            if (sel) {
-                if (contentNode.childNodes.length > 0) {
-                    range.selectNodeContents(contentNode);
-                    range.collapse(false); 
-                } else { 
-                    range.setStart(contentNode, 0);
-                    range.collapse(true);
-                }
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-        }
-    }
-    function updateCellSuggestionHighlight() {
-        if (!autocompleteSuggestionsDiv || autocompleteSuggestionsDiv.style.display === 'none') return;
-        const items = autocompleteSuggestionsDiv.querySelectorAll('.suggestion-item');
-        items.forEach((item, index) => {
-            item.classList.toggle('active-suggestion', index === currentAutocompleteIndex);
-        });
-    }
-
-
+    // ... (rest of the utility functions, Firebase interactions, event listeners, etc. remain the same) ...
     // --- DOMContentLoaded: Main Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
         scheduleTitleElement = document.getElementById('scheduleTitle'); tablesContainer = document.getElementById('tablesContainer'); tableTabs = document.getElementById('tableTabs'); nameModal = document.getElementById('nameModal'); nameModalContent = document.getElementById('nameModalContent'); nameModalHeader = document.getElementById('nameModalHeader'); nameListContainer = document.getElementById('nameList'); newNameInput = document.getElementById('newNameInput'); sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); summaryTableElement = document.getElementById('summaryTable'); summaryTableContainerElement = document.getElementById('summaryTableContainer'); customMessageBox = document.getElementById('customMessageBox'); fileInputElement = document.getElementById('fileInput'); directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn'); closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard'); nameListImportFileInputElement = document.getElementById('nameListImportFile'); searchNameInputElement = document.getElementById('searchNameInput'); sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); userIdDisplayElement = document.getElementById('userIdDisplay'); namePagiTabElement = document.getElementById('namePagiTab'); namePetangTabElement = document.getElementById('namePetangTab'); loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal'); nameModalTitleElement = document.getElementById('nameModalTitle'); generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator'); controlsTogglerElement = document.getElementById('controlsToggler'); collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); pdfContentElement = document.getElementById('pdfContent'); clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); manualSaveBtnElement = document.getElementById('manualSaveBtn');
@@ -2243,7 +1131,6 @@
         closeRestoreBackupModalBtnElement = document.getElementById('closeRestoreBackupModalBtn');
         restoreBackupListContainerElement = document.getElementById('restoreBackupListContainer');
         loadingIndicatorRestoreModalElement = document.getElementById('loadingIndicatorRestoreModal');
-
 
         autocompleteSuggestionsDiv = document.createElement('div'); autocompleteSuggestionsDiv.id = 'autocompleteSuggestions'; document.body.appendChild(autocompleteSuggestionsDiv);
         
