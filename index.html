@@ -817,7 +817,7 @@
     let lastSavedState = null;
     let isInitialStateSet = false;
 
-    // --- DOM Element References ---
+    // --- DOM Element References (initialized in DOMContentLoaded) ---
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader,
         nameListContainer, newNameInput, sharedScheduleListContainerElement, summaryTableElement,
         summaryTableContainerElement, customMessageBox, fileInputElement, directCopyFullHtmlButtonElement,
@@ -830,7 +830,8 @@
         restoreBackupModalHeaderElement, closeRestoreBackupModalBtnElement, restoreBackupListContainerElement,
         loadingIndicatorRestoreModalElement;
 
-    // --- Summary Table Helper Functions (defined early) ---
+
+    // --- Summary Table Helper Functions (defined early for availability) ---
     function getTextForSummary(cellText) {
         if (typeof cellText !== 'string') return ''; 
         let textForSummary = cellText.split(' // ')[0]; 
@@ -951,6 +952,52 @@
         }
     }
     
+    function processNameBlockForSummary(summaryRow, name, blockData, normalizedSummaryHeaders) {
+        if (!summaryRow || !blockData || blockData.length === 0 || !normalizedSummaryHeaders) return;
+    
+        let firstOriginalHeader = blockData[0].header;
+        let lastOriginalHeader = blockData[blockData.length - 1].header; 
+        const classIdentifiersInBlock = [...new Set(blockData.map(b => b.classId))].sort().join(', ');
+    
+        const specialNamesForRule = ["LAU", "LISAH"];
+        const targetSlotForSpecialNamesRule = "10.15-10.30";
+        const sourceSlotForRule = "10.30-12.00";
+    
+        const isLauLisahSourceBlock = specialNamesForRule.some(sn => name.toUpperCase() === sn) &&
+                                   normalizeHeaderForLookup(firstOriginalHeader) === normalizeHeaderForLookup(sourceSlotForRule) &&
+                                   normalizeHeaderForLookup(lastOriginalHeader) === normalizeHeaderForLookup(sourceSlotForRule);
+    
+        if (isLauLisahSourceBlock) {
+            firstOriginalHeader = targetSlotForSpecialNamesRule;
+            lastOriginalHeader = targetSlotForSpecialNamesRule;
+        }
+    
+        const summaryStartColIdx = normalizedSummaryHeaders.indexOf(normalizeHeaderForLookup(firstOriginalHeader));
+        const summaryEndColIdx = normalizedSummaryHeaders.indexOf(normalizeHeaderForLookup(lastOriginalHeader));
+    
+        if (summaryStartColIdx > 0 && summaryEndColIdx >= summaryStartColIdx) { // summaryStartColIdx > 0 to skip name column
+            const summaryCellToUpdate = summaryRow.cells[summaryStartColIdx];
+            if (!summaryCellToUpdate) return;
+    
+            let tempClasses = summaryCellToUpdate.dataset.tempClasses ? summaryCellToUpdate.dataset.tempClasses.split(',') : [];
+            classIdentifiersInBlock.split(',').forEach(cls => {
+                const trimmedCls = cls.trim();
+                if (trimmedCls && !tempClasses.includes(trimmedCls)) { 
+                    tempClasses.push(trimmedCls);
+                }
+            });
+            summaryCellToUpdate.dataset.tempClasses = tempClasses.filter(tc => tc).sort().join(','); 
+            
+            const colspanRequired = summaryEndColIdx - summaryStartColIdx + 1;
+            if (colspanRequired > 0) {
+                const currentSummaryColspan = parseInt(summaryCellToUpdate.getAttribute('colspan') || '1');
+                if (colspanRequired > currentSummaryColspan) { // Only update if new span is larger
+                    summaryCellToUpdate.colSpan = colspanRequired;
+                }
+            }
+        }
+    }
+
     function updateSummaryTableData(allAvailableNames) {
         if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) {
             console.warn("updateSummaryTableData: Summary table structure not ready.");
@@ -988,7 +1035,7 @@
                     const classIdentifier = String(scheduleDataRow.cells[0]?.textContent||'').trim();
                     if (!classIdentifier) return;
     
-                    let currentOriginalCellIndex = 1; // Start after the class/time column
+                    let currentOriginalCellIndex = 1; 
                     while (currentOriginalCellIndex < scheduleDataRow.cells.length) {
                         const scheduleCell = scheduleDataRow.cells[currentOriginalCellIndex];
                         if (!scheduleCell) { currentOriginalCellIndex++; continue; }
@@ -999,44 +1046,35 @@
     
                         let firstOriginalHeaderInBlock = null;
                         let lastOriginalHeaderInBlock = null;
-                        let numCellsSpannedInOriginal = 0;
+                        let numCellsSpannedInOriginal = 0; // How many *original table columns* this cell/merge covers
     
                         const mergeId = scheduleCell.dataset.mergeId;
                         if (mergeId && scheduleCell.classList.contains('merged-cell-container')) {
-                            // This is the primary cell of a UI-created merge group
                             let minColIndexOfMergeGroup = currentOriginalCellIndex;
                             let maxColIndexOfMergeGroup = currentOriginalCellIndex;
-                            // Find all cells in this row belonging to this mergeId
-                            scheduleDataRow.querySelectorAll(`[data-merge-id="${mergeId}"]`).forEach(cellInGroup => {
+                            scheduleDataRow.querySelectorAll(`td[data-merge-id="${mergeId}"], th[data-merge-id="${mergeId}"]`).forEach(cellInGroup => { // Query within the current row
                                 minColIndexOfMergeGroup = Math.min(minColIndexOfMergeGroup, cellInGroup.cellIndex);
                                 maxColIndexOfMergeGroup = Math.max(maxColIndexOfMergeGroup, cellInGroup.cellIndex);
                             });
                             if (minColIndexOfMergeGroup < scheduleHeaders.length) firstOriginalHeaderInBlock = scheduleHeaders[minColIndexOfMergeGroup];
                             if (maxColIndexOfMergeGroup < scheduleHeaders.length) lastOriginalHeaderInBlock = scheduleHeaders[maxColIndexOfMergeGroup];
                             numCellsSpannedInOriginal = maxColIndexOfMergeGroup - minColIndexOfMergeGroup + 1;
-                             // Ensure we process from the actual start of the merge group if currentOriginalCellIndex wasn't it
-                            if(currentOriginalCellIndex > minColIndexOfMergeGroup) {
-                                // This means we encountered a subsumed cell first, which shouldn't happen if iterating correctly.
-                                // However, as a safeguard, or if logic changes, this ensures we use the true start.
-                                currentOriginalCellIndex = minColIndexOfMergeGroup;
-                                firstOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex]; // Re-assign
-                            }
-
-                        } else if (scheduleCell.hasAttribute('colspan') && !mergeId) { // HTML colspan (not a UI merge)
+                            currentOriginalCellIndex = minColIndexOfMergeGroup; // Ensure we start processing from the actual beginning of the merge group
+                        } else if (scheduleCell.hasAttribute('colspan') && !mergeId) { 
                             const cellColspan = parseInt(scheduleCell.getAttribute('colspan') || '1');
                             firstOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex];
                             if (currentOriginalCellIndex + cellColspan - 1 < scheduleHeaders.length) {
                                 lastOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex + cellColspan - 1];
                             } else if (scheduleHeaders.length > 0) {
-                                lastOriginalHeaderInBlock = scheduleHeaders[scheduleHeaders.length - 1];
+                                lastOriginalHeaderInBlock = scheduleHeaders[scheduleHeaders.length - 1]; // Cap at last available header
                             }
                             numCellsSpannedInOriginal = cellColspan;
-                        } else if (!mergeId) { // Simple, non-merged cell
+                        } else if (!mergeId) { 
                             firstOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex];
                             lastOriginalHeaderInBlock = scheduleHeaders[currentOriginalCellIndex];
                             numCellsSpannedInOriginal = 1;
-                        } else { // Subsumed cell of a UI merge, already handled by advancing past the group
-                            currentOriginalCellIndex++;
+                        } else { 
+                            currentOriginalCellIndex++; // It's a subsumed cell of a UI merge, skip
                             continue;
                         }
     
@@ -1051,7 +1089,7 @@
                     
                             if (tempCurrentHeaderIndex !== -1 && tempEndHeaderIndex !== -1) {
                                 for (let hLoopIdx = tempCurrentHeaderIndex; hLoopIdx <= tempEndHeaderIndex; hLoopIdx++) {
-                                    if (normalizeHeaderForLookup(scheduleHeaders[hLoopIdx]) !== normalizeHeaderForLookup(sourceSlotForRule)) {
+                                    if (hLoopIdx >= scheduleHeaders.length || normalizeHeaderForLookup(scheduleHeaders[hLoopIdx]) !== normalizeHeaderForLookup(sourceSlotForRule)) {
                                         blockIsEntirelySourceSlot = false;
                                         break;
                                     }
@@ -1093,7 +1131,7 @@
     
         // Second pass: set text content, apply styles, and hide subsumed cells
         Array.from(summaryBody.rows).forEach(summaryRow => {
-            for (let j = 1; j < summaryRow.cells.length; ) { // Start from 1 to skip name column
+            for (let j = 1; j < summaryRow.cells.length; ) { 
                 const currentCell = summaryRow.cells[j];
                 if (!currentCell) { j++; continue; } 
     
@@ -1144,7 +1182,7 @@
 
 
     // --- Utility Functions (continued) ---
-    // ... (rest of the utility functions, Firebase interactions, event listeners, etc. remain the same) ...
+    // ... (All other functions from your provided script: showMessage, customPrompt, ..., cloneTableForPdf)
     // --- DOMContentLoaded: Main Initialization ---
     document.addEventListener('DOMContentLoaded', () => {
         scheduleTitleElement = document.getElementById('scheduleTitle'); tablesContainer = document.getElementById('tablesContainer'); tableTabs = document.getElementById('tableTabs'); nameModal = document.getElementById('nameModal'); nameModalContent = document.getElementById('nameModalContent'); nameModalHeader = document.getElementById('nameModalHeader'); nameListContainer = document.getElementById('nameList'); newNameInput = document.getElementById('newNameInput'); sharedScheduleListContainerElement = document.getElementById('sharedScheduleListContainer'); summaryTableElement = document.getElementById('summaryTable'); summaryTableContainerElement = document.getElementById('summaryTableContainer'); customMessageBox = document.getElementById('customMessageBox'); fileInputElement = document.getElementById('fileInput'); directCopyFullHtmlButtonElement = document.getElementById('directCopyFullHtmlBtn'); closeNameModalButtonStandardElement = document.getElementById('closeNameModalBtnStandard'); nameListImportFileInputElement = document.getElementById('nameListImportFile'); searchNameInputElement = document.getElementById('searchNameInput'); sharedScheduleImportFileInputElement = document.getElementById('sharedScheduleImportFile'); userIdDisplayElement = document.getElementById('userIdDisplay'); namePagiTabElement = document.getElementById('namePagiTab'); namePetangTabElement = document.getElementById('namePetangTab'); loadingIndicatorModalElement = document.getElementById('loadingIndicatorModal'); nameModalTitleElement = document.getElementById('nameModalTitle'); generalLoadingIndicatorElement = document.getElementById('generalLoadingIndicator'); controlsTogglerElement = document.getElementById('controlsToggler'); collapsibleButtonBarsElement = document.getElementById('collapsibleButtonBars'); downloadPdfButtonElement = document.getElementById('downloadPdfBtn'); pdfContentElement = document.getElementById('pdfContent'); clearAndResetScheduleBtnElement = document.getElementById('clearAndResetScheduleBtn'); manualSaveBtnElement = document.getElementById('manualSaveBtn');
