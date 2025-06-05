@@ -41,6 +41,25 @@
             window.fbUserId = fbUserId;
             window.fbIsAuthReady = fbIsAuthReady;
             
+            // Make Firebase functions available globally
+            window.signInAnonymously = signInAnonymously;
+            window.onAuthStateChanged = onAuthStateChanged;
+            window.signInWithCustomToken = signInWithCustomToken;
+            window.doc = doc;
+            window.setDoc = setDoc;
+            window.onSnapshot = onSnapshot;
+            window.collection = collection;
+            window.addDoc = addDoc;
+            window.getDocs = getDocs;
+            window.getDoc = getDoc;
+            window.deleteDoc = deleteDoc;
+            window.updateDoc = updateDoc;
+            window.query = query;
+            window.serverTimestamp = serverTimestamp;
+            window.orderBy = orderBy;
+            window.where = where;
+            window.limit = limit;
+            
         } catch (e) {
             console.error("CRITICAL Error initializing Firebase services:", e);
             const userIdDisplay = document.getElementById('userIdDisplay');
@@ -57,6 +76,11 @@
                     window.fbIsAuthReady = true;
                     if (userIdDisplay) userIdDisplay.textContent = `User ID: ${user.uid}`;
                     console.log("User authenticated:", user.uid);
+                    
+                    // Trigger application initialization after authentication
+                    if (window.initializeApplicationAfterAuth) {
+                        window.initializeApplicationAfterAuth();
+                    }
                 } else {
                     window.fbIsAuthReady = false;
                     window.fbUserId = null;
@@ -101,6 +125,27 @@
             <button id="clearScheduledNamesBtn" class="top-action-btn">Clear Names (Active Table)</button>
         </div>
 
+        <div id="collapsibleButtonBars" style="display: none;">
+            <div class="bar">
+                <button id="selectBtn">Select</button>
+                <button id="mergeBtn">Merge</button>
+                <button id="deselectBtn">Deselect</button>
+                <button id="unmergeBtn">Unmerge</button>
+            </div>
+            <div class="bar">
+                <button id="addTableBtn">➕ Add Table</button>
+                <button id="addIndependentTableBtn">🔄 Add Independent Table</button>
+                <button id="renameTableBtn">📝 Rename Table</button>
+                <button id="deleteTableBtn">❌ Delete Table</button>
+                <button id="nameListBtn">👥 Names</button>
+            </div>
+        </div>
+
+        <div id="tableTabs">
+            <button class="active" data-table-id="tbl_1">Kelas 3 & 5</button>
+            <button data-table-id="tbl_2">Kelas 1, 2 & 4</button>
+        </div>
+
         <div id="tablesContainer">
             <table id="tbl_1" class="active">
                 <thead>
@@ -133,6 +178,44 @@
                         <td>*SpecialAssembly</td>
                         <td></td>
                         <td>LILY</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <table id="tbl_2">
+                <thead>
+                    <tr class="date-header-row">
+                        <th colspan="6">Thursday, 22 May 2025</th>
+                        <th>DAY INFO</th>
+                    </tr>
+                    <tr>
+                        <th>Class</th>
+                        <th>08:00</th>
+                        <th>09:45</th>
+                        <th>10:00</th>
+                        <th>REHAT</th>
+                        <th>12:00</th>
+                        <th>13:00</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1A</td>
+                        <td>MARY</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>2B</td>
+                        <td></td>
+                        <td>JOHN</td>
+                        <td></td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -249,6 +332,53 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
             transform: translateY(-1px);
         }
+        #collapsibleButtonBars {
+            margin-bottom: 20px;
+        }
+        .bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+        .bar button {
+            padding: 8px 12px;
+            font-size: 0.85em;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #f8f9fa;
+            color: #495057;
+            transition: all 0.2s ease;
+        }
+        .bar button:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+        #tableTabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        #tableTabs button {
+            padding: 10px 20px;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            color: #495057;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s ease;
+        }
+        #tableTabs button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        #tableTabs button:hover:not(.active) {
+            background-color: #e9ecef;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -257,6 +387,10 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: none;
+        }
+        table.active {
+            display: table;
         }
         th, td {
             border: 1px solid #dee2e6;
@@ -276,6 +410,7 @@
         }
         #summaryTable {
             margin-top: 20px;
+            display: table;
         }
         #summaryTable th {
             background-color: #28a745;
@@ -284,26 +419,387 @@
     </style>
 
     <script>
-        // Basic functionality for testing
+        // Global variables
+        let activeTableId = 'tbl_1';
+        let summaryTableElement;
+        let tablesContainer;
+        let tableTabs;
+        let collapsibleButtonBars;
+        
+        // Utility functions
+        function normalizeHeaderForLookup(header) {
+            if (typeof header !== 'string') return '';
+            return header.replace(/\s/g, "").replace(/:/g,".").toLowerCase(); 
+        }
+        
+        function parseTimeToMinutes(timeStr) {
+            if (typeof timeStr !== 'string') return Infinity;
+            const match = timeStr.match(/^(\d{1,2})[:.]\s*(\d{2})\s*-\s*(\d{1,2})[:.]\s*(\d{2})$/);
+            if (match) {
+                const startHour = parseInt(match[1], 10);
+                const startMin = parseInt(match[2], 10);
+                return startHour * 60 + startMin;
+            }
+            const singleMatch = timeStr.match(/^(\d{1,2})[:.]\s*(\d{2})$/);
+            if (singleMatch) {
+                const hour = parseInt(singleMatch[1], 10);
+                const min = parseInt(singleMatch[2], 10);
+                return hour * 60 + min;
+            }
+            return Infinity;
+        }
+        
+        function getTextForSummary(text) {
+            if (!text || typeof text !== 'string') return '';
+            const trimmed = text.trim();
+            if (trimmed.startsWith('*')) return '';
+            const parts = trimmed.split('//');
+            return parts[0].trim();
+        }
+        
+        // Summary table functions
+        function buildSummaryTableSkeleton(allAvailableNames) {
+            if (!summaryTableElement) { 
+                console.error("buildSummaryTableSkeleton: summaryTableElement not found."); 
+                return; 
+            }
+            summaryTableElement.innerHTML = ''; 
+
+            let allScheduleTableHeaders = new Set();
+            let mergedHeaderGroups = [];
+            
+            if (tablesContainer) {
+                tablesContainer.querySelectorAll('table:not([data-is-independent="true"])').forEach(scheduleTable => {
+                    if (!scheduleTable.tHead) return;
+                    const timeSlotHeaderRow = Array.from(scheduleTable.tHead.rows).find(row => !row.classList.contains('date-header-row'));
+                    if (timeSlotHeaderRow) {
+                        for (let hIdx = 1; hIdx < timeSlotHeaderRow.cells.length; hIdx++) { 
+                            const headerCell = timeSlotHeaderRow.cells[hIdx];
+                            const headerText = String(headerCell.textContent || '').trim();
+                            
+                            if (headerText) {
+                                if (headerCell.classList.contains('merged-cell-container')) {
+                                    const mergeId = headerCell.dataset.mergeId;
+                                    if (mergeId) {
+                                        const mergedCells = Array.from(timeSlotHeaderRow.querySelectorAll(`[data-merge-id="${mergeId}"]`));
+                                        const mergedHeaders = mergedCells.map(cell => String(cell.textContent || '').trim()).filter(text => text);
+                                        
+                                        mergedHeaderGroups.push({
+                                            mergeId: mergeId,
+                                            primaryHeader: headerText,
+                                            allHeaders: mergedCells.map(cell => String(cell.textContent || '').trim()),
+                                            startIndex: hIdx,
+                                            endIndex: hIdx + mergedCells.length - 1
+                                        });
+                                        
+                                        mergedHeaders.forEach(header => {
+                                            if (header) allScheduleTableHeaders.add(header);
+                                        });
+                                    }
+                                } else if (!headerCell.classList.contains('subsumed-cell')) {
+                                    allScheduleTableHeaders.add(headerText);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            let sortedUniqueHeaders = Array.from(allScheduleTableHeaders).sort((a, b) => {
+                const timeA = parseTimeToMinutes(a);
+                const timeB = parseTimeToMinutes(b);
+                if (timeA !== Infinity && timeB !== Infinity) return timeA - timeB;
+                if (timeA !== Infinity) return -1; 
+                if (timeB !== Infinity) return 1;
+                return String(a).localeCompare(String(b)); 
+            });
+
+            const finalSummaryColumnHeaders = ['Nama/Masa', ...sortedUniqueHeaders];
+            const thead = summaryTableElement.createTHead(); 
+            const headerRowForSummary = thead.insertRow();
+            finalSummaryColumnHeaders.forEach(headerText => { 
+                const th = document.createElement('th'); 
+                th.textContent = headerText; 
+                headerRowForSummary.appendChild(th); 
+            });
+            
+            const tbody = summaryTableElement.createTBody();
+            if (allAvailableNames.length === 0 && sortedUniqueHeaders.length === 0) { 
+                const tr = tbody.insertRow(); 
+                const td = tr.insertCell(); 
+                td.textContent = "No names scheduled and no time slots defined."; 
+                td.colSpan = finalSummaryColumnHeaders.length || 1; 
+                td.style.textAlign = 'center'; 
+                td.style.fontStyle = 'italic'; 
+            } else if (allAvailableNames.length === 0) { 
+                const tr = tbody.insertRow(); 
+                const td = tr.insertCell(); 
+                td.textContent = "No names found in any schedule."; 
+                td.colSpan = finalSummaryColumnHeaders.length || 1; 
+                td.style.textAlign = 'center'; 
+                td.style.fontStyle = 'italic'; 
+            } else { 
+                allAvailableNames.forEach(name => { 
+                    const tr = tbody.insertRow(); 
+                    tr.insertCell().textContent = String(name || ''); 
+                    for (let i = 1; i < finalSummaryColumnHeaders.length; i++) {
+                        tr.insertCell().textContent = ''; 
+                    }
+                }); 
+            }
+            
+            summaryTableElement.dataset.mergedHeaderGroups = JSON.stringify(mergedHeaderGroups);
+        }
+        
+        function updateSummaryTableData(allAvailableNames) {
+            if (!summaryTableElement?.tBodies?.[0] || !summaryTableElement.tHead?.rows?.[0]) {
+                console.warn("updateSummaryTableData: Summary table structure not ready.");
+                return;
+            }
+            const summaryBody = summaryTableElement.tBodies[0];
+            const summaryHeaderCells = Array.from(summaryTableElement.tHead.rows[0].cells);
+            const summaryTableDisplayHeaders = summaryHeaderCells.map(th => String(th.textContent||'').trim());
+            const normalizedSummaryHeadersForLookup = summaryTableDisplayHeaders.map(normalizeHeaderForLookup);
+            
+            let mergedHeaderGroups = [];
+            try {
+                if (summaryTableElement.dataset.mergedHeaderGroups) {
+                    mergedHeaderGroups = JSON.parse(summaryTableElement.dataset.mergedHeaderGroups);
+                }
+            } catch (e) {
+                console.error("Error parsing merged header groups:", e);
+                mergedHeaderGroups = [];
+            }
+
+            Array.from(summaryBody.rows).forEach(summaryRow => {
+                for (let i = 1; i < summaryRow.cells.length; i++) { 
+                    const cell = summaryRow.cells[i];
+                    cell.textContent = '';
+                    cell.removeAttribute('colspan');
+                    cell.style.display = 'table-cell'; 
+                    cell.style.backgroundColor = ''; 
+                    cell.classList.remove('highlight-conflict', 'summary-merged-cell');
+                    cell.removeAttribute('data-temp-classes');
+                }
+            });
+
+            allAvailableNames.forEach(name => {
+                const targetSummaryRow = Array.from(summaryBody.rows).find(sr => sr.cells[0]?.textContent === name);
+                if (!targetSummaryRow) return;
+
+                let nameDataBlocks = [];
+
+                tablesContainer.querySelectorAll('table:not([data-is-independent="true"])').forEach(scheduleTable => {
+                    if (!scheduleTable.tHead || !scheduleTable.tBodies[0]) return;
+                    const timeSlotHeaderRow = Array.from(scheduleTable.tHead.rows).find(row => !row.classList.contains('date-header-row'));
+                    if (!timeSlotHeaderRow) return;
+                    const scheduleHeaders = Array.from(timeSlotHeaderRow.cells).map(th => String(th.textContent||'').trim());
+
+                    scheduleTable.tBodies[0].querySelectorAll('tr').forEach(row => {
+                        Array.from(row.cells).forEach((cell, cellIndex) => {
+                            if (cellIndex > 0) { 
+                                const overlay = cell.querySelector('.merged-cell-overlay');
+                                const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
+                                const actualNameForSummary = getTextForSummary(nameFromCell);
+                                if (actualNameForSummary === name) {
+                                    const headerForThisCell = scheduleHeaders[cellIndex] || '';
+                                    if (headerForThisCell) {
+                                        nameDataBlocks.push({
+                                            header: headerForThisCell,
+                                            normalizedHeader: normalizeHeaderForLookup(headerForThisCell),
+                                            content: nameFromCell,
+                                            tableId: scheduleTable.id
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
+
+                nameDataBlocks.forEach(blockData => {
+                    const targetColIndex = normalizedSummaryHeadersForLookup.indexOf(blockData.normalizedHeader);
+                    if (targetColIndex !== -1 && targetSummaryRow.cells[targetColIndex]) {
+                        const targetCell = targetSummaryRow.cells[targetColIndex];
+                        if (targetCell.textContent.trim() === '') {
+                            targetCell.textContent = blockData.content;
+                        } else {
+                            targetCell.textContent += `, ${blockData.content}`;
+                        }
+                    }
+                });
+            });
+        }
+        
+        function rebuildAndRenderSummary() {
+            if (!tablesContainer || !summaryTableElement) return;
+            
+            const allNames = new Set();
+            tablesContainer.querySelectorAll('table:not([data-is-independent="true"])').forEach(table => {
+                if (!table.tBodies[0]) return;
+                table.tBodies[0].querySelectorAll('tr').forEach(row => {
+                    Array.from(row.cells).forEach((cell, cellIndex) => {
+                        if (cellIndex > 0) { 
+                            const overlay = cell.querySelector('.merged-cell-overlay');
+                            const nameFromCell = String(overlay ? overlay.textContent : cell.textContent || '').trim();
+                            const actualNameForSummary = getTextForSummary(nameFromCell);
+                            if (actualNameForSummary) allNames.add(actualNameForSummary);
+                        }
+                    });
+                });
+            });
+
+            const sortedNames = Array.from(allNames).sort((a, b) => String(a).localeCompare(String(b)));
+            buildSummaryTableSkeleton(sortedNames);
+            updateSummaryTableData(sortedNames);
+        }
+        
+        // Table management functions
+        function switchTable(id) {
+            if (!tablesContainer || !tableTabs) return;
+            
+            activeTableId = id;
+            tablesContainer.querySelectorAll('table').forEach(t => t.classList.toggle('active', t.id === id));
+            tableTabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tableId === id));
+            
+            const isIndependent = isIndependentTable(id);
+            
+            const summaryTableContainer = document.getElementById('summaryTableContainer');
+            if (summaryTableContainer) {
+                summaryTableContainer.style.display = isIndependent ? 'none' : 'block';
+            }
+            
+            const summaryTitle = document.querySelector('h3[style*="margin-top:32px"]');
+            if (summaryTitle) {
+                summaryTitle.style.display = isIndependent ? 'none' : 'block';
+            }
+            
+            if (!isIndependent) {
+                rebuildAndRenderSummary(); 
+            }
+        }
+        
+        function isIndependentTable(tableId) {
+            const table = document.getElementById(tableId);
+            return table && table.dataset.isIndependent === "true";
+        }
+        
+        function createIndependentTable() {
+            const tableId = `indep_tbl_${Date.now()}`;
+            
+            const newTable = document.createElement('table');
+            newTable.id = tableId;
+            newTable.dataset.tableName = "Independent Table";
+            newTable.dataset.isIndependent = "true";
+            
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            
+            const headerRow = document.createElement('tr');
+            
+            const headers = ["Item", "Column 1", "Column 2", "Column 3"];
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                th.contentEditable = 'true';
+                headerRow.appendChild(th);
+            });
+            
+            thead.appendChild(headerRow);
+            
+            for (let i = 1; i <= 3; i++) {
+                const row = document.createElement('tr');
+                
+                const firstCell = document.createElement('td');
+                firstCell.textContent = `Row ${i}`;
+                firstCell.contentEditable = 'true';
+                row.appendChild(firstCell);
+                
+                for (let j = 1; j < headers.length; j++) {
+                    const cell = document.createElement('td');
+                    cell.contentEditable = 'true';
+                    row.appendChild(cell);
+                }
+                
+                tbody.appendChild(row);
+            }
+            
+            newTable.appendChild(thead);
+            newTable.appendChild(tbody);
+            
+            tablesContainer.appendChild(newTable);
+            
+            const newTab = document.createElement('button');
+            newTab.textContent = "Independent Table";
+            newTab.dataset.tableId = tableId;
+            newTab.onclick = () => switchTable(tableId);
+            tableTabs.appendChild(newTab);
+            
+            switchTable(tableId);
+            
+            console.log("Independent table created successfully");
+            
+            return tableId;
+        }
+        
+        // Initialize application after authentication
+        window.initializeApplicationAfterAuth = function() {
+            console.log("Initializing application after authentication");
+            rebuildAndRenderSummary();
+        };
+        
+        // DOM Content Loaded
         document.addEventListener('DOMContentLoaded', () => {
             console.log("DOM Content Loaded");
             
-            // Test button functionality
+            // Initialize DOM elements
+            summaryTableElement = document.getElementById('summaryTable');
+            tablesContainer = document.getElementById('tablesContainer');
+            tableTabs = document.getElementById('tableTabs');
+            collapsibleButtonBars = document.getElementById('collapsibleButtonBars');
+            
+            // Initialize event listeners
             document.getElementById('controlsToggler')?.addEventListener('click', () => {
                 console.log("Controls toggler clicked");
+                if (collapsibleButtonBars) {
+                    const isVisible = collapsibleButtonBars.style.display !== 'none';
+                    collapsibleButtonBars.style.display = isVisible ? 'none' : 'block';
+                    const span = document.querySelector('#controlsToggler span');
+                    if (span) {
+                        span.textContent = isVisible ? 'Show Controls' : 'Hide Controls';
+                    }
+                }
             });
             
             document.getElementById('manualSaveBtn')?.addEventListener('click', () => {
                 console.log("Manual save clicked");
+                alert("Save functionality would be implemented here");
             });
             
             document.getElementById('downloadPdfBtn')?.addEventListener('click', () => {
                 console.log("Download PDF clicked");
+                alert("PDF download functionality would be implemented here");
             });
             
             document.getElementById('clearScheduledNamesBtn')?.addEventListener('click', () => {
                 console.log("Clear names clicked");
+                alert("Clear names functionality would be implemented here");
             });
+            
+            document.getElementById('addIndependentTableBtn')?.addEventListener('click', createIndependentTable);
+            
+            // Initialize tab switching
+            tableTabs?.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tableId = button.dataset.tableId;
+                    if (tableId) {
+                        switchTable(tableId);
+                    }
+                });
+            });
+            
+            // Initial summary build
+            rebuildAndRenderSummary();
         });
     </script>
 </body>
