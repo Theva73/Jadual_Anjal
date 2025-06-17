@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadual Anjal User Guide</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #007bff;
+            --dark-blue: #0056b3;
+            --light-blue-bg: #e6f7ff;
+            --heading-color: #2c3e50;
+            --text-color: #444;
+            --light-grey: #f8f8f8;
+            --medium-grey: #e0e0e0;
+            --border-color: #ddd;
+            --shadow-light: 0 4px 15px rgba(0,0,0,0.08);
+            --shadow-heavy: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.7; /* Increased line height for better readability */
+            font-weight: 400;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px; /* Increased padding */
+            border-radius: 16px; /* More rounded corners */
+            box-shadow: var(--shadow-heavy);
+            max-width: 950px; /* Slightly wider */
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 30px;
+            overflow: hidden; /* For rounded corners on tables etc. */
+        }
+
+        /* --- Header Section --- */
+        .header-section {
+            padding: 30px 0;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%); /* Subtle gradient background */
+            border-bottom: 1px solid var(--medium-grey);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif; /* A more elegant font for the main title */
+            font-size: 3.2em; /* Larger title */
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 800; /* Extra bold */
+            letter-spacing: -0.5px;
+        }
+        h3.subtitle {
+            font-size: 1.3em;
+            color: #666;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        /* --- Content Headings --- */
+        h2 {
+            font-size: 2em; /* Slightly larger */
+            color: var(--heading-color);
+            margin-top: 50px; /* More space above sections */
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid var(--primary-blue); /* More prominent underline */
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        h2::after { /* Small decorative element */
+            content: '';
+            display: block;
+            width: 30px;
+            height: 3px;
+            background-color: var(--dark-blue);
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            z-index: 2;
+            border-radius: 2px;
+        }
+        h3:not(.subtitle) { /* For sub-sections */
+            font-size: 1.5em;
+            color: var(--heading-color);
+            margin-top: 35px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            padding-left: 10px;
+            border-left: 4px solid var(--primary-blue); /* Left border accent */
+        }
+
+        p {
+            margin-bottom: 15px;
+            font-size: 1.05em; /* Slightly larger base text */
+        }
+        ul {
+            list-style-type: none; /* Remove default bullets */
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+        ul li {
+            margin-bottom: 12px; /* More space between list items */
+            position: relative;
+            padding-left: 30px; /* Space for custom bullet */
+            font-size: 1em;
+        }
+        ul li::before {
+            content: '•'; /* Custom bullet */
+            color: var(--primary-blue);
+            font-size: 1.2em;
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-weight: 700;
+        }
+
+        strong {
+            font-weight: 600;
+            color: #333; /* Make strong text slightly darker */
+        }
+        em {
+            font-style: italic;
+            color: #555;
+        }
+
+        /* --- Tables --- */
+        table {
+            width: 100%;
+            border-collapse: separate; /* Allows border-radius on tables */
+            border-spacing: 0; /* Important for separate */
+            margin: 30px 0;
+            font-size: 0.9em;
+            box-shadow: var(--shadow-light);
+            border-radius: 10px; /* Rounded table corners */
+            overflow: hidden; /* Ensures content respects border-radius */
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 14px 18px; /* More padding */
+            text-align: left;
+            vertical-align: top; /* Align content to top for longer descriptions */
+        }
+        th {
+            background-color: var(--light-grey);
+            font-weight: 700; /* Bolder headers */
+            color: var(--heading-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tr:nth-child(even) {
+            background-color: #fcfdfe; /* Very subtle alternating row color */
+        }
+        tr:hover {
+            background-color: #f0f8ff; /* Light blue on hover */
+        }
+
+        /* --- Button Icons in Tables --- */
+        .button-icon-text {
+            display: flex; /* Use flexbox for alignment */
+            align-items: center; /* Vertically align icon and text */
+            gap: 8px; /* Space between icon and text */
+            font-weight: 600;
+        }
+        .button-icon-text svg {
+            width: 22px; /* Larger icon size */
+            height: 22px;
+            min-width: 22px; /* Prevent shrinking */
+            min-height: 22px;
+            flex-shrink: 0; /* Prevent shrinking */
+            fill: none; /* Default for stroke icons */
+            stroke: var(--primary-blue); /* Default stroke color */
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        /* Specific icon colors if needed */
+        .button-icon-text.red svg { stroke: #dc3545; } /* Red for delete/clear */
+        .button-icon-text.green svg { stroke: #28a745; } /* Green for import/export */
+        .button-icon-text.orange svg { stroke: #fd7e0f; } /* Orange for restore/names */
+        .button-icon-text.purple svg { stroke: #6f42c1; } /* Purple for merge */
+
+        /* --- Buttons --- */
+        .button-group {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+        .generate-pdf-btn {
+            background: linear-gradient(45deg, var(--primary-blue) 0%, var(--dark-blue) 100%); /* Gradient button */
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px; /* More rounded */
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            letter-spacing: 0.5px;
+        }
+        .generate-pdf-btn:hover {
+            background: linear-gradient(45deg, var(--dark-blue) 0%, #004085 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .generate-pdf-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* --- Separator --- */
+        .section-separator {
+            border: 0;
+            height: 2px; /* Thicker */
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), var(--primary-blue), rgba(0, 0, 0, 0)); /* Blue gradient */
+            margin: 50px 0; /* More vertical space */
+        }
+
+        /* --- Quick-Start Specifics --- */
+        .quick-start-list li::before {
+            content: '✨'; /* Sparkle emoji for quick start */
+            color: transparent; /* Hide default color */
+            font-size: 1.4em; /* Larger emoji */
+            margin-right: 10px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            left: -5px; /* Adjust position */
+        }
+        .quick-start-list li:nth-child(2) ul li::before { /* Nested list default bullet */
+            content: '•';
+            font-size: 1em;
+            color: var(--primary-blue);
+            left: 0;
+        }
+
+
+        /* --- Footer --- */
+        .footer-text {
+            text-align: center;
+            font-size: 0.95em;
+            color: #777;
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 1px dashed var(--medium-grey); /* Dashed border */
+            line-height: 1.5;
+        }
+
+        /* --- PDF Specific Styles (Applied via .pdf-render-area class) --- */
+        .pdf-render-area {
+            background-color: #fff !important; 
+            color: #333 !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 10pt !important; /* Base font size for PDF */
+            padding: 20mm !important; /* A4 margins */
+            box-sizing: border-box !important;
+            width: 210mm !important; /* A4 width */
+            box-shadow: none !important; /* No shadow in PDF */
+            border-radius: 0 !important; /* No border-radius in PDF */
+        }
+        .pdf-render-area .header-section {
+            background: none !important; /* No gradient in PDF header */
+            border-bottom: 0.5pt solid var(--medium-grey) !important;
+            box-shadow: none !important;
+            padding: 15pt 0 !important;
+            border-radius: 0 !important;
+        }
+        .pdf-render-area h1 {
+            font-size: 24pt !important;
+            color: var(--dark-blue) !important; /* Slightly darker blue for print */
+            margin-bottom: 5pt !important;
+        }
+        .pdf-render-area h3.subtitle {
+            font-size: 12pt !important;
+            color: #555 !important;
+            margin-bottom: 15pt !important;
+        }
+        .pdf-render-area h2 {
+            font-size: 18pt !important;
+            color: var(--heading-color) !important;
+            margin-top: 25pt !important;
+            margin-bottom: 10pt !important;
+            border-bottom: 1pt solid var(--primary-blue) !important;
+            padding-bottom: 3pt !important;
+        }
+        .pdf-render-area h2::after {
+            width: 15pt !important; /* Smaller accent in PDF */
+            height: 1pt !important;
+            bottom: -1pt !important;
+        }
+        .pdf-render-area h3:not(.subtitle) {
+            font-size: 14pt !important;
+            color: var(--heading-color) !important;
+            margin-top: 18pt !important;
+            margin-bottom: 8pt !important;
+            padding-left: 8pt !important;
+            border-left: 3pt solid var(--primary-blue) !important;
+        }
+        .pdf-render-area p {
+            font-size: 9.5pt !important;
+            line-height: 1.5 !important;
+            margin-bottom: 10pt !important;
+        }
+        .pdf-render-area ul {
+            padding-left: 0 !important;
+            margin-bottom: 15pt !important;
+        }
+        .pdf-render-area ul li {
+            margin-bottom: 8pt !important;
+            padding-left: 20pt !important;
+            font-size: 9.5pt !important;
+        }
+        .pdf-render-area ul li::before {
+            font-size: 1em !important; /* Adjust icon size for PDF */
+            left: 0;
+        }
+         .pdf-render-area .quick-start-list li::before { /* Sparkle emoji for quick start */
+            font-size: 12pt !important; /* Smaller in PDF */
+        }
+        .pdf-render-area .quick-start-list li:nth-child(2) ul li::before {
+            font-size: 9pt !important;
+        }
+        .pdf-render-area strong {
+            font-weight: 600 !important;
+            color: #333 !important;
+        }
+        .pdf-render-area em {
+            font-style: italic !important;
+            color: #555 !important;
+        }
+        .pdf-render-area table {
+            margin: 20pt 0 !important;
+            font-size: 9pt !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
+        .pdf-render-area th, .pdf-render-area td {
+            border: 0.5pt solid #ccc !important;
+            padding: 10pt 12pt !important;
+        }
+        .pdf-render-area th {
+            background-color: #f5f5f5 !important;
+            font-weight: 700 !important;
+            color: #444 !important;
+        }
+        .pdf-render-area tr:nth-child(even) {
+            background-color: #ffffff !important; /* No subtle alternating color in PDF */
+        }
+        .pdf-render-area tr:hover {
+            background-color: #ffffff !important; /* No hover effect in PDF */
+        }
+        /* Icon styling specific for PDF */
+        .pdf-render-area .button-icon-text svg {
+            width: 18pt !important; /* Adjust icon size for PDF */
+            height: 18pt !important;
+            min-width: 18pt !important;
+            min-height: 18pt !important;
+            stroke-width: 1.5 !important; /* Slightly thinner stroke for print */
+        }
+        .pdf-render-area .section-separator {
+            margin: 30pt 0 !important;
+            height: 1pt !important;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)) !important; /* Subtle grey for print */
+        }
+        .pdf-render-area .footer-text {
+            font-size: 8.5pt !important;
+            margin-top: 25pt !important;
+            padding-top: 15pt !important;
+            border-top: 0.5pt solid #e0e0e0 !important; /* Solid border for print */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h1>Jadual Anjal</h1>
+            <h3 class="subtitle">Teacher Timetable & Attendance Dashboard User Guide (v23 · 17 June 2025)</h3>
+        </div>
+
+        <hr class="section-separator">
+
+        <h2>1 &middot; Quick-Start (TL;DR)</h2>
+        <p>Get up and running with Jadual Anjal in just a few steps:</p>
+        <ul class="quick-start-list">
+            <li><strong>Show Controls</strong> &rarr; <strong>Add Table</strong> and give it a name.</li>
+            <li>Build your timetable:
+                <ul>
+                    <li>Click inside any cell and type.</li>
+                    <li>Press <strong>Names</strong> to open the draggable list and tap a teacher’s name.</li>
+                </ul>
+            </li>
+            <li>Need merged breaks?
+                <ul>
+                    <li><strong>Select Cells &rarr; Merge</strong>, type “*REHAT” (asterisk hides from summary).</li>
+                </ul>
+            </li>
+            <li><strong>Save Shared</strong> when you’re happy&mdash;colleagues can <strong>Load Shared</strong> to get the latest version.</li>
+            <li>Export or archive your data: Use <strong>PDF</strong>, <strong>Export Excel</strong>, or <strong>Copy HTML</strong>.</li>
+        </ul>
+
+        <hr class="section-separator">
+
+        <h2>2 &middot; Interface Map</h2>
+        <p>Familiarize yourself with the main areas of the Jadual Anjal interface:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Area</th>
+                    <th>Description / Tips</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>A</td>
+                    <td><strong>Toolbar</strong></td>
+                    <td>Collapsible strip with every action button.</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td><strong>Tabs</strong></td>
+                    <td>One tab per timetable (linked) or standalone table.</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td><strong>Editable Table</strong></td>
+                    <td>The main timetable area. The first column is <em>Kelas / Masa</em> (never cleared).</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td><strong>Attendance Summary</strong></td>
+                    <td>Auto-updates with “*” where a teacher is scheduled, providing an overview of assignments.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr class="section-separator">
+
+        <h2>3 &middot; Toolbar Reference</h2>
+        <p>A comprehensive guide to all the action buttons available in the toolbar.</p>
+
+        <h3>3.1 Page-level Actions</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Button</th>
+                    <th>Use Case</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                            <span>Hide / Show Controls</span>
+                        </div>
+                    </td>
+                    <td>Collapse or expand the toolbar to free up screen space.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                            <span>Save Page</span>
+                        </div>
+                    </td>
+                    <td>Saves a self-contained HTML copy of your current page state (for offline use).</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            <span>PDF</span>
+                        </div>
+                    </td>
+                    <td>Generates a clean, print-ready PDF of all your timetables on one page.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text red">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="8" x2="22" y2="13"></line><line x1="22" y1="8" x2="17" y2="13"></line></svg>
+                            <span>Clear Names (All Tables)</span>
+                        </div>
+                    </td>
+                    <td>Wipes all scheduled teacher names from every linked timetable, while retaining merged banners and remarks.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.2 Clipboard & HTML</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Button</th>
+                    <th>Use Case</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                            <span>Copy HTML</span>
+                        </div>
+                    </td>
+                    <td>Copies the full HTML of the rendered timetable (including inline CSS) to your clipboard for easy embedding or sharing.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.3 Excel Round-trip</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Button</th>
+                    <th>Use Case</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="button-icon-text green">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Export Excel / Import Excel</span>
+                        </div>
+                    </td>
+                    <td>Facilitates single-table <code>.xlsx</code> export for external editing or backup, and import of new data into a fresh table.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text green">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <span>Export All / Import All</span>
+                        </div>
+                    </td>
+                    <td>Provides multi-sheet versions, allowing you to manage all your tables in a single Excel file.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.4 Cloud Sync & Backups *(Firebase)*</h3>
+        <p>Leverage cloud capabilities for seamless collaboration and data safety.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Button</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+                            <span>Save Shared</span>
+                        </div>
+                    </td>
+                    <td>Push your current schedules to the shared Firestore database, making them accessible to colleagues.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 16l-4-4"></path><path d="M12 16V4"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path></svg>
+                            <span>Load Shared</span>
+                        </div>
+                    </td>
+                    <td>Pull the latest shared version of the schedules from the cloud, ensuring you always work with up-to-date data.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text orange">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <span>Restore Backup</span>
+                        </div>
+                    </td>
+                    <td>Reloads the last automatically saved local snapshot of your schedules, acting as a quick undo for recent changes.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text red">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3l18 18"></path><path d="M18 3l3 3"></path><path d="M21 3l-3 3"></path><path d="M9 3h3l7 7v7l-3 3h-7l-7-7V6z"></path></svg>
+                            <span>Clear & New</span>
+                        </div>
+                    </td>
+                    <td>Creates a fresh, blank set of schedules, prompting for confirmation to prevent accidental data loss.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.5 Cell-level Editing</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Button</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+                            <span>Select Cells</span>
+                        </div>
+                    </td>
+                    <td>Enables multi-selection mode, allowing you to select multiple cells by dragging or holding Ctrl/Cmd and clicking.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text purple">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 4h-4a4 4 0 0 0-4 4v2a4 4 0 0 0 4 4h4v6"></path><path d="M8 20h4a4 4 0 0 0 4-4v-2a4 4 0 0 0-4-4H8V4"></path></svg>
+                            <span>Merge / Unmerge</span>
+                        </div>
+                    </td>
+                    <td>Use to combine selected cells into a single larger cell, or split a previously merged cell back into its individual components.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                            <span>Deselect</span>
+                        </div>
+                    </td>
+                    <td>Clears any current cell selection.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.6 Table Management</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Button</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14M21 12H3"></path><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                            <span>Add Table</span>
+                        </div>
+                    </td>
+                    <td>Adds a new, empty timetable that is automatically <em>linked</em> to the attendance summary.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14M21 12H3"></path><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="3 3"></rect></svg>
+                            <span>Add Standalone Table</span>
+                        </div>
+                    </td>
+                    <td>Adds an <strong>independent</strong> timetable that is ignored by the attendance summary, useful for personal notes or drafts.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <span>Rename Table</span>
+                        </div>
+                    </td>
+                    <td>Allows you to rename the currently active tab for better organization.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text red">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <span>Delete Table</span>
+                        </div>
+                    </td>
+                    <td>Permanently deletes the active table after a double confirmation.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text orange">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>Names</span>
+                        </div>
+                    </td>
+                    <td>Opens a draggable modal window where you can manage a shared list of teacher names, powered by Firestore.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.7 Row / Column Tools</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Button</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                            <span>Row Above / Row Below</span>
+                        </div>
+                    </td>
+                    <td>Inserts a blank row either above or below the currently selected or clicked row.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            <span>Col Left / Col Right</span>
+                        </div>
+                    </td>
+                    <td>Inserts a blank column to the left or right of the currently selected or clicked column.</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="button-icon-text red">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <span>Del Row / Del Col</span>
+                        </div>
+                    </td>
+                    <td>Deletes the entire selected row or column.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr class="section-separator">
+
+        <h2>4 &middot; Working With Cells</h2>
+        <p>Mastering cell interactions for efficient timetable creation.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Steps</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Edit text</strong></td>
+                    <td>Click inside a cell &rarr; type your desired text &rarr; press <em>Enter</em> or tap outside to confirm.</td>
+                </tr>
+                <tr>
+                    <td><strong>Insert teacher names</strong></td>
+                    <td>Click a cell &rarr; click the <strong>Names</strong> button &rarr; pick a name from the draggable list.</td>
+                </tr>
+                <tr>
+                    <td><strong>Multi-select</strong></td>
+                    <td>Click <strong>Select Cells</strong> &rarr; drag your mouse across a range, or hold <strong>Ctrl/Cmd</strong> and click individual cells to select multiple.</td>
+                </tr>
+                <tr>
+                    <td><strong>Merge cells</strong></td>
+                    <td>Select your desired range of cells &rarr; click <strong>Merge</strong> &rarr; type a banner (e.g. <code>*REHAT</code>) to describe the merged section.</td>
+                </tr>
+                <tr>
+                    <td><strong>Unmerge</strong></td>
+                    <td>Click on any merged cell &rarr; click <strong>Unmerge</strong> to revert it to individual cells.</td>
+                </tr>
+                <tr>
+                    <td><strong>Clear only remarks</strong></td>
+                    <td>If your cell content is formatted as <code>ENTRY // remark</code>, the "Clear Names" function will intelligently clear the name while keeping the text after <code>//</code>.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr class="section-separator">
+
+        <h2>5 &middot; Attendance Summary</h2>
+        <p>The attendance summary provides an automated, real-time overview of teacher assignments.</p>
+        <ul>
+            <li>The summary sits directly below your last timetable.</li>
+            <li>Rows represent individual teachers, and columns correspond to 30-minute time blocks.</li>
+            <li>A “*” is displayed wherever a teacher is scheduled in any of your <strong>linked</strong> timetables.</li>
+            <li><strong>Standalone</strong> tables are intentionally ignored by the attendance summary.</li>
+        </ul>
+
+        <hr class="section-separator">
+
+        <div class="footer-text">
+            <strong>Happy scheduling!</strong> Questions or ideas? Open an issue on GitHub or e-mail <strong>support@jadual-anjal.app</strong>.
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button class="generate-pdf-btn" onclick="generatePdf()">Download User Guide as PDF</button>
+    </div>
+
+    <script>
+        async function generatePdf() {
+            const container = document.querySelector('.container');
+            const generateButton = document.querySelector('.generate-pdf-btn');
+
+            // Temporarily hide the button during PDF generation
+            if (generateButton) {
+                generateButton.style.display = 'none';
+            }
+
+            // Add a class to the container that applies PDF-specific styles
+            container.classList.add('pdf-render-area');
+
+            // Options for html2pdf
+            const options = {
+                margin: [15, 15, 15, 15], // Top, Left, Bottom, Right margins in mm
+                filename: 'Jadual_Anjal_User_Guide.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, logging: false, useCORS: true }, // Set logging to false for clean console
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                // html2pdf will render the current visible DOM, applying .pdf-render-area styles
+                await html2pdf().from(container).set(options).save();
+                alert('User Guide PDF downloaded successfully!');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Failed to generate PDF. Please try again. Check your browser\'s console for errors.');
+            } finally {
+                // Restore the button visibility
+                if (generateButton) {
+                    generateButton.style.display = 'block';
+                }
+                // Remove the PDF-specific class
+                container.classList.remove('pdf-render-area');
+            }
+        }
+    </script>
+</body>
+</html>
