@@ -3332,5 +3332,59 @@ window.clearScheduledNamesFromActiveTable = clearScheduledNamesFromAllTables;
 </script>
 
 
+
+
+<!-- ### Patch v5 – keep Kelas/Masa column intact ### -->
+<script>
+function smartConfirm(msg) {
+    if (typeof customConfirm === 'function') return customConfirm(msg);
+    return Promise.resolve(window.confirm(msg));
+}
+function smartMessage(msg, type='info') {
+    if (typeof showMessage === 'function') { showMessage(msg, type); }
+    else { console.log(type.toUpperCase() + ': ' + msg); }
+}
+async function clearScheduledNamesFromAllTables() {
+    const container = document.getElementById('tablesContainer');
+    if (!container) { smartMessage('Tables container not found.', 'error'); return; }
+
+    if (!await smartConfirm('Are you sure you want to clear scheduled names from ALL tables? Merged cells will be retained.')) {
+        smartMessage('Operation cancelled.', 'info');
+        return;
+    }
+
+    if (typeof showGeneralLoading === 'function') showGeneralLoading(true);
+    try {
+        // Iterate over every schedule table except independent ones
+        container.querySelectorAll('table:not([data-independent="true"])').forEach(tbl => {
+            tbl.querySelectorAll('tbody tr').forEach(row => {
+                row.querySelectorAll('td, th').forEach((cell, idx) => {
+                    // Skip first column (Kelas / Masa)
+                    if (idx === 0) return;
+                    // Skip merged-overlay hosts
+                    if (cell.hasAttribute('data-merge-id')) return;
+                    // Skip banner cells that start with *
+                    const trimmed = cell.textContent.trim();
+                    if (trimmed.startsWith('*')) return;
+                    // Keep remark after //
+                    const slashIdx = trimmed.indexOf(' // ');
+                    cell.textContent = slashIdx !== -1 ? trimmed.slice(slashIdx + 4).trim() : '';
+                });
+            });
+        });
+
+        if (typeof rebuildAndRenderSummary === 'function') rebuildAndRenderSummary();
+        smartMessage('Scheduled names cleared from ALL tables (Kelas/Masa untouched).', 'success');
+    } catch (err) {
+        console.error(err);
+        smartMessage('Error clearing names: ' + err.message, 'error');
+    } finally {
+        if (typeof showGeneralLoading === 'function') showGeneralLoading(false);
+    }
+}
+window.clearScheduledNamesFromActiveTable = clearScheduledNamesFromAllTables;
+</script>
+
+
 </body>
 </html>
