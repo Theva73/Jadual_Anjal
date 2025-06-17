@@ -3282,5 +3282,75 @@ async function clearScheduledNamesFromAllTables() {
 window.clearScheduledNamesFromActiveTable = clearScheduledNamesFromAllTables;
 </script>
 
+
+<!-- ### Clear‑All‑Tables Patch – updated 2025‑06‑17 ### -->
+<script>
+/**
+ * Universal confirm helper – falls back to window.confirm if customConfirm isn’t globally available.
+ * Always returns a Promise<boolean>.
+ */
+function smartConfirm(msg) {
+    if (typeof customConfirm === 'function') {
+        // customConfirm already returns a Promise<boolean>
+        return customConfirm(msg);
+    }
+    return Promise.resolve(window.confirm(msg));
+}
+
+/**
+ * Clear every scheduled teacher name from **all** standard schedule tables
+ * while preserving merged cells and remarks.
+ */
+async function clearScheduledNamesFromAllTables() {
+    if (!window.tablesContainer) {
+        showMessage('Tables container not found.', 'error');
+        return;
+    }
+
+    if (!await smartConfirm('Are you sure you want to clear scheduled names from ALL tables? Merged cells will be retained.')) {
+        showMessage('Operation cancelled.', 'info');
+        return;
+    }
+
+    showGeneralLoading(true);
+    try {
+        const allSharedNamesLower = new Set([
+            ...(window.namesPagiShared || []).map(n => String(n).toLowerCase()),
+            ...(window.namesPetangShared || []).map(n => String(n).toLowerCase())
+        ]);
+
+        Array.from(tablesContainer.querySelectorAll('table'))
+             .filter(tbl => tbl.dataset.independent !== 'true')
+             .forEach(tbl => {
+                tbl.querySelectorAll('tbody td, tbody th').forEach(cellElement => {
+                    if (cellElement.hasAttribute('data-merge-id')) return;
+
+                    const parts = String(cellElement.textContent || '').split(' // ');
+                    let main = parts[0];
+                    const remark = parts.length > 1 ? ' // ' + parts.slice(1).join(' // ') : '';
+
+                    const keepWords = main.split(/\s+/)
+                                          .filter(w => w.startsWith('*') || !allSharedNamesLower.has(w.toLowerCase()));
+
+                    let newText = (keepWords.join(' ').trim() + remark).trim();
+                    if (newText === '//' || newText === '') newText = '';
+                    cellElement.textContent = newText;
+                });
+             });
+
+        rebuildAndRenderSummary();
+        showMessage('Scheduled names cleared from ALL tables.', 'success');
+    } catch (err) {
+        console.error('Error clearing names:', err);
+        showMessage('Error clearing names: ' + err.message, 'error');
+    } finally {
+        showGeneralLoading(false);
+    }
+}
+
+// Backward‑compat alias (old API name)
+window.clearScheduledNamesFromActiveTable = clearScheduledNamesFromAllTables;
+</script>
+
 </body>
 </html>
