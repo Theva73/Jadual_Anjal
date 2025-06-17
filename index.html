@@ -608,9 +608,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             <span>PDF</span>
         </button>
-        <button id="clearScheduledNamesBtn" class="top-action-btn" title="Clear scheduled names from the ACTIVE table (retains merged cell content)">
+        <button id="clearScheduledNamesBtn" class="top-action-btn" title="Clear scheduled names from ALL tables (retains merged cell content)">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="8" x2="22" y2="13"></line><line x1="22" y1="8" x2="17" y2="13"></line></svg>
-            <span>Clear Names (Active Table)</span>
+            <span>Clear Names (All Tables)</span>
         </button>
     </div>
 
@@ -2611,6 +2611,52 @@ function addNewIndependentTable() {
             return;
         }
 
+// === NEW: Clear names from ALL tables (replaces old per‑table behaviour) ===
+async function clearScheduledNamesFromAllTables() {
+    if (!tablesContainer) { showMessage('Tables container not found.', 'error'); return; }
+    if (!await customConfirm('Are you sure you want to clear scheduled names from ALL tables? Merged cells will be retained.')) {
+        showMessage('Operation cancelled.', 'info');
+        return;
+    }
+    showGeneralLoading(true);
+    try {
+        // Build set of names to clear (shared name list, both sessions)
+        const allSharedNamesLowerCase = new Set([
+            ...namesPagiShared.map(n => String(n).toLowerCase()),
+            ...namesPetangShared.map(n => String(n).toLowerCase())
+        ]);
+
+        // Iterate over every schedule table (skip independent tables)
+        Array.from(tablesContainer.querySelectorAll('table'))
+             .filter(tbl => tbl.dataset.independent !== 'true')
+             .forEach(tbl => {
+                tbl.querySelectorAll('tbody td, tbody th').forEach(cellElement => {
+                    // Skip merged‑overlay hosts (retain banner text)
+                    if (cellElement.hasAttribute('data-merge-id')) return;
+
+                    const parts = String(cellElement.textContent || '').split(' // ');
+                    let mainContent = parts[0];
+                    const remarkContent = parts.length > 1 ? ' // ' + parts.slice(1).join(' // ') : '';
+
+                    const keptWords = mainContent.split(/\s+/)
+                                                 .filter(w => w.startsWith('*') || !allSharedNamesLowerCase.has(w.toLowerCase()));
+                    let finalText = (keptWords.join(' ').trim() + remarkContent).trim();
+                    if (finalText === '//' || finalText === '') finalText = '';
+                    cellElement.textContent = finalText;
+                });
+             });
+
+        rebuildAndRenderSummary();
+        showMessage('Scheduled names cleared from ALL tables.', 'success');
+    } catch (err) {
+        console.error('Error while clearing names across tables:', err);
+        showMessage('Error clearing names: ' + err.message, 'error');
+    } finally {
+        showGeneralLoading(false);
+    }
+}
+
+
         const activeTableName = activeTableElement.dataset.tableName || activeTableId;
         if (!await customConfirm(`Are you sure you want to clear scheduled names from table "${activeTableName}"? Merged cells will be retained. This cannot be undone for other cells.`)) {
             showMessage('Operation cancelled.', 'info');
@@ -2947,7 +2993,7 @@ function addNewIndependentTable() {
         if(controlsTogglerElement) controlsTogglerElement.addEventListener('click', toggleButtonBarsVisibility);
         if(manualSaveBtnElement) manualSaveBtnElement.addEventListener('click', manualSaveCurrentPage);
         if(downloadPdfButtonElement) downloadPdfButtonElement.addEventListener('click', generateSchedulePdf);
-        if(clearScheduledNamesBtnElement) clearScheduledNamesBtnElement.addEventListener('click', clearScheduledNamesFromActiveTable);
+        if(clearScheduledNamesBtnElement) clearScheduledNamesBtnElement.addEventListener('click', clearScheduledNamesFromAllTables);
         if(directCopyFullHtmlButtonElement) directCopyFullHtmlButtonElement.addEventListener('click', attemptDirectCopyToClipboard);
         if(closeNameModalButtonStandardElement) closeNameModalButtonStandardElement.addEventListener('click', closeNameModal);
         if(nameModalHeader) { nameModalHeader.addEventListener('mousedown', (e) => startDragModal(e, nameModalContent)); nameModalHeader.addEventListener('touchstart', (e) => startDragModal(e, nameModalContent), { passive: false }); }
