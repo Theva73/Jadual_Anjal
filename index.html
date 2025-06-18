@@ -1038,6 +1038,32 @@ function getMergeGroupColumnRange(tableElement, mergeId) {
         return header.replace(/\s/g, "").replace(/:/g,".").toLowerCase(); 
     }
 
+// === Added: Highlight specific summary slots ===
+function highlightSummaryColumns() {
+    if (!summaryTableElement || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) return;
+    const highlightSlotsNormalized = ["09.45-10.00", "10.15-10.30"];
+    const headerCells = Array.from(summaryTableElement.tHead.rows[0].cells);
+    const indices = [];
+    headerCells.forEach((th, idx) => {
+        const norm = normalizeHeaderForLookup(String(th.textContent || '').trim());
+        if (highlightSlotsNormalized.includes(norm)) {
+            indices.push(idx + 1); // nth-child is 1‑based
+        }
+    });
+    // Remove old style block if exists
+    let styleEl = document.getElementById('summaryHighlightStyle');
+    if (styleEl) styleEl.remove();
+    if (indices.length) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'summaryHighlightStyle';
+        styleEl.textContent = indices.map(i => `#summaryTable th:nth-child(${i}), #summaryTable td:nth-child(${i}) { background-color:#d8f9d8 !important; }`).join('\n');
+        document.head.appendChild(styleEl);
+    }
+}
+// === End Added ===
+
+
+
     function buildSummaryTableSkeleton(allAvailableNames) {
         if (!summaryTableElement) { console.error("buildSummaryTableSkeleton: summaryTableElement not found."); return; }
         summaryTableElement.innerHTML = ''; 
@@ -1130,7 +1156,10 @@ function getMergeGroupColumnRange(tableElement, mergeId) {
                 }
             }); 
         }
-    }
+    
+        // Call highlight after building skeleton
+        highlightSummaryColumns();
+}
     
     function processNameBlockForSummary(summaryRow, name, blockData, normalizedSummaryHeaders) {
         if (!summaryRow || !blockData || blockData.length === 0 || !normalizedSummaryHeaders) return;
