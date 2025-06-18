@@ -1049,20 +1049,49 @@ function getMergeGroupColumnRange(tableElement, mergeId) {
 // === Added: Highlight specific summary slots ===
 
 function highlightSummaryColumns() {
+    // Shade break-time columns (header + every covered cell)
     const summaryTableElement = document.getElementById('summaryTable');
     if (!summaryTableElement || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) return;
     const highlightSlotsNormalized = ["09.45-10.00", "10.15-10.30"];
     const headerCells = Array.from(summaryTableElement.tHead.rows[0].cells);
-    headerCells.forEach(th => {
-        const norm = th.textContent.trim().replace(/\s/g,'').replace(/:/g,'.').replace(/[–—\-]/g,'-');
+    const highlightIndices = [];
+    headerCells.forEach((th, idx) => {
+        const norm = th.textContent.trim()
+            .replace(/\s/g,'')
+            .replace(/:/g,'.')
+            .replace(/[–—\-]/g,'-');
         if (highlightSlotsNormalized.includes(norm)) {
-            th.style.backgroundColor = '#d8f9d8';
+            highlightIndices.push(idx + 1);      // 1‑based index
+            th.style.backgroundColor = '#eafbe6';
         } else {
-            // clear if previously set
-            if (th.style.backgroundColor) th.style.backgroundColor = '';
+            th.style.backgroundColor = '';
         }
     });
+    if(!highlightIndices.length) return;
+
+    // walk through table body rows and colour any cell that spans a highlight column
+    const bodyRows = summaryTableElement.tBodies[0]?.rows || [];
+    for(let r=0; r<bodyRows.length; r++){
+        const row = bodyRows[r];
+        let colCursor = 1; // visual column count starts after Nama/Masa
+        for(let c=0; c<row.cells.length; c++){
+            const cell = row.cells[c];
+            const colspan = parseInt(cell.getAttribute('colspan') || '1', 10);
+            const cellStart = colCursor;
+            const cellEnd   = colCursor + colspan - 1;
+            // check overlap between [cellStart,cellEnd] and highlightIndices
+            const hasHighlight = highlightIndices.some(idx => idx >= cellStart && idx <= cellEnd);
+            if(hasHighlight && !cell.classList.contains('highlight-overlap')){
+                cell.style.backgroundColor = '#eafbe6';
+            } else if(!hasHighlight && cell.style.backgroundColor === 'rgb(216, 249, 216)'){
+                // reset only if old shade remains (in RGB format)
+                cell.style.backgroundColor = '';
+            }
+            colCursor += colspan;
+        }
+    }
 }
+
 
 
 // === Added: clash detection for overlapping time blocks ===
