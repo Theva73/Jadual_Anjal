@@ -588,6 +588,12 @@
 .independent-table {
     opacity: 0.9;
 }
+
+        .highlight-overlap {
+            background-color:#d88c8c !important;
+            color:#ffffff !important;
+            font-weight:bold;
+        }
 </style>
 </head>
 <body>
@@ -1033,33 +1039,78 @@ function getMergeGroupColumnRange(tableElement, mergeId) {
         return Infinity; 
     }
     
-    function normalizeHeaderForLookup(header) {
-        if (typeof header !== 'string') return '';
-        return header.replace(/\s/g, "").replace(/:/g,".").toLowerCase(); 
+    function normalizeHeaderForLookup(txt){
+        return txt
+            .replace(/\s/g,'')        // remove spaces
+            .replace(/:/g,'.')         // 09:45 -> 09.45
+            .replace(/[–—\-]/g,'-');  // any dash → hyphen
     }
 
 // === Added: Highlight specific summary slots ===
+
 function highlightSummaryColumns() {
+    const summaryTableElement = document.getElementById('summaryTable');
     if (!summaryTableElement || !summaryTableElement.tHead || !summaryTableElement.tHead.rows[0]) return;
     const highlightSlotsNormalized = ["09.45-10.00", "10.15-10.30"];
     const headerCells = Array.from(summaryTableElement.tHead.rows[0].cells);
-    const indices = [];
-    headerCells.forEach((th, idx) => {
-        const norm = normalizeHeaderForLookup(String(th.textContent || '').trim());
+    headerCells.forEach(th => {
+        const norm = th.textContent.trim().replace(/\s/g,'').replace(/:/g,'.').replace(/[–—\-]/g,'-');
         if (highlightSlotsNormalized.includes(norm)) {
-            indices.push(idx + 1); // nth-child is 1‑based
+            th.style.backgroundColor = '#d8f9d8';
+        } else {
+            // clear if previously set
+            if (th.style.backgroundColor) th.style.backgroundColor = '';
         }
     });
-    // Remove old style block if exists
-    let styleEl = document.getElementById('summaryHighlightStyle');
-    if (styleEl) styleEl.remove();
-    if (indices.length) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'summaryHighlightStyle';
-        styleEl.textContent = indices.map(i => `#summaryTable th:nth-child(${i}), #summaryTable td:nth-child(${i}) { background-color:#d8f9d8 !important; }`).join('\n');
-        document.head.appendChild(styleEl);
-    }
 }
+
+
+// === Added: clash detection for overlapping time blocks ===
+function minutes(hhmm){
+    const [h,m] = hhmm.split(/[:.]/).map(Number);
+    return h*60 + m;
+}
+function rangeStrToMinutes(range){
+    const [s,e] = range.split('-').map(t=>t.trim());
+    return [minutes(s), minutes(e)];
+}
+function detectAndMarkClashes(){
+    const summary = document.getElementById('summaryTable');
+    if(!summary || !summary.tHead || !summary.tBodies[0]) return;
+
+    const headers = Array.from(summary.tHead.rows[0].cells).map(th => th.textContent.trim());
+    const headerRanges = headers.map(txt => {
+        if(txt === 'Nama/Masa') return null;
+        return rangeStrToMinutes(txt.replace(/\s/g,''));   // strip spaces
+    });
+
+    Array.from(summary.tBodies[0].rows).forEach(row => {
+        const intervals = [];            // {start, end, cell}
+        for(let i=1; i<row.cells.length; i++){
+            const cell = row.cells[i];
+            if(cell.style.display === 'none' || !cell.textContent.trim()) continue;
+            const colspan = parseInt(cell.getAttribute('colspan') || '1', 10);
+            const startIdx = i;
+            const endIdx   = i + colspan - 1;
+            const startRange = headerRanges[startIdx];
+            const endRange   = headerRanges[endIdx];
+            if(!startRange || !endRange) continue;
+            intervals.push({ start: startRange[0], end: endRange[1], cell });
+        }
+        intervals.sort((a,b) => a.start - b.start);
+        for(let k=1; k<intervals.length; k++){
+            if(intervals[k].start < intervals[k-1].end){
+                intervals[k-1].cell.classList.add('highlight-overlap');
+                intervals[k].cell.classList.add('highlight-overlap');
+            }
+        }
+    });
+
+    // ensure column highlight applied last
+    highlightSummaryColumns();
+}
+// === End clash detection ===
+
 // === End Added ===
 
 
@@ -1159,6 +1210,7 @@ function highlightSummaryColumns() {
     
         // Call highlight after building skeleton
         highlightSummaryColumns();
+        detectAndMarkClashes();
 }
     
     function processNameBlockForSummary(summaryRow, name, blockData, normalizedSummaryHeaders) {
@@ -1363,7 +1415,9 @@ function highlightSummaryColumns() {
                 j += currentCellColspan;
             }
         });
-    }
+    
+    detectAndMarkClashes();
+}
     
     function rebuildAndRenderSummary() {
         const scheduledNames = new Set();
