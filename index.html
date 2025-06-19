@@ -594,6 +594,8 @@
             color:#ffffff !important;
             font-weight:bold;
         }
+
+.highlight-urgent td:first-child{border-left:4px solid #dc3545;}
 </style>
 </head>
 <body>
@@ -1090,7 +1092,8 @@ function highlightSummaryColumns() {
             colCursor += colspan;
         }
     }
-}
+
+    bubbleProblemRows();}
 
 
 
@@ -1137,6 +1140,7 @@ function detectAndMarkClashes(){
 
     // ensure column highlight applied last
     highlightSummaryColumns();
+    bubbleProblemRows();
 }
 // === End clash detection ===
 
@@ -1446,7 +1450,8 @@ function detectAndMarkClashes(){
         });
     
     detectAndMarkClashes();
-}
+
+    bubbleProblemRows();}
     
     function rebuildAndRenderSummary() {
         const scheduledNames = new Set();
@@ -3495,6 +3500,59 @@ async function clearScheduledNamesFromAllTables() {
     }
 }
 window.clearScheduledNamesFromActiveTable = clearScheduledNamesFromAllTables;
+
+// === Added: move rows with clashes/duplicates to top ===
+function bubbleProblemRows(){
+    const tbody = document.querySelector('#summaryTable tbody');
+    if(!tbody) return;
+    const rows = Array.from(tbody.rows);
+    const urgent = [];
+    const normal = [];
+    rows.forEach(r=>{
+        if(r.querySelector('.highlight-overlap, .highlight-conflict')){
+            urgent.push(r);
+            r.classList.add('highlight-urgent');
+        } else {
+            normal.push(r);
+            r.classList.remove('highlight-urgent');
+        }
+    });
+    if(!urgent.length) return;
+    const frag = document.createDocumentFragment();
+    urgent.forEach(row=>frag.appendChild(row));
+    normal.forEach(row=>frag.appendChild(row));
+    tbody.appendChild(frag);
+}
+// === End move rows ===
+
+
+// === Added: live observer for summary mutations ===
+function initProblemRowObserver(){
+    const tbody = document.querySelector('#summaryTable tbody');
+    if(!tbody) return;
+    let timer=null;
+    const schedule=()=>{clearTimeout(timer);timer=setTimeout(bubbleProblemRows,60);};
+    const obs=new MutationObserver(list=>{
+        for(const m of list){
+            if(m.type==='attributes'&&m.attributeName==='class'){
+                if(m.target.classList.contains('highlight-overlap')||m.target.classList.contains('highlight-conflict')){
+                    schedule();break;
+                }
+            }else if(m.type==='childList'&&(m.addedNodes.length||m.removedNodes.length)){
+                schedule();break;
+            }
+        }
+    });
+    obs.observe(tbody,{subtree:true,attributes:true,attributeFilter:['class'],childList:true});
+}
+// === End observer ===
+
+
+document.addEventListener('DOMContentLoaded', ()=>{
+    bubbleProblemRows();
+    initProblemRowObserver();
+});
+
 </script>
 
 
