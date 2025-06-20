@@ -795,6 +795,7 @@
 
 <div id="pdfContent"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -3605,24 +3606,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 
 
-  <div style="position:relative;width:100%;height:calc(100% - 30px);">
-    <iframe src="timetable.html" style="width:100%;height:100%;border:none;pointer-events:auto;"></iframe>
-  </div>
-</div>
-
-
-
-
-  <iframe src="timetable.html" style="width:100%;height:calc(100% - 40px);border:none;"></iframe>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-
-
-
-
-
-<!-- ░░░ Resizable / draggable timetable panel ░░░ -->
+  <!-- ░░░ Resizable / draggable timetable panel ░░░ -->
 <div id="timetablePanel" class="panel hidden" data-x="0" data-y="0">
   <div class="panel-header" id="timetableHandle">
       ☰ Searchable Timetable
