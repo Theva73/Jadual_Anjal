@@ -3636,6 +3636,15 @@ document.getElementById('searchTimetableBtn').addEventListener('click', function
 </script>
 
 
+<div id="timetableModal" style="display:none;position:fixed;top:100px;left:100px;width:400px;height:300px;z-index:3000;background:white;border:2px solid #007bff;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);overflow:hidden;">
+  <div id="timetableHeader" style="background:#007bff;color:white;padding:10px;cursor:grab;font-weight:bold;display:flex;justify-content:space-between;align-items:center;">
+    ☰ Searchable Timetable
+    <button onclick="document.getElementById('timetableModal').style.display='none'" style="background:none;border:none;font-size:1.2em;color:white;">×</button>
+  </div>
+  <iframe src="timetable.html" style="width:100%;height:calc(100% - 40px);border:none;"></iframe>
+  <div id="resizeHandle" style="position:absolute;width:25px;height:25px;right:0;bottom:0;background:#007bff;clip-path:polygon(100% 0,100% 100%,0 100%);cursor:se-resize;"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
 document.getElementById('searchTimetableBtn').addEventListener('click', function() {
