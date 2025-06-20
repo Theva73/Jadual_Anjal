@@ -3662,13 +3662,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if(typeof interact !== 'undefined' && panel){
       interact(panel).draggable({
         allowFrom:'#timetableHandle',
+        
         listeners:{ move(event){
           const t = event.target;
-          const x = (parseFloat(t.getAttribute('data-x'))||0)+event.dx;
-          const y = (parseFloat(t.getAttribute('data-y'))||0)+event.dy;
+          let x = (parseFloat(t.dataset.x)||0) + event.dx;
+          let y = (parseFloat(t.dataset.y)||0) + event.dy;
+
+          // clamp so panel stays within viewport
+          const maxX = window.innerWidth  - t.offsetWidth;
+          const maxY = window.innerHeight - t.offsetHeight;
+          x = Math.min(Math.max(0, x), maxX);
+          y = Math.min(Math.max(0, y), maxY);
+
           t.style.transform = `translate(${x}px,${y}px)`;
-          t.setAttribute('data-x',x); t.setAttribute('data-y',y);
+          t.dataset.x = x; t.dataset.y = y;
         }}
+
       });
 
       interact(panel).resizable({
