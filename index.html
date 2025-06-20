@@ -3678,6 +3678,14 @@ document.getElementById('searchTimetableBtn').addEventListener('click', function
   const handle  = document.getElementById('timetableHandle');
   const grip    = document.getElementById('timetableGrip');
   const openBtn = document.getElementById('searchTimetableBtn');
+
+  /* ───── ensure iframe src works no matter where file is served ───── */
+  const iframe = document.getElementById('timetableIframe');
+  if (iframe) {
+    const base = location.href.substring(0, location.href.lastIndexOf('/') + 1);
+    iframe.src = base + 'timetable.html';
+  }
+
   const closeBtn= document.getElementById('closeTimetablePanel');
 
   openBtn?.addEventListener('click', () => panel.classList.remove('hidden'));
