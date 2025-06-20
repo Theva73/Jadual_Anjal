@@ -596,6 +596,42 @@
         }
 
 .highlight-urgent td:first-child{border-left:4px solid #dc3545;}
+
+/* ░░░ floating panel ░░░ */
+.panel{
+  position:fixed;
+  top:80px; left:80px;
+  width:420px; height:280px;
+  background:#1f273b;
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  display:flex; flex-direction:column;
+  z-index:3000;
+  overflow:hidden;
+  touch-action:none;
+}
+.panel.hidden{display:none;}
+.panel-header{
+  flex:0 0 42px;
+  background:#007bff;
+  color:#fff; font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 12px;
+  cursor:grab; user-select:none; touch-action:none;
+}
+.panel-header:active{cursor:grabbing;}
+.panel-header button{
+  all:unset; font-size:1.6em; line-height:1; cursor:pointer;
+  padding:0 4px;
+}
+.panel iframe{flex:1 1 auto;}
+.panel-grip{
+  position:absolute; right:0; bottom:0;
+  width:22px;height:22px;
+  background:#007bff;
+  clip-path:polygon(100% 0,100% 100%,0 100%);
+  cursor:se-resize;
+}
 </style>
 </head>
 <body>
@@ -3569,11 +3605,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 
 
-<div id="timetableModal" style="display:none;position:fixed;top:80px;left:80px;width:400px;height:300px;z-index:3000;background:white;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);overflow:hidden;">
-  <div id="timetableHeader" style="padding:6px;background:#f1f1f1;cursor:grab;user-select:none;border-bottom:1px solid #ddd;pointer-events:auto;">
-    Searchable Timetable 
-    <button onclick="document.getElementById('timetableModal').style.display='none'" style="float:right;background:none;border:none;font-size:1.2em;">×</button>
-  </div>
   <div style="position:relative;width:100%;height:calc(100% - 30px);">
     <iframe src="timetable.html" style="width:100%;height:100%;border:none;pointer-events:auto;"></iframe>
     <div id="resizeHandle" style="position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:se-resize;background:transparent;pointer-events:auto;"></div>
@@ -3636,16 +3667,73 @@ document.getElementById('searchTimetableBtn').addEventListener('click', function
 </script>
 
 
-<div id="timetableModal" style="display:none;position:fixed;top:100px;left:100px;width:400px;height:300px;z-index:3000;background:white;border:2px solid #007bff;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);overflow:hidden;">
-  <div id="timetableHeader" style="background:#007bff;color:white;padding:10px;cursor:grab;font-weight:bold;display:flex;justify-content:space-between;align-items:center;">
-    ☰ Searchable Timetable
-    <button onclick="document.getElementById('timetableModal').style.display='none'" style="background:none;border:none;font-size:1.2em;color:white;">×</button>
-  </div>
   <iframe src="timetable.html" style="width:100%;height:calc(100% - 40px);border:none;"></iframe>
   <div id="resizeHandle" style="position:absolute;width:25px;height:25px;right:0;bottom:0;background:#007bff;clip-path:polygon(100% 0,100% 100%,0 100%);cursor:se-resize;"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script>
+(() => {
+  const panel   = document.getElementById('timetablePanel');
+  const handle  = document.getElementById('timetableHandle');
+  const grip    = document.getElementById('timetableGrip');
+  const openBtn = document.getElementById('searchTimetableBtn');
+  const closeBtn= document.getElementById('closeTimetablePanel');
+
+  openBtn?.addEventListener('click', () => panel.classList.remove('hidden'));
+  closeBtn?.addEventListener('click',() => panel.classList.add('hidden'));
+
+  interact(panel).draggable({
+    allowFrom: '#timetableHandle',
+    listeners:{
+      move (event){
+        const target = event.target;
+        const x = (parseFloat(target.getAttribute('data-x'))||0) + event.dx;
+        const y = (parseFloat(target.getAttribute('data-y'))||0) + event.dy;
+        target.style.transform = `translate(${x}px,${y}px)`;
+        target.setAttribute('data-x',x);
+        target.setAttribute('data-y',y);
+      }
+    }
+  });
+
+  interact(panel).resizable({
+    edges: { left:true, right:true, bottom:true, top:true },
+    listeners:{
+      move (event){
+        let { x, y } = event.target.dataset;
+        x = parseFloat(x) || 0;
+        y = parseFloat(y) || 0;
+
+        // update the element's style
+        Object.assign(event.target.style, {
+          width:  event.rect.width + 'px',
+          height: event.rect.height + 'px',
+        });
+
+        // translate when resizing from top or left edges
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+
+        Object.assign(event.target.style, {
+          transform: 'translate(' + x + 'px,' + y + 'px)'
+        });
+
+        Object.assign(event.target.dataset, { x, y });
+      }
+    },
+    modifiers: [
+      interact.modifiers.restrictSize({
+        min: { width: 280, height: 200 },
+        max: { width: window.innerWidth * 0.95,
+               height: window.innerHeight * 0.95 }
+      })
+    ]
+  });
+
+})();
+</script>
+
 <script>
 document.getElementById('searchTimetableBtn').addEventListener('click', function() {
   document.getElementById('timetableModal').style.display = 'block';
@@ -3680,5 +3768,20 @@ interact('#resizeHandle')
   });
 </script>
 
+
+<!-- ░░░ Resizable / draggable timetable panel ░░░ -->
+<div id="timetablePanel" class="panel hidden" data-x="0" data-y="0">
+  <div class="panel-header" id="timetableHandle">
+      ☰ Searchable Timetable
+      <button id="closeTimetablePanel" aria-label="Close timetable">×</button>
+  </div>
+
+  <iframe id="timetableIframe"
+          src="./timetable.html"
+          loading="lazy"
+          style="width:100%;height:100%;border:none;"></iframe>
+
+  <div id="timetableGrip" class="panel-grip"></div>
+</div>
 </body>
 </html>
