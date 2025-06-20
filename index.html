@@ -620,6 +620,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="8" x2="22" y2="13"></line><line x1="22" y1="8" x2="17" y2="13"></line></svg>
             <span>Clear Names (All Tables)</span>
         </button>
+
+<button id="searchTimetableBtn" class="top-action-btn" title="Open searchable timetable">
+    🔍 Search Timetable
+</button>
     </div>
 
     <div id="collapsibleButtonBars">
@@ -3566,6 +3570,22 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 </script>
 
+
+
+<div id="timetableModal" class="modal" style="display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+  <div class="modal-content" style="background:#fff;border-radius:8px;max-width:95%;max-height:95vh;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.3);display:flex;flex-direction:column;">
+    <div class="modal-header" style="padding:10px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;">Searchable Timetable</h3>
+      <button type="button" class="modal-close-btn" onclick="document.getElementById('timetableModal').style.display='none';" style="background:none;border:none;font-size:1.5em;cursor:pointer;">×</button>
+    </div>
+    <iframe src="timetable.html" style="width:100%;height:80vh;border:none;"></iframe>
+  </div>
+</div>
+<script>
+document.getElementById('searchTimetableBtn').addEventListener('click', function() {
+    document.getElementById('timetableModal').style.display = 'flex';
+});
+</script>
 
 </body>
 </html>
