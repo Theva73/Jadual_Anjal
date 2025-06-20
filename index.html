@@ -3617,67 +3617,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-<script>
-(() => {
-  const panel   = document.getElementById('timetablePanel');
-  const handle  = document.getElementById('timetableHandle');
-  const grip    = document.getElementById('timetableGrip');
-  const openBtn = document.getElementById('searchTimetableBtn');
-  const closeBtn= document.getElementById('closeTimetablePanel');
 
-  openBtn?.addEventListener('click', () => panel.classList.remove('hidden'));
-  closeBtn?.addEventListener('click',() => panel.classList.add('hidden'));
-
-  interact(panel).draggable({
-    allowFrom: '#timetableHandle',
-    listeners:{
-      move (event){
-        const target = event.target;
-        const x = (parseFloat(target.getAttribute('data-x'))||0) + event.dx;
-        const y = (parseFloat(target.getAttribute('data-y'))||0) + event.dy;
-        target.style.transform = `translate(${x}px,${y}px)`;
-        target.setAttribute('data-x',x);
-        target.setAttribute('data-y',y);
-      }
-    }
-  });
-
-  interact(panel).resizable({
-    edges: { left:true, right:true, bottom:true, top:true },
-    listeners:{
-      move (event){
-        let { x, y } = event.target.dataset;
-        x = parseFloat(x) || 0;
-        y = parseFloat(y) || 0;
-
-        // update the element's style
-        Object.assign(event.target.style, {
-          width:  event.rect.width + 'px',
-          height: event.rect.height + 'px',
-        });
-
-        // translate when resizing from top or left edges
-        x += event.deltaRect.left;
-        y += event.deltaRect.top;
-
-        Object.assign(event.target.style, {
-          transform: 'translate(' + x + 'px,' + y + 'px)'
-        });
-
-        Object.assign(event.target.dataset, { x, y });
-      }
-    },
-    modifiers: [
-      interact.modifiers.restrictSize({
-        min: { width: 280, height: 200 },
-        max: { width: window.innerWidth * 0.95,
-               height: window.innerHeight * 0.95 }
-      })
-    ]
-  });
-
-})();
-</script>
 
 
 
@@ -3696,5 +3636,57 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   <div id="timetableGrip" class="panel-grip"></div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const panel   = document.getElementById('timetablePanel');
+  const handle  = document.getElementById('timetableHandle');
+  const grip    = document.getElementById('timetableGrip');
+  const openBtn = document.getElementById('searchTimetableBtn');
+  const closeBtn= document.getElementById('closeTimetablePanel');
+
+  /* Dynamic iframe path */
+  const iframe = document.getElementById('timetableIframe');
+  if (iframe) {
+      const base = location.href.substring(0, location.href.lastIndexOf('/') + 1);
+      iframe.src = base + 'timetable.html';
+  }
+
+  if(openBtn && panel){
+     openBtn.addEventListener('click', () => panel.classList.remove('hidden'));
+  }
+  if(closeBtn && panel){
+     closeBtn.addEventListener('click', () => panel.classList.add('hidden'));
+  }
+
+  if(typeof interact !== 'undefined' && panel){
+      interact(panel).draggable({
+        allowFrom:'#timetableHandle',
+        listeners:{ move(event){
+          const t = event.target;
+          const x = (parseFloat(t.getAttribute('data-x'))||0)+event.dx;
+          const y = (parseFloat(t.getAttribute('data-y'))||0)+event.dy;
+          t.style.transform = `translate(${x}px,${y}px)`;
+          t.setAttribute('data-x',x); t.setAttribute('data-y',y);
+        }}
+      });
+
+      interact(panel).resizable({
+        edges:{left:true,right:true,top:true,bottom:true},
+        listeners:{ move(event){
+          const t = event.target;
+          const {width,height} = event.rect;
+          t.style.width = width + 'px';
+          t.style.height = height + 'px';
+          const x = (parseFloat(t.getAttribute('data-x'))||0) + event.deltaRect.left;
+          const y = (parseFloat(t.getAttribute('data-y'))||0) + event.deltaRect.top;
+          t.style.transform = `translate(${x}px,${y}px)`;
+          t.setAttribute('data-x',x); t.setAttribute('data-y',y);
+        }},
+        modifiers:[ interact.modifiers.restrictSize({min:{width:280,height:200},max:{width:window.innerWidth*0.95,height:window.innerHeight*0.95}})]
+      });
+  }
+});
+</script>
 </body>
 </html>
