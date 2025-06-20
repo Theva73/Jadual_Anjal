@@ -3607,68 +3607,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   <div style="position:relative;width:100%;height:calc(100% - 30px);">
     <iframe src="timetable.html" style="width:100%;height:100%;border:none;pointer-events:auto;"></iframe>
-    <div id="resizeHandle" style="position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:se-resize;background:transparent;pointer-events:auto;"></div>
   </div>
 </div>
 
-<script>
-document.getElementById('searchTimetableBtn').addEventListener('click', function() {
-  document.getElementById('timetableModal').style.display = 'block';
-});
 
-(function(){
-  const modal = document.getElementById("timetableModal");
-  const header = document.getElementById("timetableHeader");
-  let isDown = false, offsetX, offsetY;
-
-  header.addEventListener('mousedown', e => {
-    isDown = true;
-    offsetX = e.clientX - modal.offsetLeft;
-    offsetY = e.clientY - modal.offsetTop;
-    header.style.cursor = 'grabbing';
-  });
-
-  document.addEventListener('mouseup', () => {
-    isDown = false;
-    header.style.cursor = 'grab';
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!isDown) return;
-    modal.style.left = (e.clientX - offsetX) + 'px';
-    modal.style.top = (e.clientY - offsetY) + 'px';
-  });
-})();
-
-(function(){
-  const modal = document.getElementById("timetableModal");
-  const handle = document.getElementById("resizeHandle");
-  let isResizing = false, startX, startY, startWidth, startHeight;
-
-  handle.addEventListener('mousedown', e => {
-    isResizing = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startWidth = modal.offsetWidth;
-    startHeight = modal.offsetHeight;
-    e.preventDefault();
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!isResizing) return;
-    modal.style.width = (startWidth + e.clientX - startX) + 'px';
-    modal.style.height = (startHeight + e.clientY - startY) + 'px';
-  });
-
-  document.addEventListener('mouseup', () => {
-    isResizing = false;
-  });
-})();
-</script>
 
 
   <iframe src="timetable.html" style="width:100%;height:calc(100% - 40px);border:none;"></iframe>
-  <div id="resizeHandle" style="position:absolute;width:25px;height:25px;right:0;bottom:0;background:#007bff;clip-path:polygon(100% 0,100% 100%,0 100%);cursor:se-resize;"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
@@ -3678,14 +3623,6 @@ document.getElementById('searchTimetableBtn').addEventListener('click', function
   const handle  = document.getElementById('timetableHandle');
   const grip    = document.getElementById('timetableGrip');
   const openBtn = document.getElementById('searchTimetableBtn');
-
-  /* ───── ensure iframe src works no matter where file is served ───── */
-  const iframe = document.getElementById('timetableIframe');
-  if (iframe) {
-    const base = location.href.substring(0, location.href.lastIndexOf('/') + 1);
-    iframe.src = base + 'timetable.html';
-  }
-
   const closeBtn= document.getElementById('closeTimetablePanel');
 
   openBtn?.addEventListener('click', () => panel.classList.remove('hidden'));
@@ -3742,39 +3679,7 @@ document.getElementById('searchTimetableBtn').addEventListener('click', function
 })();
 </script>
 
-<script>
-document.getElementById('searchTimetableBtn').addEventListener('click', function() {
-  document.getElementById('timetableModal').style.display = 'block';
-});
 
-interact('#timetableModal')
-  .draggable({
-    allowFrom: '#timetableHeader',
-    listeners: {
-      move(event) {
-        const target = event.target
-        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
-        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
-        target.style.transform = `translate(${x}px, ${y}px)`
-        target.setAttribute('data-x', x)
-        target.setAttribute('data-y', y)
-      }
-    }
-  });
-
-interact('#resizeHandle')
-  .draggable({
-    listeners: {
-      move(event) {
-        const modal = document.getElementById('timetableModal');
-        const width = modal.offsetWidth + event.dx;
-        const height = modal.offsetHeight + event.dy;
-        modal.style.width = Math.max(250, width) + 'px';
-        modal.style.height = Math.max(150, height) + 'px';
-      }
-    }
-  });
-</script>
 
 
 <!-- ░░░ Resizable / draggable timetable panel ░░░ -->
