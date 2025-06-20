@@ -3664,31 +3664,20 @@ interact('#timetableModal')
         target.setAttribute('data-y', y)
       }
     }
-  })
-  .resizable({
-    edges: { left: true, right: true, bottom: true, top: true },
+  });
+
+interact('#resizeHandle')
+  .draggable({
     listeners: {
       move(event) {
-        let { x, y } = event.target.dataset
-        x = parseFloat(x) || 0
-        y = parseFloat(y) || 0
-
-        Object.assign(event.target.style, {
-          width: `${event.rect.width}px`,
-          height: `${event.rect.height}px`,
-          transform: `translate(${x + event.deltaRect.left}px, ${y + event.deltaRect.top}px)`
-        })
-
-        event.target.dataset.x = x + event.deltaRect.left
-        event.target.dataset.y = y + event.deltaRect.top
+        const modal = document.getElementById('timetableModal');
+        const width = modal.offsetWidth + event.dx;
+        const height = modal.offsetHeight + event.dy;
+        modal.style.width = Math.max(250, width) + 'px';
+        modal.style.height = Math.max(150, height) + 'px';
       }
-    },
-    modifiers: [
-      interact.modifiers.restrictSize({
-        min: { width: 250, height: 150 }
-      })
-    ]
-  })
+    }
+  });
 </script>
 
 </body>
