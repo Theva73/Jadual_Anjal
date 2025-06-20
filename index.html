@@ -3569,12 +3569,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 
 
-<div id="timetableModal" style="display:none;position:fixed;top:80px;left:80px;width:400px;height:300px;z-index:3000;background:white;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-  <div id="timetableHeader" style="padding:6px;background:#f1f1f1;cursor:grab;user-select:none;border-bottom:1px solid #ddd;">
+<div id="timetableModal" style="display:none;position:fixed;top:80px;left:80px;width:400px;height:300px;z-index:3000;background:white;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);overflow:hidden;">
+  <div id="timetableHeader" style="padding:6px;background:#f1f1f1;cursor:grab;user-select:none;border-bottom:1px solid #ddd;pointer-events:auto;">
     Searchable Timetable 
     <button onclick="document.getElementById('timetableModal').style.display='none'" style="float:right;background:none;border:none;font-size:1.2em;">×</button>
   </div>
-  <iframe src="timetable.html" style="width:100%;height:calc(100% - 30px);border:none;"></iframe>
+  <div style="position:relative;width:100%;height:calc(100% - 30px);">
+    <iframe src="timetable.html" style="width:100%;height:100%;border:none;pointer-events:auto;"></iframe>
+    <div id="resizeHandle" style="position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:se-resize;background:transparent;pointer-events:auto;"></div>
+  </div>
 </div>
 
 <script>
@@ -3585,25 +3588,49 @@ document.getElementById('searchTimetableBtn').addEventListener('click', function
 (function(){
   const modal = document.getElementById("timetableModal");
   const header = document.getElementById("timetableHeader");
-  let offsetX, offsetY, isDown = false;
+  let isDown = false, offsetX, offsetY;
 
-  header.addEventListener('mousedown', function(e) {
+  header.addEventListener('mousedown', e => {
     isDown = true;
     offsetX = e.clientX - modal.offsetLeft;
     offsetY = e.clientY - modal.offsetTop;
     header.style.cursor = 'grabbing';
   });
 
-  document.addEventListener('mouseup', function() {
+  document.addEventListener('mouseup', () => {
     isDown = false;
     header.style.cursor = 'grab';
   });
 
-  document.addEventListener('mousemove', function(e) {
+  document.addEventListener('mousemove', e => {
     if (!isDown) return;
-    e.preventDefault();
     modal.style.left = (e.clientX - offsetX) + 'px';
     modal.style.top = (e.clientY - offsetY) + 'px';
+  });
+})();
+
+(function(){
+  const modal = document.getElementById("timetableModal");
+  const handle = document.getElementById("resizeHandle");
+  let isResizing = false, startX, startY, startWidth, startHeight;
+
+  handle.addEventListener('mousedown', e => {
+    isResizing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = modal.offsetWidth;
+    startHeight = modal.offsetHeight;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isResizing) return;
+    modal.style.width = (startWidth + e.clientX - startX) + 'px';
+    modal.style.height = (startHeight + e.clientY - startY) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    isResizing = false;
   });
 })();
 </script>
