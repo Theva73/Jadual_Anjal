@@ -3662,22 +3662,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if(typeof interact !== 'undefined' && panel){
       interact(panel).draggable({
         allowFrom:'#timetableHandle',
-        
         listeners:{ move(event){
           const t = event.target;
-          let x = (parseFloat(t.dataset.x)||0) + event.dx;
-          let y = (parseFloat(t.dataset.y)||0) + event.dy;
-
-          // clamp so panel stays within viewport
-          const maxX = window.innerWidth  - t.offsetWidth;
-          const maxY = window.innerHeight - t.offsetHeight;
-          x = Math.min(Math.max(0, x), maxX);
-          y = Math.min(Math.max(0, y), maxY);
-
+          const x = (parseFloat(t.getAttribute('data-x'))||0)+event.dx;
+          const y = (parseFloat(t.getAttribute('data-y'))||0)+event.dy;
           t.style.transform = `translate(${x}px,${y}px)`;
-          t.dataset.x = x; t.dataset.y = y;
+          t.setAttribute('data-x',x); t.setAttribute('data-y',y);
         }}
-
       });
 
       interact(panel).resizable({
@@ -3695,6 +3686,20 @@ document.addEventListener('DOMContentLoaded', () => {
         modifiers:[ interact.modifiers.restrictSize({min:{width:280,height:200},max:{width:window.innerWidth*0.95,height:window.innerHeight*0.95}})]
       });
   }
+});
+</script>
+
+<!-- Remove SMK banners completely -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // wait a little to let schedule loader inject banners
+  setTimeout(() => {
+    document.querySelectorAll('body *').forEach(el=>{
+      if(/SMK\s+Seri\s+Pulai\s+Perdana/i.test(el.textContent.trim())){
+        el.remove();
+      }
+    });
+  }, 1000);
 });
 </script>
 </body>
