@@ -19,6 +19,12 @@
             <h1 class="text-3xl md:text-4xl font-bold text-white">SMK Seri Pulai Perdana</h1>
             <p class="text-lg text-gray-400 mt-2">Complete & Verified Teacher Timetables</p>
         </header>
+<div class="flex justify-end mb-4">
+  <button id="addBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+    ➕ Add New
+  </button>
+</div>
+
         
         <div class="mb-8 sticky top-0 bg-gray-900 py-4 z-10">
             <input
@@ -28,6 +34,18 @@
                 class="w-full px-4 py-3 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
             />
         </div>
+<!-- Editable slot form (hidden by default) -->
+<form id="slotForm" class="hidden mt-6 flex flex-wrap gap-4 items-end">
+  <input class="px-3 py-2 rounded bg-gray-800 flex-1" name="teacher" placeholder="Teacher" required>
+  <input class="px-3 py-2 rounded bg-gray-800 flex-1" name="day" placeholder="Day" required>
+  <input class="px-3 py-2 rounded bg-gray-800 flex-1" name="block" placeholder="Block" required>
+  <input class="px-3 py-2 rounded bg-gray-800 flex-1" name="class" placeholder="Class" required>
+  <input class="px-3 py-2 rounded bg-gray-800 flex-1" name="venue" placeholder="Venue" required>
+  <button class="px-4 py-2 bg-blue-600 rounded text-white" type="submit">Save</button>
+</form>
+
+<section id="timetable-cards" class="grid gap-6 mt-8"></section>
+
 
         <main id="timetable-container" class="space-y-8">
             <!-- Timetable cards will be dynamically inserted here -->
@@ -510,5 +528,90 @@
         });
 
     </script>
+
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+/* TODO: replace with your Firebase config */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
+};
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const auth = getAuth(app);
+signInAnonymously(auth).catch(console.error);
+
+const col = collection(db,"timetables");
+const cards = document.getElementById("timetable-cards");
+
+/* Live render */
+onSnapshot(col, snap=>{
+  cards.innerHTML='';
+  snap.forEach(docSnap=>{
+    const d=docSnap.data();
+    cards.insertAdjacentHTML('beforeend', cardHTML(d, docSnap.id));
+  });
+});
+
+function cardHTML(d,id){
+  return `
+  <article class="bg-gray-800 rounded-lg p-4 space-y-2 shadow">
+    <div class="flex justify-between items-center">
+      <h3 class="text-lg font-semibold">${d.teacher}</h3>
+      <div class="space-x-2">
+        <button class="edit text-yellow-400" data-id="${id}">✏️</button>
+        <button class="del  text-red-400"   data-id="${id}">🗑️</button>
+      </div>
+    </div>
+    <p class="text-gray-300 text-sm">${d.day} • ${d.block}</p>
+    <p class="text-gray-200">${d.class} @ ${d.venue}</p>
+  </article>`;
+}
+
+function slotId(o){return \`\${o.teacher}_\${o.day}_\${o.block}\`.replace(/\s+/g,'');}
+async function saveSlot(o){o.lastEdit=serverTimestamp();await setDoc(doc(col, slotId(o)), o, {merge:true});}
+async function removeSlot(id){await deleteDoc(doc(col, id));}
+
+/* Add form show/hide */
+const addBtn = document.getElementById('addBtn');
+const slotForm = document.getElementById('slotForm');
+addBtn.addEventListener('click', ()=> {
+  slotForm.classList.toggle('hidden');
+  slotForm.scrollIntoView({behavior:'smooth'});
+  slotForm.reset();
+  slotForm.querySelector('input[name=teacher]').focus();
+});
+
+/* Form submit */
+slotForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data=Object.fromEntries(new FormData(slotForm).entries());
+  await saveSlot(data);
+  slotForm.reset();
+  slotForm.classList.add('hidden');
+});
+
+/* card edit / delete */
+cards.addEventListener('click', async e=>{
+  const id=e.target.dataset.id;
+  if(e.target.classList.contains('edit')){
+    const val=prompt('New Class | Venue', '');
+    if(!val) return;
+    const [cls,ven]=val.split('|');
+    const obj={};
+    if(cls) obj.class=cls.trim();
+    if(ven) obj.venue=ven.trim();
+    if(Object.keys(obj).length) await setDoc(doc(col,id), obj, {merge:true});
+  }
+  if(e.target.classList.contains('del')){
+    if(confirm('Delete this slot?')) await removeSlot(id);
+  }
+});
+</script>
+
 </body>
 </html>
