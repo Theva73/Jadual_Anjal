@@ -13,7 +13,7 @@
  summary svg{transition:transform .2s}
  details[open] summary svg{transform:rotate(90deg)}
  .subject{font-weight:700}
- .venue{color:#ef4444;font-size:.75rem}           /* red-400, small */
+ .venue  {color:#ef4444;font-size:.75rem}      /* red-400, smaller */
  .day-Monday{background:#0ea5e90d}.day-Tuesday{background:#22c55e0d}
  .day-Wed{background:#eab3080d}.day-Thursday{background:#3b82f60d}
  .day-Friday{background:#ec48990d}
@@ -30,8 +30,7 @@
 
   <div class="flex flex-wrap items-center gap-3 mb-4">
     <button id="addBtn" class="px-4 py-2 bg-blue-600 rounded text-white">➕ Add New</button>
-    <input id="search" placeholder="Search teacher / class…"
-           class="flex-1 px-3 py-2 rounded bg-gray-800 focus:outline-none">
+    <input id="search" placeholder="Search teacher / class…" class="flex-1 px-3 py-2 rounded bg-gray-800 focus:outline-none">
   </div>
 
   <!-- Add-form -->
@@ -64,7 +63,7 @@ import {getFirestore,collection,doc,setDoc,deleteDoc,onSnapshot,serverTimestamp}
 import {getAuth,signInAnonymously}
         from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* Firebase cfg */
+/* Firebase cfg (same project) */
 const cfg={apiKey:"AIzaSyDtpSlQx8VxnqtI4wOJtAANfQ1grpd4_1o",authDomain:"jadualharian-c1c02.firebaseapp.com",
  projectId:"jadualharian-c1c02",storageBucket:"jadualharian-c1c02.appspot.com",
  messagingSenderId:"69074885448",appId:"1:69074885448:web:92de8875a7df9d4f47317d"};
@@ -72,23 +71,27 @@ const app=getApps().length?getApps()[0]:initializeApp(cfg);
 const db =getFirestore(app); const col=collection(db,"timetables");
 signInAnonymously(getAuth(app)).catch(console.error);
 
-/* subject list */
-const SUBJECTS=new Set(["PH","KOKO","P","IV","MM","PNG","PI","LET","PM","BC","FIZ","KKQ",
- "RB","GE","NILAM","ASK","IB","PLC","SN","DBM","KIM","PD","RBT","TAW","PPS","BI","MMT","D","na Insan","BA"]);
+/* subject + venue lists for exact matching */
+const SUBJECTS=new Set(["PH","KOKO","P","IV","MM","PNG","PI","LET","PM","BC","FIZ","KKQ","RB","GE","NILAM","ASK","IB","PLC","SN","DBM","KIM","PD","RBT","TAW","PPS","BI","MMT","D","na","Insan","BA"]);
+const VENUES=new Set(["M.KOM 1","M3","MAK.BIO","MAK.KIM","M2","BANGKEL E","B. LUKISAN","B. DIGITAL","BANGKEL. P","B.NILAM","PAK 21 A","BANGKEL R"]);
 
 /* helpers */
-function splitClass(cls){
-  const [first,...rest]=cls.trim().split(/\s+/);
-  return {sub:first,tail:rest.join(' ')};
+function venueTag(v){return v?` <span class="venue">(${v})</span>`:'';}
+function splitFirst(tokenStr){
+  const m=tokenStr.match(/^([^/\s]+)[/ ]?(.*)$/);
+  return m?[m[1],m[2]]:[tokenStr,''];
 }
-const venueTag=v=>v?` <span class="venue">(${v})</span>`:'';
+function makeSlot(row){
+  /* guaranteed subject field: use it or derive */
+  const sub=(row.subject||'').trim()||splitFirst(row.class)[0];
+  const subjectHTML=`<span class="subject">${sub}</span>`;
 
-function fmtSlot(row){
-  /* derive subject + tail */
-  const sub=row.subject||splitClass(row.class).sub;
-  let tail=row.class;
-  if(tail.toUpperCase().startsWith(sub.toUpperCase())) tail=tail.slice(sub.length).trim();
-  return {subject:SUBJECTS.has(sub)?`<span class="subject">${sub}</span>`:sub, classTail:tail};
+  /* class w/o duplicate subject prefix */
+  let cls=row.class.trim();
+  if(cls.toUpperCase().startsWith(sub.toUpperCase()))
+    cls=cls.slice(sub.length).replace(/^[/\s]+/,'').trim();
+
+  return {subjectHTML,classLine:cls+venueTag(row.venue)};
 }
 
 /* DOM refs */
@@ -96,48 +99,50 @@ const list=document.getElementById('timetable-list');
 const search=document.getElementById('search');
 const form=document.getElementById('slotForm');
 
-/* realtime */
+/* live data */
 let cache=[];
 onSnapshot(col,s=>{cache=s.docs.map(d=>({id:d.id,...d.data()}));render()});
 search.oninput=render;
 
-/* render groups */
+/* render grouped */
 function render(){
  const q=search.value.toLowerCase();
  list.innerHTML='';
  const buckets=new Map();
  cache.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q))
-  .forEach(r=>{if(!buckets.has(r.teacher)) buckets.set(r.teacher,[]); buckets.get(r.teacher).push(r);});
-
+      .forEach(r=>{if(!buckets.has(r.teacher)) buckets.set(r.teacher,[]); buckets.get(r.teacher).push(r);});
  const dayIdx={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
+
  [...buckets.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,rows])=>{
-   rows.sort((a,b)=>dayIdx[a.day]-dayIdx[b.day]||a.block.localeCompare(b.block));
-   const det=document.createElement('details');
-   det.className="bg-gray-800 rounded shadow";
-   det.innerHTML=`<summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
+  rows.sort((a,b)=>dayIdx[a.day]-dayIdx[b.day]||a.block.localeCompare(b.block));
+
+  const det=document.createElement('details');
+  det.className="bg-gray-800 rounded shadow";
+  det.innerHTML=`<summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
      <span class="font-semibold text-lg">${teacher}</span>
      <div class="flex items-center gap-3">
        <button class="add-slot text-green-400" data-teacher="${teacher}" title="Add slot">＋</button>
-       <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><path d="M8 9l4 4 4-4"/></svg>
-     </div></summary><ul class="divide-y divide-gray-700"></ul>`;
-   const ul=det.querySelector('ul');
+       <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4 4 4-4"/></svg>
+     </div>
+   </summary><ul class="divide-y divide-gray-700"></ul>`;
+  const ul=det.querySelector('ul');
 
-   rows.forEach(r=>{
-     const {subject,classTail}=fmtSlot(r);
-     const li=document.createElement('li');
-     li.className=`flex justify-between px-4 py-2 day-${r.day.slice(0,3)}`;
-     li.innerHTML=`<div>
+  rows.forEach(r=>{
+    const slot=makeSlot(r);
+    const li=document.createElement('li');
+    li.className=`flex justify-between px-4 py-2 day-${r.day.slice(0,3)}`;
+    li.innerHTML=`<div>
         <p class="text-sm text-gray-400">${r.day} • ${r.block}</p>
-        <p>${subject}</p>
-        <p class="text-gray-200">${classTail}${venueTag(r.venue)}</p>
+        <p>${slot.subjectHTML}</p>
+        <p class="text-gray-200">${slot.classLine}</p>
       </div>
       <div class="space-x-2 shrink-0">
         <button class="edit text-yellow-400" data-id="${r.id}">✏️</button>
         <button class="del  text-red-400"   data-id="${r.id}">🗑️</button>
       </div>`;
-     ul.appendChild(li);
-   });
-   list.appendChild(det);
+    ul.appendChild(li);
+  });
+  list.appendChild(det);
  });
 }
 
@@ -162,13 +167,15 @@ form.onsubmit=async ev=>{
 /* edit / delete */
 list.addEventListener('click',async e=>{
  const id=e.target.dataset.id;if(!id) return;
+
  if(e.target.classList.contains('edit')){
-   const row=cache.find(r=>r.id===id); if(!row) return;
-   const def=`${row.subject||splitClass(row.class).sub}|${row.class}|${row.venue||''}|${row.day}|${row.block}`;
+   const row=cache.find(r=>r.id===id);
+   const def=[row.subject||splitFirst(row.class)[0],row.class,row.venue||'',row.day,row.block].join('|');
    const v=prompt('Subject|Class|Venue|Day|Block',def);if(!v) return;
    const [sub,cls,ven,day,blk]=v.split('|').map(s=>s.trim());
    await setDoc(doc(col,id),{subject:sub,class:cls,venue:ven,day,block:blk,lastEdit:serverTimestamp()},{merge:true});
  }
+
  if(e.target.classList.contains('del')){
    if(confirm('Delete this slot?')) await deleteDoc(doc(col,id));
  }
