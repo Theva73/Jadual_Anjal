@@ -30,14 +30,14 @@
   </header>
 
   <div class="flex flex-wrap items-center gap-3 mb-4">
-    <button id="addBtn" class="px-4 py-2 bg-blue-600 rounded text-white">➕ Add New</button>
+    <button id="addBtn" class="px-4 py-2 bg-blue-600 rounded text-white">➕ Add&nbsp;New</button>
     <input id="search" placeholder="Search teacher / class…"
            class="flex-1 px-3 py-2 rounded bg-gray-800 focus:outline-none">
   </div>
 
   <!-- add / edit form -->
   <form id="slotForm" class="hidden flex flex-wrap gap-3 items-end mb-6">
-    <input class="flex-1 px-3 py-2 bg-gray-800 rounded" name="teacher" placeholder="Teacher" required>
+    <input  class="flex-1 px-3 py-2 bg-gray-800 rounded" name="teacher" placeholder="Teacher" required>
     <select class="px-3 py-2 bg-gray-800 rounded" name="day" required>
       <option disabled selected value="">Day</option>
       <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
@@ -64,70 +64,74 @@ import {getFirestore,collection,doc,setDoc,deleteDoc,onSnapshot,serverTimestamp}
 import {getAuth,signInAnonymously}
         from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* Firebase config (unchanged) */
-const cfg={
-  apiKey:"AIzaSyDtpSlQx8VxnqtI4wOJtAANfQ1grpd4_1o",
-  authDomain:"jadualharian-c1c02.firebaseapp.com",
-  projectId:"jadualharian-c1c02",
-  storageBucket:"jadualharian-c1c02.appspot.com",
-  messagingSenderId:"69074885448",
-  appId:"1:69074885448:web:92de8875a7df9d4f47317d"
-};
+/* Firebase cfg */
+const cfg={apiKey:"AIzaSyDtpSlQx8VxnqtI4wOJtAANfQ1grpd4_1o",
+           authDomain:"jadualharian-c1c02.firebaseapp.com",
+           projectId:"jadualharian-c1c02",
+           storageBucket:"jadualharian-c1c02.appspot.com",
+           messagingSenderId:"69074885448",
+           appId:"1:69074885448:web:92de8875a7df9d4f47317d"};
 const app=getApps().length?getApps()[0]:initializeApp(cfg);
-const db =getFirestore(app);
-const col=collection(db,"timetables");
+const db =getFirestore(app), col=collection(db,"timetables");
 signInAnonymously(getAuth(app)).catch(console.error);
 
 /* ── helpers ─────────────────────────────────────────────── */
-const VENUE_TOKENS = new Set([
-  "M.KOM","M.KOM1","M.KOM2","M1","M2","M3","MAK.BIO","MAK.KIM",
-  "BANGKEL","BANGKEL.E","BANGKEL.R","B.LUKISAN","B.DIGITAL",
-  "BANGKEL.P","B.NILAM","PAK21A"
+const VENUE_KEYS=new Set([
+  "MKOM","MKOM1","MKOM2","M1","M2","M3","MAKBIO","MAKKIM",
+  "BLUKISAN","BDIGITAL","BANGKELE","BANGKELR","BANGKELP",
+  "BANGKEL","BNILAM","PAK21A"
 ]);
-const venueHTML=v=>v?` <span class="venue">(${v})</span>`:'';
+const norm=t=>t.replace(/[.\s]/g,'').toUpperCase();
+const venueHtml=v=>v?` <span class="venue">(${v})</span>`:'';
 
-function buildView(row){
-  let subject=(row.subject||'').trim();
-  let cls    =row.class.trim();
-  let venue  =(row.venue ||'').trim();
+function tidyRow(r){
+  let subject=(r.subject||'').trim();
+  let cls    =r.class.trim();
+  let venue  =(r.venue ||'').trim();
 
-  /* pull venue token if at end of class */
-  const tokens=cls.split(/\s+/);
+  // split by slash first to preserve compound classes like A/B/C
+  const bySlash=cls.split('/');
+  const firstChunk = bySlash[0].trim();
+  const tokens=firstChunk.split(/\s+/);
+
+  /* 1 ▸ venue at tail of whole class */
   if(!venue){
-    const last=tokens[tokens.length-1].replace(/[\s.]/g,'').toUpperCase();
-    if(VENUE_TOKENS.has(last)){ venue=tokens.pop(); cls=tokens.join(' '); }
+    const tail = norm(tokens[tokens.length-1]);
+    if(VENUE_KEYS.has(tail)){ venue=tokens.pop(); }
+    else if(tokens.length>=2){
+      const two=norm(tokens.slice(-2).join(''));
+      if(VENUE_KEYS.has(two)){
+        venue=tokens.splice(-2).join(' ');
+      }
+    }
   }
 
-  /* derive subject from FIRST token if still blank */
-  if(!subject && tokens.length){ subject=tokens[0]; }
+  /* 2 ▸ subject = very first token if still blank */
+  if(!subject && tokens.length) subject=tokens[0];
 
-  /* strip subject from start OR end of class to avoid duplicate */
-  const subU=subject.toUpperCase();
-  if(subU){
-    let changed=false;
-    if(cls.toUpperCase().startsWith(subU)){
-      cls=cls.slice(subject.length).replace(/^[/\s]+/,''); changed=true;
-    }
-    else if(cls.toUpperCase().endsWith(subU)){
-      cls=cls.slice(0,-subject.length).replace(/[/\s]+$/,''); changed=true;
-    }
-    if(changed) cls=cls.trim();
-  }
+  /* 3 ▸ drop subject duplicates anywhere in each slash-segment */
+  const dedupSegments = bySlash.map(seg=>{
+      const parts=seg.trim().split(/\s+/).filter(tok=>norm(tok)!==norm(subject));
+      return parts.join(' ');
+  }).filter(Boolean);
 
-  if(!cls) cls=subject;              // never leave class line empty
+  cls = dedupSegments.join('/').trim();
+
+  if(!cls) cls='–';               // show dash if class emptied
 
   return {
     subjLine : `<span class="subject">${subject||'–'}</span>`,
-    classLine: `${cls}${venueHTML(venue)}`
+    classLine: `${cls}${venueHtml(venue)}`
   };
 }
-/* ── DOM refs ────────────────────────────────────────────── */
+
+/* ── DOM refs */
 const list=document.getElementById('timetable-list');
 const search=document.getElementById('search');
 const form=document.getElementById('slotForm');
 const addBtn=document.getElementById('addBtn');
 
-/* ── realtime render ─────────────────────────────────────── */
+/* ── realtime */
 let cache=[];
 onSnapshot(col,s=>{cache=s.docs.map(d=>({id:d.id,...d.data()})); render();});
 search.oninput=render;
@@ -136,31 +140,29 @@ function render(){
   const q=search.value.toLowerCase();
   list.innerHTML='';
 
-  const buckets=new Map();
+  const map=new Map();
   cache.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q))
-       .forEach(r=>{
-         if(!buckets.has(r.teacher)) buckets.set(r.teacher,[]);
-         buckets.get(r.teacher).push(r);
-       });
+       .forEach(r=>{ if(!map.has(r.teacher)) map.set(r.teacher,[]); map.get(r.teacher).push(r);} );
 
-  const dayIndex={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
+  const idx={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
 
-  [...buckets.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,rows])=>{
-    rows.sort((a,b)=>dayIndex[a.day]-dayIndex[b.day]||a.block.localeCompare(b.block));
+  [...map.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,rows])=>{
+    rows.sort((a,b)=>idx[a.day]-idx[b.day]||a.block.localeCompare(b.block));
 
     const det=document.createElement('details');
     det.className="bg-gray-800 rounded shadow";
     det.innerHTML=`<summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
         <span class="font-semibold text-lg">${teacher}</span>
         <div class="flex items-center gap-2">
-          <button class="add-slot text-green-400" data-teacher="${teacher}" title="Add slot">＋</button>
+          <button class="add-slot text-green-400" data-teacher="${teacher}">＋</button>
           <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2"><path d="M8 9l4 4 4-4"/></svg>
-        </div></summary><ul class="divide-y divide-gray-700"></ul>`;
+        </div>
+      </summary><ul class="divide-y divide-gray-700"></ul>`;
     const ul=det.querySelector('ul');
 
     rows.forEach(r=>{
-      const v=buildView(r);
+      const v=tidyRow(r);
       const li=document.createElement('li');
       li.className=`flex justify-between px-4 py-2 day-${r.day.slice(0,3)}`;
       li.innerHTML=`<div>
@@ -170,16 +172,15 @@ function render(){
         </div>
         <div class="shrink-0 space-x-2">
           <button class="edit text-yellow-400" data-id="${r.id}">✏️</button>
-          <button class="del  text-red-400"   data-id="${r.id}">🗑️</button>
+          <button class="del text-red-400"  data-id="${r.id}">🗑️</button>
         </div>`;
       ul.appendChild(li);
     });
-
     list.appendChild(det);
   });
 }
 
-/* ── Add / Edit / Delete ─────────────────────────────────── */
+/* add/edit/delete the same as before */
 addBtn.onclick=()=>{form.classList.toggle('hidden');form.reset();form.teacher.focus();};
 list.addEventListener('click',e=>{
   if(e.target.classList.contains('add-slot')){
@@ -197,10 +198,10 @@ form.onsubmit=async ev=>{
 list.addEventListener('click',async e=>{
   const id=e.target.dataset.id;if(!id) return;
   if(e.target.classList.contains('edit')){
-    const row=cache.find(r=>r.id===id);
-    const def=[row.subject,row.class,row.venue||'',row.day,row.block].join('|');
-    const v=prompt('Subject|Class|Venue|Day|Block',def);if(!v) return;
-    const [s,c,ven,d,b]=v.split('|').map(x=>x.trim());
+    const r=cache.find(x=>x.id===id);
+    const def=[r.subject,r.class,r.venue||'',r.day,r.block].join('|');
+    const val=prompt('Subject|Class|Venue|Day|Block',def); if(!val) return;
+    const [s,c,ven,d,b]=val.split('|').map(x=>x.trim());
     await setDoc(doc(col,id),{subject:s,class:c,venue:ven,day:d,block:b,lastEdit:serverTimestamp()},{merge:true});
   }else if(e.target.classList.contains('del')){
     if(confirm('Delete this slot?')) await deleteDoc(doc(col,id));
