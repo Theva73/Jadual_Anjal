@@ -12,8 +12,9 @@
  summary::-webkit-details-marker{display:none}
  summary svg{transition:transform .2s}
  details[open] summary svg{transform:rotate(90deg)}
+ /* lines */
  .subject{font-weight:700}
- .venue  {color:#ef4444;font-size:.75rem}      /* red-400, smaller */
+ .venue  {color:#ef4444;font-size:.75rem}
  .day-Monday{background:#0ea5e90d}.day-Tuesday{background:#22c55e0d}
  .day-Wed{background:#eab3080d}.day-Thursday{background:#3b82f60d}
  .day-Friday{background:#ec48990d}
@@ -25,26 +26,27 @@
 
   <header class="text-center mb-6">
     <h1 class="text-3xl md:text-4xl font-bold text-white">SMK Seri Pulai Perdana</h1>
-    <p class="text-lg text-gray-400">Complete &amp; Verified Teacher Timetables</p>
+    <p class="text-lg text-gray-400">Complete & Verified Teacher Timetables</p>
   </header>
 
   <div class="flex flex-wrap items-center gap-3 mb-4">
-    <button id="addBtn" class="px-4 py-2 bg-blue-600 rounded text-white">➕ Add New</button>
-    <input id="search" placeholder="Search teacher / class…" class="flex-1 px-3 py-2 rounded bg-gray-800 focus:outline-none">
+    <button id="addBtn" class="px-4 py-2 bg-blue-600 rounded text-white">➕ Add&nbsp;New</button>
+    <input id="search" placeholder="Search teacher / class…"
+           class="flex-1 px-3 py-2 rounded bg-gray-800 focus:outline-none">
   </div>
 
   <!-- Add-form -->
   <form id="slotForm" class="hidden flex flex-wrap gap-3 items-end mb-6">
-    <input  class="flex-1 px-3 py-2 rounded bg-gray-800" name="teacher" placeholder="Teacher" required>
-    <select class="px-3 py-2 rounded bg-gray-800" name="day" required>
+    <input  class="flex-1 px-3 py-2 bg-gray-800 rounded" name="teacher" placeholder="Teacher" required>
+    <select class="px-3 py-2 bg-gray-800 rounded" name="day" required>
       <option disabled selected value="">Day</option>
       <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
       <option>Thursday</option><option>Friday</option>
     </select>
-    <input  class="px-3 py-2 rounded bg-gray-800" name="block"   placeholder="07:45-08:15" required>
-    <input  class="px-3 py-2 rounded bg-gray-800" name="subject" placeholder="Subject" required>
-    <input  class="px-3 py-2 rounded bg-gray-800" name="class"   placeholder="Class" required>
-    <input  class="px-3 py-2 rounded bg-gray-800" name="venue"   placeholder="Venue">
+    <input  class="px-3 py-2 bg-gray-800 rounded" name="block"   placeholder="07:45-08:15" required>
+    <input  class="px-3 py-2 bg-gray-800 rounded" name="subject" placeholder="Subject" required>
+    <input  class="px-3 py-2 bg-gray-800 rounded" name="class"   placeholder="Class" required>
+    <input  class="px-3 py-2 bg-gray-800 rounded" name="venue"   placeholder="Venue">
     <button class="px-4 py-2 bg-blue-600 rounded text-white">Save</button>
   </form>
 
@@ -55,7 +57,7 @@
   </footer>
 </div>
 
-<!-- Firebase & app -->
+<!-- Firebase + logic -->
 <script type="module">
 import {initializeApp,getApps} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getFirestore,collection,doc,setDoc,deleteDoc,onSnapshot,serverTimestamp}
@@ -71,112 +73,98 @@ const app=getApps().length?getApps()[0]:initializeApp(cfg);
 const db =getFirestore(app); const col=collection(db,"timetables");
 signInAnonymously(getAuth(app)).catch(console.error);
 
-/* subject + venue lists for exact matching */
-const SUBJECTS=new Set(["PH","KOKO","P","IV","MM","PNG","PI","LET","PM","BC","FIZ","KKQ","RB","GE","NILAM","ASK","IB","PLC","SN","DBM","KIM","PD","RBT","TAW","PPS","BI","MMT","D","na","Insan","BA"]);
-const VENUES=new Set(["M.KOM 1","M3","MAK.BIO","MAK.KIM","M2","BANGKEL E","B. LUKISAN","B. DIGITAL","BANGKEL. P","B.NILAM","PAK 21 A","BANGKEL R"]);
+/* ── helpers ─────────────────────────────────────────────── */
+function venueHTML(v){return v?` <span class="venue">(${v})</span>`:'';}
+function mkLines(row){
+  const subj = (row.subject||'').trim();
+  let cls    = row.class.trim();
 
-/* helpers */
-function venueTag(v){return v?` <span class="venue">(${v})</span>`:'';}
-function splitFirst(tokenStr){
-  const m=tokenStr.match(/^([^/\s]+)[/ ]?(.*)$/);
-  return m?[m[1],m[2]]:[tokenStr,''];
+  // remove duplicate subject prefix in class
+  if(subj && cls.toUpperCase().startsWith(subj.toUpperCase()))
+    cls = cls.slice(subj.length).replace(/^[/\s]+/,'').trim();
+
+  return {
+    subjLine : `<span class="subject">${subj||'–'}</span>`,
+    classLine: `${cls||'–'}${venueHTML(row.venue)}`
+  };
 }
-function makeSlot(row){
-  /* guaranteed subject field: use it or derive */
-  const sub=(row.subject||'').trim()||splitFirst(row.class)[0];
-  const subjectHTML=`<span class="subject">${sub}</span>`;
-
-  /* class w/o duplicate subject prefix */
-  let cls=row.class.trim();
-  if(cls.toUpperCase().startsWith(sub.toUpperCase()))
-    cls=cls.slice(sub.length).replace(/^[/\s]+/,'').trim();
-
-  return {subjectHTML,classLine:cls+venueTag(row.venue)};
-}
-
-/* DOM refs */
+/* ── DOM refs ────────────────────────────────────────────── */
 const list=document.getElementById('timetable-list');
+const addBtn=document.getElementById('addBtn');
 const search=document.getElementById('search');
 const form=document.getElementById('slotForm');
 
-/* live data */
+/* ── realtime load ───────────────────────────────────────── */
 let cache=[];
 onSnapshot(col,s=>{cache=s.docs.map(d=>({id:d.id,...d.data()}));render()});
 search.oninput=render;
 
-/* render grouped */
+/* ── renderer ────────────────────────────────────────────── */
 function render(){
  const q=search.value.toLowerCase();
  list.innerHTML='';
  const buckets=new Map();
  cache.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q))
-      .forEach(r=>{if(!buckets.has(r.teacher)) buckets.set(r.teacher,[]); buckets.get(r.teacher).push(r);});
+  .forEach(r=>{if(!buckets.has(r.teacher)) buckets.set(r.teacher,[]); buckets.get(r.teacher).push(r);});
+
  const dayIdx={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
-
  [...buckets.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,rows])=>{
-  rows.sort((a,b)=>dayIdx[a.day]-dayIdx[b.day]||a.block.localeCompare(b.block));
+   rows.sort((a,b)=>dayIdx[a.day]-dayIdx[b.day]||a.block.localeCompare(b.block));
 
-  const det=document.createElement('details');
-  det.className="bg-gray-800 rounded shadow";
-  det.innerHTML=`<summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
-     <span class="font-semibold text-lg">${teacher}</span>
-     <div class="flex items-center gap-3">
-       <button class="add-slot text-green-400" data-teacher="${teacher}" title="Add slot">＋</button>
-       <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4 4 4-4"/></svg>
-     </div>
-   </summary><ul class="divide-y divide-gray-700"></ul>`;
-  const ul=det.querySelector('ul');
+   const det=document.createElement('details');
+   det.className="bg-gray-800 rounded shadow";
+   det.innerHTML=`<summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
+      <span class="font-semibold text-lg">${teacher}</span>
+      <div class="flex items-center gap-2">
+        <button class="add-slot text-green-400" data-teacher="${teacher}" title="Add slot">＋</button>
+        <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4 4 4-4"/></svg>
+      </div>
+    </summary><ul class="divide-y divide-gray-700"></ul>`;
+   const ul=det.querySelector('ul');
 
-  rows.forEach(r=>{
-    const slot=makeSlot(r);
-    const li=document.createElement('li');
-    li.className=`flex justify-between px-4 py-2 day-${r.day.slice(0,3)}`;
-    li.innerHTML=`<div>
+   rows.forEach(r=>{
+     const lines=mkLines(r);
+     const li=document.createElement('li');
+     li.className=`flex justify-between px-4 py-2 day-${r.day.slice(0,3)}`;
+     li.innerHTML=`<div>
         <p class="text-sm text-gray-400">${r.day} • ${r.block}</p>
-        <p>${slot.subjectHTML}</p>
-        <p class="text-gray-200">${slot.classLine}</p>
+        <p>${lines.subjLine}</p>
+        <p class="text-gray-200">${lines.classLine}</p>
       </div>
       <div class="space-x-2 shrink-0">
         <button class="edit text-yellow-400" data-id="${r.id}">✏️</button>
         <button class="del  text-red-400"   data-id="${r.id}">🗑️</button>
       </div>`;
-    ul.appendChild(li);
-  });
-  list.appendChild(det);
+     ul.appendChild(li);
+   });
+   list.appendChild(det);
  });
 }
 
-/* Add new */
-document.getElementById('addBtn').onclick=()=>{form.classList.toggle('hidden');form.reset();form.teacher.focus();};
+/* ── Add / Edit / Delete ─────────────────────────────────── */
+addBtn.onclick=()=>{form.classList.toggle('hidden');form.reset();form.teacher.focus();};
 list.addEventListener('click',e=>{
- if(e.target.classList.contains('add-slot')){
-   form.classList.remove('hidden');form.reset();
-   form.teacher.value=e.target.dataset.teacher;form.scrollIntoView({behavior:'smooth'});
- }
+  if(e.target.classList.contains('add-slot')){
+     form.classList.remove('hidden');form.reset();
+     form.teacher.value=e.target.dataset.teacher;form.scrollIntoView({behavior:'smooth'});
+  }
 });
-
-/* submit */
 form.onsubmit=async ev=>{
- ev.preventDefault();
- const d=Object.fromEntries(new FormData(form).entries());
- const id=`${d.teacher}_${d.day}_${d.block}`.replace(/[\/\s]+/g,'');
- await setDoc(doc(col,id),{...d,lastEdit:serverTimestamp()},{merge:true});
- form.classList.add('hidden');form.reset();
+  ev.preventDefault();
+  const d=Object.fromEntries(new FormData(form).entries());
+  const id=`${d.teacher}_${d.day}_${d.block}`.replace(/[\/\s]+/g,'');
+  await setDoc(doc(col,id),{...d,lastEdit:serverTimestamp()},{merge:true});
+  form.classList.add('hidden');form.reset();
 };
-
-/* edit / delete */
 list.addEventListener('click',async e=>{
  const id=e.target.dataset.id;if(!id) return;
-
  if(e.target.classList.contains('edit')){
    const row=cache.find(r=>r.id===id);
-   const def=[row.subject||splitFirst(row.class)[0],row.class,row.venue||'',row.day,row.block].join('|');
+   const def=[row.subject,row.class,row.venue||'',row.day,row.block].join('|');
    const v=prompt('Subject|Class|Venue|Day|Block',def);if(!v) return;
-   const [sub,cls,ven,day,blk]=v.split('|').map(s=>s.trim());
-   await setDoc(doc(col,id),{subject:sub,class:cls,venue:ven,day,block:blk,lastEdit:serverTimestamp()},{merge:true});
- }
-
- if(e.target.classList.contains('del')){
+   const [s,c,vn,d,b]=v.split('|').map(x=>x.trim());
+   await setDoc(doc(col,id),{subject:s,class:c,venue:vn,day:d,block:b,lastEdit:serverTimestamp()},{merge:true});
+ }else if(e.target.classList.contains('del')){
    if(confirm('Delete this slot?')) await deleteDoc(doc(col,id));
  }
 });
