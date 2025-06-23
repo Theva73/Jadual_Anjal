@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Teacher Timetables – SMK Seri Pulai Perdana</title>
 
-<!-- Tailwind (CDN) + Inter font -->
+<!-- Tailwind (stand-alone CDN for quick demos) -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -14,19 +14,24 @@
   summary::-webkit-details-marker{display:none}
   summary svg{transition:transform .2s}
   details[open] summary svg{transform:rotate(90deg)}
-  .subject{font-weight:700}.venue{font-size:.75rem;color:#ef4444}
-
-  /* day tint */
+  .subject{font-weight:600}
+  .venue{font-size:.75rem;color:#ef4444}
+  /* tint by day ------------------------------------------------- */
   .day-Monday   {background:#0ea5e90d}
   .day-Tuesday  {background:#22c55e0d}
   .day-Wednesday{background:#eab3080d}
   .day-Thursday {background:#3b82f60d}
   .day-Friday   {background:#ec48990d}
+  /* bottom-sheet ------------------------------------------------ */
+  #sheetWrap{transition:opacity .2s ease,visibility .2s}
+  #sheet   {transition:transform .25s ease}
+  #sheetWrap.invisible{opacity:0;visibility:hidden}
+  #sheet.translate-y-full{transform:translateY(100%)}
 </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100">
-<div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+<body class="bg-gray-900 text-gray-100 min-h-full flex flex-col">
+<main class="grow max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
 
   <header class="text-center mb-6">
     <h1 class="text-3xl md:text-4xl font-bold text-white">SMK Seri Pulai Perdana</h1>
@@ -34,108 +39,88 @@
   </header>
 
   <div class="flex flex-wrap items-center gap-3 mb-4">
-    <button id="addBtn" class="px-4 py-2 bg-blue-600 rounded text-white">➕ Add slot</button>
+    <button id="addBtn" class="px-4 py-2 bg-blue-600 rounded text-white">➕ Add&nbsp;slot</button>
     <input id="search" placeholder="Search teacher / class / subject…"
            class="flex-1 px-3 py-2 rounded bg-gray-800 focus:outline-none">
   </div>
 
-  <!-- quick-add form -->
-  <form id="slotForm" class="hidden flex flex-wrap gap-3 items-end mb-6">
-    <input  class="flex-1 px-3 py-2 bg-gray-800 rounded" name="teacher" placeholder="Teacher" required>
-    <select class="px-3 py-2 bg-gray-800 rounded" name="day" required>
-      <option disabled selected value="">Day</option>
-      <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-      <option>Thursday</option><option>Friday</option>
-    </select>
-    <input  class="px-3 py-2 bg-gray-800 rounded" name="block"   placeholder="07:45-08:15" required>
-    <input  class="px-3 py-2 bg-gray-800 rounded" name="subject" placeholder="Subject">
-    <input  class="px-3 py-2 bg-gray-800 rounded" name="classes" placeholder="Classes (comma / slash separated)">
-    <input  class="px-3 py-2 bg-gray-800 rounded" name="venue"   placeholder="Venue">
-    <button class="px-4 py-2 bg-blue-600 rounded text-white">Save</button>
-  </form>
-
   <section id="timetableList" class="space-y-4"></section>
 
   <footer class="text-center mt-8 text-sm text-gray-500">
-    Data migrated &amp; normalised · Last update <span id="stamp"></span>
+    Data migrated &middot; Last update <span id="stamp"></span>
   </footer>
-</div>
+</main>
 
-<!-- ─────────── EDIT BOTTOM-SHEET ─────────── -->
-<div id="editWrap"
-     class="fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm
-            invisible opacity-0 transition">
-  <form id="editForm"
-        class="w-full max-h-[90%] overflow-auto rounded-t-2xl bg-gray-900
-               p-5 space-y-4 translate-y-full transition">
-    <header class="text-center">
-      <div class="w-12 h-1 mx-auto rounded bg-gray-600 mb-2"></div>
-      <h2 class="font-semibold text-lg">Edit slot</h2>
-    </header>
 
-    <!-- Subject -->
-    <label class="block">
+<!-- ───────────── Bottom-sheet (Add / Edit) ───────────── -->
+<div id="sheetWrap" class="fixed inset-0 flex justify-center items-end bg-black/40 invisible opacity-0">
+  <form id="sheet"
+        class="w-full max-w-lg bg-gray-800 rounded-t-2xl p-6 translate-y-full">
+    <div class="mx-auto h-1 w-16 rounded-full bg-gray-600 mb-4"></div>
+    <h2 class="text-center font-semibold text-xl mb-6" id="sheetTitle">Add slot</h2>
+
+    <label class="block mb-4">
       <span class="block text-sm text-gray-400">Subject</span>
-      <select name="subject" required
-              class="mt-1 w-full rounded bg-gray-800 p-2"></select>
+      <input name="subject" list="subjList" class="mt-1 w-full p-2 rounded bg-gray-700">
+    </label>
+    <datalist id="subjList">
+      <!-- quick list – extend to taste -->
+      <option>BM</option><option>BI</option><option>PH</option><option>MM</option>
+      <option>PJ</option><option>KOKO</option><option>IB</option>
+    </datalist>
+
+    <label class="block mb-4">
+      <span class="block text-sm text-gray-400">Classes (tap to pick ⤴)</span>
+      <select name="classes" id="classesSel" multiple
+              class="mt-1 w-full h-32 p-2 rounded bg-gray-700 overflow-y-auto"></select>
     </label>
 
-    <!-- Classes -->
-    <label class="block">
-      <span class="block text-sm text-gray-400">Classes</span>
-      <input name="classes" list="classList"
-             placeholder="Type or pick…"
-             class="mt-1 w-full rounded bg-gray-800 p-2">
-    </label>
-    <datalist id="classList"></datalist>
-
-    <!-- Venue -->
-    <label class="block">
+    <label class="block mb-4">
       <span class="block text-sm text-gray-400">Venue</span>
-      <select name="venue"
-              class="mt-1 w-full rounded bg-gray-800 p-2">
-        <option value="">—</option>
-      </select>
+      <input name="venue" list="venueList" class="mt-1 w-full p-2 rounded bg-gray-700">
     </label>
+    <datalist id="venueList">
+      <option>M.KOM1</option><option>M2</option><option>M3</option><option>BANGKEL E</option>
+      <option>B.NILAM</option><option>MAK.BIO</option><option>MAK.KIM</option>
+    </datalist>
 
-    <!-- Day & Block -->
-    <div class="flex gap-3">
+    <div class="flex gap-4 mb-6">
       <label class="flex-1">
         <span class="block text-sm text-gray-400">Day</span>
-        <select name="day" required
-                class="mt-1 w-full rounded bg-gray-800 p-2">
-          <option>Monday</option><option>Tuesday</option>
-          <option>Wednesday</option><option>Thursday</option>
-          <option>Friday</option>
+        <select name="day" class="mt-1 w-full p-2 rounded bg-gray-700" required>
+          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+          <option>Thursday</option><option>Friday</option>
         </select>
       </label>
       <label class="flex-1">
         <span class="block text-sm text-gray-400">Block</span>
-        <select name="block" required
-                class="mt-1 w-full rounded bg-gray-800 p-2"></select>
+        <select name="block" class="mt-1 w-full p-2 rounded bg-gray-700" required>
+          <option>07:15-07:45</option><option>07:45-08:15</option><option>08:15-08:45</option>
+          <option>08:45-09:15</option><option>09:45-10:15</option><option>10:15-10:45</option>
+        </select>
       </label>
     </div>
 
-    <div class="flex justify-between pt-4">
-      <button type="button" id="cancelEdit"
-              class="px-4 py-2 rounded bg-gray-700 text-white">Cancel</button>
+    <div class="flex justify-between">
+      <button type="button" id="cancelBtn"
+              class="px-4 py-2 rounded bg-gray-600 text-white">Cancel</button>
       <button class="px-4 py-2 rounded bg-blue-600 text-white">Save</button>
     </div>
   </form>
 </div>
-<!-- ─────────── /EDIT SHEET ─────────── -->
 
-<!--------------------  FIREBASE & APP  -------------------->
+
+<!----------------------------  FIREBASE & APP LOGIC  --------------------------->
 <script type="module">
-import {initializeApp, getApps}
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {initializeApp, getApps}        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getFirestore, collection, doc,
-        setDoc, deleteDoc, onSnapshot, serverTimestamp}
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        setDoc, deleteDoc, onSnapshot,
+        serverTimestamp}
+       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {getAuth, signInAnonymously}
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* ------------------------------- CONFIG ------------------------------ */
+/*  Firebase  */
 const cfg = {
   apiKey            : "AIzaSyDtpSlQx8VxnqtI4wOJtAANfQ1grpd4_1o",
   authDomain        : "jadualharian-c1c02.firebaseapp.com",
@@ -144,187 +129,151 @@ const cfg = {
   messagingSenderId : "69074885448",
   appId             : "1:69074885448:web:92de8875a7df9d4f47317d"
 };
-
 const app   = getApps().length ? getApps()[0] : initializeApp(cfg);
 const auth  = getAuth(app);
 const db    = getFirestore(app);
-const col   = collection(db,"timetables_structured");
+const col   = collection(db, "timetables_structured");
 signInAnonymously(auth).catch(console.error);
 
-/* ----------------------------- helpers ------------------------------ */
+/* ------------ helpers / refs ------------ */
 const list   = document.getElementById('timetableList');
 const search = document.getElementById('search');
-const form   = document.getElementById('slotForm');
+const stamp  = document.getElementById('stamp');
 const addBtn = document.getElementById('addBtn');
-document.getElementById('stamp').textContent =
-  new Date().toLocaleString('en-GB',{hour12:false});
 
-function toArr(str){ return str.split(/[\/,]/).map(t=>t.trim()).filter(Boolean);}
-function idFor(r){return `${r.teacher}_${r.day}_${r.block}`.replace(/[^\w-]/g,'');}
+/* bottom-sheet elements */
+const wrap       = document.getElementById('sheetWrap');
+const sheet      = document.getElementById('sheet');
+const sheetTitle = document.getElementById('sheetTitle');
+const cancelBtn  = document.getElementById('cancelBtn');
+const classSel   = document.getElementById('classesSel');
+
+stamp.textContent = new Date().toLocaleString('en-GB');
+
+function toArr(str){ return str.split(/[\/,]/).map(t=>t.trim()).filter(Boolean); }
+function idFor(r){ return `${r.teacher}_${r.day}_${r.block}`.replace(/[^\w-]/g,''); }
 function buildLine(r){
-  const subj = r.subject?.trim()||'–';
-  const cls  = Array.isArray(r.classes)?r.classes.join(', '):(r.classes||'–');
-  const ven  = r.venue?` <span class="venue">(${r.venue})</span>`:'';
-  return {
-    subjHTML:`<span class="subject">${subj}</span>`,
-    clsHTML :`${cls}${ven}`
-  };
+  const subj = r.subject?.trim() || '–';
+  const cls  = Array.isArray(r.classes) ? r.classes.join(', ') : (r.classes||'–');
+  const ven  = r.venue ? ` <span class="venue">(${r.venue})</span>` : '';
+  return { subjHTML:`<span class="subject">${subj}</span>`, clsHTML:`${cls}${ven}` };
 }
 
-/* --------------------- real-time display ---------------------- */
+/* ------------ live listener ------------ */
 let cache=[];
 onSnapshot(col,snap=>{
   cache=snap.docs.map(d=>({id:d.id,...d.data()}));
+  rebuildClassPickers();
   render();
 });
 search.oninput=render;
 
 function render(){
-  const q = search.value.toLowerCase();
-  list.innerHTML='';
-
+  const q=search.value.toLowerCase(); list.innerHTML='';
   const map=new Map();
   cache.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q))
-       .forEach(r=>{
-         if(!map.has(r.teacher)) map.set(r.teacher,[]);
-         map.get(r.teacher).push(r);
-       });
+       .forEach(r=>{ if(!map.has(r.teacher)) map.set(r.teacher,[]); map.get(r.teacher).push(r); });
 
   const dayIdx={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
 
-  [...map.entries()].sort(([a],[b])=>a.localeCompare(b))
-    .forEach(([teacher,rows])=>{
-      rows.sort((a,b)=>dayIdx[a.day]-dayIdx[b.day]||
-                       a.block.localeCompare(b.block));
+  [...map.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([t,rows])=>{
+    rows.sort((a,b)=>dayIdx[a.day]-dayIdx[b.day]||a.block.localeCompare(b.block));
 
-      const details=document.createElement('details');
-      details.className='bg-gray-800 rounded shadow';
+    const det=document.createElement('details');
+    det.className='bg-gray-800 rounded shadow';
+    const ul=document.createElement('ul');
+    ul.className='divide-y divide-gray-700';
 
-      const ul=document.createElement('ul');
-      ul.className='divide-y divide-gray-700';
-
-      rows.forEach(r=>{
-        const v=buildLine(r);
-        const li=document.createElement('li');
-        li.className=`flex justify-between px-4 py-2 day-${r.day}`;
-        li.innerHTML=`<div>
-            <p class="text-sm text-gray-400">${r.day} • ${r.block}</p>
-            <p>${v.subjHTML}</p><p class="text-gray-200">${v.clsHTML}</p>
-          </div>
-          <div class="shrink-0 space-x-2">
-            <button class="edit text-yellow-400" data-id="${r.id}">✏️</button>
-            <button class="del  text-red-400"  data-id="${r.id}">🗑️</button>
-          </div>`;
-        ul.appendChild(li);
-      });
-
-      details.innerHTML=`<summary
-          class="flex justify-between items-center px-4 py-3 cursor-pointer">
-        <span class="font-semibold text-lg">${teacher}</span>
-        <div class="flex items-center gap-2">
-          <button class="add-slot text-green-400"
-                  data-teacher="${teacher}">＋</button>
-          <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2"><path d="M8 9l4 4 4-4"/></svg>
-        </div></summary>`;
-      details.appendChild(ul);
-      list.appendChild(details);
+    rows.forEach(r=>{
+      const v=buildLine(r);
+      const li=document.createElement('li');
+      li.className=`flex justify-between px-4 py-2 day-${r.day}`;
+      li.innerHTML=`
+        <div>
+          <p class="text-sm text-gray-400">${r.day} • ${r.block}</p>
+          <p>${v.subjHTML}</p><p class="text-gray-200">${v.clsHTML}</p>
+        </div>
+        <div class="shrink-0 space-x-2">
+          <button class="edit text-yellow-400" data-id="${r.id}">✏️</button>
+          <button class="del  text-red-400"  data-id="${r.id}">🗑️</button>
+        </div>`;
+      ul.appendChild(li);
     });
+
+    det.innerHTML=`
+      <summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
+        <span class="font-semibold text-lg">${t||'—'}</span>
+        <div class="flex items-center gap-2">
+          <button class="add-slot text-green-400" data-teacher="${t}">＋</button>
+          <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4 4 4-4"/></svg>
+        </div>
+      </summary>`;
+    det.appendChild(ul); list.appendChild(det);
+  });
 }
 
-/* -------------------- quick-add form -------------------- */
-addBtn.onclick=()=>{
-  form.classList.toggle('hidden');
-  form.reset();form.teacher.focus();
-};
-form.onsubmit=async ev=>{
-  ev.preventDefault();
-  const fd=Object.fromEntries(new FormData(form).entries());
-  const payload={
-    teacher :fd.teacher.trim(),
-    day     :fd.day,
-    block   :fd.block.trim(),
-    subject :fd.subject.trim(),
-    classes :toArr(fd.classes||''),
-    venue   :fd.venue.trim(),
-    lastEdit:serverTimestamp()
-  };
-  await setDoc(doc(col,idFor(payload)),payload,{merge:true});
-  form.classList.add('hidden');form.reset();
-};
-
-/* ------------------ bottom-sheet editor ------------------ */
-const SUBJECTS=['PH','KOKO','P','IV','MM','PNG','PI','LET','PM','BC','FIZ',
-  'KKQ','RB','GE','NILAM','ASK','IB','PLC','SN','DBM','KIM','PD','RBT','TAW',
-  'PPS','BI','MMT','D','NA','BA'];
-const VENUES=['M.KOM1','M3','MAK.BIO','MAK.KIM','M2','BANGKEL E',
-  'B. LUKISAN','B. DIGITAL','BANGKEL. P','B.NILAM','PAK21A','BANGKEL R'];
-const BLOCKS=['07:15-07:45','07:45-08:15','08:15-08:45','08:45-09:15',
-  '09:15-09:45','09:45-10:15','10:15-10:45','10:45-11:15'];
-
-const wrap  = document.getElementById('editWrap');
-const sheet = document.getElementById('editForm');
-const cancelBtn=document.getElementById('cancelEdit');
-const subjSel = sheet.querySelector('select[name=subject]');
-const venueSel= sheet.querySelector('select[name=venue]');
-const blockSel= sheet.querySelector('select[name=block]');
-SUBJECTS.forEach(s=>subjSel.insertAdjacentHTML('beforeend',`<option>${s}</option>`));
-VENUES.forEach(v=>venueSel.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
-BLOCKS.forEach(b=>blockSel.insertAdjacentHTML('beforeend',`<option>${b}</option>`));
-
+/* ---------------- bottom-sheet logic ---------------- */
 let currentId=null;
-function openSheet(r){
-  currentId=r.id;
-  sheet.subject.value=r.subject||'';
-  sheet.classes.value=(r.classes||[]).join(',');
-  sheet.venue.value=r.venue||'';
-  sheet.day.value=r.day;
-  sheet.block.value=r.block;
 
+function openSheet(r={teacher:'',day:'Monday',block:'07:15-07:45',subject:'',classes:[],venue:''}){
+  currentId=r.id||idFor(r);
+  sheetTitle.textContent=r.id?'Edit slot':'Add slot';
+  sheet.teacher   ?= document.createElement('input'); // dynamic field if missing
+  /* fill fields */
+  sheet.subject.value=r.subject||'';
+  sheet.venue.value  =r.venue||'';
+  sheet.day.value    =r.day;
+  sheet.block.value  =r.block;
+  [...classSel.options].forEach(o=>o.selected=(r.classes||[]).includes(o.value));
+  /* show */
   wrap.classList.remove('invisible','opacity-0');
   sheet.classList.remove('translate-y-full');
 }
 function closeSheet(){
   wrap.classList.add('opacity-0');
-  sheet.classList.add('translate-y-full');
   setTimeout(()=>wrap.classList.add('invisible'),200);
+  sheet.classList.add('translate-y-full');
 }
+/* build class <option>s from cache */
+function rebuildClassPickers(){
+  const set=new Set();
+  cache.forEach(r=>(r.classes||[]).forEach(c=>set.add(c)));
+  if(classSel.options.length!==set.size){
+    classSel.innerHTML=[...set].sort().map(c=>`<option>${c}</option>`).join('');
+  }
+}
+
+addBtn.onclick = ()=>openSheet({teacher:''});  /* new teacher slot */
+
+list.addEventListener('click',e=>{
+  if(e.target.classList.contains('add-slot')){
+    openSheet({teacher:e.target.dataset.teacher});
+  }else if(e.target.classList.contains('edit')){
+    const r=cache.find(x=>x.id===e.target.dataset.id);
+    if(r) openSheet(r);
+  }else if(e.target.classList.contains('del')){
+    const id=e.target.dataset.id;
+    if(id && confirm('Delete this slot?')) deleteDoc(doc(col,id));
+  }
+});
+
+cancelBtn.onclick = closeSheet;
+wrap.onclick = e=>{ if(e.target===wrap) closeSheet(); };
 
 sheet.addEventListener('submit',async ev=>{
   ev.preventDefault();
-  const fd=Object.fromEntries(new FormData(sheet).entries());
-  await setDoc(doc(col,currentId),{
-    subject :fd.subject.trim(),
-    classes :toArr(fd.classes),
-    venue   :fd.venue.trim(),
-    day     :fd.day,
-    block   :fd.block,
-    lastEdit:serverTimestamp()
-  },{merge:true});
+  const cls=[...classSel.selectedOptions].map(o=>o.value);
+  const payload={
+    teacher   : currentId.split('_')[0],  // teacher segment from id
+    day       : sheet.day.value,
+    block     : sheet.block.value,
+    subject   : sheet.subject.value.trim(),
+    classes   : cls,
+    venue     : sheet.venue.value.trim(),
+    lastEdit  : serverTimestamp()
+  };
+  await setDoc(doc(col,currentId),payload,{merge:true});
   closeSheet();
-});
-cancelBtn.onclick=closeSheet;
-wrap.onclick=e=>{if(e.target===wrap)closeSheet();};
-
-/* build class datalist on every snapshot (keeps options fresh) */
-const dl=document.getElementById('classList');
-onSnapshot(col,s=>{
-  const u=new Set();
-  s.docs.forEach(d=>(d.data().classes||[]).forEach(c=>u.add(c)));
-  dl.innerHTML='';u.forEach(c=>dl.insertAdjacentHTML('beforeend',`<option>${c}</option>`));
-});
-
-/* delegate edit / delete / inline add */
-list.addEventListener('click',async e=>{
-  const id=e.target.dataset.id;
-  if(e.target.classList.contains('edit')){
-    const r=cache.find(x=>x.id===id); if(r) openSheet(r);
-  }else if(e.target.classList.contains('del')){
-    if(confirm('Delete this slot?')) await deleteDoc(doc(col,id));
-  }else if(e.target.classList.contains('add-slot')){
-    form.classList.remove('hidden');form.reset();
-    form.teacher.value=e.target.dataset.teacher;form.scrollIntoView({behavior:'smooth'});
-  }
 });
 </script>
 </body>
