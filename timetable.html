@@ -1,279 +1,282 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Teacher Timetables – SMK Seri Pulai Perdana</title>
 
-<!-- Tailwind (stand-alone CDN for quick demos) -->
+<!-- Tailwind (via CDN for convenience) -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-  body{font-family:Inter,system-ui,sans-serif}
+  html,body{height:100%;background:#0f172a;color:#e2e8f0;font-family:Inter,system-ui,sans-serif}
   summary::-webkit-details-marker{display:none}
   summary svg{transition:transform .2s}
   details[open] summary svg{transform:rotate(90deg)}
   .subject{font-weight:600}
-  .venue{font-size:.75rem;color:#ef4444}
-  /* tint by day ------------------------------------------------- */
+  .venue  {font-size:.75rem;color:#ef4444}
+  /* subtle row tint by weekday (only used in list mode) */
   .day-Monday   {background:#0ea5e90d}
   .day-Tuesday  {background:#22c55e0d}
   .day-Wednesday{background:#eab3080d}
   .day-Thursday {background:#3b82f60d}
   .day-Friday   {background:#ec48990d}
-  /* bottom-sheet ------------------------------------------------ */
-  #sheetWrap{transition:opacity .2s ease,visibility .2s}
-  #sheet   {transition:transform .25s ease}
-  #sheetWrap.invisible{opacity:0;visibility:hidden}
-  #sheet.translate-y-full{transform:translateY(100%)}
+  /* simple grid outline */
+  .grid-cell{border:1px solid rgb(30 41 59/.6)}
 </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100 min-h-full flex flex-col">
-<main class="grow max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+<body class="flex flex-col items-center py-6 sm:py-10">
+<h1 class="text-2xl sm:text-3xl font-bold mb-1">SMK Seri Pulai Perdana</h1>
+<p class="text-gray-400 mb-6 text-center">Searchable timetable – add / edit in real time</p>
 
-  <header class="text-center mb-6">
-    <h1 class="text-3xl md:text-4xl font-bold text-white">SMK Seri Pulai Perdana</h1>
-    <p class="text-lg text-gray-400">Verified Teacher Timetables</p>
-  </header>
+<!-- ───── Tabs (days) ───── -->
+<nav id="dayTabs" class="flex gap-2 mb-6">
+  <button data-day="Monday"    class="tab px-4 py-1 rounded-md">Monday</button>
+  <button data-day="Tuesday"   class="tab px-4 py-1 rounded-md">Tuesday</button>
+  <button data-day="Wednesday" class="tab px-4 py-1 rounded-md">Wednesday</button>
+  <button data-day="Thursday"  class="tab px-4 py-1 rounded-md">Thursday</button>
+  <button data-day="Friday"    class="tab px-4 py-1 rounded-md">Friday</button>
+</nav>
 
-  <div class="flex flex-wrap items-center gap-3 mb-4">
-    <button id="addBtn" class="px-4 py-2 bg-blue-600 rounded text-white">➕ Add&nbsp;slot</button>
-    <input id="search" placeholder="Search teacher / class / subject…"
-           class="flex-1 px-3 py-2 rounded bg-gray-800 focus:outline-none">
-  </div>
-
-  <section id="timetableList" class="space-y-4"></section>
-
-  <footer class="text-center mt-8 text-sm text-gray-500">
-    Data migrated &middot; Last update <span id="stamp"></span>
-  </footer>
-</main>
-
-
-<!-- ───────────── Bottom-sheet (Add / Edit) ───────────── -->
-<div id="sheetWrap" class="fixed inset-0 flex justify-center items-end bg-black/40 invisible opacity-0">
-  <form id="sheet"
-        class="w-full max-w-lg bg-gray-800 rounded-t-2xl p-6 translate-y-full">
-    <div class="mx-auto h-1 w-16 rounded-full bg-gray-600 mb-4"></div>
-    <h2 class="text-center font-semibold text-xl mb-6" id="sheetTitle">Add slot</h2>
-
-    <label class="block mb-4">
-      <span class="block text-sm text-gray-400">Subject</span>
-      <input name="subject" list="subjList" class="mt-1 w-full p-2 rounded bg-gray-700">
-    </label>
-    <datalist id="subjList">
-      <!-- quick list – extend to taste -->
-      <option>BM</option><option>BI</option><option>PH</option><option>MM</option>
-      <option>PJ</option><option>KOKO</option><option>IB</option>
-    </datalist>
-
-    <label class="block mb-4">
-      <span class="block text-sm text-gray-400">Classes (tap to pick ⤴)</span>
-      <select name="classes" id="classesSel" multiple
-              class="mt-1 w-full h-32 p-2 rounded bg-gray-700 overflow-y-auto"></select>
-    </label>
-
-    <label class="block mb-4">
-      <span class="block text-sm text-gray-400">Venue</span>
-      <input name="venue" list="venueList" class="mt-1 w-full p-2 rounded bg-gray-700">
-    </label>
-    <datalist id="venueList">
-      <option>M.KOM1</option><option>M2</option><option>M3</option><option>BANGKEL E</option>
-      <option>B.NILAM</option><option>MAK.BIO</option><option>MAK.KIM</option>
-    </datalist>
-
-    <div class="flex gap-4 mb-6">
-      <label class="flex-1">
-        <span class="block text-sm text-gray-400">Day</span>
-        <select name="day" class="mt-1 w-full p-2 rounded bg-gray-700" required>
-          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-          <option>Thursday</option><option>Friday</option>
-        </select>
-      </label>
-      <label class="flex-1">
-        <span class="block text-sm text-gray-400">Block</span>
-        <select name="block" class="mt-1 w-full p-2 rounded bg-gray-700" required>
-          <option>07:15-07:45</option><option>07:45-08:15</option><option>08:15-08:45</option>
-          <option>08:45-09:15</option><option>09:45-10:15</option><option>10:15-10:45</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="flex justify-between">
-      <button type="button" id="cancelBtn"
-              class="px-4 py-2 rounded bg-gray-600 text-white">Cancel</button>
-      <button class="px-4 py-2 rounded bg-blue-600 text-white">Save</button>
-    </div>
-  </form>
+<!-- ───── Top toolbar ───── -->
+<div class="flex flex-wrap gap-3 items-center mb-4 max-w-6xl w-full">
+  <button id="addBtn" class="px-5 py-2 bg-blue-600 rounded text-white shrink-0">＋ Add slot</button>
+  <input id="search" placeholder="Search teacher / class / subject"
+         class="flex-1 min-w-[12rem] px-3 py-2 rounded bg-slate-800 focus:outline-none">
+  <button id="listBtn"  class="view px-4 py-2 rounded bg-slate-700">List</button>
+  <button id="gridBtn"  class="view px-4 py-2 rounded bg-slate-700">Grid</button>
 </div>
 
+<!-- ───── quick-add / edit form ───── -->
+<form id="slotForm" class="hidden flex flex-wrap gap-3 items-end mb-6 max-w-6xl w-full bg-slate-800 p-4 rounded">
+  <input  class="flex-1 px-3 py-2 bg-slate-700 rounded" name="teacher" placeholder="Teacher" required>
+  <select class="px-3 py-2 bg-slate-700 rounded"   name="day" required>
+    <option disabled selected value="">Day</option>
+    <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+    <option>Thursday</option><option>Friday</option>
+  </select>
+  <input  class="px-3 py-2 bg-slate-700 rounded w-28" name="block"   placeholder="07:45-08:15" required>
+  <input  class="px-3 py-2 bg-slate-700 rounded w-28" name="subject" placeholder="Subject">
+  <input  class="px-3 py-2 bg-slate-700 rounded w-40" name="classes" placeholder="Classes (comma/slash)">
+  <input  class="px-3 py-2 bg-slate-700 rounded w-24" name="venue"   placeholder="Venue">
+  <button class="px-5 py-2 bg-blue-600 rounded text-white">Save</button>
+</form>
 
-<!----------------------------  FIREBASE & APP LOGIC  --------------------------->
+<!-- ───── timetable containers ───── -->
+<section id="timetableList" class="max-w-6xl w-full space-y-4"></section>
+<section id="timetableGrid" class="hidden max-w-6xl w-full overflow-x-auto"></section>
+
+<footer class="text-sm text-gray-500 mt-8">Last update <span id="stamp"></span></footer>
+
+<!-- ─────────────────────────────  FIREBASE + APP LOGIC  ───────────────────────────── -->
 <script type="module">
-import {initializeApp, getApps}        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore, collection, doc,
-        setDoc, deleteDoc, onSnapshot,
-        serverTimestamp}
-       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {getAuth, signInAnonymously}
-       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+/*────────────────  1. Firebase  ────────────────*/
+import {initializeApp,getApps}            from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously}        from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,doc,
+        setDoc,deleteDoc,onSnapshot,
+        serverTimestamp}                  from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/*  Firebase  */
-const cfg = {
-  apiKey            : "AIzaSyDtpSlQx8VxnqtI4wOJtAANfQ1grpd4_1o",
-  authDomain        : "jadualharian-c1c02.firebaseapp.com",
-  projectId         : "jadualharian-c1c02",
-  storageBucket     : "jadualharian-c1c02.appspot.com",
-  messagingSenderId : "69074885448",
-  appId             : "1:69074885448:web:92de8875a7df9d4f47317d"
+/* your project credentials */
+const cfg={
+  apiKey:"AIzaSyDtpSlQx8VxnqtI4wOJtAANfQ1grpd4_1o",
+  authDomain:"jadualharian-c1c02.firebaseapp.com",
+  projectId:"jadualharian-c1c02",
+  storageBucket:"jadualharian-c1c02.appspot.com",
+  messagingSenderId:"69074885448",
+  appId:"1:69074885448:web:92de8875a7df9d4f47317d"
 };
-const app   = getApps().length ? getApps()[0] : initializeApp(cfg);
-const auth  = getAuth(app);
-const db    = getFirestore(app);
-const col   = collection(db, "timetables_structured");
-signInAnonymously(auth).catch(console.error);
+const app = getApps().length?getApps()[0]:initializeApp(cfg);
+const auth= getAuth(app);
+const db  = getFirestore(app);
+const col = collection(db,"timetables_structured");
+await signInAnonymously(auth).catch(console.error);
 
-/* ------------ helpers / refs ------------ */
-const list   = document.getElementById('timetableList');
-const search = document.getElementById('search');
-const stamp  = document.getElementById('stamp');
-const addBtn = document.getElementById('addBtn');
+/*────────────────  2. DOM refs & helpers  ────────────────*/
+const listEl = document.getElementById("timetableList");
+const gridEl = document.getElementById("timetableGrid");
+const search = document.getElementById("search");
+const form   = document.getElementById("slotForm");
+const addBtn = document.getElementById("addBtn");
+const stamp  = document.getElementById("stamp");
+stamp.textContent=new Date().toLocaleString("en-GB");
+const tabs=[...document.querySelectorAll(".tab")];
+const views=[...document.querySelectorAll(".view")];
 
-/* bottom-sheet elements */
-const wrap       = document.getElementById('sheetWrap');
-const sheet      = document.getElementById('sheet');
-const sheetTitle = document.getElementById('sheetTitle');
-const cancelBtn  = document.getElementById('cancelBtn');
-const classSel   = document.getElementById('classesSel');
+let activeDay="Monday";
+let viewMode="Grid";
 
-stamp.textContent = new Date().toLocaleString('en-GB');
+/* time blocks used in grid header (adjust as needed) */
+const TIME_BLOCKS=[
+ "07:45-08:15","08:15-08:45","08:45-09:15","09:15-09:45",
+ "09:45-10:15","10:15-10:45","10:45-11:15","11:15-11:45",
+ "11:45-12:15","12:15-12:45","12:45-13:15","13:15-13:45","13:45-14:15"
+];
+const dayIdx={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
+const toArr=s=>s.split(/[\/,]/).map(t=>t.trim()).filter(Boolean);
+const idFor=r=>`${r.teacher}_${r.day}_${r.block}`.replace(/[^\w-]/g,"");
+const buildLine=r=>{
+  const subj=r.subject?.trim()||"–";
+  const cls =Array.isArray(r.classes)?r.classes.join(", "):(r.classes||"–");
+  const ven =r.venue?` <span class="venue">(${r.venue})</span>`:"";
+  return{ subj:`<span class="subject">${subj}</span>`, cls:`${cls}${ven}`};
+};
 
-function toArr(str){ return str.split(/[\/,]/).map(t=>t.trim()).filter(Boolean); }
-function idFor(r){ return `${r.teacher}_${r.day}_${r.block}`.replace(/[^\w-]/g,''); }
-function buildLine(r){
-  const subj = r.subject?.trim() || '–';
-  const cls  = Array.isArray(r.classes) ? r.classes.join(', ') : (r.classes||'–');
-  const ven  = r.venue ? ` <span class="venue">(${r.venue})</span>` : '';
-  return { subjHTML:`<span class="subject">${subj}</span>`, clsHTML:`${cls}${ven}` };
-}
-
-/* ------------ live listener ------------ */
+/*────────────────  3. Data & realtime listener  ────────────────*/
 let cache=[];
 onSnapshot(col,snap=>{
   cache=snap.docs.map(d=>({id:d.id,...d.data()}));
-  rebuildClassPickers();
   render();
 });
 search.oninput=render;
 
+tabs.forEach(btn=>{
+  btn.onclick=()=>{
+    tabs.forEach(t=>t.classList.remove("bg-blue-600","text-white"));
+    btn.classList.add("bg-blue-600","text-white");
+    activeDay=btn.dataset.day;
+    render();
+  };
+});
+views.forEach(btn=>{
+  btn.onclick=()=>{
+    views.forEach(v=>v.classList.remove("bg-blue-600","text-white"));
+    btn.classList.add("bg-blue-600","text-white");
+    viewMode=btn.textContent.trim();
+    render();
+  };
+});
+/* init default highlight */
+tabs[0].click();       // Monday
+views[1].click();      // Grid
+
 function render(){
-  const q=search.value.toLowerCase(); list.innerHTML='';
-  const map=new Map();
-  cache.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q))
-       .forEach(r=>{ if(!map.has(r.teacher)) map.set(r.teacher,[]); map.get(r.teacher).push(r); });
+  const q=search.value.toLowerCase();
+  const dayData=cache.filter(r=>r.day===activeDay && (!q||JSON.stringify(r).toLowerCase().includes(q)));
 
-  const dayIdx={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
+  if(viewMode==="List"){ renderList(dayData); }
+  else                { renderGrid(dayData); }
+}
 
-  [...map.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([t,rows])=>{
-    rows.sort((a,b)=>dayIdx[a.day]-dayIdx[b.day]||a.block.localeCompare(b.block));
+function renderList(rows){
+  gridEl.classList.add("hidden");
+  listEl.classList.remove("hidden");
+  listEl.innerHTML="";
 
-    const det=document.createElement('details');
-    det.className='bg-gray-800 rounded shadow';
-    const ul=document.createElement('ul');
-    ul.className='divide-y divide-gray-700';
+  const grouped=new Map();
+  rows.forEach(r=>{
+    if(!grouped.has(r.teacher))grouped.set(r.teacher,[]);
+    grouped.get(r.teacher).push(r);
+  });
 
-    rows.forEach(r=>{
+  [...grouped.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,slots])=>{
+    slots.sort((a,b)=>a.block.localeCompare(b.block));
+    const details=document.createElement("details");
+    details.className="bg-slate-800 rounded shadow";
+
+    const ul=document.createElement("ul");
+    ul.className="divide-y divide-slate-700";
+
+    slots.forEach(r=>{
       const v=buildLine(r);
-      const li=document.createElement('li');
-      li.className=`flex justify-between px-4 py-2 day-${r.day}`;
-      li.innerHTML=`
-        <div>
-          <p class="text-sm text-gray-400">${r.day} • ${r.block}</p>
-          <p>${v.subjHTML}</p><p class="text-gray-200">${v.clsHTML}</p>
-        </div>
-        <div class="shrink-0 space-x-2">
-          <button class="edit text-yellow-400" data-id="${r.id}">✏️</button>
-          <button class="del  text-red-400"  data-id="${r.id}">🗑️</button>
-        </div>`;
-      ul.appendChild(li);
+      ul.insertAdjacentHTML("beforeend",`
+        <li class="flex justify-between px-4 py-2 day-${r.day}">
+          <div>
+            <p class="text-sm text-slate-400">${r.block}</p>
+            <p>${v.subj}</p><p class="text-slate-200">${v.cls}</p>
+          </div>
+          <div class="shrink-0 space-x-2">
+            <button class="edit text-yellow-400" data-id="${r.id}">✏️</button>
+            <button class="del  text-red-400"  data-id="${r.id}">🗑️</button>
+          </div>
+        </li>`);
     });
 
-    det.innerHTML=`
+    details.innerHTML=`
       <summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
-        <span class="font-semibold text-lg">${t||'—'}</span>
-        <div class="flex items-center gap-2">
-          <button class="add-slot text-green-400" data-teacher="${t}">＋</button>
-          <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4 4 4-4"/></svg>
-        </div>
+        <span class="font-semibold text-lg">${teacher}</span>
+        <button class="add-slot text-green-400" data-teacher="${teacher}">＋</button>
       </summary>`;
-    det.appendChild(ul); list.appendChild(det);
+    details.appendChild(ul);
+    listEl.appendChild(details);
   });
 }
 
-/* ---------------- bottom-sheet logic ---------------- */
-let currentId=null;
+function renderGrid(rows){
+  listEl.classList.add("hidden");
+  gridEl.classList.remove("hidden");
 
-function openSheet(r={teacher:'',day:'Monday',block:'07:15-07:45',subject:'',classes:[],venue:''}){
-  currentId=r.id||idFor(r);
-  sheetTitle.textContent=r.id?'Edit slot':'Add slot';
-  sheet.teacher   ?= document.createElement('input'); // dynamic field if missing
-  /* fill fields */
-  sheet.subject.value=r.subject||'';
-  sheet.venue.value  =r.venue||'';
-  sheet.day.value    =r.day;
-  sheet.block.value  =r.block;
-  [...classSel.options].forEach(o=>o.selected=(r.classes||[]).includes(o.value));
-  /* show */
-  wrap.classList.remove('invisible','opacity-0');
-  sheet.classList.remove('translate-y-full');
+  /* build header row */
+  let html=`<table class="select-none border-collapse w-full text-center text-sm">
+  <thead><tr>
+    <th class="sticky left-0 bg-slate-900 z-10 w-44">Nama/Masa</th>`;
+  TIME_BLOCKS.forEach(b=>html+=`<th class="px-1">${b.replace("-","<br>")}</th>`);
+  html+="</tr></thead><tbody>";
+
+  /* group by teacher */
+  const grouped=new Map();
+  rows.forEach(r=>{
+    if(!grouped.has(r.teacher))grouped.set(r.teacher,[]);
+    grouped.get(r.teacher).push(r);
+  });
+
+  [...grouped.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,slots])=>{
+    const map=new Map(slots.map(s=>[s.block,s]));           // quick lookup
+    html+=`<tr>
+      <th class="sticky left-0 bg-slate-900 text-left px-2">${teacher}</th>`;
+    TIME_BLOCKS.forEach(b=>{
+      const r=map.get(b)||{};
+      const {subj,cls}=buildLine(r);
+      html+=`<td class="grid-cell align-top px-1 py-0.5">
+               ${r.subject?subj:""}${r.classes?`<br><span class="text-xs">${cls}</span>`:""}
+             </td>`;
+    });
+    html+="</tr>";
+  });
+
+  html+="</tbody></table>";
+  gridEl.innerHTML=html;
 }
-function closeSheet(){
-  wrap.classList.add('opacity-0');
-  setTimeout(()=>wrap.classList.add('invisible'),200);
-  sheet.classList.add('translate-y-full');
-}
-/* build class <option>s from cache */
-function rebuildClassPickers(){
-  const set=new Set();
-  cache.forEach(r=>(r.classes||[]).forEach(c=>set.add(c)));
-  if(classSel.options.length!==set.size){
-    classSel.innerHTML=[...set].sort().map(c=>`<option>${c}</option>`).join('');
-  }
-}
 
-addBtn.onclick = ()=>openSheet({teacher:''});  /* new teacher slot */
+/*────────────  4. CRUD actions  ────────────*/
+addBtn.onclick=()=>{form.classList.toggle("hidden");form.reset();form.teacher.focus();};
 
-list.addEventListener('click',e=>{
-  if(e.target.classList.contains('add-slot')){
-    openSheet({teacher:e.target.dataset.teacher});
-  }else if(e.target.classList.contains('edit')){
-    const r=cache.find(x=>x.id===e.target.dataset.id);
-    if(r) openSheet(r);
-  }else if(e.target.classList.contains('del')){
-    const id=e.target.dataset.id;
-    if(id && confirm('Delete this slot?')) deleteDoc(doc(col,id));
-  }
-});
-
-cancelBtn.onclick = closeSheet;
-wrap.onclick = e=>{ if(e.target===wrap) closeSheet(); };
-
-sheet.addEventListener('submit',async ev=>{
-  ev.preventDefault();
-  const cls=[...classSel.selectedOptions].map(o=>o.value);
-  const payload={
-    teacher   : currentId.split('_')[0],  // teacher segment from id
-    day       : sheet.day.value,
-    block     : sheet.block.value,
-    subject   : sheet.subject.value.trim(),
-    classes   : cls,
-    venue     : sheet.venue.value.trim(),
-    lastEdit  : serverTimestamp()
+form.onsubmit=async e=>{
+  e.preventDefault();
+  const fd=Object.fromEntries(new FormData(form).entries());
+  const data={
+    teacher:fd.teacher.trim(),
+    day:fd.day,
+    block:fd.block.trim(),
+    subject:fd.subject.trim(),
+    classes:toArr(fd.classes||""),
+    venue:fd.venue.trim(),
+    lastEdit:serverTimestamp()
   };
-  await setDoc(doc(col,currentId),payload,{merge:true});
-  closeSheet();
+  await setDoc(doc(col,idFor(data)),data,{merge:true});
+  form.classList.add("hidden");form.reset();
+};
+
+document.body.addEventListener("click",async e=>{
+  const id=e.target.dataset.id;
+  if(e.target.classList.contains("edit")){
+    const r=cache.find(x=>x.id===id);
+    if(!r)return;
+    const val=prompt("Subject|Classes|Venue|Block",`${r.subject}|${(r.classes||[]).join(",")}|${r.venue||""}|${r.block}`);
+    if(val){
+      const [s,c,v,b]=val.split("|").map(t=>t.trim());
+      await setDoc(doc(col,id),{subject:s,classes:toArr(c),venue:v,block:b,lastEdit:serverTimestamp()},{merge:true});
+    }
+  }else if(e.target.classList.contains("del")){
+    if(confirm("Delete this slot?"))await deleteDoc(doc(col,id));
+  }else if(e.target.classList.contains("add-slot")){
+    form.classList.remove("hidden");form.reset();
+    form.teacher.value=e.target.dataset.teacher;
+    form.day.value=activeDay;
+    form.scrollIntoView({behavior:"smooth"});
+  }
 });
 </script>
 </body>
