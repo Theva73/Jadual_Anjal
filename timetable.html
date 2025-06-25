@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Teacher Timetables – SMK Seri Pulai Perdana</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  html,body{height:100%;background:#0f172a;color:#e2e8f0;font-family:Inter,system-ui,sans-serif}
+  html,body{background:#0f172a;color:#e2e8f0;font-family:Inter,system-ui,sans-serif}
   .subject{font-weight:600}
   .venue  {font-size:.75rem;color:#ef4444}
   .day-Monday   {background:#0ea5e90d}
@@ -20,9 +19,8 @@
 </head>
 <body class="flex flex-col items-center py-6 sm:py-10">
 <h1 class="text-2xl sm:text-3xl font-bold mb-1">SMK Seri Pulai Perdana</h1>
-<p class="text-gray-400 mb-6 text-center">Searchable timetable – add / edit in real time</p>
+<p class="text-gray-400 mb-6 text-center">Searchable timetable (JSON version)</p>
 
-<!-- ───── Tabs (days) ───── -->
 <nav id="dayTabs" class="flex gap-2 mb-6">
   <button data-day="Monday"    class="tab px-4 py-1 rounded-md">Monday</button>
   <button data-day="Tuesday"   class="tab px-4 py-1 rounded-md">Tuesday</button>
@@ -30,63 +28,94 @@
   <button data-day="Thursday"  class="tab px-4 py-1 rounded-md">Thursday</button>
   <button data-day="Friday"    class="tab px-4 py-1 rounded-md">Friday</button>
 </nav>
-
-<!-- ───── Top toolbar ───── -->
 <div class="flex flex-wrap gap-3 items-center mb-4 max-w-6xl w-full">
-  <button id="addBtn" class="px-5 py-2 bg-blue-600 rounded text-white shrink-0">＋ Add slot</button>
   <input id="search" placeholder="Search teacher / class / subject"
          class="flex-1 min-w-[12rem] px-3 py-2 rounded bg-slate-800 focus:outline-none">
   <button id="listBtn"  class="view px-4 py-2 rounded bg-slate-700">List</button>
   <button id="gridBtn"  class="view px-4 py-2 rounded bg-slate-700">Grid</button>
+  <!--
+  <input type="file" id="fileInput" accept=".json">
+  -->
 </div>
 
-<!-- ───── quick-add / edit form ───── -->
-<form id="slotForm" class="hidden flex flex-wrap gap-3 items-end mb-6 max-w-6xl w-full bg-slate-800 p-4 rounded">
-  <input  class="flex-1 px-3 py-2 bg-slate-700 rounded" name="teacher" placeholder="Teacher" required>
-  <select class="px-3 py-2 bg-slate-700 rounded"   name="day" required>
-    <option disabled selected value="">Day</option>
-    <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-    <option>Thursday</option><option>Friday</option>
-  </select>
-  <input  class="px-3 py-2 bg-slate-700 rounded w-28" name="block"   placeholder="07:45-08:15" required>
-  <input  class="px-3 py-2 bg-slate-700 rounded w-28" name="subject" placeholder="Subject">
-  <input  class="px-3 py-2 bg-slate-700 rounded w-40" name="class" placeholder="Class">
-  <input  class="px-3 py-2 bg-slate-700 rounded w-24" name="venue"   placeholder="Venue">
-  <button class="px-5 py-2 bg-blue-600 rounded text-white">Save</button>
-</form>
-
-<!-- ───── timetable containers ───── -->
 <section id="timetableList" class="max-w-6xl w-full space-y-4"></section>
 <section id="timetableGrid" class="hidden max-w-6xl w-full overflow-x-auto"></section>
-
 <footer class="text-sm text-gray-500 mt-8">Last update <span id="stamp"></span></footer>
 
 <script type="module">
-import {initializeApp,getApps}            from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,signInAnonymously}        from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,collection,doc,
-        setDoc,deleteDoc,onSnapshot,
-        serverTimestamp}                  from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// --- Drop your JSON content here for static testing
+// Replace the below require with your actual JSON content
+// (If you want to use <input type="file">, uncomment and use that section)
 
-const cfg={
-  apiKey:"AIzaSyDtpSlQx8VxnqtI4wOJtAANfQ1grpd4_1o",
-  authDomain:"jadualharian-c1c02.firebaseapp.com",
-  projectId:"jadualharian-c1c02",
-  storageBucket:"jadualharian-c1c02.appspot.com",
-  messagingSenderId:"69074885448",
-  appId:"1:69074885448:web:92de8875a7df9d4f47317d"
-};
-const app = getApps().length?getApps()[0]:initializeApp(cfg);
-const auth= getAuth(app);
-const db  = getFirestore(app);
-const col = collection(db,"timetable_structure"); // <-- NEW structure
-await signInAnonymously(auth).catch(console.error);
+const timetableData = /* Paste your JSON here, e.g.:
+{
+  "timetables": {
+    "TEACHER_NAME": {
+      "name": "TEACHER_NAME",
+      "sessions": [
+        {
+          "day": "Monday",
+          "startTime": "07:15",
+          "endTime": "07:45",
+          "subject": "BM",
+          "class": "4TS1/4TS2",
+          "venue": "B. LUKISAN"
+        },
+        ...
+      ]
+    },
+    ...
+  }
+}
+*/
+// For real file, comment the next line and use file picker!
+await fetch('Download the unified_timetables.json')
+  .then(r => r.json())
+  .then(d => window.timetableData = d)
+  .catch(() => alert("Failed to load timetable JSON file!"));
 
+// Build TIME_BLOCKS from all session pairs
+function getAllTimeBlocks(data) {
+  const blocks = new Set();
+  Object.values(data.timetables).forEach(teacher => {
+    teacher.sessions.forEach(session => {
+      if(session.startTime && session.endTime) {
+        blocks.add(`${session.startTime}-${session.endTime}`);
+      }
+    });
+  });
+  // Sort blocks by start time (as string)
+  return Array.from(blocks).sort((a, b) => {
+    const [h1,m1] = a.split('-')[0].split(':').map(Number);
+    const [h2,m2] = b.split('-')[0].split(':').map(Number);
+    return h1 !== h2 ? h1-h2 : m1-m2;
+  });
+}
+
+function sessionsToRows(data) {
+  const rows = [];
+  Object.values(data.timetables).forEach(teacher => {
+    teacher.sessions.forEach(session => {
+      rows.push({
+        teacher: (teacher.name||"").replace(/^"(.*)"$/,'$1'),
+        day: session.day,
+        block: session.startTime && session.endTime ? `${session.startTime}-${session.endTime}` : "",
+        subject: session.subject,
+        class: session.class,
+        venue: session.venue
+      });
+    });
+  });
+  return rows;
+}
+
+const TIME_BLOCKS = getAllTimeBlocks(timetableData);
+let cache = sessionsToRows(timetableData);
+
+// UI controls
+const search = document.getElementById("search");
 const listEl = document.getElementById("timetableList");
 const gridEl = document.getElementById("timetableGrid");
-const search = document.getElementById("search");
-const form   = document.getElementById("slotForm");
-const addBtn = document.getElementById("addBtn");
 const stamp  = document.getElementById("stamp");
 stamp.textContent=new Date().toLocaleString("en-GB");
 const tabs=[...document.querySelectorAll(".tab")];
@@ -94,27 +123,6 @@ const views=[...document.querySelectorAll(".view")];
 
 let activeDay="Monday";
 let viewMode="Grid";
-const TIME_BLOCKS=[
- "07:45-08:15","08:15-08:45","08:45-09:15","09:15-09:45",
- "09:45-10:15","10:15-10:45","10:45-11:15","11:15-11:45",
- "11:45-12:15","12:15-12:45","12:45-13:15","13:15-13:45","13:45-14:15"
-];
-const toArr=s=>s.split(/[\/,]/).map(t=>t.trim()).filter(Boolean);
-const idFor=r=>`${(r.teacher||"").replace(/\s+/g,"_")}_${r.day||""}_${(r.block||"").replace(/\W/g,"")}`.replace(/[^\w-]/g,"");
-const stripQuote=s=>(typeof s==="string"?s.replace(/^"(.*)"$/, '$1'):s);
-const buildLine=r=>{
-  const subj=stripQuote(r.subject||"–");
-  const cls =stripQuote(r.class   ||"–");
-  const ven =r.venue?` <span class="venue">(${stripQuote(r.venue)})</span>`:"";
-  return{ subj:`<span class="subject">${subj}</span>`, cls:`${cls}${ven}`};
-};
-
-let cache=[];
-onSnapshot(col,snap=>{
-  cache=snap.docs.map(d=>({id:d.id,...d.data()}));
-  render();
-});
-search.oninput=render;
 
 tabs.forEach(btn=>{
   btn.onclick=()=>{
@@ -135,10 +143,19 @@ views.forEach(btn=>{
 tabs[0].click();
 views[1].click();
 
+search.oninput=render;
+
+function stripQuote(s){return(typeof s==="string"?s.replace(/^"(.*)"$/, '$1'):s);}
+function buildLine(r){
+  const subj=stripQuote(r.subject||"–");
+  const cls =stripQuote(r.class   ||"–");
+  const ven =r.venue?` <span class="venue">(${stripQuote(r.venue)})</span>`:"";
+  return{ subj:`<span class="subject">${subj}</span>`, cls:`${cls}${ven}`};
+}
+
 function render(){
   const q=search.value.toLowerCase();
   const dayData=cache.filter(r=>r.day===activeDay && (!q||JSON.stringify(r).toLowerCase().includes(q)));
-
   if(viewMode==="List"){ renderList(dayData); }
   else                { renderGrid(dayData); }
 }
@@ -167,16 +184,11 @@ function renderList(rows){
             <p class="text-sm text-slate-400">${r.block}</p>
             <p>${v.subj}</p><p class="text-slate-200">${v.cls}</p>
           </div>
-          <div class="shrink-0 space-x-2">
-            <button class="edit text-yellow-400" data-id="${r.id}">✏️</button>
-            <button class="del  text-red-400"  data-id="${r.id}">🗑️</button>
-          </div>
         </li>`);
     });
     details.innerHTML=`
       <summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
         <span class="font-semibold text-lg">${teacher}</span>
-        <button class="add-slot text-green-400" data-teacher="${teacher}">＋</button>
       </summary>`;
     details.appendChild(ul);
     listEl.appendChild(details);
@@ -214,49 +226,7 @@ function renderGrid(rows){
   gridEl.innerHTML=html;
 }
 
-addBtn.onclick=()=>{form.classList.toggle("hidden");form.reset();form.teacher.focus();};
-
-form.onsubmit=async e=>{
-  e.preventDefault();
-  const fd=Object.fromEntries(new FormData(form).entries());
-  const data={
-    teacher: stripQuote(fd.teacher.trim()),
-    day: fd.day,
-    block: fd.block.trim(),
-    subject: stripQuote(fd.subject.trim()),
-    class: stripQuote(fd.class.trim()),
-    venue: stripQuote(fd.venue.trim()),
-    lastEdit: serverTimestamp()
-  };
-  await setDoc(doc(col, idFor(data)), data, {merge:true});
-  form.classList.add("hidden");form.reset();
-};
-
-document.body.addEventListener("click",async e=>{
-  const id=e.target.dataset.id;
-  if(e.target.classList.contains("edit")){
-    const r=cache.find(x=>x.id===id);
-    if(!r)return;
-    const val=prompt("Subject|Class|Venue|Block",`${stripQuote(r.subject)}|${stripQuote(r.class||"")}|${stripQuote(r.venue||"")}|${r.block}`);
-    if(val){
-      const [s,c,v,b]=val.split("|").map(t=>stripQuote(t.trim()));
-      await setDoc(doc(col,id),{
-        subject: s,
-        class: c,
-        venue: v,
-        block: b,
-        lastEdit: serverTimestamp()
-      },{merge:true});
-    }
-  }else if(e.target.classList.contains("del")){
-    if(confirm("Delete this slot?"))await deleteDoc(doc(col,id));
-  }else if(e.target.classList.contains("add-slot")){
-    form.classList.remove("hidden");form.reset();
-    form.teacher.value=stripQuote(e.target.dataset.teacher);
-    form.day.value=activeDay;
-    form.scrollIntoView({behavior:"smooth"});
-  }
-});
+render();
 </script>
 </body>
 </html>
