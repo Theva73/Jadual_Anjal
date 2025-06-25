@@ -91,7 +91,7 @@ const cfg={
 const app = getApps().length?getApps()[0]:initializeApp(cfg);
 const auth= getAuth(app);
 const db  = getFirestore(app);
-const col = collection(db,"timetable_structure");
+const col = collection(db,"timetables");
 await signInAnonymously(auth).catch(console.error);
 
 /*────────────────  2. DOM refs & helpers  ────────────────*/
