@@ -4,29 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Teacher Timetables – SMK Seri Pulai Perdana</title>
-
-<!-- Tailwind (via CDN for convenience) -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
   html,body{height:100%;background:#0f172a;color:#e2e8f0;font-family:Inter,system-ui,sans-serif}
-  summary::-webkit-details-marker{display:none}
-  summary svg{transition:transform .2s}
-  details[open] summary svg{transform:rotate(90deg)}
   .subject{font-weight:600}
   .venue  {font-size:.75rem;color:#ef4444}
-  /* subtle row tint by weekday (only used in list mode) */
   .day-Monday   {background:#0ea5e90d}
   .day-Tuesday  {background:#22c55e0d}
   .day-Wednesday{background:#eab3080d}
   .day-Thursday {background:#3b82f60d}
   .day-Friday   {background:#ec48990d}
-  /* simple grid outline */
   .grid-cell{border:1px solid rgb(30 41 59/.6)}
 </style>
 </head>
-
 <body class="flex flex-col items-center py-6 sm:py-10">
 <h1 class="text-2xl sm:text-3xl font-bold mb-1">SMK Seri Pulai Perdana</h1>
 <p class="text-gray-400 mb-6 text-center">Searchable timetable – add / edit in real time</p>
@@ -59,7 +50,7 @@
   </select>
   <input  class="px-3 py-2 bg-slate-700 rounded w-28" name="block"   placeholder="07:45-08:15" required>
   <input  class="px-3 py-2 bg-slate-700 rounded w-28" name="subject" placeholder="Subject">
-  <input  class="px-3 py-2 bg-slate-700 rounded w-40" name="classes" placeholder="Classes (comma/slash)">
+  <input  class="px-3 py-2 bg-slate-700 rounded w-40" name="class" placeholder="Class">
   <input  class="px-3 py-2 bg-slate-700 rounded w-24" name="venue"   placeholder="Venue">
   <button class="px-5 py-2 bg-blue-600 rounded text-white">Save</button>
 </form>
@@ -70,16 +61,13 @@
 
 <footer class="text-sm text-gray-500 mt-8">Last update <span id="stamp"></span></footer>
 
-<!-- ─────────────────────────────  FIREBASE + APP LOGIC  ───────────────────────────── -->
 <script type="module">
-/*────────────────  1. Firebase  ────────────────*/
 import {initializeApp,getApps}            from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously}        from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,collection,doc,
         setDoc,deleteDoc,onSnapshot,
         serverTimestamp}                  from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* your project credentials */
 const cfg={
   apiKey:"AIzaSyDtpSlQx8VxnqtI4wOJtAANfQ1grpd4_1o",
   authDomain:"jadualharian-c1c02.firebaseapp.com",
@@ -91,10 +79,9 @@ const cfg={
 const app = getApps().length?getApps()[0]:initializeApp(cfg);
 const auth= getAuth(app);
 const db  = getFirestore(app);
-const col = collection(db,"timetable_structure");
+const col = collection(db,"timetable_structure"); // <-- NEW structure
 await signInAnonymously(auth).catch(console.error);
 
-/*────────────────  2. DOM refs & helpers  ────────────────*/
 const listEl = document.getElementById("timetableList");
 const gridEl = document.getElementById("timetableGrid");
 const search = document.getElementById("search");
@@ -107,24 +94,20 @@ const views=[...document.querySelectorAll(".view")];
 
 let activeDay="Monday";
 let viewMode="Grid";
-
-/* time blocks used in grid header (adjust as needed) */
 const TIME_BLOCKS=[
  "07:45-08:15","08:15-08:45","08:45-09:15","09:15-09:45",
  "09:45-10:15","10:15-10:45","10:45-11:15","11:15-11:45",
  "11:45-12:15","12:15-12:45","12:45-13:15","13:15-13:45","13:45-14:15"
 ];
-const dayIdx={Monday:0,Tuesday:1,Wednesday:2,Thursday:3,Friday:4};
 const toArr=s=>s.split(/[\/,]/).map(t=>t.trim()).filter(Boolean);
-const idFor=r=>`${r.teacher}_${r.day}_${r.block}`.replace(/[^\w-]/g,"");
+const idFor=r=>`${(r.teacher||"").replace(/\s+/g,"_")}_${r.day||""}_${(r.block||"").replace(/\W/g,"")}`.replace(/[^\w-]/g,"");
 const buildLine=r=>{
-  const subj=r.subject?.trim()||"–";
-  const cls =Array.isArray(r.classes)?r.classes.join(", "):(r.classes||"–");
-  const ven =r.venue?` <span class="venue">(${r.venue})</span>`:"";
+  const subj=(r.subject||"–").replace(/^"(.*)"$/, '$1');
+  const cls =(r.class   ||"–").replace(/^"(.*)"$/, '$1');
+  const ven =r.venue?` <span class="venue">(${r.venue.replace(/^"(.*)"$/, '$1')})</span>`:"";
   return{ subj:`<span class="subject">${subj}</span>`, cls:`${cls}${ven}`};
 };
 
-/*────────────────  3. Data & realtime listener  ────────────────*/
 let cache=[];
 onSnapshot(col,snap=>{
   cache=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -148,9 +131,8 @@ views.forEach(btn=>{
     render();
   };
 });
-/* init default highlight */
-tabs[0].click();       // Monday
-views[1].click();      // Grid
+tabs[0].click();
+views[1].click();
 
 function render(){
   const q=search.value.toLowerCase();
@@ -164,21 +146,18 @@ function renderList(rows){
   gridEl.classList.add("hidden");
   listEl.classList.remove("hidden");
   listEl.innerHTML="";
-
   const grouped=new Map();
   rows.forEach(r=>{
-    if(!grouped.has(r.teacher))grouped.set(r.teacher,[]);
-    grouped.get(r.teacher).push(r);
+    const teacher = (r.teacher||"–").replace(/^"(.*)"$/, '$1');
+    if(!grouped.has(teacher))grouped.set(teacher,[]);
+    grouped.get(teacher).push(r);
   });
-
   [...grouped.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,slots])=>{
     slots.sort((a,b)=>a.block.localeCompare(b.block));
     const details=document.createElement("details");
     details.className="bg-slate-800 rounded shadow";
-
     const ul=document.createElement("ul");
     ul.className="divide-y divide-slate-700";
-
     slots.forEach(r=>{
       const v=buildLine(r);
       ul.insertAdjacentHTML("beforeend",`
@@ -193,7 +172,6 @@ function renderList(rows){
           </div>
         </li>`);
     });
-
     details.innerHTML=`
       <summary class="flex justify-between items-center px-4 py-3 cursor-pointer">
         <span class="font-semibold text-lg">${teacher}</span>
@@ -207,55 +185,49 @@ function renderList(rows){
 function renderGrid(rows){
   listEl.classList.add("hidden");
   gridEl.classList.remove("hidden");
-
-  /* build header row */
   let html=`<table class="select-none border-collapse w-full text-center text-sm">
   <thead><tr>
     <th class="sticky left-0 bg-slate-900 z-10 w-44">Nama/Masa</th>`;
   TIME_BLOCKS.forEach(b=>html+=`<th class="px-1">${b.replace("-","<br>")}</th>`);
   html+="</tr></thead><tbody>";
-
-  /* group by teacher */
   const grouped=new Map();
   rows.forEach(r=>{
-    if(!grouped.has(r.teacher))grouped.set(r.teacher,[]);
-    grouped.get(r.teacher).push(r);
+    const teacher = (r.teacher||"–").replace(/^"(.*)"$/, '$1');
+    if(!grouped.has(teacher))grouped.set(teacher,[]);
+    grouped.get(teacher).push(r);
   });
-
   [...grouped.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,slots])=>{
-    const map=new Map(slots.map(s=>[s.block,s]));           // quick lookup
+    const map=new Map(slots.map(s=>[s.block,s]));
     html+=`<tr>
       <th class="sticky left-0 bg-slate-900 text-left px-2">${teacher}</th>`;
     TIME_BLOCKS.forEach(b=>{
       const r=map.get(b)||{};
       const {subj,cls}=buildLine(r);
       html+=`<td class="grid-cell align-top px-1 py-0.5">
-               ${r.subject?subj:""}${r.classes?`<br><span class="text-xs">${cls}</span>`:""}
+               ${r.subject?subj:""}${r.class?`<br><span class="text-xs">${cls}</span>`:""}
              </td>`;
     });
     html+="</tr>";
   });
-
   html+="</tbody></table>";
   gridEl.innerHTML=html;
 }
 
-/*────────────  4. CRUD actions  ────────────*/
 addBtn.onclick=()=>{form.classList.toggle("hidden");form.reset();form.teacher.focus();};
 
 form.onsubmit=async e=>{
   e.preventDefault();
   const fd=Object.fromEntries(new FormData(form).entries());
   const data={
-    teacher:fd.teacher.trim(),
-    day:fd.day,
-    block:fd.block.trim(),
-    subject:fd.subject.trim(),
-    classes:toArr(fd.classes||""),
-    venue:fd.venue.trim(),
-    lastEdit:serverTimestamp()
+    teacher: fd.teacher.trim().replace(/^"(.*)"$/, '$1'),
+    day: fd.day,
+    block: fd.block.trim(),
+    subject: fd.subject.trim().replace(/^"(.*)"$/, '$1'),
+    class: fd.class.trim().replace(/^"(.*)"$/, '$1'),
+    venue: fd.venue.trim().replace(/^"(.*)"$/, '$1'),
+    lastEdit: serverTimestamp()
   };
-  await setDoc(doc(col,idFor(data)),data,{merge:true});
+  await setDoc(doc(col, idFor(data)), data, {merge:true});
   form.classList.add("hidden");form.reset();
 };
 
@@ -264,10 +236,16 @@ document.body.addEventListener("click",async e=>{
   if(e.target.classList.contains("edit")){
     const r=cache.find(x=>x.id===id);
     if(!r)return;
-    const val=prompt("Subject|Classes|Venue|Block",`${r.subject}|${(r.classes||[]).join(",")}|${r.venue||""}|${r.block}`);
+    const val=prompt("Subject|Class|Venue|Block",`${r.subject}|${r.class||""}|${r.venue||""}|${r.block}`);
     if(val){
       const [s,c,v,b]=val.split("|").map(t=>t.trim());
-      await setDoc(doc(col,id),{subject:s,classes:toArr(c),venue:v,block:b,lastEdit:serverTimestamp()},{merge:true});
+      await setDoc(doc(col,id),{
+        subject: s.replace(/^"(.*)"$/, '$1'),
+        class: c.replace(/^"(.*)"$/, '$1'),
+        venue: v.replace(/^"(.*)"$/, '$1'),
+        block: b.replace(/^"(.*)"$/, '$1'),
+        lastEdit: serverTimestamp()
+      },{merge:true});
     }
   }else if(e.target.classList.contains("del")){
     if(confirm("Delete this slot?"))await deleteDoc(doc(col,id));
