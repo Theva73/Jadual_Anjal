@@ -101,10 +101,11 @@ const TIME_BLOCKS=[
 ];
 const toArr=s=>s.split(/[\/,]/).map(t=>t.trim()).filter(Boolean);
 const idFor=r=>`${(r.teacher||"").replace(/\s+/g,"_")}_${r.day||""}_${(r.block||"").replace(/\W/g,"")}`.replace(/[^\w-]/g,"");
+const stripQuote=s=>(typeof s==="string"?s.replace(/^"(.*)"$/, '$1'):s);
 const buildLine=r=>{
-  const subj=(r.subject||"–").replace(/^"(.*)"$/, '$1');
-  const cls =(r.class   ||"–").replace(/^"(.*)"$/, '$1');
-  const ven =r.venue?` <span class="venue">(${r.venue.replace(/^"(.*)"$/, '$1')})</span>`:"";
+  const subj=stripQuote(r.subject||"–");
+  const cls =stripQuote(r.class   ||"–");
+  const ven =r.venue?` <span class="venue">(${stripQuote(r.venue)})</span>`:"";
   return{ subj:`<span class="subject">${subj}</span>`, cls:`${cls}${ven}`};
 };
 
@@ -148,12 +149,12 @@ function renderList(rows){
   listEl.innerHTML="";
   const grouped=new Map();
   rows.forEach(r=>{
-    const teacher = (r.teacher||"–").replace(/^"(.*)"$/, '$1');
+    const teacher = stripQuote(r.teacher||"–");
     if(!grouped.has(teacher))grouped.set(teacher,[]);
     grouped.get(teacher).push(r);
   });
-  [...grouped.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,slots])=>{
-    slots.sort((a,b)=>a.block.localeCompare(b.block));
+  [...grouped.entries()].sort(([a],[b])=>(a||"").localeCompare(b||"")).forEach(([teacher,slots])=>{
+    slots.sort((a,b)=>(a.block||"").localeCompare(b.block||""));
     const details=document.createElement("details");
     details.className="bg-slate-800 rounded shadow";
     const ul=document.createElement("ul");
@@ -192,11 +193,11 @@ function renderGrid(rows){
   html+="</tr></thead><tbody>";
   const grouped=new Map();
   rows.forEach(r=>{
-    const teacher = (r.teacher||"–").replace(/^"(.*)"$/, '$1');
+    const teacher = stripQuote(r.teacher||"–");
     if(!grouped.has(teacher))grouped.set(teacher,[]);
     grouped.get(teacher).push(r);
   });
-  [...grouped.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([teacher,slots])=>{
+  [...grouped.entries()].sort(([a],[b])=>(a||"").localeCompare(b||"")).forEach(([teacher,slots])=>{
     const map=new Map(slots.map(s=>[s.block,s]));
     html+=`<tr>
       <th class="sticky left-0 bg-slate-900 text-left px-2">${teacher}</th>`;
@@ -219,12 +220,12 @@ form.onsubmit=async e=>{
   e.preventDefault();
   const fd=Object.fromEntries(new FormData(form).entries());
   const data={
-    teacher: fd.teacher.trim().replace(/^"(.*)"$/, '$1'),
+    teacher: stripQuote(fd.teacher.trim()),
     day: fd.day,
     block: fd.block.trim(),
-    subject: fd.subject.trim().replace(/^"(.*)"$/, '$1'),
-    class: fd.class.trim().replace(/^"(.*)"$/, '$1'),
-    venue: fd.venue.trim().replace(/^"(.*)"$/, '$1'),
+    subject: stripQuote(fd.subject.trim()),
+    class: stripQuote(fd.class.trim()),
+    venue: stripQuote(fd.venue.trim()),
     lastEdit: serverTimestamp()
   };
   await setDoc(doc(col, idFor(data)), data, {merge:true});
@@ -236,14 +237,14 @@ document.body.addEventListener("click",async e=>{
   if(e.target.classList.contains("edit")){
     const r=cache.find(x=>x.id===id);
     if(!r)return;
-    const val=prompt("Subject|Class|Venue|Block",`${r.subject}|${r.class||""}|${r.venue||""}|${r.block}`);
+    const val=prompt("Subject|Class|Venue|Block",`${stripQuote(r.subject)}|${stripQuote(r.class||"")}|${stripQuote(r.venue||"")}|${r.block}`);
     if(val){
-      const [s,c,v,b]=val.split("|").map(t=>t.trim());
+      const [s,c,v,b]=val.split("|").map(t=>stripQuote(t.trim()));
       await setDoc(doc(col,id),{
-        subject: s.replace(/^"(.*)"$/, '$1'),
-        class: c.replace(/^"(.*)"$/, '$1'),
-        venue: v.replace(/^"(.*)"$/, '$1'),
-        block: b.replace(/^"(.*)"$/, '$1'),
+        subject: s,
+        class: c,
+        venue: v,
+        block: b,
         lastEdit: serverTimestamp()
       },{merge:true});
     }
@@ -251,7 +252,7 @@ document.body.addEventListener("click",async e=>{
     if(confirm("Delete this slot?"))await deleteDoc(doc(col,id));
   }else if(e.target.classList.contains("add-slot")){
     form.classList.remove("hidden");form.reset();
-    form.teacher.value=e.target.dataset.teacher;
+    form.teacher.value=stripQuote(e.target.dataset.teacher);
     form.day.value=activeDay;
     form.scrollIntoView({behavior:"smooth"});
   }
