@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -403,6 +404,26 @@
             padding: 6px 12px; font-size: 0.9em; transition: background-color 0.2s;
         }
         .name-item button:hover { background-color: #c82333; }
+        /* Additional styling for new hide/unhide button and hidden names */
+        .name-item button.hide-btn {
+            /* Use a neutral grey tone so it doesn't compete with the red delete button */
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 12px;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+            margin-right: 6px;
+        }
+        .name-item button.hide-btn:hover {
+            background-color: #5a6268;
+        }
+        /* Visually indicate hidden names with reduced opacity and strike through */
+        .hidden-name {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
         .highlighted { background-color: #cfe2ff !important; font-weight: bold; }
         
         #sharedScheduleListContainer, #restoreBackupListContainer {
@@ -877,6 +898,79 @@
     let isAutoSaving = false;
     let lastSavedState = null;
     let isInitialStateSet = false;
+
+    // --- Hidden Names Feature ---
+    // Arrays to store names hidden from autocomplete and schedule selection.
+    // These are persisted in localStorage per appId and per session (pagi/petang).
+    let hiddenNamesPagiShared = [];
+    let hiddenNamesPetangShared = [];
+
+    /**
+     * Construct a storage key for hidden names for a given session.
+     * Uses the appId so multiple deployments don't clash in localStorage.
+     * @param {string} session 'pagi' or 'petang'
+     * @returns {string} fully qualified key
+     */
+    function getHiddenNamesKey(session) {
+        return `hidden_names_${session}_${appId}`;
+    }
+
+    /**
+     * Load hidden names lists from localStorage.  If keys are missing or invalid
+     * the arrays will be reset to empty.  This should be called once on page
+     * initialization before rendering any name lists.
+     */
+    function loadHiddenNames() {
+        try {
+            const pagi = JSON.parse(localStorage.getItem(getHiddenNamesKey('pagi')));
+            const petang = JSON.parse(localStorage.getItem(getHiddenNamesKey('petang')));
+            hiddenNamesPagiShared = Array.isArray(pagi) ? pagi : [];
+            hiddenNamesPetangShared = Array.isArray(petang) ? petang : [];
+        } catch (e) {
+            hiddenNamesPagiShared = [];
+            hiddenNamesPetangShared = [];
+        }
+    }
+
+    /**
+     * Persist the hidden names lists to localStorage.  Errors are logged but not thrown.
+     */
+    function saveHiddenNames() {
+        try {
+            localStorage.setItem(getHiddenNamesKey('pagi'), JSON.stringify(hiddenNamesPagiShared));
+            localStorage.setItem(getHiddenNamesKey('petang'), JSON.stringify(hiddenNamesPetangShared));
+        } catch (e) {
+            console.warn('Unable to save hidden names to localStorage', e);
+        }
+    }
+
+    /**
+     * Toggle the hidden state of a given name for the current session.  If the
+     * name is already hidden it will be unhidden, otherwise it will be added
+     * to the hidden list.  After toggling the lists are saved back to
+     * localStorage.
+     *
+     * @param {string} session 'pagi' or 'petang'
+     * @param {string} name the name to toggle
+     */
+    function toggleHideName(session, name) {
+        const trimmed = String(name || '').trim();
+        if (!trimmed) return;
+        if (session === 'pagi') {
+            if (hiddenNamesPagiShared.includes(trimmed)) {
+                hiddenNamesPagiShared = hiddenNamesPagiShared.filter(n => n !== trimmed);
+            } else {
+                hiddenNamesPagiShared.push(trimmed);
+            }
+        } else {
+            if (hiddenNamesPetangShared.includes(trimmed)) {
+                hiddenNamesPetangShared = hiddenNamesPetangShared.filter(n => n !== trimmed);
+            } else {
+                hiddenNamesPetangShared.push(trimmed);
+            }
+        }
+        saveHiddenNames();
+    }
 
     // --- DOM Element References (initialized in DOMContentLoaded) ---
     let scheduleTitleElement, tablesContainer, tableTabs, nameModal, nameModalContent, nameModalHeader,
@@ -2384,7 +2478,10 @@ function detectAndMarkClashes(){
     // --- Autocomplete Functions ---
     function showCellAutocompleteSuggestions(cell, inputText) {
         if (!autocompleteSuggestionsDiv) return;
-        const namesForAutocomplete = currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared;
+        // Use shared names but exclude any names hidden for the current session
+        const hiddenArrayCurrent = currentNameListSession === 'pagi' ? hiddenNamesPagiShared : hiddenNamesPetangShared;
+        const namesForAutocomplete = (currentNameListSession === 'pagi' ? namesPagiShared : namesPetangShared)
+            .filter(name => !hiddenArrayCurrent.includes(String(name || '')));
         let textForMatchingInput = String(inputText || '').split(' // ')[0]; 
         const wordsForMatching = textForMatchingInput.split(/\s+/).filter(word => !word.startsWith('*')); 
         const textForMatching = wordsForMatching.join(' ').toLowerCase().trim(); 
@@ -2916,8 +3013,46 @@ function addNewIndependentTable() {
         const normalizedFilterText = String(filterText || '').toLowerCase().trim();
         if (!Array.isArray(namesToRender)) { nameListContainer.innerHTML = '<p>Error: Name list invalid.</p>'; return; }
         const filteredNames = namesToRender.filter(name => String(name || '').toLowerCase().trim().includes(normalizedFilterText));
-        if (filteredNames.length === 0) { nameListContainer.innerHTML = `<p>${normalizedFilterText ? 'No names match.' : `No names in ${currentNameListSession} session.`}</p>`; return; }
-        filteredNames.forEach(name => { const itemDiv = document.createElement('div'); itemDiv.className = 'name-item'; const nameStr = String(name || ''); const safeNameAttr = nameStr.replace(/"/g, '&quot;'); itemDiv.innerHTML = `<span data-name="${safeNameAttr}" title="Select '${safeNameAttr}'">${nameStr}</span><button data-name-delete="${safeNameAttr}" title="Delete '${safeNameAttr}'">Delete</button>`; nameListContainer.appendChild(itemDiv); });
+        if (filteredNames.length === 0) {
+            // When no names match the search text or none exist, display an informative message.
+            nameListContainer.innerHTML = '<p>' + (normalizedFilterText ? 'No names match.' : ('No names in ' + currentNameListSession + ' session.')) + '</p>';
+            return;
+        }
+        // Determine which names are hidden for the current session so we can mark them and toggle visibility.
+        const hiddenArrayCurrent = currentNameListSession === 'pagi' ? hiddenNamesPagiShared : hiddenNamesPetangShared;
+        filteredNames.forEach(name => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'name-item';
+            const nameStr = String(name || '');
+            const safeNameAttr = nameStr.replace(/"/g, '&quot;');
+            const isHidden = hiddenArrayCurrent.includes(nameStr);
+            const hideBtnText = isHidden ? 'Unhide' : 'Hide';
+            // Build span element for the name
+            const span = document.createElement('span');
+            // Store the raw name in the dataset so toggleHideName operates on the actual value
+            span.dataset.name = nameStr;
+            span.title = 'Select \'' + safeNameAttr + '\'';
+            span.textContent = nameStr;
+            if (isHidden) span.classList.add('hidden-name');
+            // Button to hide/unhide the name
+            const hideBtn = document.createElement('button');
+            hideBtn.dataset.nameTogglehide = nameStr;
+            hideBtn.dataset.action = isHidden ? 'unhide' : 'hide';
+            hideBtn.classList.add('hide-btn');
+            hideBtn.title = hideBtnText + ' \'' + safeNameAttr + '\'';
+            hideBtn.textContent = hideBtnText;
+            // Delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.dataset.nameDelete = nameStr;
+            deleteBtn.title = 'Delete \'' + safeNameAttr + '\'';
+            deleteBtn.textContent = 'Delete';
+            // Assemble and append
+            itemDiv.appendChild(span);
+            itemDiv.appendChild(hideBtn);
+            itemDiv.appendChild(deleteBtn);
+            nameListContainer.appendChild(itemDiv);
+        });
+        // Re-apply highlighting to the selected name (if any)
         highlightSelectedNameInList(selectedNameFromList);
     }
     function selectNameForCellInsertion(name) {
@@ -3169,6 +3304,17 @@ function addNewIndependentTable() {
         if(nameListContainer) nameListContainer.addEventListener('click', async (e) => {
             const nameItemSpan = e.target.closest('.name-item span[data-name]');
             const deleteButton = e.target.closest('.name-item button[data-name-delete]');
+            const toggleHideButton = e.target.closest('.name-item button[data-name-togglehide]');
+            // If the hide/unhide button was clicked, toggle the hidden state and re-render the list
+            if (toggleHideButton) {
+                const nameToToggle = toggleHideButton.dataset.nameTogglehide;
+                // The current session is determined by the active tab
+                toggleHideName(currentNameListSession, nameToToggle);
+                // Refresh the list using the current filter text if search box is present
+                const currentFilter = searchNameInputElement ? searchNameInputElement.value : '';
+                renderNameListFromFirestore(currentFilter);
+                return;
+            }
             if (nameItemSpan) selectNameForCellInsertion(nameItemSpan.dataset.name);
             else if (deleteButton) await deleteNameFromSharedSessionInFirestore(deleteButton.dataset.nameDelete);
         });
@@ -3300,6 +3446,9 @@ function addNewIndependentTable() {
         autocompleteSuggestionsDiv = document.createElement('div'); 
         autocompleteSuggestionsDiv.id = 'autocompleteSuggestions'; 
         document.body.appendChild(autocompleteSuggestionsDiv);
+        // Load hidden name settings from localStorage so that previously hidden names
+        // remain hidden across page reloads. This must run before the name list is first rendered.
+        loadHiddenNames();
         
         // Initialize UI elements that might need it
         if (controlsTogglerElement && collapsibleButtonBarsElement) { 
