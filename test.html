@@ -714,8 +714,11 @@
         <div class="bar" id="rowColManipulationBar">
             <button id="addRowAboveBtn" title="Add a new row above the currently selected/clicked row">⬆️ Row Above</button>
             <button id="addRowBelowBtn" title="Add a new row below the currently selected/clicked row">⬇️ Row Below</button>
+            <button id="addRowEndBtn" title="Add a new row at the end of the table" onclick="addRowEndToActiveTable()">➕ Add Row</button>
             <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Col Left</button>
             <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Col Right</button>
+            <button id="addColEndBtn" title="Add a new column at the end of the table" onclick="addColumnEndToActiveTable()">➕ Add Col</button>
+            <button id="addDateRowBtn" title="Insert a new date header row spanning all columns at the top of the current table" onclick="restoreDateHeaderRowToActiveTable()">➕ Date Row</button>
             <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Del Row</button>
             <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Del Col</button>
         </div>
@@ -1075,6 +1078,16 @@
                 tableElement.tHead.appendChild(dateRow);
             }
         } else {
+            // If the date row already contains a single merged cell, simply update its colSpan
+            // and return without splitting it into individual header cells.  This allows custom
+            // merged date headers (e.g., "3 Nov 2025" spanning all columns) to persist.
+            if (dateRow.cells.length === 1) {
+                const singleCell = dateRow.cells[0];
+                if (singleCell && singleCell.colSpan !== numCols) {
+                    singleCell.colSpan = numCols;
+                }
+                return;
+            }
             const currentCellCount = dateRow.cells.length;
             if (currentCellCount < numCols) {
                 for (let i = currentCellCount; i < numCols; i++) {
@@ -2835,6 +2848,78 @@ function addNewIndependentTable() {
         addColumnToTable(table, insertAtIndex);
         ensureDateHeaderRowExists(table); 
         rebuildAndRenderSummary(); updateAllMergeOverlays();
+    }
+
+    // --- Additional row/column append functions ---
+    /**
+     * Add a new row to the end of the currently active table.  This uses the
+     * same structure as adding rows above/below but always appends after the
+     * last existing row.  If no active table or no table body exists, it
+     * silently aborts.
+     */
+    function addRowEndToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table || !table.tBodies || table.tBodies.length === 0) return;
+        const body = table.tBodies[0];
+        const timeSlotHeaderRow = Array.from(table.tHead.rows).find(r => !r.classList.contains('date-header-row'));
+        const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
+        const insertAtIndex = body.rows.length; // append at end
+        addRowToTable(body, insertAtIndex, numCols);
+        rebuildAndRenderSummary();
+        updateAllMergeOverlays();
+    }
+
+    /**
+     * Create or restore a single merged date header row at the top of the currently
+     * active table.  This helper first ensures a date header row exists via
+     * ensureDateHeaderRowExists(), then removes any existing cells in that row
+     * and inserts a single <th> element whose colSpan spans all time slots.  The
+     * new cell is made contentEditable so the user can type a date (e.g.
+     * "3 Nov 2025").  After insertion the summary view and merge overlays
+     * are refreshed.  If no active table is present, this function does
+     * nothing.
+     */
+    function restoreDateHeaderRowToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table || !table.tHead) return;
+        // Ensure a date header row exists and compute number of columns
+        ensureDateHeaderRowExists(table);
+        const timeSlotHeaderRow = Array.from(table.tHead.rows).find(row => !row.classList.contains('date-header-row'));
+        const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
+        const dateRow = table.tHead.querySelector('tr.date-header-row');
+        if (!dateRow) return;
+        // Remove all existing cells to prepare for a single merged cell
+        while (dateRow.firstChild) {
+            dateRow.removeChild(dateRow.firstChild);
+        }
+        // Create a single <th> cell spanning all columns
+        const mergedCell = document.createElement('th');
+        mergedCell.className = 'date-header-cell';
+        mergedCell.contentEditable = 'true';
+        mergedCell.colSpan = numCols;
+        // Optionally set a placeholder or leave empty for user to type date
+        mergedCell.textContent = '';
+        dateRow.appendChild(mergedCell);
+        // Refresh overlays and summary to reflect the change
+        rebuildAndRenderSummary();
+        updateAllMergeOverlays();
+        showMessage('Date header row added. Click to edit.', 'success', 2500);
+    }
+
+    /**
+     * Add a new column to the end of the currently active table.  Passing -1
+     * as the index to addColumnToTable signals that the new column should be
+     * appended after the last existing column.  If no active table exists,
+     * the operation quietly fails.
+     */
+    function addColumnEndToActiveTable() {
+        const table = document.getElementById(activeTableId);
+        if (!table) return;
+        // Use -1 to indicate append to the end; addColumnToTable handles this
+        addColumnToTable(table, -1);
+        ensureDateHeaderRowExists(table);
+        rebuildAndRenderSummary();
+        updateAllMergeOverlays();
     }
     async function deleteClickedRowFromActiveTable() {
         if (!lastClickedCell) { showMessage('Click cell in row to delete.', 'info'); return; }
