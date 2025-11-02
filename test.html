@@ -718,7 +718,7 @@
             <button id="addColLeftBtn" title="Add a new column to the left of the currently selected/clicked column">⬅️ Col Left</button>
             <button id="addColRightBtn" title="Add a new column to the right of the currently selected/clicked column">➡️ Col Right</button>
             <button id="addColEndBtn" title="Add a new column at the end of the table" onclick="addColumnEndToActiveTable()">➕ Add Col</button>
-            <button id="addDateRowBtn" title="Insert a new date header row spanning all columns at the top of the current table" onclick="restoreDateHeaderRowToActiveTable()">➕ Date Row</button>
+            <button id="toggleDateRowBtn" title="Merge or split the date header row across all columns" onclick="toggleDateHeaderRowMerge()">↔️ Date Row</button>
             <button id="deleteRowBtn" class="delete-btn" title="Delete the currently selected/clicked row">🗑️ Del Row</button>
             <button id="deleteColBtn" class="delete-btn" title="Delete the currently selected/clicked column">🗑️ Del Col</button>
         </div>
@@ -2870,51 +2870,62 @@ function addNewIndependentTable() {
     }
 
     /**
-     * Create or restore a single merged date header row at the top of the currently
-     * active table.  This helper first ensures a date header row exists via
-     * ensureDateHeaderRowExists(), then removes any existing cells in that row
-     * and inserts a single <th> element whose colSpan spans all time slots.  The
-     * new cell is made contentEditable so the user can type a date (e.g.
-     * "3 Nov 2025").  After insertion the summary view and merge overlays
-     * are refreshed.  If no active table is present, this function does
-     * nothing.
+     * Toggle the date header row between a merged state (single cell spanning all
+     * time slots) and a split state (individual cells per column). If the row
+     * currently has multiple cells, it is merged into one; if it already has
+     * one merged cell, it is split into individual cells using the same text
+     * value for each column.  This assists users who want to either merge or
+     * split the date row without needing to add or remove columns manually.
      */
-    function restoreDateHeaderRowToActiveTable() {
+    function toggleDateHeaderRowMerge() {
         const table = document.getElementById(activeTableId);
         if (!table || !table.tHead) return;
-        // Ensure a date header row exists and compute number of columns
+        // Ensure there is at least a date header row present
         ensureDateHeaderRowExists(table);
         const timeSlotHeaderRow = Array.from(table.tHead.rows).find(row => !row.classList.contains('date-header-row'));
         const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
         const dateRow = table.tHead.querySelector('tr.date-header-row');
         if (!dateRow) return;
-        // Gather any existing date text from the current date header row before replacing.
-        let dateText = '';
-        if (dateRow.cells.length > 0) {
-            // Prefer the first non-empty cell's text as the date; if multiple cells
-            // exist we assume the same date is repeated across.
+        // If the row is currently merged (one cell), split it into individual cells
+        if (dateRow.cells.length === 1) {
+            const mergedCell = dateRow.cells[0];
+            const dateText = mergedCell.textContent.trim() || 'Date';
+            // Remove merged cell
+            mergedCell.remove();
+            // Add new cells equal to numCols
+            for (let i = 0; i < numCols; i++) {
+                const th = document.createElement('th');
+                th.className = 'date-header-cell';
+                th.contentEditable = 'true';
+                th.textContent = dateText;
+                dateRow.appendChild(th);
+            }
+            rebuildAndRenderSummary();
+            updateAllMergeOverlays();
+            showMessage('Date header row split into individual cells.', 'info', 2500);
+        } else {
+            // Gather text from first non-empty cell as date text
+            let dateText = '';
             for (const cell of dateRow.cells) {
                 const txt = cell.textContent.trim();
                 if (txt) { dateText = txt; break; }
             }
+            if (!dateText) dateText = 'Date';
+            // Remove all current cells
+            while (dateRow.firstChild) {
+                dateRow.removeChild(dateRow.firstChild);
+            }
+            // Create merged cell
+            const mergedCell = document.createElement('th');
+            mergedCell.className = 'date-header-cell';
+            mergedCell.contentEditable = 'true';
+            mergedCell.colSpan = numCols;
+            mergedCell.textContent = dateText;
+            dateRow.appendChild(mergedCell);
+            rebuildAndRenderSummary();
+            updateAllMergeOverlays();
+            showMessage('Date header row merged. Click to edit.', 'success', 2500);
         }
-        // Default to 'Date' if no text found
-        if (!dateText) dateText = 'Date';
-        // Clear all existing cells to prepare for a single merged cell
-        while (dateRow.firstChild) {
-            dateRow.removeChild(dateRow.firstChild);
-        }
-        // Create a single <th> cell spanning all columns
-        const mergedCell = document.createElement('th');
-        mergedCell.className = 'date-header-cell';
-        mergedCell.contentEditable = 'true';
-        mergedCell.colSpan = numCols;
-        mergedCell.textContent = dateText;
-        dateRow.appendChild(mergedCell);
-        // Refresh overlays and summary to reflect the change
-        rebuildAndRenderSummary();
-        updateAllMergeOverlays();
-        showMessage('Date header row merged. Click to edit.', 'success', 2500);
     }
 
     /**
