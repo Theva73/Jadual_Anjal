@@ -2888,7 +2888,19 @@ function addNewIndependentTable() {
         const numCols = timeSlotHeaderRow ? timeSlotHeaderRow.cells.length : (table.rows[0]?.cells.length || 1);
         const dateRow = table.tHead.querySelector('tr.date-header-row');
         if (!dateRow) return;
-        // Remove all existing cells to prepare for a single merged cell
+        // Gather any existing date text from the current date header row before replacing.
+        let dateText = '';
+        if (dateRow.cells.length > 0) {
+            // Prefer the first non-empty cell's text as the date; if multiple cells
+            // exist we assume the same date is repeated across.
+            for (const cell of dateRow.cells) {
+                const txt = cell.textContent.trim();
+                if (txt) { dateText = txt; break; }
+            }
+        }
+        // Default to 'Date' if no text found
+        if (!dateText) dateText = 'Date';
+        // Clear all existing cells to prepare for a single merged cell
         while (dateRow.firstChild) {
             dateRow.removeChild(dateRow.firstChild);
         }
@@ -2897,14 +2909,12 @@ function addNewIndependentTable() {
         mergedCell.className = 'date-header-cell';
         mergedCell.contentEditable = 'true';
         mergedCell.colSpan = numCols;
-        // Provide a helpful default label so users know this cell holds the date.
-        // Users can click and edit this text to set the actual date.
-        mergedCell.textContent = 'Date';
+        mergedCell.textContent = dateText;
         dateRow.appendChild(mergedCell);
         // Refresh overlays and summary to reflect the change
         rebuildAndRenderSummary();
         updateAllMergeOverlays();
-        showMessage('Date header row added. Click to edit.', 'success', 2500);
+        showMessage('Date header row merged. Click to edit.', 'success', 2500);
     }
 
     /**
