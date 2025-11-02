@@ -2897,8 +2897,9 @@ function addNewIndependentTable() {
         mergedCell.className = 'date-header-cell';
         mergedCell.contentEditable = 'true';
         mergedCell.colSpan = numCols;
-        // Optionally set a placeholder or leave empty for user to type date
-        mergedCell.textContent = '';
+        // Provide a helpful default label so users know this cell holds the date.
+        // Users can click and edit this text to set the actual date.
+        mergedCell.textContent = 'Date';
         dateRow.appendChild(mergedCell);
         // Refresh overlays and summary to reflect the change
         rebuildAndRenderSummary();
