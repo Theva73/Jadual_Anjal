@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategic Plan Submitter</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .scroll-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 0.5rem;
+        }
+        /* Custom scrollbar for aesthetics */
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        /* --- PRINT STYLES FOR A4 LANDSCAPE OUTPUT --- */
+        @media print {
+            /* Force Landscape Orientation and A4 size */
+            @page {
+                size: A4 landscape;
+                margin: 1cm;
+            }
+
+            /* Hide everything except the main content and the master list */
+            body > * {
+                display: none !important;
+            }
+            #app, main, #masterListSection, #plansDisplayArea, #plansList {
+                display: block !important;
+                width: 100% !important;
+                position: static !important;
+                transform: none !important;
+                box-shadow: none !important;
+                background-color: white !important;
+            }
+            
+            /* Hide the login gate, buttons, and scrollbars */
+            #adminLoginGate, #closeMasterList, #loadingPlans, #adminLoginMessage, .print-hidden {
+                display: none !important;
+            }
+
+            /* Main Header for Print */
+            #masterListSection h2 {
+                color: #166534 !important; /* Dark Green */
+                border-bottom: 2px solid #a7f3d0 !important;
+                padding-bottom: 1rem;
+                margin-bottom: 1rem;
+                text-align: center;
+                font-size: 1.5rem;
+            }
+
+            /* Style individual plan cards for print */
+            .plan-card {
+                border: 1px solid #e5e7eb;
+                margin-bottom: 1.5rem;
+                padding: 1rem;
+                page-break-inside: avoid; /* Keep plan cards intact */
+            }
+
+            /* Use flex for plan details to utilize landscape space */
+            .plan-details-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr; /* Two columns */
+                gap: 1rem;
+                margin-top: 0.5rem;
+            }
+            .plan-details-grid ul {
+                list-style: disc;
+            }
+            .plan-details-grid p, .plan-details-grid ul {
+                margin-top: 0.25rem;
+                font-size: 0.8rem;
+                line-height: 1.2;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="min-h-screen p-4 sm:p-8 relative">
+    
+    <!-- New School Name Header -->
+    <h1 class="text-center text-4xl font-extrabold text-indigo-900 mb-2 tracking-tight">
+        SMK Seri Pulai Perdana
+    </h1>
+
+    <!-- Clean, Centered Header (Reduced size for Strategic Plan Submission) -->
+    <header class="text-center mb-8 max-w-lg mx-auto"> 
+        <h2 class="text-xl font-bold text-indigo-700">Strategic Plan Submission</h2>
+        <p class="text-gray-600 mt-1">Submit your detailed strategic plan for the upcoming year.</p>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        
+        <!-- Submission Form Section (Always Visible) -->
+        <section class="bg-white p-6 rounded-xl shadow-2xl h-fit lg:col-span-1 print-hidden" id="submissionFormSection">
+            
+            <!-- Plan Status Indicator -->
+            <div id="planStatus" class="p-3 mb-4 rounded-lg text-center font-medium"></div>
+
+            <h2 class="text-2xl font-semibold mb-6 text-indigo-600 border-b pb-2">Plan Details</h2>
+            
+            <form id="planForm" class="space-y-4">
+                
+                <!-- Basic Info -->
+                <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                    <h3 class="font-medium text-lg text-gray-700">Area and Planner</h3>
+                    <input type="text" id="plannerName" required placeholder="Your Name / Planner Name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                    <input type="text" id="subjectArea" required placeholder="Subject / Department Area (e.g., Marketing, HR, R&D)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                    <select id="planYear" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <option value="" disabled selected>Select Plan Year</option>
+                    </select>
+                </div>
+
+                <!-- Mission Statement -->
+                <div>
+                    <label for="missionStatement" class="block text-sm font-medium text-gray-700 mb-1">Mission Statement (The main objective for the year)</label>
+                    <textarea id="missionStatement" required rows="2" placeholder="e.g., To achieve 15% revenue growth while maintaining a 95% customer satisfaction rate." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"></textarea>
+                </div>
+
+                <!-- Key Goals (Dynamic) -->
+                <div class="space-y-4 p-4 border rounded-lg bg-indigo-50">
+                    <h3 class="font-medium text-lg text-indigo-700 mb-2">Key Strategic Goals (SMART)</h3>
+                    <div id="goalsContainer" class="space-y-3">
+                        <!-- Initial goal input will be inserted here by JavaScript -->
+                    </div>
+                    <button type="button" id="addGoalButton" class="flex items-center text-sm text-indigo-600 hover:text-indigo-800 font-medium mt-3 p-2 rounded-lg bg-indigo-100 hover:bg-indigo-200 transition duration-150">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Add Another Goal
+                    </button>
+                </div>
+
+                <!-- Action Items and Metrics -->
+                <div>
+                    <label for="actionItems" class="block text-sm font-medium text-gray-700 mb-1">Primary Action Items (Detailed steps to achieve goals)</label>
+                    <textarea id="actionItems" required rows="3" placeholder="List the top actions, separated by new lines." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"></textarea>
+                </div>
+
+                <div>
+                    <label for="keyMetrics" class="block text-sm font-medium text-gray-700 mb-1">Key Success Metrics (KPIs)</label>
+                    <textarea id="keyMetrics" required rows="3" placeholder="e.g., Quarterly Revenue Target, Employee Turnover Rate, Project Completion Time." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"></textarea>
+                </div>
+
+                <!-- Status & Submit Button -->
+                <div id="messageBox" class="p-3 text-center rounded-lg hidden" role="alert"></div>
+
+                <button type="submit" id="submitButton" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition duration-200 shadow-md">
+                    Submit Strategic Plan
+                </button>
+            </form>
+            
+            <!-- Admin View Trigger Link (replaces the gear icon) -->
+            <div class="text-center pt-4 border-t mt-4">
+                <button id="adminViewTrigger" class="text-xs text-gray-400 hover:text-indigo-600 transition duration-150 cursor-pointer">
+                    Admin View
+                </button>
+            </div>
+        </section>
+
+        <!-- Master List Section (Hidden by default, toggled by trigger link) -->
+        <section class="bg-white p-6 rounded-xl shadow-2xl lg:col-span-1 fixed inset-0 lg:static lg:block z-40 transition-transform duration-300 transform translate-x-full lg:translate-x-0" id="masterListSection" style="display: none;">
+            <h2 class="text-2xl font-semibold mb-6 text-green-600 border-b pb-2 flex justify-between items-center">
+                Master Plan List (Admin View)
+                <!-- Close button for mobile -->
+                <button id="closeMasterList" class="lg:hidden text-gray-500 hover:text-gray-800 print-hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </h2>
+            
+            <div id="adminLoginGate" class="space-y-4 p-4 border rounded-lg bg-red-50">
+                <p class="text-sm font-medium text-red-700">Access Submissions: Enter Admin Key below to view all plans.</p>
+                <div class="flex space-x-2">
+                    <input type="password" id="adminKeyInput" placeholder="Enter Admin Key" class="flex-grow p-3 border border-red-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150">
+                    <button type="button" id="adminLoginButton" class="bg-red-600 text-white font-semibold px-4 py-3 rounded-lg hover:bg-red-700 transition duration-200">
+                        Unlock
+                    </button>
+                </div>
+                <div id="adminLoginMessage" class="text-sm text-center font-medium hidden"></div>
+            </div>
+
+            <div id="plansDisplayArea" style="display: none;">
+                <p class="text-sm text-gray-500 mb-4 print-hidden">Plans update automatically when new data is submitted.</p>
+                
+                <button id="printButton" class="w-full bg-green-600 text-white font-semibold py-2 mb-4 rounded-lg hover:bg-green-700 transition duration-200 shadow-md print-hidden">
+                    Print All Plans (A4 Landscape)
+                </button>
+
+                <div id="plansList" class="space-y-4 scroll-container bg-gray-50 p-4">
+                    <p id="loadingPlans" class="text-center text-gray-500 p-4">Loading submitted plans...</p>
+                    <!-- Plans will be inserted here -->
+                </div>
+                <div class="text-right mt-4 print-hidden">
+                    <button onclick="loadPlans()" class="text-sm text-green-600 hover:text-green-800 font-medium">Force Refresh List</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Set Firestore log level to debug for development/troubleshooting
+    setLogLevel('debug');
+
+    // --- MANDATORY GLOBAL VARIABLE SETUP ---
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    // --- FIREBASE INITIALIZATION AND AUTHENTICATION ---
+    let app, db, auth;
+    let userId = null;
+    let isAuthReady = false;
+    let isListLoaded = false; // Track if the real-time listener is active
+    let isEditingExistingPlan = false; // Track if the form is in edit mode
+
+    // --- FIRESTORE PATHS ---
+    const COLLECTION_PATH = `artifacts/${appId}/public/data/strategic_plans`;
+
+    const messageBox = document.getElementById('messageBox');
+    const submitButton = document.getElementById('submitButton');
+    const plansList = document.getElementById('plansList');
+    const loadingPlans = document.getElementById('loadingPlans');
+    const planForm = document.getElementById('planForm');
+    const goalsContainer = document.getElementById('goalsContainer');
+    const addGoalButton = document.getElementById('addGoalButton');
+    const planStatus = document.getElementById('planStatus');
+    
+    // Admin Access Elements
+    const ADMIN_SECRET_KEY = "admin2025";
+    const adminLoginButton = document.getElementById('adminLoginButton');
+    const adminKeyInput = document.getElementById('adminKeyInput');
+    const adminLoginGate = document.getElementById('adminLoginGate');
+    const plansDisplayArea = document.getElementById('plansDisplayArea');
+    const adminLoginMessage = document.getElementById('adminLoginMessage');
+    const masterListSection = document.getElementById('masterListSection');
+    const adminViewTrigger = document.getElementById('adminViewTrigger');
+    const closeMasterList = document.getElementById('closeMasterList');
+    const printButton = document.getElementById('printButton');
+
+    let goalCounter = 0;
+
+    // --- UTILITIES ---
+
+    function showMessage(message, type = 'success') {
+        messageBox.textContent = message;
+        messageBox.className = `p-3 text-center rounded-lg ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+        messageBox.style.display = 'block';
+        setTimeout(() => { messageBox.style.display = 'none'; }, 5000);
+    }
+    
+    function showAdminMessage(message, isError = false) {
+        adminLoginMessage.textContent = message;
+        adminLoginMessage.className = `text-sm text-center font-medium mt-2 ${isError ? 'text-red-700' : 'text-green-700'}`;
+        adminLoginMessage.style.display = 'block';
+    }
+
+
+    // --- DYNAMIC GOAL MANAGEMENT ---
+
+    function createGoalInput(isRequired = false, initialValue = '') {
+        goalCounter++;
+        const goalId = `keyGoal-${goalCounter}`;
+        const container = document.createElement('div');
+        container.className = 'flex items-center space-x-2 goal-input-group';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = goalId;
+        input.name = 'keyGoal'; // Use a common name for easier retrieval
+        input.required = isRequired;
+        input.value = initialValue;
+        input.placeholder = isRequired ? `Goal ${goalCounter}: Specific & Measurable (Required)` : `Goal ${goalCounter}: Specific & Measurable`;
+        input.className = 'flex-grow p-3 border border-indigo-300 rounded-lg';
+        
+        container.appendChild(input);
+
+        if (!isRequired || goalCounter > 1) { // Allow removing all but the very first goal
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'text-red-500 hover:text-red-700 p-2 rounded-full transition duration-150';
+            deleteButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+            deleteButton.title = "Remove Goal";
+            deleteButton.onclick = () => container.remove();
+            container.appendChild(deleteButton);
+        }
+
+        goalsContainer.appendChild(container);
+        return input;
+    }
+
+    // Initialize with the first required goal
+    function resetGoals() {
+        goalsContainer.innerHTML = '';
+        goalCounter = 0;
+        createGoalInput(true);
+    }
+    resetGoals();
+
+    addGoalButton.addEventListener('click', () => {
+        createGoalInput(false).focus(); // Add new goal and focus on it
+    });
+
+    // Populate the Plan Year dropdown
+    function populatePlanYear() {
+        const select = document.getElementById('planYear');
+        const currentYear = new Date().getFullYear();
+        for (let i = 0; i < 4; i++) {
+            const year = currentYear + i;
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (i === 1) { // Default to next year
+                option.selected = true;
+            }
+            select.appendChild(option);
+        }
+    }
+    populatePlanYear();
+
+    // --- FIREBASE INITIALIZATION AND AUTHENTICATION ---
+    async function initializeFirebaseAndAuth() {
+        try {
+            if (Object.keys(firebaseConfig).length === 0) {
+                console.error("Firebase config is empty. Cannot initialize.");
+                showMessage("Setup Error: Firebase configuration missing.", 'error');
+                return;
+            }
+
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                } else {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        userId = auth.currentUser.uid;
+                    } else {
+                        const anonymousUser = await signInAnonymously(auth);
+                        userId = anonymousUser.user.uid;
+                    }
+                }
+                isAuthReady = true;
+                // Once authenticated, check for an existing plan
+                loadPlanForEditing();
+            });
+
+        } catch (error) {
+            console.error("Firebase initialization or authentication error:", error);
+            showMessage(`Initialization Error: ${error.message}`, 'error');
+        }
+    }
+    
+    // --- EDITING LOGIC: LOAD EXISTING PLAN ---
+    async function loadPlanForEditing() {
+        if (!isAuthReady || !userId) return;
+
+        const planRef = doc(db, COLLECTION_PATH, userId);
+        const docSnap = await getDoc(planRef);
+
+        if (docSnap.exists()) {
+            const plan = docSnap.data();
+            isEditingExistingPlan = true;
+            
+            // Populate static fields
+            document.getElementById('plannerName').value = plan.plannerName || '';
+            document.getElementById('subjectArea').value = plan.subjectArea || '';
+            document.getElementById('planYear').value = plan.planYear || '';
+            document.getElementById('missionStatement').value = plan.missionStatement || '';
+            document.getElementById('actionItems').value = (Array.isArray(plan.actionItems) ? plan.actionItems.join('\n') : plan.actionItems) || '';
+            document.getElementById('keyMetrics').value = (Array.isArray(plan.keyMetrics) ? plan.keyMetrics.join('\n') : plan.keyMetrics) || '';
+
+            // Populate dynamic goals
+            resetGoals();
+            if (Array.isArray(plan.keyGoals) && plan.keyGoals.length > 0) {
+                const goals = plan.keyGoals;
+                
+                // Set first goal (which is already created by resetGoals)
+                document.getElementById(`keyGoal-1`).value = goals[0];
+                
+                // Create remaining goals
+                for (let i = 1; i < goals.length; i++) {
+                    createGoalInput(false, goals[i]);
+                }
+            }
+            
+            submitButton.textContent = 'Update Strategic Plan';
+            planStatus.className = 'p-3 mb-4 rounded-lg text-center font-medium bg-indigo-100 text-indigo-800 border border-indigo-300';
+            const dateUpdated = plan.submittedAt ? new Date(plan.submittedAt.toDate()).toLocaleDateString() : 'N/A';
+            planStatus.innerHTML = `&#9999; Editing Existing Plan | Last Updated: ${dateUpdated}`;
+        } else {
+            isEditingExistingPlan = false;
+            submitButton.textContent = 'Submit Strategic Plan';
+            planStatus.className = 'p-3 mb-4 rounded-lg text-center font-medium bg-gray-100 text-gray-700 border border-gray-300';
+            planStatus.innerHTML = `&#10004; New Plan Submission`;
+            resetGoals(); // Ensure the form is clean
+        }
+    }
+
+    // --- ADMIN ACCESS LOGIC ---
+    function toggleMasterList() {
+        if (masterListSection.style.display === 'none' || masterListSection.style.display === '') {
+            masterListSection.style.display = 'block';
+            masterListSection.classList.remove('translate-x-full');
+        } else {
+            masterListSection.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (masterListSection.classList.contains('translate-x-full')) {
+                    masterListSection.style.display = 'none';
+                }
+            }, 300);
+        }
+    }
+
+    function attemptAdminLogin() {
+        if (!isAuthReady) {
+            showAdminMessage("System is initializing. Please wait for authentication.", true);
+            return;
+        }
+
+        if (adminKeyInput.value === ADMIN_SECRET_KEY) {
+            adminLoginGate.style.display = 'none';
+            plansDisplayArea.style.display = 'block';
+            showAdminMessage('Access granted. Loading data...', false);
+            if (!isListLoaded) {
+                 loadPlans();
+                 isListLoaded = true;
+            } else {
+                adminLoginMessage.style.display = 'none';
+            }
+        } else {
+            showAdminMessage('Invalid Admin Key. Access denied.', true);
+        }
+        adminKeyInput.value = '';
+    }
+    
+    // --- PRINTING LOGIC ---
+    printButton.addEventListener('click', () => {
+        window.print();
+    });
+
+    // --- FORM SUBMISSION LOGIC (Updated to use setDoc) ---
+    async function savePlan(e) {
+        e.preventDefault();
+        if (!isAuthReady || !userId) {
+            showMessage("System is initializing. Please wait a moment.", 'error');
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = isEditingExistingPlan ? 'Updating...' : 'Submitting...';
+
+        try {
+            // Get all goal values from the dynamic inputs
+            const goalInputs = Array.from(goalsContainer.querySelectorAll('input[name="keyGoal"]'));
+            const keyGoals = goalInputs.map(input => input.value.trim()).filter(g => g);
+
+            if (keyGoals.length === 0) {
+                showMessage("Please enter at least one strategic goal.", 'error');
+                submitButton.disabled = false;
+                submitButton.textContent = isEditingExistingPlan ? 'Update Strategic Plan' : 'Submit Strategic Plan';
+                return;
+            }
+
+            const planData = {
+                plannerName: document.getElementById('plannerName').value.trim(),
+                subjectArea: document.getElementById('subjectArea').value.trim(),
+                planYear: parseInt(document.getElementById('planYear').value, 10),
+                missionStatement: document.getElementById('missionStatement').value.trim(),
+                keyGoals: keyGoals,
+                actionItems: document.getElementById('actionItems').value.trim().split('\n').filter(a => a.trim()),
+                keyMetrics: document.getElementById('keyMetrics').value.trim().split('\n').filter(m => m.trim()),
+                submittedBy: userId,
+                submittedAt: serverTimestamp(),
+            };
+
+            const planRef = doc(db, COLLECTION_PATH, userId);
+            
+            // Use setDoc to create or overwrite the document with the userId as ID
+            await setDoc(planRef, planData);
+            
+            isEditingExistingPlan = true; // Now that a plan exists, switch to edit mode
+            submitButton.textContent = 'Update Strategic Plan';
+            showMessage(`Plan for "${planData.subjectArea}" updated successfully!`);
+            loadPlanForEditing(); // Re-load to update status message
+
+        } catch (error) {
+            console.error("Error saving plan:", error);
+            showMessage(`Submission Failed: ${error.message}`, 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    // --- MASTER LIST REAL-TIME LISTENER ---
+    function loadPlans() {
+        if (!isAuthReady || !userId || !db) return;
+        
+        loadingPlans.style.display = 'block';
+        plansList.innerHTML = '';
+
+        const q = query(collection(db, COLLECTION_PATH));
+
+        // Set up real-time listener (This is only called once after first successful login)
+        onSnapshot(q, (snapshot) => {
+            plansList.innerHTML = '';
+            loadingPlans.style.display = 'none';
+            adminLoginMessage.style.display = 'none';
+
+            if (snapshot.empty) {
+                plansList.innerHTML = '<p class="text-center text-gray-500 p-4">No strategic plans have been submitted yet.</p>';
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const plan = doc.data();
+                
+                const goalsArray = Array.isArray(plan.keyGoals) ? plan.keyGoals : (plan.keyGoals ? [plan.keyGoals] : []);
+                const actionArray = Array.isArray(plan.actionItems) ? plan.actionItems : (plan.actionItems ? [plan.actionItems] : []);
+                const metricsArray = Array.isArray(plan.keyMetrics) ? plan.keyMetrics : (plan.keyMetrics ? [plan.keyMetrics] : []);
+
+                const goalsHtml = goalsArray.map(g => `<li class="text-sm text-gray-700">${g}</li>`).join('');
+                const actionHtml = actionArray.map(a => `<li class="text-sm text-gray-700">${a}</li>`).join('');
+                const metricsHtml = metricsArray.map(m => `<li class="text-sm text-gray-700">${m}</li>`).join('');
+                
+                const dateSubmitted = plan.submittedAt ? new Date(plan.submittedAt.toDate()).toLocaleDateString() : 'N/A';
+                
+                // Card for each submitted plan
+                const planCard = `
+                    <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500 hover:shadow-lg transition duration-150 plan-card">
+                        <div class="flex justify-between items-start mb-2 border-b pb-2">
+                            <h3 class="text-xl font-bold text-green-700">${plan.subjectArea} (${plan.planYear})</h3>
+                            <span class="text-xs text-gray-500">Submitted: ${dateSubmitted}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">Planner: <span class="font-medium">${plan.plannerName}</span></p>
+                        
+                        <div class="plan-details-grid">
+                            <!-- Column 1 -->
+                            <div class="space-y-3">
+                                <p class="text-sm font-semibold text-gray-700">Mission Statement:</p>
+                                <p class="font-normal italic text-gray-600 text-sm">${plan.missionStatement}</p>
+
+                                <p class="text-sm font-semibold text-gray-700 mt-2">Key Goals:</p>
+                                <ul class="list-disc pl-5 space-y-0.5">
+                                    ${goalsHtml}
+                                </ul>
+                            </div>
+                            <!-- Column 2 -->
+                            <div class="space-y-3">
+                                <p class="text-sm font-semibold text-gray-700">Action Items:</p>
+                                <ul class="list-disc pl-5 space-y-0.5">
+                                    ${actionHtml}
+                                </ul>
+
+                                <p class="text-sm font-semibold text-gray-700 mt-2">Key Success Metrics (KPIs):</p>
+                                <ul class="list-disc pl-5 space-y-0.5">
+                                    ${metricsHtml}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                plansList.innerHTML += planCard;
+            });
+
+        }, (error) => {
+            console.error("Error fetching plans:", error);
+            plansList.innerHTML = `<p class="text-center text-red-500 p-4">Error loading plans: ${error.message}</p>`;
+            loadingPlans.style.display = 'none';
+        });
+    }
+
+    // --- EVENT LISTENERS & STARTUP ---
+    adminViewTrigger.addEventListener('click', toggleMasterList);
+    closeMasterList.addEventListener('click', toggleMasterList);
+    adminLoginButton.addEventListener('click', attemptAdminLogin);
+    adminKeyInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            attemptAdminLogin();
+        }
+    });
+    planForm.addEventListener('submit', savePlan);
+    
+    // Start the whole process
+    initializeFirebaseAndAuth();
+</script>
+
+</body>
+</html>
+
